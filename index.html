@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
+  <title>極速戰情室 (Wide V3 - 即時戰情寬螢幕版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -396,6 +396,172 @@
       .v2-c1c4-card .chip-card .big-val { font-size: 19px !important; }
       .ocf-command-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .ocf-command-item.direction { grid-column: 1 / -1; }
+    }
+
+
+    /* =============================================================
+       Dashboard V3 Wide: ultrawide command-center layout
+       Active automatically on desktop widths >= 1400px.
+       ============================================================= */
+    .v2-market-slot > .box {
+      justify-content: flex-start;
+      box-sizing: border-box;
+    }
+    .v2-force-card .battle-box,
+    .v2-sniper-card .box {
+      height: auto;
+      justify-content: flex-start;
+    }
+
+    @media (min-width: 1400px) {
+      body { padding: 5px 6px 8px; }
+      .dashboard-container { gap: 5px; }
+      .v2-dashboard-nav {
+        padding: 3px 0 5px;
+        gap: 3px;
+      }
+      .v2-tab-btn {
+        min-height: 28px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 10px;
+      }
+      .v2-live-stack { gap: 6px; }
+      .v2-status-card { display: none; }
+
+      /* First row: TX / C1-C4 / P9-R7 / sniper targets. */
+      .v2-core-grid {
+        grid-template-columns: repeat(24, minmax(0, 1fr));
+        gap: 6px;
+        align-items: start;
+      }
+      .v2-market-slot { grid-column: span 5; min-width: 0; }
+      .v2-c1c4-card { grid-column: span 5; }
+      .v2-force-card { grid-column: span 7; }
+      .v2-sniper-card { grid-column: span 7; }
+
+      .v2-section-card {
+        padding: 7px;
+        border-radius: 10px;
+      }
+      .v2-section-card > .v2-card-title {
+        min-height: 16px;
+        margin: 0 2px 5px;
+        font-size: 11px;
+      }
+      .v2-section-card > .v2-card-title small { font-size: 8px; }
+
+      /* Compact the old TX card into a true dashboard tile. */
+      .v2-market-slot > .box {
+        display: grid !important;
+        grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+        grid-template-rows: auto auto;
+        gap: 6px;
+        align-content: start;
+        min-height: 184px;
+        padding: 8px 10px !important;
+        border-radius: 10px;
+      }
+      .v2-market-slot > .box > div:first-child {
+        grid-column: 1 / -1;
+        min-width: 0;
+      }
+      .v2-market-slot > .box > div:nth-child(2),
+      .v2-market-slot > .box > div:nth-child(3) {
+        margin-top: 0 !important;
+        min-width: 0;
+        padding: 6px !important;
+        border-radius: 6px;
+        background: rgba(255,255,255,.045);
+      }
+      .v2-market-slot > .box > div:nth-child(2) { grid-column: 1; }
+      .v2-market-slot > .box > div:nth-child(3) { grid-column: 2; }
+      .v2-market-slot #price { font-size: 37px !important; }
+      .v2-market-slot #oi-dn-price { font-size: 22px !important; }
+      .v2-market-slot #vwap-cross,
+      .v2-market-slot #spread-spot,
+      .v2-market-slot #spread-next { font-size: 14px !important; }
+
+      /* Make the four core tiles visually balanced instead of stretched. */
+      .v2-c1c4-card,
+      .v2-force-card,
+      .v2-sniper-card { min-height: 184px; }
+      .v2-c1c4-card .chip-grid { gap: 4px; }
+      .v2-c1c4-card .chip-card {
+        min-height: 55px;
+        padding: 5px 4px;
+        border-radius: 7px;
+      }
+      .v2-c1c4-card .chip-card .big-val { font-size: 23px !important; }
+      .v2-c1c4-card .chip-card .chip-tag { font-size: 10px !important; }
+
+      .v2-force-card .battle-box { padding: 6px 8px; }
+      .v2-force-card .battle-box > .req-level-4-block > div {
+        padding: 5px !important;
+        margin: 2px 0 4px !important;
+      }
+      .v2-force-card .p9-container {
+        min-height: 58px;
+        padding: 4px !important;
+      }
+      .v2-force-card #p9-val,
+      .v2-force-card #r7-val { font-size: 27px !important; }
+      .v2-force-card #dyn-omi-support,
+      .v2-force-card #dyn-omi-pressure { font-size: 20px !important; }
+
+      .v2-sniper-card .box {
+        min-height: 128px;
+        padding: 7px 8px !important;
+      }
+      .v2-sniper-card #bull-target-val,
+      .v2-sniper-card #bear-target-val { font-size: 14px !important; }
+      .v2-sniper-card #target-net-force { font-size: 15px !important; }
+      .v2-target-force-live { font-size: 10px; }
+      .v2-target-balance { margin-top: 8px; height: 8px; }
+      .v2-target-balance-label { font-size: 9px; }
+
+      /* Second row: Radar receives more width; OCF remains fully visible. */
+      .v2-intel-grid {
+        grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr);
+        gap: 6px;
+        align-items: start;
+      }
+      .v2-radar-card .box { padding: 7px 9px !important; }
+      .v2-radar-card .radar-static-container { min-height: 14px; }
+      .v2-radar-card .radar-phase-panel { padding-top: 5px; }
+      .v2-radar-card .radar-model-grid,
+      .v2-radar-card .radar-band-grid { gap: 4px; }
+      .v2-radar-card .radar-band-main { font-size: 13px; }
+      .v2-radar-card .radar-band-range { font-size: 10px; }
+
+      .v2-ocf-card .ocf-battle-header { margin-bottom: 5px; }
+      .v2-ocf-card .ocf-command-item { padding: 5px 6px; }
+      .v2-ocf-card .ocf-command-value { font-size: 13px; }
+      .v2-ocf-card .ocf-defense-card { padding: 6px; }
+      .v2-ocf-card .ocf-defense-zone { font-size: 15px; }
+      .v2-ocf-card .ocf-defense-action {
+        min-height: 16px;
+        margin-top: 4px;
+        padding-top: 4px;
+      }
+      .v2-ocf-card .ocf-action-band { padding: 6px 7px; }
+      .v2-ocf-card .ocf-action-text { font-size: 11px; }
+      .v2-ocf-card .ocf-prior-band { margin-top: 5px; padding-top: 5px; }
+
+      /* Keep the aggregate summary compact; it should not compete with live cards. */
+      .v2-final-summary { padding: 5px 7px; }
+      .v2-final-summary > .v2-card-title { margin-bottom: 4px; }
+      .v2-summary-grid { gap: 4px; }
+      .v2-summary-item { padding: 4px 6px; border-radius: 6px; }
+      .v2-summary-value { font-size: 9px; }
+    }
+
+    /* Mid-size desktop fallback: two balanced rows instead of tiny four columns. */
+    @media (min-width: 901px) and (max-width: 1399px) {
+      .v2-core-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+      .v2-market-slot, .v2-c1c4-card { grid-column: span 6; }
+      .v2-force-card, .v2-sniper-card { grid-column: span 6; }
+      .v2-market-slot > .box { min-height: 0; }
     }
 
   </style>
@@ -2657,6 +2823,12 @@
     targetSummary.textContent = '等待狙擊重鎮';
     sniperCard.appendChild(targetSummary);
     coreGrid.appendChild(sniperCard);
+
+    // V3 Wide: put the compact TX market tile into the same command row.
+    if (marketSlot) {
+      marketSlot.classList.add('v2-market-card');
+      coreGrid.insertBefore(marketSlot, coreGrid.firstChild);
+    }
 
     const intelGrid = el('div', 'v2-intel-grid');
     liveStack.appendChild(intelGrid);
