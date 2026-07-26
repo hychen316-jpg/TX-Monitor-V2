@@ -14,9 +14,9 @@
     /* === 核心樣式 === */
     :root { --bg:#000; --card:#1c1c1e; --text:#fff; --red:#ff453a; --green:#30d158; --yellow:#ffd60a; --blue:#0a84ff; --gray:#8e8e93; --purple:#bf5af2; }
     * { box-sizing: border-box; }
-    body { background:var(--bg); color:var(--text); font-family:-apple-system, sans-serif; padding:6px; margin:0; overflow-x:hidden; }
+    body { background:var(--bg); color:var(--text); font-family:-apple-system, sans-serif; padding:4px 6px; margin:0; overflow-x:hidden; }
     
-    .dashboard-container { filter: blur(15px); transition: filter 0.5s; pointer-events: none; opacity: 0.3; display: flex; flex-direction: column; gap: 5px; width: 100%; max-width: 1600px; margin: 0 auto; }
+    .dashboard-container { filter: blur(15px); transition: filter 0.5s; pointer-events: none; opacity: 0.3; display: flex; flex-direction: column; gap: 4px; width: 100%; max-width: 1600px; margin: 0 auto; }
     .unlocked { filter: blur(0); pointer-events: auto; opacity: 1; }
 
     .req-level-2-flex, .req-level-2-block, .req-level-2-grid,
@@ -38,23 +38,23 @@
     .dashboard-container.lvl4 .req-level-4-grid { display: grid !important; }
     .dashboard-container.lvl4 .lock-lvl-4 { display: none !important; }
 
-    .upgrade-prompt { background: rgba(28, 28, 30, 0.6); border: 1px dashed #444; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #888; font-size: 11px; gap: 6px; padding: 10px; }
-    .upgrade-btn { background: #333; color: #aaa; border: 1px solid #555; padding: 2px 8px; border-radius: 4px; font-size: 9px; }
+    .upgrade-prompt { background: rgba(28, 28, 30, 0.6); border: 1px dashed #444; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #888; font-size: 10px; gap: 4px; padding: 6px; }
+    .upgrade-btn { background: #333; color: #aaa; border: 1px solid #555; padding: 2px 6px; border-radius: 4px; font-size: 9px; }
 
-    .box-header { font-size: 11px; color: var(--gray); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .box-header { font-size: 10px; color: var(--gray); font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* ★ 頂部橫向佈局微調 */
-    .top-section { display:flex; flex-direction:column; gap:5px; width:100%; }
-    .box { background:var(--card); border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; justify-content:space-between; border: 1px solid #333; min-width: 0; width:100%; }
-    .big-val { font-size:26px; font-weight:600; letter-spacing:-1px; margin-top:2px; }
-    .power-val { font-size:28px; font-weight:700; text-align:right; } 
-    .chip-tag { font-size:10px; padding:2px 6px; border-radius:4px; width:fit-content; background:#333; color:#ccc; }
+    .top-section { display:flex; flex-direction:column; gap:4px; width:100%; }
+    .box { background:var(--card); border-radius:10px; padding:6px 8px; display:flex; flex-direction:column; justify-content:space-between; border: 1px solid #333; min-width: 0; width:100%; }
+    .big-val { font-size:24px; font-weight:600; letter-spacing:-1px; margin-top:1px; }
+    .power-val { font-size:26px; font-weight:700; text-align:right; } 
+    .chip-tag { font-size:9px; padding:1px 5px; border-radius:4px; width:fit-content; background:#333; color:#ccc; }
     
     .c-red { color:var(--red); } .c-green { color:var(--green); }
     .bg-red { background:rgba(255, 69, 58, 0.15); color:var(--red); } 
     .bg-green { background:rgba(48, 209, 88, 0.15); color:var(--green); }
-    .alert-red { border: 1px solid var(--red) !important; box-shadow: 0 0 10px rgba(255, 69, 58, 0.2); }
-    .alert-green { border: 1px solid var(--green) !important; box-shadow: 0 0 10px rgba(48, 209, 88, 0.2); }
+    .alert-red { border: 1px solid var(--red) !important; box-shadow: 0 0 8px rgba(255, 69, 58, 0.2); }
+    .alert-green { border: 1px solid var(--green) !important; box-shadow: 0 0 8px rgba(48, 209, 88, 0.2); }
 
     .alpha-box { background: var(--card); border-radius: 10px; padding: 6px 8px; border: 1px solid #333; }
     .alpha-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;}
@@ -87,47 +87,26 @@
     .dot-blue { background: var(--blue); }
     .dot-gray { background: #555; }
 
-    .battle-box { background: var(--card); border-radius: 12px; padding: 6px 10px; border: 1px solid #333; display: flex; flex-direction: column; gap: 2px; }
-    .tug-container { height: 14px; background: #111; border-radius: 7px; position: relative; overflow: hidden; display: flex; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); margin-bottom: 0; }
-    .bull-bar { height: 100%; background: var(--red); transition: width 0.5s; }
-    .bear-bar { height: 100%; background: var(--green); transition: width 0.5s; }
-    .percent-text { position: absolute; width: 100%; text-align: center; top: 0; font-size: 9px; font-weight: bold; color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px #000; z-index: 5; }
-    .force-display { text-align: center; font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
-    .army-stats { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; margin-top: 0; padding: 0 5px; }
-    .logic-text { text-align: left; font-size: 12px; font-weight: 400; color: #ccc; margin-top: 0; letter-spacing: 0.3px; line-height: 1.4; }
-    .action-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-right: 4px; }
-    .action-long { background: rgba(255, 69, 58, 0.2); color: var(--red); border: 1px solid var(--red); }
-    .action-short { background: rgba(48, 209, 88, 0.2); color: var(--green); border: 1px solid var(--green); }
-    .action-wait { background: rgba(255, 214, 10, 0.2); color: var(--yellow); border: 1px solid var(--yellow); }
-    .override-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; background: rgba(10, 132, 255, 0.2); color: var(--blue); border: 1px solid var(--blue); margin-top: 4px;}
+    .battle-box { background: var(--card); border-radius: 10px; padding: 5px 8px; border: 1px solid #333; display: flex; flex-direction: column; gap: 2px; }
     
-    .p9-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 2px; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 6px; }
-    .p9-label { font-size: 11px; color: #ccc; font-weight: 700; }
+    .p9-container { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 2px; padding: 3px; background: rgba(0,0,0,0.3); border-radius: 5px; }
+    .p9-label { font-size: 10px; color: #ccc; font-weight: 700; }
     
-    .p9-val { font-size: 20px; font-weight: 800; letter-spacing: 0.5px; transition: all 0.3s ease; }
-    #r7-val { font-size: 18px; }
+    .p9-val { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; transition: all 0.3s ease; }
+    #r7-val { font-size: 16px; }
     
-    .slope-label { font-size:9px; margin-left:2px; padding:1px 5px; border-radius:5px; font-weight:800; transition:all 0.3s ease; display:inline-block; border: 1px solid transparent; white-space:nowrap; }
+    .slope-label { font-size:8px; margin-left:2px; padding:1px 4px; border-radius:4px; font-weight:800; transition:all 0.3s ease; display:inline-block; border: 1px solid transparent; white-space:nowrap; }
 
-    .strategy-card { background: #2c2c2e; border-radius: 12px; padding: 8px; border: 1px solid #444; position: relative; overflow: hidden; }
+    .strategy-card { background: #2c2c2e; border-radius: 10px; padding: 8px; border: 1px solid #444; position: relative; overflow: hidden; }
     .strategy-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 4px; }
-    .phase-badge { background: #0a84ff; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-    .s-advice { background: rgba(0,0,0,0.3); padding: 6px; border-radius: 6px; color: #ddd; line-height: 1.4; border-left: 3px solid #888; font-size: 11px; }
-    
-    .range-box { background: var(--card); border-radius: 12px; padding: 8px 12px; border: 1px solid #333; display: grid; grid-template-rows: 1fr 1fr; gap: 6px; position: relative; overflow: hidden; }
-    .range-box::after { content: ""; position: absolute; top: 50%; left: 16px; right: 16px; height: 1px; background: #333; }
-    .range-row { display: flex; justify-content: space-between; align-items: center; }
-    .range-title { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
-    .range-val { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
-    .range-vol { font-size: 10px; color: #666; font-weight: normal; margin-left: 2px; }
-    .range-old { font-size: 11px; color: #666; font-weight: normal; display: flex; align-items: center; }
-    .arrow-icon { font-size: 9px; margin: 0 3px; color: #444; }
+    .phase-badge { background: #0a84ff; color: #fff; padding: 2px 5px; border-radius: 3px; font-size: 9px; font-weight: bold; }
+    .s-advice { background: rgba(0,0,0,0.3); padding: 6px; border-radius: 5px; color: #ddd; line-height: 1.3; border-left: 3px solid #888; font-size: 11px; }
 
-    .chip-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; width:100%; }
-    .chip-card { background:var(--card); padding:4px 2px; border-radius:8px; border: 1px solid #333; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .chip-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:3px; width:100%; }
+    .chip-card { background:var(--card); padding:3px 2px; border-radius:6px; border: 1px solid #333; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     
-    .split-chart-box { background: var(--card); border-radius: 12px; padding: 6px; border: 1px solid #333; height: 180px; position: relative; width:100%; }
-    .section-title { margin-top: 8px; margin-bottom: 2px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; font-weight: 600; }
+    .split-chart-box { background: var(--card); border-radius: 10px; padding: 6px; border: 1px solid #333; height: 180px; position: relative; width:100%; }
+    .section-title { margin-top: 6px; margin-bottom: 2px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; font-weight: 600; }
 
     #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .auth-box { text-align: center; width: 85%; max-width: 320px; background: #1c1c1e; padding: 25px 20px; border-radius: 16px; border: 1px solid #333; }
@@ -137,20 +116,17 @@
     .auth-btn.secondary { background: #3a3a3c; margin-top: 8px; }
     .error-msg { color: var(--red); font-size: 12px; margin-top: 12px; }
     .toggle-link { margin-top: 16px; font-size: 13px; color: var(--blue); cursor: pointer; text-decoration: underline; }
-    #logout-btn { position: fixed; top: 8px; right: 8px; z-index: 1000; display: none; padding: 3px 8px; background: rgba(28,28,30,0.8); border: 1px solid #444; color: #aaa; border-radius: 16px; font-size: 10px; cursor: pointer; backdrop-filter: blur(5px); }
+    #logout-btn { position: fixed; top: 6px; right: 6px; z-index: 1000; display: none; padding: 3px 8px; background: rgba(28,28,30,0.8); border: 1px solid #444; color: #aaa; border-radius: 16px; font-size: 10px; cursor: pointer; backdrop-filter: blur(5px); }
 
-    .rank-s { color: #d4af37 !important; text-shadow: 0 0 10px rgba(212, 175, 55, 0.8); animation: pulse-gold 1.5s infinite; border: 1px solid #d4af37 !important; }
+    .rank-s { color: #d4af37 !important; border: 1px solid #d4af37 !important; }
     .rank-a-bull { color: var(--red) !important; border: 1px solid var(--red) !important; }
     .rank-a-bear { color: var(--green) !important; border: 1px solid var(--green) !important; }
     .rank-b { color: var(--yellow) !important; border: 1px solid var(--yellow) !important; }
     .rank-n { color: #888 !important; border: 1px solid #444 !important; }
 
-    @keyframes pulse-gold { 0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); } 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); } }
-    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.5); } 70% { box-shadow: 0 0 0 8px rgba(255, 69, 58, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0); } }
-
     /* ★ P9 動態視覺特效 ★ */
-    @keyframes p9-exhaust-red { 0% { text-shadow: 0 0 5px var(--red); transform: scale(1); } 50% { text-shadow: 0 0 15px var(--red), 0 0 25px var(--red); transform: scale(1.05); } 100% { text-shadow: 0 0 5px var(--red); transform: scale(1); } }
-    @keyframes p9-exhaust-green { 0% { text-shadow: 0 0 5px var(--green); transform: scale(1); } 50% { text-shadow: 0 0 15px var(--green), 0 0 25px var(--green); transform: scale(1.05); } 100% { text-shadow: 0 0 5px var(--green); transform: scale(1); } }
+    @keyframes p9-exhaust-red { 0% { text-shadow: 0 0 5px var(--red); transform: scale(1); } 50% { text-shadow: 0 0 15px var(--red); transform: scale(1.03); } 100% { text-shadow: 0 0 5px var(--red); transform: scale(1); } }
+    @keyframes p9-exhaust-green { 0% { text-shadow: 0 0 5px var(--green); transform: scale(1); } 50% { text-shadow: 0 0 15px var(--green); transform: scale(1.03); } 100% { text-shadow: 0 0 5px var(--green); transform: scale(1); } }
     
     .p9-attack-red { text-shadow: 0 0 8px var(--red); font-weight: 900; }
     .p9-attack-green { text-shadow: 0 0 8px var(--green); font-weight: 900; }
@@ -158,7 +134,7 @@
     .p9-exhaust-green { animation: p9-exhaust-green 1s infinite; font-weight: 900; color: #fff !important; }
 
     /* ★ Skew 訊號呼吸燈特效 ★ */
-    @keyframes skew-signal-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes skew-signal-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
     .skew-signal-active { display: inline-block; animation: skew-signal-pulse 1.5s infinite; }
 
     /* ★ 雷達區塊樣式 ★ */
@@ -166,82 +142,82 @@
     .radar-ticker { font-size: 11px; font-weight: 600; color: #ddd; display: flex; align-items: center; width: 100%; }
 
     /* === TX Radar V19.3 Phase 1 雙軌成本帶 === */
-    .radar-phase-panel { width:100%; border-top:1px dashed #3a3a3c; padding-top:6px; margin-top:2px; }
-    .radar-phase-header { display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:5px; }
+    .radar-phase-panel { width:100%; border-top:1px dashed #3a3a3c; padding-top:4px; margin-top:2px; }
+    .radar-phase-header { display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px; }
     .radar-phase-title { color:#64d2ff; font-size:10px; font-weight:800; letter-spacing:.3px; }
     .radar-version-badge { font-size:8px; color:#aaa; border:1px solid #444; background:rgba(255,255,255,.04); padding:1px 5px; border-radius:999px; white-space:nowrap; }
-    .radar-model-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; width:100%; margin-bottom:5px; }
-    .radar-model-item { background:rgba(255,255,255,.035); border:1px solid #303034; border-radius:5px; padding:4px 5px; min-width:0; }
+    .radar-model-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; width:100%; margin-bottom:4px; }
+    .radar-model-item { background:rgba(255,255,255,.035); border:1px solid #303034; border-radius:5px; padding:3px 4px; min-width:0; }
     .radar-model-label { color:#888; font-size:8px; line-height:1.2; }
-    .radar-model-value { color:#eee; font-size:10px; font-weight:800; margin-top:2px; overflow-wrap:anywhere; }
+    .radar-model-value { color:#eee; font-size:10px; font-weight:800; margin-top:1px; overflow-wrap:anywhere; }
     .radar-band-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; width:100%; }
-    .radar-band-card { background:rgba(255,255,255,.04); border:1px solid #333; border-radius:7px; padding:6px; min-width:0; }
+    .radar-band-card { background:rgba(255,255,255,.04); border:1px solid #333; border-radius:6px; padding:5px; min-width:0; }
     .radar-band-card.long { border-color:rgba(255,69,58,.38); background:linear-gradient(135deg,rgba(255,69,58,.09),rgba(255,255,255,.025)); }
     .radar-band-card.short { border-color:rgba(48,209,88,.38); background:linear-gradient(135deg,rgba(48,209,88,.09),rgba(255,255,255,.025)); }
-    .radar-band-title { display:flex; justify-content:space-between; gap:4px; align-items:center; font-size:10px; font-weight:800; margin-bottom:4px; }
-    .radar-band-status { font-size:8px; border-radius:4px; padding:1px 4px; white-space:nowrap; }
+    .radar-band-title { display:flex; justify-content:space-between; gap:4px; align-items:center; font-size:10px; font-weight:800; margin-bottom:3px; }
+    .radar-band-status { font-size:8px; border-radius:3px; padding:1px 4px; white-space:nowrap; }
     .radar-band-status.valid { color:#fff; background:rgba(10,132,255,.24); border:1px solid rgba(10,132,255,.65); }
     .radar-band-status.provisional { color:var(--yellow); background:rgba(255,214,10,.12); border:1px solid rgba(255,214,10,.45); }
     .radar-band-status.empty { color:#777; background:rgba(255,255,255,.03); border:1px solid #3a3a3c; }
-    .radar-band-main { font-size:12px; font-weight:900; line-height:1.25; white-space:nowrap; }
-    .radar-band-range { font-size:10px; color:#ddd; margin-top:2px; white-space:nowrap; }
-    .radar-band-meta { display:grid; grid-template-columns:1fr 1fr; gap:2px 5px; margin-top:5px; color:#999; font-size:8px; line-height:1.35; }
-    .radar-channel-row { grid-column:1/-1; border:1px solid #353539; background:rgba(0,0,0,.22); border-radius:6px; padding:5px 6px; font-size:9px; text-align:center; line-height:1.4; }
-    .radar-event-row { grid-column:1/-1; border-top:1px dashed #444; padding-top:5px; margin-top:1px; font-size:9px; line-height:1.45; color:#bbb; }
-    .radar-position-row { grid-column:1/-1; color:#64d2ff; font-size:9px; text-align:center; padding-top:2px; }
+    .radar-band-main { font-size:12px; font-weight:900; line-height:1.2; white-space:nowrap; }
+    .radar-band-range { font-size:10px; color:#ddd; margin-top:1px; white-space:nowrap; }
+    .radar-band-meta { display:grid; grid-template-columns:1fr 1fr; gap:2px 4px; margin-top:4px; color:#999; font-size:8px; line-height:1.3; }
+    .radar-channel-row { grid-column:1/-1; border:1px solid #353539; background:rgba(0,0,0,.22); border-radius:5px; padding:4px 5px; font-size:9px; text-align:center; line-height:1.3; }
+    .radar-event-row { grid-column:1/-1; border-top:1px dashed #444; padding-top:4px; margin-top:1px; font-size:8px; line-height:1.35; color:#bbb; }
+    .radar-position-row { grid-column:1/-1; color:#64d2ff; font-size:8px; text-align:center; padding-top:1px; }
 
     /* === OCF 2.1 面板 === */
-    .ocf-battle-panel { margin-top:6px; padding:8px 0 0; border-top:1px solid #3a3a3c; width:100%; }
-    .ocf-battle-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .ocf-battle-panel { margin-top:4px; padding:6px 0 0; border-top:1px solid #3a3a3c; width:100%; }
+    .ocf-battle-header { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:5px; }
     .ocf-battle-kicker { color:#64d2ff; font-size:8px; font-weight:800; }
-    .ocf-battle-title { color:#f2f2f7; font-size:12px; font-weight:800; margin-top:1px; }
-    .ocf-model-badge { flex:0 0 auto; color:#8e8e93; background:#252527; border:1px solid #444; border-radius:4px; padding:2px 5px; font-size:8px; font-weight:800; }
+    .ocf-battle-title { color:#f2f2f7; font-size:11px; font-weight:800; margin-top:1px; }
+    .ocf-model-badge { flex:0 0 auto; color:#8e8e93; background:#252527; border:1px solid #444; border-radius:3px; padding:2px 5px; font-size:8px; font-weight:800; }
     .ocf-model-badge.is-live { color:#64d2ff; border-color:rgba(100,210,255,.65); background:rgba(10,132,255,.12); }
     .ocf-model-badge.is-warn { color:var(--yellow); border-color:rgba(255,214,10,.55); background:rgba(255,214,10,.10); }
     .ocf-model-badge.is-stale { color:#aaa; border-color:#555; background:#29292b; }
-    .ocf-command-grid { display:grid; grid-template-columns:minmax(0,1.8fr) repeat(2,minmax(0,1fr)); gap:4px; }
-    .ocf-command-item { min-width:0; background:#242426; border:1px solid #353538; border-radius:6px; padding:5px 6px; }
+    .ocf-command-grid { display:grid; grid-template-columns:minmax(0,1.8fr) repeat(2,minmax(0,1fr)); gap:3px; }
+    .ocf-command-item { min-width:0; background:#242426; border:1px solid #353538; border-radius:5px; padding:4px 5px; }
     .ocf-command-label { display:block; color:#85858a; font-size:8px; line-height:1.2; }
-    .ocf-command-value { display:block; color:#f2f2f7; font-size:12px; font-weight:900; line-height:1.2; margin-top:2px; overflow-wrap:anywhere; }
-    .ocf-command-sub { display:block; color:#9a9aa0; font-size:8px; line-height:1.3; margin-top:2px; overflow-wrap:anywhere; }
+    .ocf-command-value { display:block; color:#f2f2f7; font-size:11px; font-weight:900; line-height:1.2; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-command-sub { display:block; color:#9a9aa0; font-size:8px; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
     .ocf-tone-bull { color:var(--red) !important; }
     .ocf-tone-bear { color:var(--green) !important; }
     .ocf-tone-wait { color:var(--yellow) !important; }
     .ocf-tone-neutral { color:#d1d1d6 !important; }
     .ocf-defense-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin-top:4px; }
-    .ocf-defense-card { min-width:0; border:1px solid #3a3a3c; border-radius:6px; padding:6px; background:#202022; }
+    .ocf-defense-card { min-width:0; border:1px solid #3a3a3c; border-radius:5px; padding:5px; background:#202022; }
     .ocf-defense-card.support { border-left:3px solid var(--red); }
     .ocf-defense-card.resistance { border-left:3px solid var(--green); }
     .ocf-defense-head { display:flex; align-items:center; justify-content:space-between; gap:4px; }
-    .ocf-defense-name { color:#d1d1d6; font-size:9px; font-weight:800; }
-    .ocf-defense-state { flex:0 0 auto; color:#8e8e93; background:#2c2c2e; border:1px solid #48484a; border-radius:3px; padding:1px 4px; font-size:8px; font-weight:900; white-space:nowrap; }
+    .ocf-defense-name { color:#d1d1d6; font-size:8px; font-weight:800; }
+    .ocf-defense-state { flex:0 0 auto; color:#8e8e93; background:#2c2c2e; border:1px solid #48484a; border-radius:3px; padding:1px 4px; font-size:7px; font-weight:900; white-space:nowrap; }
     .ocf-defense-state.state-active,
     .ocf-defense-state.state-confirming { color:var(--yellow); border-color:rgba(255,214,10,.6); background:rgba(255,214,10,.10); }
     .ocf-defense-card.support .ocf-defense-state.state-valid { color:var(--red); border-color:rgba(255,69,58,.65); background:rgba(255,69,58,.12); }
     .ocf-defense-card.resistance .ocf-defense-state.state-valid { color:var(--green); border-color:rgba(48,209,88,.65); background:rgba(48,209,88,.12); }
     .ocf-defense-state.state-failed { color:#ff9f0a; border-color:rgba(255,159,10,.65); background:rgba(255,159,10,.12); }
     .ocf-defense-state.state-stale { color:#aaa; border-color:#555; background:#29292b; }
-    .ocf-defense-zone { color:#fff; font-size:15px; font-weight:900; line-height:1.2; margin-top:4px; overflow-wrap:anywhere; }
-    .ocf-defense-detail { color:#9a9aa0; font-size:8px; line-height:1.3; min-height:10px; margin-top:2px; overflow-wrap:anywhere; }
-    .ocf-meter { height:3px; background:#111; overflow:hidden; margin-top:4px; }
+    .ocf-defense-zone { color:#fff; font-size:14px; font-weight:900; line-height:1.2; margin-top:3px; overflow-wrap:anywhere; }
+    .ocf-defense-detail { color:#9a9aa0; font-size:8px; line-height:1.25; min-height:10px; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-meter { height:2px; background:#111; overflow:hidden; margin-top:4px; }
     .ocf-meter-fill { display:block; width:0; height:100%; transition:width .35s ease; }
     .ocf-defense-card.support .ocf-meter-fill { background:var(--red); }
     .ocf-defense-card.resistance .ocf-meter-fill { background:var(--green); }
-    .ocf-defense-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:2px; margin-top:4px; }
+    .ocf-defense-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:2px; margin-top:3px; }
     .ocf-defense-stat { color:#85858a; font-size:7px; line-height:1.2; }
     .ocf-defense-stat strong { display:block; color:#e5e5ea; font-size:8px; margin-top:1px; }
-    .ocf-defense-action { color:#d1d1d6; border-top:1px dashed #3a3a3c; font-size:8px; font-weight:700; line-height:1.3; margin-top:4px; padding-top:4px; min-height:20px; }
-    .ocf-action-band { border:1px solid #3a3a3c; border-left:3px solid var(--yellow); border-radius:5px; background:#232325; margin-top:4px; padding:5px 6px; }
+    .ocf-defense-action { color:#d1d1d6; border-top:1px dashed #3a3a3c; font-size:8px; font-weight:700; line-height:1.25; margin-top:4px; padding-top:3px; min-height:18px; }
+    .ocf-action-band { border:1px solid #3a3a3c; border-left:3px solid var(--yellow); border-radius:5px; background:#232325; margin-top:4px; padding:4px 6px; }
     .ocf-action-band.action-bull { border-left-color:var(--red); }
     .ocf-action-band.action-bear { border-left-color:var(--green); }
     .ocf-action-band.action-wait { border-left-color:var(--yellow); }
-    .ocf-action-label { color:#85858a; font-size:8px; font-weight:800; }
-    .ocf-action-text { color:var(--yellow); font-size:11px; font-weight:900; line-height:1.3; margin-top:1px; overflow-wrap:anywhere; }
-    .ocf-action-context { color:#9a9aa0; font-size:8px; line-height:1.3; margin-top:1px; overflow-wrap:anywhere; }
-    .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:5px; padding-top:4px; }
-    .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:4px; }
+    .ocf-action-label { color:#85858a; font-size:7px; font-weight:800; }
+    .ocf-action-text { color:var(--yellow); font-size:11px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-action-context { color:#9a9aa0; font-size:8px; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:4px; }
+    .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; }
     .ocf-prior-title { color:#8e8e93; font-size:8px; font-weight:800; }
-    .ocf-prior-status { color:#d4af37; border:1px solid rgba(212,175,55,.45); background:rgba(212,175,55,.08); border-radius:3px; padding:1px 4px; font-size:8px; font-weight:900; }
+    .ocf-prior-status { color:#d4af37; border:1px solid rgba(212,175,55,.45); background:rgba(212,175,55,.08); border-radius:3px; padding:1px 4px; font-size:7px; font-weight:900; }
     .ocf-prior-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; }
     .ocf-prior-item { min-width:0; }
     .ocf-prior-label { color:#777; font-size:7px; }
@@ -253,13 +229,13 @@
     .v2-dashboard-nav {
       position: sticky; top: 0; z-index: 950; display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px;
-      padding: 5px 0 6px; background: rgba(0,0,0,.92);
+      padding: 4px 0 5px; background: rgba(0,0,0,.92);
       backdrop-filter: blur(12px); border-bottom: 1px solid #2c2c2e; width: 100%;
     }
     .v2-tab-btn {
       appearance: none; border: 1px solid #3a3a3c; background: #1c1c1e;
-      color: #8e8e93; border-radius: 6px; min-height: 30px; padding: 4px 6px;
-      font-size: 11px; font-weight: 800; cursor: pointer;
+      color: #8e8e93; border-radius: 6px; min-height: 28px; padding: 3px 6px;
+      font-size: 10px; font-weight: 800; cursor: pointer;
     }
     .v2-tab-btn.active {
       color: #fff; border-color: rgba(10,132,255,.75);
@@ -268,24 +244,24 @@
     }
     .v2-page { display: none; min-width: 0; width: 100%; }
     .v2-page.active { display: block; }
-    .v2-live-stack { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+    .v2-live-stack { display: flex; flex-direction: column; gap: 4px; width: 100%; }
     .v2-section-card {
       min-width: 0; background: var(--card); border: 1px solid #333;
-      border-radius: 12px; padding: 6px 8px; overflow: hidden; width: 100%;
+      border-radius: 10px; padding: 5px 7px; overflow: hidden; width: 100%;
     }
     .v2-section-card > .v2-card-title {
-      display: flex; align-items: center; justify-content: space-between; gap: 6px;
-      color: #d1d1d6; font-size: 10px; font-weight: 800;
-      margin: 0 2px 4px; letter-spacing: .2px;
+      display: flex; align-items: center; justify-content: space-between; gap: 4px;
+      color: #d1d1d6; font-size: 9px; font-weight: 800;
+      margin: 0 2px 3px; letter-spacing: .2px;
     }
     .v2-section-card > .v2-card-title small {
       color: #777; font-size: 8px; font-weight: 600;
     }
-    .v2-market-slot > .box { border-radius: 12px; }
+    .v2-market-slot > .box { border-radius: 10px; }
     
     /* ★ 核心三卡片列 (C1~C4, Force, Sniper) 壓低高度與滿版整合 ★ */
     .v2-core-grid {
-      display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px;
+      display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 5px;
       align-items: stretch; width: 100%;
     }
     .v2-c1c4-card { grid-column: span 4; display: flex; flex-direction: column; }
@@ -294,36 +270,36 @@
     
     .v2-intel-grid {
       display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 6px; align-items: start; width: 100%;
+      gap: 5px; align-items: stretch; width: 100%;
     }
     .v2-intel-grid > * { min-width: 0; }
     .v2-radar-card .box, .v2-force-card .battle-box,
     .v2-sniper-card .box, .v2-ocf-card .ocf-battle-panel {
       margin: 0 !important; border-radius: 8px;
     }
-    .v2-radar-card .box { padding: 6px 8px !important; }
+    .v2-radar-card .box { padding: 5px 7px !important; }
     .v2-ocf-card .ocf-battle-panel {
       border-top: 0; padding-top: 0; margin-top: 0;
     }
     .v2-c1c4-card .chip-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; flex: 1;
+      grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; flex: 1;
     }
-    .v2-c1c4-card .chip-card { min-height: 52px; padding: 4px; }
-    .v2-c1c4-card .chip-card .big-val { font-size: 19px !important; margin: 1px auto !important; }
-    .v2-c1c4-card .chip-card .chip-tag { font-size: 9px !important; padding: 1px 4px !important; }
+    .v2-c1c4-card .chip-card { min-height: 48px; padding: 3px; }
+    .v2-c1c4-card .chip-card .big-val { font-size: 18px !important; margin: 1px auto !important; }
+    .v2-c1c4-card .chip-card .chip-tag { font-size: 8px !important; padding: 1px 3px !important; }
     
     .v2-force-card .battle-box { height: 100%; box-sizing: border-box; justify-content: space-between; }
-    .v2-force-card .p9-container { min-height: 50px; padding: 2px 4px; }
-    .v2-force-card #p9-val, .v2-force-card #r7-val { font-size: 19px !important; }
+    .v2-force-card .p9-container { min-height: 46px; padding: 2px 4px; }
+    .v2-force-card #p9-val, .v2-force-card #r7-val { font-size: 18px !important; }
     
-    /* ★ 修復「主力實彈狙擊重鎮」卡片內部佈局與多空比例棒溢出問題 ★ */
+    /* ★ 修復「主力實彈狙擊重鎮」卡片內部佈局 ★ */
     .v2-sniper-card .box { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
-    .v2-target-cell { flex-direction: column !important; gap: 2px; min-width: 0; padding: 2px 0 !important; }
-    .v2-target-force-live { font-size: 9px; color: #aaa; font-weight: 700; }
+    .v2-target-cell { flex-direction: column !important; gap: 0px; min-width: 0; padding: 2px 0 !important; }
+    .v2-target-force-live { display: none !important; } /* ★ 隱藏重複顯示的「力道」行 ★ */
     
-    /* ★ 精準定義內縮比例棒，防止掉出底界 ★ */
+    /* ★ 定義比例棒包覆 ★ */
     .v2-target-balance {
-      margin-top: 4px; height: 6px; border-radius: 999px; overflow: hidden;
+      margin-top: 3px; height: 5px; border-radius: 999px; overflow: hidden;
       display: flex; background: #111; border: 1px solid #333; width: 100%;
     }
     .v2-target-balance-bull { background: var(--red); width: 50%; transition: width .35s ease; }
@@ -338,26 +314,26 @@
     }
     .v2-summary-item {
       min-width: 0; background: rgba(255,255,255,.035); border: 1px solid #303034;
-      border-radius: 6px; padding: 4px 6px;
+      border-radius: 5px; padding: 3px 5px;
     }
     .v2-summary-label { color: #777; font-size: 8px; font-weight: 800; }
     .v2-summary-value {
-      color: #e5e5ea; font-size: 9px; font-weight: 800; line-height: 1.25;
+      color: #e5e5ea; font-size: 9px; font-weight: 800; line-height: 1.2;
       margin-top: 1px; overflow-wrap: anywhere;
     }
     .v2-history-grid {
-      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px;
     }
     .v2-history-item {
       min-width: 0; background: var(--card); border: 1px solid #333;
-      border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 4px;
+      border-radius: 10px; padding: 5px; display: flex; flex-direction: column; gap: 4px;
     }
     .v2-history-item > .section-title { margin: 0; min-height: 16px; }
     .v2-history-item > .split-chart-box { height: 210px !important; margin: 0 !important; }
-    .v2-detail-stack { display: flex; flex-direction: column; gap: 5px; }
+    .v2-detail-stack { display: flex; flex-direction: column; gap: 4px; }
     .v2-page-note {
-      color: #8e8e93; font-size: 9px; line-height: 1.35; padding: 5px 8px;
-      border: 1px dashed #3a3a3c; border-radius: 6px; margin-bottom: 5px;
+      color: #8e8e93; font-size: 8px; line-height: 1.3; padding: 4px 6px;
+      border: 1px dashed #3a3a3c; border-radius: 5px; margin-bottom: 4px;
       background: rgba(255,255,255,.025);
     }
     #v2-live-page .top-section { display: contents; }
@@ -371,16 +347,16 @@
     @media (max-width: 560px) {
       body { padding: 4px; }
       .dashboard-container { gap: 4px; }
-      .v2-dashboard-nav { padding-top: 3px; }
-      .v2-tab-btn { min-height: 30px; font-size: 10px; padding: 4px 2px; }
-      .v2-core-grid { grid-template-columns: 1fr; gap: 5px; }
+      .v2-dashboard-nav { padding-top: 2px; }
+      .v2-tab-btn { min-height: 28px; font-size: 10px; padding: 3px 2px; }
+      .v2-core-grid { grid-template-columns: 1fr; gap: 4px; }
       .v2-c1c4-card, .v2-force-card, .v2-sniper-card { grid-column: 1; }
-      .v2-section-card { padding: 5px; border-radius: 10px; }
+      .v2-section-card { padding: 4px; border-radius: 8px; }
       .v2-summary-grid { grid-template-columns: 1fr; }
       .v2-history-grid { grid-template-columns: 1fr; }
       .v2-history-grid > .split-chart-box { height: 180px !important; }
-      .v2-c1c4-card .chip-card { min-height: 50px; }
-      .v2-c1c4-card .chip-card .big-val { font-size: 18px !important; }
+      .v2-c1c4-card .chip-card { min-height: 46px; }
+      .v2-c1c4-card .chip-card .big-val { font-size: 17px !important; }
       .ocf-command-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .ocf-command-item.direction { grid-column: 1 / -1; }
     }
@@ -413,7 +389,7 @@
 
   <div class="dashboard-container" id="dashboard">
     <div class="top-section">
-      <div class="box" style="padding:8px 12px; position:relative;">
+      <div class="box" style="padding:6px 10px; position:relative;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
             <div style="flex:1; min-width:0;">
               <div class="box-header" style="margin-bottom:0; display:flex; flex-wrap:nowrap; align-items:flex-end; line-height:1; white-space:nowrap;">
@@ -421,33 +397,33 @@
                 <span style="font-size:9px; font-weight:normal; color:#888; margin-left:6px;">次月: <span id="price-next" style="color:#ccc; font-weight:bold;">--</span></span>
               </div>
               
-              <div id="price" class="big-val" style="font-size:30px; margin-top:3px; margin-bottom:3px; line-height:1; white-space:nowrap;">---</div>
+              <div id="price" class="big-val" style="font-size:28px; margin-top:2px; margin-bottom:2px; line-height:1; white-space:nowrap;">---</div>
               
               <div style="display:flex; flex-wrap:nowrap; gap:8px; margin-top:2px; font-size:11px; color:#aaa; font-weight:500; line-height:1; white-space:nowrap;">
                 <div>🌞 <span id="vwap-day" style="color:#fff; font-weight:600;">--</span></div>
                 <div>🌙 <span id="vwap-night" style="color:#fff; font-weight:600;">--</span></div>
               </div>
               
-              <div id="update-time" style="color:#fff; font-size:9px; line-height:1; margin-top:3px; white-space:nowrap;">--:--:--</div>
+              <div id="update-time" style="color:#fff; font-size:9px; line-height:1; margin-top:2px; white-space:nowrap;">--:--:--</div>
             </div>
 
-            <div class="req-level-4-flex" style="flex-direction:column; align-items:flex-end; gap:4px; background:linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding:6px 10px; border-radius:10px; border: 1px solid rgba(212,175,55,0.4); box-shadow: inset 0 0 10px rgba(212,175,55,0.1); min-width: 120px; margin-left: 10px; margin-top: 4px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom: 1px dashed rgba(212,175,55,0.3); padding-bottom:3px;">
+            <div class="req-level-4-flex" style="flex-direction:column; align-items:flex-end; gap:3px; background:linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding:5px 8px; border-radius:8px; border: 1px solid rgba(212,175,55,0.4); box-shadow: inset 0 0 8px rgba(212,175,55,0.1); min-width: 120px; margin-left: 10px; margin-top: 2px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom: 1px dashed rgba(212,175,55,0.3); padding-bottom:2px;">
                     <span style="font-size:10px; color:#d4af37; font-weight:800; letter-spacing:0.5px;">⚖️ 中性值</span>
-                    <span id="oi-dn-price" style="font-size:18px; font-weight:900; color:#ffd700; text-shadow: 0 0 6px rgba(212,175,55,0.6); line-height:1;">--</span>
+                    <span id="oi-dn-price" style="font-size:17px; font-weight:900; color:#ffd700; text-shadow: 0 0 6px rgba(212,175,55,0.6); line-height:1;">--</span>
                 </div>
                 <div id="oi-iv-val" style="width:100%; box-sizing:border-box;">
-                    <div style="text-align:center; color:#888; font-size:10px; margin-top:2px;">IV 數據等待中...</div>
+                    <div style="text-align:center; color:#888; font-size:9px; margin-top:1px;">IV 數據等待中...</div>
                 </div>
             </div>
         </div>
 
-        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:#aaa; font-weight:500; line-height:1; align-items:center;">
-            <div>跨盤均價: <span id="vwap-cross" style="color:#fff; font-weight:800; font-size:14px; text-shadow:0 0 4px rgba(255,255,255,0.3);">--</span></div>
+        <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:10px; color:#aaa; font-weight:500; line-height:1; align-items:center;">
+            <div>跨盤均價: <span id="vwap-cross" style="color:#fff; font-weight:800; font-size:13px; text-shadow:0 0 4px rgba(255,255,255,0.3);">--</span></div>
         </div>
-        <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:11px; color:#aaa; font-weight:500; line-height:1; background:rgba(255,255,255,0.05); padding:5px 6px; border-radius:6px;">
-            <div>期現差: <span id="spread-spot" style="color:#fff; font-weight:800; font-size:13px;">--</span></div>
-            <div>跨月差: <span id="spread-next" style="color:#fff; font-weight:800; font-size:13px;">--</span></div>
+        <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:10px; color:#aaa; font-weight:500; line-height:1; background:rgba(255,255,255,0.05); padding:4px 6px; border-radius:5px;">
+            <div>期現差: <span id="spread-spot" style="color:#fff; font-weight:800; font-size:12px;">--</span></div>
+            <div>跨月差: <span id="spread-next" style="color:#fff; font-weight:800; font-size:12px;">--</span></div>
         </div>
 
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 2.1 固定戰場與盤中防守">
@@ -543,13 +519,13 @@
             </div>
 
         </section>
-        <div class="range-box upgrade-prompt lock-lvl-4" style="margin-top:8px; display:flex; height:50px; border:1px solid rgba(191,90,242,0.4);">
+        <div class="range-box upgrade-prompt lock-lvl-4" style="margin-top:6px; display:flex; height:45px; border:1px solid rgba(191,90,242,0.4);">
             <div>🔒 戰場固定藍圖</div>
             <div class="upgrade-btn">需要 Level 4</div>
         </div>
       </div>
 
-      <div class="box req-level-4-flex" style="padding:6px 10px; flex-direction:row; align-items:center; gap:8px; border: 1px solid rgba(10, 132, 255, 0.4); box-shadow: inset 0 0 10px rgba(10, 132, 255, 0.1); background: linear-gradient(90deg, rgba(10,132,255,0.05) 0%, transparent 100%);">
+      <div class="box req-level-4-flex" style="padding:5px 8px; flex-direction:row; align-items:center; gap:6px; border: 1px solid rgba(10, 132, 255, 0.4); box-shadow: inset 0 0 10px rgba(10, 132, 255, 0.1); background: linear-gradient(90deg, rgba(10,132,255,0.05) 0%, transparent 100%);">
           <div class="radar-static-container">
               <div id="radar-ticker" class="radar-ticker">
                   <span style="color:#888;">連線中，等待 TX_Radar 實時數據... ⏳</span>
@@ -563,13 +539,13 @@
               <div class="upgrade-btn" style="font-size:8px; padding:2px 6px;">需 Level 4 解鎖</div>
           </div>
       </div>
-      <div class="box req-level-2-flex" style="flex-direction:row; justify-content:space-between; align-items:center; padding:8px 10px;" id="pwr-box">
+      <div class="box req-level-2-flex" style="flex-direction:row; justify-content:space-between; align-items:center; padding:6px 8px;" id="pwr-box">
         <div style="display:flex; flex-direction:column; justify-content:center;">
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
                 <div class="box-header" style="margin-bottom:0; font-size:11px; line-height:1;">🚀 P6 動能</div>
                 <div id="pwr-tag" class="chip-tag" style="font-size:9px; padding:1px 5px;">Wait</div>
             </div>
-            <div id="pwr-val" class="power-val" style="text-align:left; font-size:28px; line-height:1;">0%</div>
+            <div id="pwr-val" class="power-val" style="text-align:left; font-size:26px; line-height:1;">0%</div>
         </div>
         
         <div class="req-level-4-flex" style="flex-direction:column; align-items:flex-end; gap:3px; border-left: 1px dashed #444; padding-left: 10px;">
@@ -597,8 +573,8 @@
         </div>
       </div>
       
-      <div class="box upgrade-prompt lock-lvl-2" id="pwr-box-locked" style="padding:10px; flex-direction:row; gap:8px;">
-          <div style="font-size:18px;">🚀</div>
+      <div class="box upgrade-prompt lock-lvl-2" id="pwr-box-locked" style="padding:8px; flex-direction:row; gap:8px;">
+          <div style="font-size:16px;">🚀</div>
           <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
               <div style="font-size:10px; font-weight:bold; color:#aaa;">P6 / P9 動能分析</div>
               <div class="upgrade-btn" style="font-size:8px; padding:2px 6px;">解鎖 Level 2</div>
@@ -664,35 +640,35 @@
         </div>
         
         <div class="req-level-4-block">
-            <div style="display:flex; justify-content:space-around; align-items:center; background:rgba(0,0,0,0.3); padding:6px; border-radius:6px; margin:2px 0; border:1px solid #444;">
+            <div style="display:flex; justify-content:space-around; align-items:center; background:rgba(0,0,0,0.3); padding:5px; border-radius:5px; margin:2px 0; border:1px solid #444;">
                 <div style="text-align:center; flex:1; border-right:1px solid #333;">
-                    <div style="font-size:9px; color:#aaa; margin-bottom:2px;">盤中動態支撐 (AL2)</div>
-                    <div id="dyn-omi-support" style="font-size:16px; font-weight:bold; color:var(--red);">--</div>
+                    <div style="font-size:9px; color:#aaa; margin-bottom:1px;">盤中動態支撐 (AL2)</div>
+                    <div id="dyn-omi-support" style="font-size:15px; font-weight:bold; color:var(--red);">--</div>
                 </div>
                 <div style="text-align:center; flex:1;">
-                    <div style="font-size:9px; color:#aaa; margin-bottom:2px;">盤中動態壓力 (AM2)</div>
-                    <div id="dyn-omi-pressure" style="font-size:16px; font-weight:bold; color:var(--green);">--</div>
+                    <div style="font-size:9px; color:#aaa; margin-bottom:1px;">盤中動態壓力 (AM2)</div>
+                    <div id="dyn-omi-pressure" style="font-size:15px; font-weight:bold; color:var(--green);">--</div>
                 </div>
             </div>
         </div>
         <div class="upgrade-prompt lock-lvl-4" style="margin:2px 0; padding:4px;">🔒 莊家防線與盤中動態藍圖 (Level 4)</div>
 
         <div style="display:flex; gap:4px; margin-top:2px;" class="req-level-2-flex">
-            <div class="p9-container" style="flex:1; flex-direction:column; padding:3px 2px; margin-top:0;">
+            <div class="p9-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0;">
                 <div class="p9-label" style="font-size:9px;">🔥 實單能量 (P9)</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-top:1px;">
+                <div style="display:flex; align-items:center; gap:3px; margin-top:1px;">
                     <div id="p9-val" class="p9-val" style="font-size:15px;">--</div>
                     <div id="p9-slope-label" class="slope-label" style="font-size:8px; padding:1px 3px;">--</div>
                 </div>
-                <div id="p9-thresholds-display" style="font-size:8px; color:#888; margin-top:1px; text-align:center; line-height:1; letter-spacing:0.3px;">
+                <div id="p9-thresholds-display" style="font-size:7px; color:#888; margin-top:1px; text-align:center; line-height:1; letter-spacing:0.3px;">
                     攻: <span id="p9-th-at">--</span> / 竭: <span id="p9-th-ex">--</span>
                 </div>
             </div>
-            <div class="p9-container" style="flex:1; flex-direction:column; padding:3px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
+            <div class="p9-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
                 <div id="r7-val" class="p9-val" style="font-size:15px; margin-top:1px;">--</div>
                 <div id="r7-delta-display" style="font-size:8px; color:#888; margin-top:1px;">(乖離: --)</div>
-                <div id="r7-thresholds-display" style="font-size:8px; color:#888; margin-top:1px; text-align:center; line-height:1; letter-spacing:0.3px;">
+                <div id="r7-thresholds-display" style="font-size:7px; color:#888; margin-top:1px; text-align:center; line-height:1; letter-spacing:0.3px;">
                     門檻: <span id="r7-th-val">--</span>
                 </div>
             </div>
@@ -1856,43 +1832,43 @@
               if (trueCallIV > 0 || truePutIV > 0) {
                   dualSkewHtml = `
                     <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                        <span style="color:rgba(255,255,255,0.85); font-size:12px; font-weight:600; letter-spacing:0.5px;">${obLabel}: ${skewStr}%</span>
-                        <span style="color:#ffd700; font-size:13px; font-weight:900; text-shadow: 0 0 8px rgba(212,175,55,0.9); border-bottom: 2px solid #ffd700; padding-bottom:1px; letter-spacing:0.5px;">真: ${trueSkewStr}%</span>
+                        <span style="color:rgba(255,255,255,0.85); font-size:11px; font-weight:600; letter-spacing:0.5px;">${obLabel}: ${skewStr}%</span>
+                        <span style="color:#ffd700; font-size:12px; font-weight:900; text-shadow: 0 0 6px rgba(212,175,55,0.8); border-bottom: 2px solid #ffd700; padding-bottom:1px; letter-spacing:0.5px;">真: ${trueSkewStr}%</span>
                     </div>
                   `;
               }
 
               if (skew < -SKEW_THRESH) {
                   callColor = "var(--red)"; 
-                  skewTag = `<div style="background:linear-gradient(90deg, rgba(255,69,58,0.8), var(--red)); padding:6px 8px; border-radius:6px; box-shadow:0 0 10px rgba(255,69,58,0.5); animation:pulse-red 1.5s infinite; margin: 4px 0; display:flex; align-items:center;">
-                      <span class="${latestSkewSignalIcon ? 'skew-signal-active' : ''}" style="margin-right:6px;">${latestSkewSignalIcon}</span>
+                  skewTag = `<div style="background:linear-gradient(90deg, rgba(255,69,58,0.8), var(--red)); padding:4px 6px; border-radius:5px; box-shadow:0 0 8px rgba(255,69,58,0.5); animation:pulse-red 1.5s infinite; margin: 3px 0; display:flex; align-items:center;">
+                      <span class="${latestSkewSignalIcon ? 'skew-signal-active' : ''}" style="margin-right:4px;">${latestSkewSignalIcon}</span>
                       <div style="flex:1;">${dualSkewHtml}</div>
                   </div>`;
               } else if (skew > SKEW_THRESH) {
                   putColor = "var(--green)"; 
-                  skewTag = `<div style="background:linear-gradient(90deg, rgba(48,209,88,0.8), var(--green)); padding:6px 8px; border-radius:6px; box-shadow:0 0 10px rgba(48,209,88,0.5); margin: 4px 0; display:flex; align-items:center;">
-                      <span class="${latestSkewSignalIcon ? 'skew-signal-active' : ''}" style="margin-right:6px;">${latestSkewSignalIcon}</span>
+                  skewTag = `<div style="background:linear-gradient(90deg, rgba(48,209,88,0.8), var(--green)); padding:4px 6px; border-radius:5px; box-shadow:0 0 8px rgba(48,209,88,0.5); margin: 3px 0; display:flex; align-items:center;">
+                      <span class="${latestSkewSignalIcon ? 'skew-signal-active' : ''}" style="margin-right:4px;">${latestSkewSignalIcon}</span>
                       <div style="flex:1;">${dualSkewHtml}</div>
                   </div>`;
               } else {
-                  skewTag = `<div style="background:rgba(255,255,255,0.08); border-radius:6px; margin: 4px 0; padding:6px 8px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center;">
-                      <span class="${latestSkewSignalIcon ? 'skew-signal-active' : ''}" style="margin-right:6px;">${latestSkewSignalIcon}</span>
+                  skewTag = `<div style="background:rgba(255,255,255,0.08); border-radius:5px; margin: 3px 0; padding:4px 6px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center;">
+                      <span class="${latestSkewSignalIcon ? 'skew-signal-active' : ''}" style="margin-right:4px;">${latestSkewSignalIcon}</span>
                       <div style="flex:1;">${dualSkewHtml}</div>
                   </div>`;
               }
               
               ivEl.style.display = "flex";
               ivEl.style.flexDirection = "column";
-              ivEl.style.gap = "4px"; 
+              ivEl.style.gap = "3px"; 
               ivEl.style.padding = "2px 0 0 0";
               ivEl.style.background = "transparent"; 
               ivEl.style.border = "none"; 
               
               let trueIvHtml = "";
               if (trueCallIV > 0 || truePutIV > 0) {
-                  trueIvHtml = `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.4); padding:4px 8px; border-radius:6px; border:1px solid rgba(212,175,55,0.3);">
-                                  <span style="color:#ffd700; font-size:10px; font-weight:bold;">True IV</span>
-                                  <div style="display:flex; gap:12px; font-size:11px; color:#fff;">
+                  trueIvHtml = `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.4); padding:3px 6px; border-radius:5px; border:1px solid rgba(212,175,55,0.3);">
+                                  <span style="color:#ffd700; font-size:9px; font-weight:bold;">True IV</span>
+                                  <div style="display:flex; gap:10px; font-size:10px; color:#fff;">
                                       <span style="white-space:nowrap; color:#aaa;">C: <span style="font-weight:bold; color:#fff;">${trueCallIV.toFixed(1)}%</span></span>
                                       <span style="white-space:nowrap; color:#aaa;">P: <span style="font-weight:bold; color:#fff;">${truePutIV.toFixed(1)}%</span></span>
                                   </div>
@@ -1900,9 +1876,9 @@
               }
               
               ivEl.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:baseline; padding:0 4px;">
-                    <span style="color:#aaa; font-size:11px;">C: <span style="color:${callColor}; font-weight:900; font-size:16px;">${callIV.toFixed(1)}%</span></span>
-                    <span style="color:#aaa; font-size:11px;">P: <span style="color:${putColor}; font-weight:900; font-size:16px;">${putIV.toFixed(1)}%</span></span>
+                <div style="display:flex; justify-content:space-between; align-items:baseline; padding:0 2px;">
+                    <span style="color:#aaa; font-size:10px;">C: <span style="color:${callColor}; font-weight:900; font-size:15px;">${callIV.toFixed(1)}%</span></span>
+                    <span style="color:#aaa; font-size:10px;">P: <span style="color:${putColor}; font-weight:900; font-size:15px;">${putIV.toFixed(1)}%</span></span>
                 </div>
                 ${skewTag}
                 ${trueIvHtml}
@@ -2061,8 +2037,8 @@
 
           const bullForceLive = document.getElementById('bull-target-force-live');
           const bearForceLive = document.getElementById('bear-target-force-live');
-          if (bullForceLive) bullForceLive.textContent = '力道 ' + (bullForce > 0 ? '+' : '') + bullForce.toLocaleString('en-US');
-          if (bearForceLive) bearForceLive.textContent = '力道 ' + (bearForce > 0 ? '+' : '') + bearForce.toLocaleString('en-US');
+          if (bullForceLive) bullForceLive.textContent = (bullForce > 0 ? '+' : '') + bullForce.toLocaleString('en-US');
+          if (bearForceLive) bearForceLive.textContent = (bearForce > 0 ? '+' : '') + bearForce.toLocaleString('en-US');
           const totalTargetForce = Math.abs(bullForce) + Math.abs(bearForce);
           const bullPct = totalTargetForce > 0 ? Math.round(Math.abs(bullForce) / totalTargetForce * 100) : 50;
           const bearPct = 100 - bullPct;
@@ -2410,19 +2386,9 @@
     const bear = document.getElementById('bear-target-val');
     if (bull && bull.parentElement) {
       bull.parentElement.classList.add('v2-target-cell');
-      if (!document.getElementById('bull-target-force-live')) {
-        const s = el('span', 'v2-target-force-live', 'bull-target-force-live');
-        s.textContent = '力道 --';
-        bull.insertAdjacentElement('afterend', s);
-      }
     }
     if (bear && bear.parentElement) {
       bear.parentElement.classList.add('v2-target-cell');
-      if (!document.getElementById('bear-target-force-live')) {
-        const s = el('span', 'v2-target-force-live', 'bear-target-force-live');
-        s.textContent = '力道 --';
-        bear.insertAdjacentElement('afterend', s);
-      }
     }
 
     const net = document.getElementById('target-net-force');
@@ -2543,12 +2509,6 @@
       marketSlot.appendChild(marketBox);
       liveStack.appendChild(marketSlot);
     }
-
-    const statusCard = card('盤中指揮摘要', '所有重要即時資訊集中於本頁', 'v2-status-card');
-    const statusValue = el('div', 'v2-summary-value', 'v2-status-summary');
-    statusValue.textContent = '等待即時資料';
-    statusCard.appendChild(statusValue);
-    liveStack.appendChild(statusCard);
 
     const coreGrid = el('div', 'v2-core-grid');
     liveStack.appendChild(coreGrid);
