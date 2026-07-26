@@ -660,6 +660,190 @@
   }
 }
 
+
+
+/* =============================================================
+   Dashboard V7: balanced desktop layout and improved readability
+   Presentation-only overrides; no data, Firebase or calculation changes.
+   ============================================================= */
+
+/* TX market: 30% price / 42% VWAP+spread / 28% neutral-IV */
+#v2-live-page .v2-market-compact-grid {
+  grid-template-columns:
+    minmax(235px, 0.90fr)
+    minmax(420px, 1.26fr)
+    minmax(250px, 0.84fr) !important;
+  gap: 6px !important;
+}
+
+/* Merge VWAP and spread information into one visual card. */
+#v2-live-page .v2-market-metrics {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto auto;
+  gap: 3px !important;
+  padding: 5px 7px !important;
+  border-radius: 8px;
+  border: 1px solid #303034;
+  background: rgba(255,255,255,.04);
+  align-content: center;
+}
+
+#v2-live-page .v2-market-metrics > div {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 2px 3px !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+}
+
+#v2-live-page .v2-market-vwap-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px !important;
+  justify-items: center;
+  align-items: center;
+  border-bottom: 1px dashed #3a3a3c !important;
+  padding-bottom: 5px !important;
+}
+
+#v2-live-page .v2-market-vwap-row > div {
+  min-width: 0;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+}
+
+#v2-live-page .v2-market-spread-row {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px !important;
+  align-items: center;
+}
+
+#v2-live-page .v2-market-spread-row > div {
+  text-align: center;
+}
+
+#v2-live-page .v2-market-vwap-row,
+#v2-live-page .v2-market-vwap-row span,
+#v2-live-page .v2-market-spread-row,
+#v2-live-page .v2-market-spread-row span {
+  font-size: 10px !important;
+}
+
+#v2-live-page .v2-market-vwap-row #vwap-day,
+#v2-live-page .v2-market-vwap-row #vwap-night,
+#v2-live-page .v2-market-vwap-row #vwap-cross,
+#v2-live-page .v2-market-spread-row #spread-spot,
+#v2-live-page .v2-market-spread-row #spread-next {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+/* Core row: C1-C4 4/12, P9-R7 5/12, sniper 3/12. */
+#v2-live-page .v2-c1c4-card { grid-column: span 4 !important; }
+#v2-live-page .v2-force-card { grid-column: span 5 !important; }
+#v2-live-page .v2-sniper-card { grid-column: span 3 !important; }
+
+/* Radar needs more horizontal room than OCF. */
+#v2-live-page .v2-intel-grid {
+  grid-template-columns:
+    minmax(0, 1.16fr)
+    minmax(0, 0.84fr) !important;
+}
+
+/* Important events/actions should never be rendered at 7-8px on desktop. */
+#v2-live-page .radar-event-row,
+#v2-live-page .radar-position-row,
+#v2-live-page .radar-band-meta,
+#v2-live-page .ocf-defense-detail,
+#v2-live-page .ocf-defense-action,
+#v2-live-page .ocf-action-context,
+#v2-live-page .ocf-command-sub,
+#v2-live-page #p9-thresholds-display,
+#v2-live-page #r7-thresholds-display,
+#v2-live-page #r7-delta-display {
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+#v2-live-page .ocf-defense-stat,
+#v2-live-page .ocf-prior-label,
+#v2-live-page .radar-model-label,
+#v2-live-page .radar-band-status {
+  font-size: 9px !important;
+}
+
+#v2-live-page .ocf-defense-stat strong,
+#v2-live-page .ocf-prior-value,
+#v2-live-page .radar-model-value {
+  font-size: 10px !important;
+}
+
+/* Keep increased fonts from increasing the first-page height too much. */
+#v2-live-page .radar-event-row {
+  padding-top: 3px !important;
+}
+
+#v2-live-page .ocf-defense-action {
+  margin-top: 3px !important;
+  padding-top: 3px !important;
+  min-height: 18px !important;
+}
+
+#v2-live-page .v2-force-card .p9-container {
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+}
+
+/* Laptop / narrower desktop: preserve readable two-row layout. */
+@media (max-width: 1180px) {
+  #v2-live-page .v2-market-compact-grid {
+    grid-template-columns: minmax(230px, 1fr) minmax(190px, .62fr) !important;
+    grid-template-areas:
+      "price neutral"
+      "metrics metrics";
+  }
+
+  #v2-live-page .v2-market-price { grid-area: price; }
+  #v2-live-page .v2-market-metrics { grid-area: metrics; }
+  #v2-live-page .v2-market-neutral { grid-area: neutral; }
+
+  #v2-live-page .v2-c1c4-card,
+  #v2-live-page .v2-force-card {
+    grid-column: span 6 !important;
+  }
+
+  #v2-live-page .v2-sniper-card {
+    grid-column: 1 / -1 !important;
+  }
+
+  #v2-live-page .v2-intel-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Mobile: keep the existing single-column behavior. */
+@media (max-width: 620px) {
+  #v2-live-page .v2-market-vwap-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #v2-live-page .v2-market-vwap-row > div:last-child {
+    grid-column: 1 / -1;
+    border-top: 1px dashed #333;
+    padding-top: 4px;
+  }
+
+  #v2-live-page .v2-c1c4-card,
+  #v2-live-page .v2-force-card,
+  #v2-live-page .v2-sniper-card {
+    grid-column: 1 !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2809,7 +2993,7 @@
       marketSlot.appendChild(marketBox);
       liveStack.appendChild(marketSlot);
 
-      /* V6: compact the TX market card without changing any existing IDs. */
+      /* V7: compact TX market card with one combined VWAP/spread panel. */
       marketBox.classList.add('v2-market-compact');
       const marketRows = Array.from(marketBox.children);
       const marketTopRow = marketRows[0] || null;
@@ -2824,10 +3008,29 @@
 
         if (marketPriceBlock) {
           marketPriceBlock.classList.add('v2-market-price');
+
+          /* Move the existing day/night VWAP row into the middle metrics card. */
+          const dayVwap = marketPriceBlock.querySelector('#vwap-day');
+          const vwapRow = dayVwap && dayVwap.parentElement
+            ? dayVwap.parentElement.parentElement
+            : null;
+
+          if (vwapRow) {
+            vwapRow.classList.add('v2-market-vwap-row');
+
+            /* Add the existing cross-session VWAP item as the third cell. */
+            const crossItem = marketCrossRow.firstElementChild;
+            if (crossItem) vwapRow.appendChild(crossItem);
+
+            marketMetrics.appendChild(vwapRow);
+          } else {
+            marketMetrics.appendChild(marketCrossRow);
+          }
+
           marketGrid.appendChild(marketPriceBlock);
         }
 
-        marketMetrics.appendChild(marketCrossRow);
+        marketSpreadRow.classList.add('v2-market-spread-row');
         marketMetrics.appendChild(marketSpreadRow);
         marketGrid.appendChild(marketMetrics);
 
@@ -2838,6 +3041,9 @@
 
         marketBox.insertBefore(marketGrid, marketBox.firstChild);
         if (marketTopRow.parentElement === marketBox) marketTopRow.remove();
+        if (marketCrossRow.parentElement === marketBox && marketCrossRow.children.length === 0) {
+          marketCrossRow.remove();
+        }
       }
     }
 
