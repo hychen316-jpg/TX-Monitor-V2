@@ -295,7 +295,7 @@
     /* ★ 修復「主力實彈狙擊重鎮」卡片內部佈局 ★ */
     .v2-sniper-card .box { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
     .v2-target-cell { flex-direction: column !important; gap: 0px; min-width: 0; padding: 2px 0 !important; }
-    .v2-target-force-live { display: none !important; } /* ★ 隱藏重複顯示的「力道」行 ★ */
+    .v2-target-force-live { display: none !important; }
     
     /* ★ 定義比例棒包覆 ★ */
     .v2-target-balance {
@@ -2411,35 +2411,35 @@
   function updateCoreSummaries() {
     const status = document.getElementById('v2-status-summary');
     if (status) {
-      status.textContent = 'TX ' + textOf('price') + '｜' + textOf('update-time') +
-        '｜OCF ' + textOf('ocf-model-status', '等待');
+      status.textContent = 'TX ' + textOf('price') + ' ｜ Update: ' + textOf('update-time').replace('Update: ', '') +
+        ' ｜ OCF ' + textOf('ocf-model-status', '等待');
     }
 
     const cSummary = document.getElementById('core-c1c4-summary');
     if (cSummary) {
       cSummary.textContent =
-        'C1 ' + textOf('c1-tag') + '｜C2 ' + textOf('c2-tag') +
-        '｜C3 ' + textOf('c3-tag') + '｜C4 ' + textOf('c4-tag');
+        'C1 ' + textOf('c1-tag') + ' ｜ C2 ' + textOf('c2-tag') +
+        ' ｜ C3 ' + textOf('c3-tag') + ' ｜ C4 ' + textOf('c4-tag');
     }
 
     const forceSummary = document.getElementById('p9-r7-resonance');
     if (forceSummary) {
       forceSummary.textContent =
         'P9 ' + textOf('p9-val') + ' ' + textOf('p9-slope-label') +
-        '｜R7 ' + textOf('r7-val') + ' ' + textOf('r7-delta-display', '');
+        ' ｜ R7 ' + textOf('r7-val') + ' ' + textOf('r7-delta-display', '');
     }
 
     const targetSummary = document.getElementById('target-force-summary');
     if (targetSummary) {
       targetSummary.textContent =
-        '多 ' + textOf('bull-target-val') + '｜差 ' + textOf('target-net-force') +
-        '｜空 ' + textOf('bear-target-val');
+        '多 ' + textOf('bull-target-val') + ' ｜ 差 ' + textOf('target-net-force') +
+        ' ｜ 空 ' + textOf('bear-target-val');
     }
 
     const ocfSummary = document.getElementById('ocf-command-summary');
     if (ocfSummary) {
       ocfSummary.textContent =
-        textOf('ocf-live-direction', 'OCF等待') + '｜' +
+        textOf('ocf-live-direction', 'OCF等待') + ' ｜ ' +
         textOf('ocf-bk-advice', '等待完整訊號');
     }
   }
@@ -2504,12 +2504,34 @@
     const liveStack = el('div', 'v2-live-stack');
     livePage.appendChild(liveStack);
 
+    /* 1. 頂部台指期報價與中性值 */
     if (marketBox) {
       const marketSlot = el('div', 'v2-market-slot');
       marketSlot.appendChild(marketBox);
       liveStack.appendChild(marketSlot);
     }
 
+    /* 2. 恢復「盤中指揮摘要」 */
+    const statusCard = card('盤中指揮摘要', '所有重要即時資訊集中於本頁', 'v2-status-card');
+    const statusValue = el('div', 'v2-summary-value', 'v2-status-summary');
+    statusValue.style.fontSize = '12px';
+    statusValue.style.color = '#64d2ff';
+    statusValue.textContent = '等待即時資料';
+    statusCard.appendChild(statusValue);
+    liveStack.appendChild(statusCard);
+
+    /* 3. 將「第一頁綜合決策資訊」搬移到盤中指揮摘要下方 */
+    const summaryCard = card('第一頁綜合決策資訊', '僅彙整既有模組，不新增交易分數', 'v2-final-summary');
+    const summaryGrid = el('div', 'v2-summary-grid');
+    summaryGrid.innerHTML =
+      '<div class="v2-summary-item"><div class="v2-summary-label">C1～C4</div><div id="v2-summary-c" class="v2-summary-value">--</div></div>' +
+      '<div class="v2-summary-item"><div class="v2-summary-label">P9／R7</div><div id="v2-summary-force" class="v2-summary-value">--</div></div>' +
+      '<div class="v2-summary-item"><div class="v2-summary-label">狙擊重鎮</div><div id="v2-summary-target" class="v2-summary-value">--</div></div>' +
+      '<div class="v2-summary-item"><div class="v2-summary-label">OCF／BK2</div><div id="ocf-command-summary" class="v2-summary-value">--</div></div>';
+    summaryCard.appendChild(summaryGrid);
+    liveStack.appendChild(summaryCard);
+
+    /* 4. 中段三核心模組 (C1~C4, P9/R7, 狙擊重鎮) */
     const coreGrid = el('div', 'v2-core-grid');
     liveStack.appendChild(coreGrid);
 
@@ -2539,6 +2561,7 @@
     sniperCard.appendChild(targetSummary);
     coreGrid.appendChild(sniperCard);
 
+    /* 5. 下段模組 (TX Radar 與 OCF 2.1) */
     const intelGrid = el('div', 'v2-intel-grid');
     liveStack.appendChild(intelGrid);
 
@@ -2551,16 +2574,6 @@
     if (ocfPanel) ocfCard.appendChild(ocfPanel);
     if (ocfLocked) ocfCard.appendChild(ocfLocked);
     intelGrid.appendChild(ocfCard);
-
-    const summaryCard = card('第一頁綜合決策資訊', '僅彙整既有模組，不新增交易分數', 'v2-final-summary');
-    const summaryGrid = el('div', 'v2-summary-grid');
-    summaryGrid.innerHTML =
-      '<div class="v2-summary-item"><div class="v2-summary-label">C1～C4</div><div id="v2-summary-c" class="v2-summary-value">--</div></div>' +
-      '<div class="v2-summary-item"><div class="v2-summary-label">P9／R7</div><div id="v2-summary-force" class="v2-summary-value">--</div></div>' +
-      '<div class="v2-summary-item"><div class="v2-summary-label">狙擊重鎮</div><div id="v2-summary-target" class="v2-summary-value">--</div></div>' +
-      '<div class="v2-summary-item"><div class="v2-summary-label">OCF／BK2</div><div id="ocf-command-summary" class="v2-summary-value">--</div></div>';
-    summaryCard.appendChild(summaryGrid);
-    liveStack.appendChild(summaryCard);
 
     const historyNote = el('div', 'v2-page-note');
     historyNote.textContent = '原有時間軸與歷史推移圖表集中於此頁；圖表資料來源、Canvas ID及Chart.js實例均保持不變。';
