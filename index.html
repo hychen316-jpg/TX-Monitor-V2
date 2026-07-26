@@ -361,7 +361,306 @@
       .ocf-command-item.direction { grid-column: 1 / -1; }
     }
 
-  </style>
+  
+
+/* =============================================================
+   Dashboard V6: Compact TX market card + readable live-page text
+   Presentation-only overrides. Existing IDs, Firebase, permissions,
+   calculations and Chart.js bindings remain unchanged.
+   ============================================================= */
+
+/* --- Compact TX market card --- */
+#v2-live-page .v2-market-compact {
+  padding: 5px 8px !important;
+  justify-content: flex-start !important;
+  min-height: 0 !important;
+}
+
+#v2-live-page .v2-market-compact-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 0.78fr)
+    minmax(390px, 1.28fr)
+    minmax(205px, 0.64fr);
+  gap: 7px;
+  align-items: stretch;
+  width: 100%;
+}
+
+#v2-live-page .v2-market-price {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2px 5px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.025);
+}
+
+#v2-live-page .v2-market-price #price {
+  font-size: 31px !important;
+  margin: 2px 0 !important;
+}
+
+#v2-live-page .v2-market-price #update-time {
+  font-size: 10px !important;
+  margin-top: 3px !important;
+}
+
+#v2-live-page .v2-market-metrics {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(150px, .72fr) minmax(245px, 1.28fr);
+  gap: 5px;
+  align-items: stretch;
+}
+
+#v2-live-page .v2-market-metrics > div {
+  margin: 0 !important;
+  min-width: 0;
+  padding: 6px 8px !important;
+  border-radius: 7px !important;
+  background: rgba(255,255,255,.045) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  line-height: 1.15 !important;
+}
+
+#v2-live-page .v2-market-metrics > div:first-child {
+  justify-content: center !important;
+}
+
+#v2-live-page .v2-market-metrics > div:last-child {
+  gap: 12px;
+}
+
+#v2-live-page .v2-market-metrics,
+#v2-live-page .v2-market-metrics span,
+#v2-live-page .v2-market-metrics div {
+  font-size: 10px;
+}
+
+#v2-live-page .v2-market-metrics #vwap-cross {
+  font-size: 14px !important;
+}
+
+#v2-live-page .v2-market-metrics #spread-spot,
+#v2-live-page .v2-market-metrics #spread-next {
+  font-size: 13px !important;
+}
+
+#v2-live-page .v2-market-neutral {
+  margin: 0 !important;
+  min-width: 0 !important;
+  width: 100%;
+  height: 100%;
+  padding: 5px 8px !important;
+  justify-content: center;
+  align-items: stretch !important;
+  border-radius: 8px !important;
+}
+
+#v2-live-page .v2-market-neutral #oi-dn-price {
+  font-size: 18px !important;
+}
+
+/* Keep the neutral/IV card compact even though its HTML is generated dynamically. */
+#v2-live-page .v2-market-neutral #oi-iv-val {
+  gap: 1px !important;
+  padding-top: 1px !important;
+}
+
+#v2-live-page .v2-market-neutral #oi-iv-val > div {
+  margin-top: 1px !important;
+  margin-bottom: 1px !important;
+}
+
+/* --- Readability floor for important live-page labels --- */
+#v2-live-page .v2-section-card > .v2-card-title {
+  font-size: 11px !important;
+  line-height: 1.2;
+}
+
+#v2-live-page .v2-section-card > .v2-card-title small {
+  font-size: 9px !important;
+}
+
+#v2-live-page .v2-summary-label {
+  font-size: 9px !important;
+}
+
+#v2-live-page .v2-summary-value {
+  font-size: 10px !important;
+  line-height: 1.3;
+}
+
+#v2-live-page .v2-c1c4-card .chip-card .box-header {
+  font-size: 9px !important;
+}
+
+#v2-live-page .v2-c1c4-card .chip-card .big-val {
+  font-size: 19px !important;
+}
+
+#v2-live-page .v2-c1c4-card .chip-card .chip-tag {
+  font-size: 9px !important;
+}
+
+#v2-live-page .v2-force-card .box-header,
+#v2-live-page .v2-sniper-card .box-header {
+  font-size: 10px !important;
+}
+
+#v2-live-page .v2-force-card .p9-label {
+  font-size: 10px !important;
+}
+
+#v2-live-page .v2-force-card #p9-val,
+#v2-live-page .v2-force-card #r7-val {
+  font-size: 20px !important;
+}
+
+#v2-live-page .v2-force-card #p9-slope-label,
+#v2-live-page .v2-force-card #p9-thresholds-display,
+#v2-live-page .v2-force-card #r7-thresholds-display,
+#v2-live-page .v2-force-card #r7-delta-display {
+  font-size: 9px !important;
+  line-height: 1.15 !important;
+}
+
+#v2-live-page .v2-sniper-card #bull-target-val,
+#v2-live-page .v2-sniper-card #bear-target-val,
+#v2-live-page .v2-sniper-card #target-net-force {
+  font-size: 12px !important;
+}
+
+/* TX Radar */
+#v2-live-page .radar-phase-title,
+#v2-live-page .radar-band-title {
+  font-size: 10px !important;
+}
+
+#v2-live-page .radar-version-badge,
+#v2-live-page .radar-model-label,
+#v2-live-page .radar-band-status,
+#v2-live-page .radar-band-meta,
+#v2-live-page .radar-event-row,
+#v2-live-page .radar-position-row {
+  font-size: 9px !important;
+  line-height: 1.3 !important;
+}
+
+#v2-live-page .radar-model-value,
+#v2-live-page .radar-band-range {
+  font-size: 11px !important;
+}
+
+#v2-live-page .radar-band-main {
+  font-size: 13px !important;
+}
+
+#v2-live-page .radar-channel-row {
+  font-size: 10px !important;
+}
+
+/* OCF 2.1 */
+#v2-live-page .ocf-battle-kicker,
+#v2-live-page .ocf-command-label,
+#v2-live-page .ocf-command-sub,
+#v2-live-page .ocf-defense-detail,
+#v2-live-page .ocf-defense-stat,
+#v2-live-page .ocf-defense-action,
+#v2-live-page .ocf-action-label,
+#v2-live-page .ocf-action-context,
+#v2-live-page .ocf-prior-label {
+  font-size: 9px !important;
+  line-height: 1.3 !important;
+}
+
+#v2-live-page .ocf-battle-title {
+  font-size: 12px !important;
+}
+
+#v2-live-page .ocf-model-badge,
+#v2-live-page .ocf-defense-state,
+#v2-live-page .ocf-prior-status {
+  font-size: 9px !important;
+}
+
+#v2-live-page .ocf-command-value {
+  font-size: 13px !important;
+}
+
+#v2-live-page .ocf-defense-name {
+  font-size: 10px !important;
+}
+
+#v2-live-page .ocf-defense-zone {
+  font-size: 15px !important;
+}
+
+#v2-live-page .ocf-defense-stat strong {
+  font-size: 10px !important;
+}
+
+#v2-live-page .ocf-action-text {
+  font-size: 12px !important;
+}
+
+#v2-live-page .ocf-prior-value {
+  font-size: 10px !important;
+}
+
+/* Prevent the font increase from creating unnecessary vertical growth. */
+#v2-live-page .v2-section-card {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+#v2-live-page .radar-band-card,
+#v2-live-page .ocf-defense-card,
+#v2-live-page .ocf-command-item {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* Level 1-3 layouts should not reserve an empty third column. */
+.dashboard-container:not(.lvl4) #v2-live-page .v2-market-compact-grid {
+  grid-template-columns: minmax(220px, .8fr) minmax(390px, 1.2fr);
+}
+
+/* Standard laptop / narrow desktop */
+@media (max-width: 1180px) {
+  #v2-live-page .v2-market-compact-grid {
+    grid-template-columns: minmax(230px, 1fr) minmax(190px, .62fr);
+    grid-template-areas:
+      "price neutral"
+      "metrics metrics";
+  }
+  #v2-live-page .v2-market-price { grid-area: price; }
+  #v2-live-page .v2-market-metrics { grid-area: metrics; }
+  #v2-live-page .v2-market-neutral { grid-area: neutral; }
+}
+
+/* Phone / very narrow window */
+@media (max-width: 620px) {
+  #v2-live-page .v2-market-compact-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(125px, .62fr);
+    gap: 4px;
+  }
+  #v2-live-page .v2-market-metrics {
+    grid-template-columns: 1fr;
+  }
+  #v2-live-page .v2-market-metrics > div {
+    padding: 5px 6px !important;
+  }
+  #v2-live-page .v2-market-price #price {
+    font-size: 28px !important;
+  }
+}
+
+</style>
 </head>
 <body>
 
@@ -2509,6 +2808,37 @@
       const marketSlot = el('div', 'v2-market-slot');
       marketSlot.appendChild(marketBox);
       liveStack.appendChild(marketSlot);
+
+      /* V6: compact the TX market card without changing any existing IDs. */
+      marketBox.classList.add('v2-market-compact');
+      const marketRows = Array.from(marketBox.children);
+      const marketTopRow = marketRows[0] || null;
+      const marketCrossRow = marketRows[1] || null;
+      const marketSpreadRow = marketRows[2] || null;
+
+      if (marketTopRow && marketCrossRow && marketSpreadRow) {
+        const marketPriceBlock = marketTopRow.children[0] || null;
+        const marketNeutralBlock = marketTopRow.children[1] || null;
+        const marketGrid = el('div', 'v2-market-compact-grid');
+        const marketMetrics = el('div', 'v2-market-metrics');
+
+        if (marketPriceBlock) {
+          marketPriceBlock.classList.add('v2-market-price');
+          marketGrid.appendChild(marketPriceBlock);
+        }
+
+        marketMetrics.appendChild(marketCrossRow);
+        marketMetrics.appendChild(marketSpreadRow);
+        marketGrid.appendChild(marketMetrics);
+
+        if (marketNeutralBlock) {
+          marketNeutralBlock.classList.add('v2-market-neutral');
+          marketGrid.appendChild(marketNeutralBlock);
+        }
+
+        marketBox.insertBefore(marketGrid, marketBox.firstChild);
+        if (marketTopRow.parentElement === marketBox) marketTopRow.remove();
+      }
     }
 
     /* 2. 恢復「盤中指揮摘要」 */
