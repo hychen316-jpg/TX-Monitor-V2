@@ -13,9 +13,10 @@
   <style>
     /* === 核心樣式 === */
     :root { --bg:#000; --card:#1c1c1e; --text:#fff; --red:#ff453a; --green:#30d158; --yellow:#ffd60a; --blue:#0a84ff; --gray:#8e8e93; --purple:#bf5af2; }
+    * { box-sizing: border-box; }
     body { background:var(--bg); color:var(--text); font-family:-apple-system, sans-serif; padding:8px; margin:0; overflow-x:hidden; }
     
-    .dashboard-container { filter: blur(15px); transition: filter 0.5s; pointer-events: none; opacity: 0.3; display: flex; flex-direction: column; gap: 6px; }
+    .dashboard-container { filter: blur(15px); transition: filter 0.5s; pointer-events: none; opacity: 0.3; display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 1400px; margin: 0 auto; }
     .unlocked { filter: blur(0); pointer-events: auto; opacity: 1; }
 
     .req-level-2-flex, .req-level-2-block, .req-level-2-grid,
@@ -42,11 +43,14 @@
 
     .box-header { font-size: 11px; color: var(--gray); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* ★ 調整上方區塊改為上下排列 */
-    .top-section { display:flex; flex-direction:column; gap:6px; }
-    /* ★ 加入 min-width: 0; 解決手機窄螢幕跑版問題 */
-    .box { background:var(--card); border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; border: 1px solid #333; min-width: 0; }
-    .big-val { font-size:26px; font-weight:600; letter-spacing:-1px; margin-top:2px; }
+    /* ★ RWD 響應式優化：頂部區域 */
+    .top-section { display:flex; flex-direction:column; gap:6px; width: 100%; }
+    .top-main-row { display: flex; flex-direction: row; justify-content: space-between; align-items: stretch; gap: 10px; width: 100%; }
+    .top-left-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+    .top-right-col { flex: 0 0 auto; min-width: 200px; }
+
+    .box { background:var(--card); border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; border: 1px solid #333; min-width: 0; width: 100%; }
+    .big-val { font-size:28px; font-weight:600; letter-spacing:-1px; margin-top:2px; }
     .power-val { font-size:30px; font-weight:700; text-align:right; } 
     .chip-tag { font-size:10px; padding:2px 6px; border-radius:4px; width:fit-content; background:#333; color:#ccc; }
     
@@ -63,7 +67,7 @@
     .prob-neutral { background: rgba(255, 214, 10, 0.15); color: var(--yellow); border: 1px solid var(--yellow); }
     .prob-low { background: rgba(48, 209, 88, 0.15); color: var(--green); border: 1px solid var(--green); }
     
-    .targets-grid-compact { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }
+    .targets-grid-compact { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 4px; margin-top: 6px; }
     .target-card-sm { background: #2c2c2e; border-radius: 4px; padding: 4px 2px; text-align: center; border-left: 4px solid #555; display: flex; flex-direction: column; justify-content: center; transition: all 0.3s ease; }
     .target-name-sm { font-size: 10px; color: #ddd; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
     .target-data-row { display: flex; justify-content: center; align-items: baseline; gap: 3px; }
@@ -104,9 +108,7 @@
     .p9-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 2px; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 6px; }
     .p9-label { font-size: 11px; color: #ccc; font-weight: 700; }
     
-    /* ★ 放大 P9 字體 */
     .p9-val { font-size: 22px; font-weight: 800; letter-spacing: 0.5px; transition: all 0.3s ease; }
-    /* ★ 放大 R7 字體 */
     #r7-val { font-size: 20px; }
     
     .slope-label { font-size:10px; margin-left:2px; padding:2px 6px; border-radius:6px; font-weight:800; transition:all 0.3s ease; display:inline-block; border: 1px solid transparent; white-space:nowrap; }
@@ -125,10 +127,10 @@
     .range-old { font-size: 11px; color: #666; font-weight: normal; display: flex; align-items: center; }
     .arrow-icon { font-size: 9px; margin: 0 3px; color: #444; }
 
-    .chip-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; }
+    .chip-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; width: 100%; }
     .chip-card { background:var(--card); padding:6px 2px; border-radius:10px; border: 1px solid #333; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     
-    .split-chart-box { background: var(--card); border-radius: 14px; padding: 8px; border: 1px solid #333; height: 200px; position: relative; }
+    .split-chart-box { background: var(--card); border-radius: 14px; padding: 8px; border: 1px solid #333; height: 200px; position: relative; width: 100%; }
     .section-title { margin-top: 10px; margin-bottom: 2px; font-size: 12px; color: #888; display: flex; align-items: center; gap: 4px; font-weight: 600; }
 
     #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -150,7 +152,7 @@
     @keyframes pulse-gold { 0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); } 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); } }
     @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.5); } 70% { box-shadow: 0 0 0 8px rgba(255, 69, 58, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0); } }
 
-    /* ★★★ P9 動態視覺特效 ★★★ */
+    /* ★ P9 動態視覺特效 ★ */
     @keyframes p9-exhaust-red { 0% { text-shadow: 0 0 5px var(--red); transform: scale(1); } 50% { text-shadow: 0 0 15px var(--red), 0 0 25px var(--red); transform: scale(1.05); } 100% { text-shadow: 0 0 5px var(--red); transform: scale(1); } }
     @keyframes p9-exhaust-green { 0% { text-shadow: 0 0 5px var(--green); transform: scale(1); } 50% { text-shadow: 0 0 15px var(--green), 0 0 25px var(--green); transform: scale(1.05); } 100% { text-shadow: 0 0 5px var(--green); transform: scale(1); } }
     
@@ -159,18 +161,17 @@
     .p9-exhaust-red { animation: p9-exhaust-red 1s infinite; font-weight: 900; color: #fff !important; }
     .p9-exhaust-green { animation: p9-exhaust-green 1s infinite; font-weight: 900; color: #fff !important; }
 
-    /* ★★★ 新增：Skew 訊號呼吸燈特效 ★★★ */
+    /* ★ Skew 訊號呼吸燈特效 ★ */
     @keyframes skew-signal-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
     .skew-signal-active { display: inline-block; animation: skew-signal-pulse 1.5s infinite; }
 
-    /* ★★★ 修改：靜態雷達區塊樣式 (允許彈性換行防止跑版) ★★★ */
+    /* ★ 雷達區塊樣式 ★ */
     .radar-static-container {
         width: 100%; display: flex; align-items: center; justify-content: space-between; min-height: 18px; flex-wrap: wrap; gap: 4px;
     }
     .radar-ticker {
         font-size: 11px; font-weight: 600; color: #ddd; display: flex; align-items: center; width: 100%;
     }
-
 
     /* === TX Radar V19.3 Phase 1 雙軌成本帶 === */
     .radar-phase-panel { width:100%; border-top:1px dashed #3a3a3c; padding-top:6px; margin-top:2px; }
@@ -199,7 +200,7 @@
     .radar-legacy-note { color:#777; font-size:9px; text-align:center; padding:6px; border:1px dashed #3a3a3c; border-radius:6px; }
 
     /* === OCF 2.1 固定藍圖與盤中防守面板（Level 4） === */
-    .ocf-battle-panel { margin-top:8px; padding:10px 0 0; border-top:1px solid #3a3a3c; }
+    .ocf-battle-panel { margin-top:8px; padding:10px 0 0; border-top:1px solid #3a3a3c; width: 100%; }
     .ocf-battle-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:7px; }
     .ocf-battle-kicker { color:#64d2ff; font-size:8px; font-weight:800; }
     .ocf-battle-title { color:#f2f2f7; font-size:12px; font-weight:800; margin-top:2px; }
@@ -254,29 +255,13 @@
     .ocf-prior-item { min-width:0; }
     .ocf-prior-label { color:#777; font-size:7px; }
     .ocf-prior-value { color:#ddd; font-size:10px; font-weight:800; line-height:1.3; margin-top:1px; overflow-wrap:anywhere; }
-    @media (max-width:430px) {
-      .radar-model-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .radar-band-meta { grid-template-columns:1fr; }
-      .ocf-command-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .ocf-command-item.direction { grid-column:1/-1; }
-      .ocf-prior-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    }
-    @media (max-width:350px) {
-      .radar-band-grid { grid-template-columns:1fr; }
-      .ocf-defense-grid { grid-template-columns:1fr; }
-    }
 
-  
-
-    /* =============================================================
-       Dashboard V2: first-page live command center
-       Existing IDs, Firebase mappings and permission classes retained.
-       ============================================================= */
+    /* === Dashboard V2: first-page live command center === */
     .v2-dashboard-nav {
       position: sticky; top: 0; z-index: 950; display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px;
       padding: 6px 0 7px; background: rgba(0,0,0,.92);
-      backdrop-filter: blur(12px); border-bottom: 1px solid #2c2c2e;
+      backdrop-filter: blur(12px); border-bottom: 1px solid #2c2c2e; width: 100%;
     }
     .v2-tab-btn {
       appearance: none; border: 1px solid #3a3a3c; background: #1c1c1e;
@@ -288,12 +273,12 @@
       background: linear-gradient(135deg, rgba(10,132,255,.30), rgba(10,132,255,.10));
       box-shadow: inset 0 0 10px rgba(10,132,255,.12);
     }
-    .v2-page { display: none; min-width: 0; }
+    .v2-page { display: none; min-width: 0; width: 100%; }
     .v2-page.active { display: block; }
-    .v2-live-stack { display: flex; flex-direction: column; gap: 7px; }
+    .v2-live-stack { display: flex; flex-direction: column; gap: 7px; width: 100%; }
     .v2-section-card {
       min-width: 0; background: var(--card); border: 1px solid #333;
-      border-radius: 14px; padding: 8px; overflow: hidden;
+      border-radius: 14px; padding: 8px; overflow: hidden; width: 100%;
     }
     .v2-section-card > .v2-card-title {
       display: flex; align-items: center; justify-content: space-between; gap: 6px;
@@ -304,16 +289,19 @@
       color: #777; font-size: 8px; font-weight: 600;
     }
     .v2-market-slot > .box { border-radius: 14px; }
+    
+    /* 核心網格佈局 */
     .v2-core-grid {
       display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 7px;
-      align-items: stretch;
+      align-items: stretch; width: 100%;
     }
     .v2-c1c4-card { grid-column: span 4; }
     .v2-force-card { grid-column: span 4; }
     .v2-sniper-card { grid-column: span 4; }
+    
     .v2-intel-grid {
       display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 7px; align-items: start;
+      gap: 7px; align-items: start; width: 100%;
     }
     .v2-intel-grid > * { min-width: 0; }
     .v2-radar-card .box, .v2-force-card .battle-box,
@@ -375,11 +363,14 @@
     }
     #v2-live-page .top-section { display: contents; }
 
+    /* === 跨裝置 Media Queries 適應調整 === */
     @media (max-width: 900px) {
       .v2-c1c4-card, .v2-force-card { grid-column: span 6; }
       .v2-sniper-card { grid-column: 1 / -1; }
       .v2-intel-grid { grid-template-columns: 1fr; }
       .v2-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .top-main-row { flex-direction: column; gap: 8px; }
+      .top-right-col { min-width: 100%; margin-left: 0 !important; margin-top: 4px !important; }
     }
     @media (max-width: 560px) {
       body { padding: 5px; }
@@ -396,6 +387,10 @@
       .v2-c1c4-card .chip-card .big-val { font-size: 19px !important; }
       .ocf-command-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .ocf-command-item.direction { grid-column: 1 / -1; }
+      .radar-model-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .radar-band-grid { grid-template-columns: 1fr; }
+      .ocf-defense-grid { grid-template-columns: 1fr; }
+      .ocf-prior-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
   </style>
@@ -427,8 +422,8 @@
   <div class="dashboard-container" id="dashboard">
     <div class="top-section">
       <div class="box" style="padding:10px 12px; position:relative;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div style="flex:1; min-width:0;">
+        <div class="top-main-row">
+            <div class="top-left-col">
               <div class="box-header" style="margin-bottom:0; display:flex; flex-wrap:nowrap; align-items:flex-end; line-height:1; white-space:nowrap;">
                 <span style="font-size:11px;">TX 台指期</span>
                 <span style="font-size:9px; font-weight:normal; color:#888; margin-left:6px;">次月: <span id="price-next" style="color:#ccc; font-weight:bold;">--</span></span>
@@ -444,7 +439,7 @@
               <div id="update-time" style="color:#fff; font-size:9px; line-height:1; margin-top:4px; white-space:nowrap;">--:--:--</div>
             </div>
 
-            <div class="req-level-4-flex" style="flex-direction:column; align-items:flex-end; gap:4px; background:linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding:6px 10px; border-radius:10px; border: 1px solid rgba(212,175,55,0.4); box-shadow: inset 0 0 10px rgba(212,175,55,0.1); min-width: 120px; margin-left: 10px; margin-top: 10px;">
+            <div class="req-level-4-flex top-right-col" style="flex-direction:column; align-items:flex-end; gap:4px; background:linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding:6px 10px; border-radius:10px; border: 1px solid rgba(212,175,55,0.4); box-shadow: inset 0 0 10px rgba(212,175,55,0.1);">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom: 1px dashed rgba(212,175,55,0.3); padding-bottom:4px;">
                     <span style="font-size:10px; color:#d4af37; font-weight:800; letter-spacing:0.5px;">⚖️ 中性值</span>
                     <span id="oi-dn-price" style="font-size:20px; font-weight:900; color:#ffd700; text-shadow: 0 0 6px rgba(212,175,55,0.6); line-height:1;">--</span>
@@ -727,7 +722,6 @@
       <div class="chip-card" id="c4-card"><span class="box-header" style="margin-bottom:2px; font-size:9px; text-align:center; width:100%; letter-spacing:0;">次月日</span><span id="c4-val" class="big-val" style="font-size:15px; margin:auto;">--</span><span id="c4-tag" class="chip-tag" style="margin:2px auto 0; font-size:9px; padding:2px 4px;">--</span></div>
     </div>
     
-    <!-- ★ 新增：主力狙擊重鎮推移 (Level 4 專屬) -->
     <div class="section-title req-level-4-flex" style="margin-top:6px;">🎯 歷史狙擊重鎮推移 (履約價 vs 力道)</div>
     <div class="split-chart-box req-level-4-block" style="margin-bottom:6px; height:150px;"><canvas id="chartSniper"></canvas></div>
     <div class="split-chart-box upgrade-prompt lock-lvl-4" style="margin-bottom:6px; height:80px;">
@@ -755,8 +749,6 @@
         <div>AI 戰略指揮官</div>
         <div class="upgrade-btn">需要 Level 4 解鎖</div>
     </div>
-
-
 
     <div class="section-title">📈 期貨現價 (Price)</div>
     <div class="split-chart-box"><canvas id="chartPrice"></canvas></div>
@@ -805,31 +797,25 @@
     const NODE_REALTIME = 'monitor_realtime';
     const NODE_HISTORY  = 'monitor_history';
     const NODE_ALPHA    = 'monitor_realtime/alpha_data';
-    const NODE_RADAR    = 'radar_realtime'; // ★ 新增雷達監聽節點
+    const NODE_RADAR    = 'radar_realtime';
 
     let chartPrice = null; let chartChip = null; let chartP6 = null; let chartWall = null; let chartHeat = null; let chartSkew = null; let chartSniper = null;
     let p9SlopeHistory = [];
     let lastCrossVwap = "--";
     
-    // === 前端獨立記憶體：專為 Heat 建立時間軸 ===
     let frontEndHeatLabels = [];
     let frontEndHeatData = [];
     let frontEndHeatExData = [];
     let frontEndFinHeatData = [];
-    // ============================================
 
     let currentSkewOffset = 0; 
     let lastHistoryData = null; 
     let lastForceSign = '+';
-    let latestSkewSignalIcon = ""; // ★ 新增：全域變數存儲最新 Skew 訊號
+    let latestSkewSignalIcon = "";
 
-    // ==========================================
-    // 🛡️ 終極螢幕不滅機制 (Dual Engine: WakeLock + Video Hack)
-    // ==========================================
     let wakeLock = null;
     let isNoSleepEnabled = false;
 
-    // 引擎 1: 隱藏無聲影片 (欺騙 iOS 系統)
     const noSleepVideo = document.createElement('video');
     noSleepVideo.setAttribute('playsinline', '');
     noSleepVideo.setAttribute('muted', '');
@@ -841,43 +827,34 @@
     async function enableNoSleep() {
         if (isNoSleepEnabled) return;
         try {
-            // 啟動影片引擎
             await noSleepVideo.play();
-            
-            // 引擎 2: 現代瀏覽器原生的 Screen Wake Lock API
             if ('wakeLock' in navigator) { 
                 wakeLock = await navigator.wakeLock.request('screen'); 
-                
-                // ⚠️ 關鍵防護：當系統強制釋放 WakeLock (如電量過低) 時，自動嘗試重連
                 wakeLock.addEventListener('release', () => {
                     if (document.visibilityState === 'visible') {
                         navigator.wakeLock.request('screen').then(wl => { wakeLock = wl; }).catch(console.error);
                     }
                 });
             }
-            
             isNoSleepEnabled = true;
             document.removeEventListener('touchstart', enableNoSleep);
             document.removeEventListener('click', enableNoSleep);
             console.log("🛡️ NoSleep 機制已全面啟動");
         } catch (err) {
             console.error("NoSleep 啟動失敗:", err);
-            isNoSleepEnabled = false; // 允許下次點擊重試
+            isNoSleepEnabled = false;
         }
     }
 
-    // 任何觸控或點擊都會觸發不滅機制
     document.addEventListener('touchstart', enableNoSleep, { once: true });
     document.addEventListener('click', enableNoSleep, { once: true });
 
-    // 當使用者切換 APP 後再回來，必須重新喚醒 (因為 iOS 會強制暫停影片與釋放 WakeLock)
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') { 
-            isNoSleepEnabled = false; // 重置狀態
-            enableNoSleep(); // 重新啟動雙引擎
+            isNoSleepEnabled = false;
+            enableNoSleep();
         }
     });
-    // ==========================================
 
     auth.onAuthStateChanged((user) => {
       const overlay = document.getElementById('auth-overlay');
@@ -984,42 +961,21 @@
           }
       });
       db.ref(NODE_ALPHA).on('value', (s) => { if(s.val()) updateAlphaUI(s.val()); });
-      // ★ 監聽雷達數據
       db.ref(NODE_RADAR).on('value', (s) => { if(s.val()) updateRadarUI(s.val()); });
     }
 
-
-    // === TX Radar V19.3 Phase 1：中文與資料防呆 ===
     const DIRECTION_CONFIRMATION_MODE_ZH = {
-        INITIAL: "初始方向確認",
-        NORMAL: "一般方向反轉",
-        FAST_BREAKOUT: "成本帶強突破快速反轉",
-        HOLD: "維持正式方向"
+        INITIAL: "初始方向確認", NORMAL: "一般方向反轉", FAST_BREAKOUT: "成本帶強突破快速反轉", HOLD: "維持正式方向"
     };
     const MAIN_COST_STATE_ZH = {
-        OPENING_PROVISIONAL: "開盤觀察期",
-        WARMUP: "證據累積中",
-        DIRECTION_PENDING: "方向確認中",
-        NEUTRAL: "多空暫無定論",
-        ACCUMULATING_LONG: "多方主導／吸籌",
-        DISTRIBUTING_SHORT: "空方主導／壓盤",
-        CONFLICT: "既有方向與近期證據衝突",
-        WAITING: "等待雷達資料",
-        LEGACY: "舊版相容模式"
+        OPENING_PROVISIONAL: "開盤觀察期", WARMUP: "證據累積中", DIRECTION_PENDING: "方向確認中", NEUTRAL: "多空暫無定論", ACCUMULATING_LONG: "多方主導／吸籌", DISTRIBUTING_SHORT: "空方主導／壓盤", CONFLICT: "既有方向與近期證據衝突", WAITING: "等待雷達資料", LEGACY: "舊版相容模式"
     };
-
     const RECOVERY_STATUS_ZH = {
-        FRESH_START: "全新啟動",
-        PENDING_FIRST_TICK: "等待首筆行情核對",
-        RECOVERED_GUARD: "快速恢復保護期",
-        RECOVERED: "快速恢復完成",
-        NEW_SESSION: "新盤重置"
+        FRESH_START: "全新啟動", PENDING_FIRST_TICK: "等待首筆行情核對", RECOVERED_GUARD: "快速恢復保護期", RECOVERED: "快速恢復完成", NEW_SESSION: "新盤重置"
     };
 
     function escapeRadarHtml(value) {
-        return String(value ?? "").replace(/[&<>'"]/g, (char) => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-        }[char]));
+        return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
     }
 
     function toFiniteNumberOrNull(value) {
@@ -1376,8 +1332,6 @@
             </div>`;
     }
 
-
-    // ★★★ 新增：渲染靜態雷達面板數據 ★★★
     function updateRadarUI(data) {
         const ticker = document.getElementById('radar-ticker');
         if (!ticker || !data || typeof data !== 'object') return;
@@ -1496,7 +1450,6 @@
             const statusBadge = isTrigger
                 ? `<span style="background:var(--red);color:#fff;padding:2px 4px;border-radius:4px;font-size:10px;">${escapeRadarHtml(data.status || '觸發')}</span>` : '';
 
-            // 原 V19 的模型摘要必須永遠顯示；Phase 1 只額外增加雙軌成本帶。
             const isConflict = mainCostState === 'CONFLICT';
             const conflictWarning = isConflict ? `<span style="color:var(--yellow);font-size:10px;margin-left:4px;">(⚠️ 判定可能延遲)</span>` : '';
             const strategyHint = isConflict ? `<div style="padding:0 6px 4px 6px;color:#bbb;font-size:10px;text-align:right;">💡 Phase 1 策略：<span style="color:#fff;">請以跌破成本帶或重回區間作為進場參考</span></div>` : '';
@@ -1710,7 +1663,6 @@
         let matrixCode = `[${diffSign} ${skewSign} ${forceSign} ${p9Sign}]`;
         let result = { text: `☕ [N級] ${matrixCode} 冰封觀望`, class: "rank-n", advice: "無明顯方向，等待更明確訊號" };
 
-        // ★ v3.7 最新校準版 Matrix 定義與 SOP 動作 (6小時未來展望 - 2026/05數據)
         switch(matrixCode) {
             case '[+ 負 - +]': 
                 result = { 
@@ -1986,7 +1938,6 @@
       }
       document.getElementById('vwap-cross').innerText = lastCrossVwap;
 
-      // Level 4: fixed prior plus OCF 2.1 live support/resistance defense.
       renderOCFBattlePanel(data);
 
       let bu2 = "--";
@@ -1994,20 +1945,12 @@
           let scoreSign = data.futures_force_score > 0 ? "+" : "";
           let rawPhase = data.futures_force_phase;
           const phaseMap = {
-              "ACCUMULATION_LONG_CANDIDATE": "多方佈局",
-              "DISTRIBUTION_SHORT_CANDIDATE": "空方佈局",
-              "ACCUMULATION_LONG": "多方發起",
-              "DISTRIBUTION_SHORT": "空方發起",
-              "ATTACK_LONG_PENDING": "多方準備",
-              "ATTACK_SHORT_PENDING": "空方準備",
-              "ATTACK_LONG": "多方發動",
-              "ATTACK_SHORT": "空方發動",
-              "EXHAUSTION_LONG": "多方竭盡",
-              "EXHAUSTION_SHORT": "空方竭盡",
-              "CONFLICT": "多空分歧",
-              "STALE": "連線中斷",
-              "WARMUP": "系統暖機",
-              "NEUTRAL": "中立"
+              "ACCUMULATION_LONG_CANDIDATE": "多方佈局", "DISTRIBUTION_SHORT_CANDIDATE": "空方佈局",
+              "ACCUMULATION_LONG": "多方發起", "DISTRIBUTION_SHORT": "空方發起",
+              "ATTACK_LONG_PENDING": "多方準備", "ATTACK_SHORT_PENDING": "空方準備",
+              "ATTACK_LONG": "多方發動", "ATTACK_SHORT": "空方發動",
+              "EXHAUSTION_LONG": "多方竭盡", "EXHAUSTION_SHORT": "空方竭盡",
+              "CONFLICT": "多空分歧", "STALE": "連線中斷", "WARMUP": "系統暖機", "NEUTRAL": "中立"
           };
           let phaseZh = phaseMap[rawPhase] || rawPhase;
           let scoreStr = parseFloat(data.futures_force_score).toFixed(1);
@@ -2052,7 +1995,6 @@
 
       let th_ex_p = parseFloat(data.p9_th_ex_p || 30000); let th_ex_n = parseFloat(data.p9_th_ex_n || -20000); let th_at_p = parseFloat(data.p9_th_at_p || 5000); let th_at_n = parseFloat(data.p9_th_at_n || -5000);
       if (th_at_p < 500) th_at_p = 500; if (th_at_n > -500) th_at_n = -500; if (th_ex_p < 2500) th_ex_p = 2500; if (th_ex_n > -2500) th_ex_n = -2500;
-      let th_push_p = th_ex_p * 0.5; let th_push_n = th_ex_n * 0.5;
 
       let valP9 = parseFloat(data.p9 || 0); 
       let p9El = document.getElementById('p9-val'); 
@@ -2086,11 +2028,9 @@
           r7DeltaEl.innerHTML = `(乖離: <span style="${deltaColor}; font-weight:bold;">${deltaIcon} ${deltaStr}</span>)`;
       }
       
-      // ★ 讀取 R7 動態門檻，並根據當下 R7 正負值決定顯示哪一個
       let dyn_r7_p = data.r7_th_p !== undefined ? parseFloat(data.r7_th_p) : 1000;
       let dyn_r7_n = data.r7_th_n !== undefined ? parseFloat(data.r7_th_n) : -1000;
       
-      // 判斷當下是多方火力(>0)還是空方火力(<0)，顯示對應閾值
       let display_r7_th = valP7 >= 0 ? dyn_r7_p : dyn_r7_n;
       let r7ThEl = document.getElementById('r7-th-val');
       if (r7ThEl) {
@@ -2106,11 +2046,6 @@
           dynPressureEl.innerText = data.omi_pressure > 0 ? data.omi_pressure : "--";
       }
 
-
-
-      // =================================================================
-      // ★ 新增：接收並渲染主力狙擊重鎮 (P28, P29) 與 多空力道差
-      // =================================================================
       let bullTargetEl = document.getElementById('bull-target-val');
       if (bullTargetEl && data.bull_target !== undefined) {
           bullTargetEl.innerHTML = data.bull_target !== "" ? data.bull_target : "--";
@@ -2121,14 +2056,12 @@
           bearTargetEl.innerHTML = data.bear_target !== "" ? data.bear_target : "--";
       }
 
-      // 讀取並計算多空力道差
       let targetNetForceEl = document.getElementById('target-net-force');
       if (targetNetForceEl && data.bull_target_force !== undefined && data.bear_target_force !== undefined) {
           let bullForce = parseFloat(data.bull_target_force) || 0;
           let bearForce = parseFloat(data.bear_target_force) || 0;
-          let netForce = bullForce + bearForce; // 依照您定義的加總公式
+          let netForce = bullForce + bearForce;
 
-          // Dashboard V2: show each side's force and a visual balance bar.
           const bullForceLive = document.getElementById('bull-target-force-live');
           const bearForceLive = document.getElementById('bear-target-force-live');
           if (bullForceLive) bullForceLive.textContent = '力道 ' + (bullForce > 0 ? '+' : '') + bullForce.toLocaleString('en-US');
@@ -2148,11 +2081,8 @@
           let sign = netForce > 0 ? "+" : "";
           let color = netForce > 0 ? "var(--red)" : (netForce < 0 ? "var(--green)" : "#888");
           
-          // 更新數值並加入千分位與顏色
           targetNetForceEl.innerHTML = `<span style="color:${color}; text-shadow: 0 0 5px ${color}80;">${sign}${netForce.toLocaleString('en-US')}</span>`;
       }
-      // =================================================================
-
 
       let rawSlope = parseFloat(data.p9_slope || 0); p9SlopeHistory.push(rawSlope); if (p9SlopeHistory.length > 3) p9SlopeHistory.shift();
       let valP9Slope = Math.round(p9SlopeHistory.reduce((a, b) => a + b, 0) / p9SlopeHistory.length);
@@ -2191,9 +2121,6 @@
       
       updateStrategyBox(data, strategy);
 
-      // Legacy p-strike/s-strike DOM elements removed in UI update.
-      
-      const chipLabels = { 'c1': '近月夜', 'c2': '近月日', 'c3': '次月夜', 'c4': '次月日' };
       ['c1','c2','c3','c4'].forEach(id => {
         let raw = data[id]; if(!raw) return;
         let parts = raw.split('|'); let v = parseFloat(parts[0].replace('%',''));
@@ -2215,7 +2142,7 @@
         let labels=[], dataP=[], dataC=[], dataR7=[], dataP9=[];
         let dataWallPS=[], dataWallSS=[], dataWallPV=[], dataWallSV=[];
         let dataSkew=[]; 
-        let dataBullStrike=[], dataBearStrike=[], dataBullForce=[], dataBearForce=[]; // ★ 新增
+        let dataBullStrike=[], dataBearStrike=[], dataBullForce=[], dataBearForce=[];
         
         let skewRadii = [];
         let skewColors = [];
@@ -2255,7 +2182,6 @@
             }
             dataSkew.push(currentSkew);
 
-            // ★ 新增：讀取多空重鎮歷史數據 (濾除 0 或是 null 以免圖表下垂)
             let b_strike = d.bull_strike ? parseFloat(d.bull_strike) : null;
             let br_strike = d.bear_strike ? parseFloat(d.bear_strike) : null;
             dataBullStrike.push(b_strike > 0 ? b_strike : null);
@@ -2335,7 +2261,6 @@
             chartSkew.update();
         }
 
-        // ★ 新增
         if(chartSniper) {
             chartSniper.data.labels = labels;
             chartSniper.data.datasets[0].data = dataBullStrike;
@@ -2428,7 +2353,6 @@
             } 
         });
 
-        // ★ 新增：狙擊重鎮圖表初始化 (左軸點位、右軸力道)
         chartSniper = new Chart(document.getElementById('chartSniper').getContext('2d'), { 
             type: 'line', 
             data: { 
@@ -2687,7 +2611,6 @@
     const historyGrid = el('div', 'v2-history-grid');
     historyPage.appendChild(historyGrid);
 
-    // Move every original timeline title/chart/locked chart to History, grouped by chart.
     let currentHistoryItem = null;
     originalChildren.forEach(function (node) {
       if (!node || node.parentElement !== dashboard) return;
@@ -2713,7 +2636,6 @@
     if (powerBox) detailStack.appendChild(powerBox);
     if (powerLocked) detailStack.appendChild(powerLocked);
 
-    // Move every remaining original node to Complete Information.
     originalChildren.forEach(function (node) {
       if (!node || node === topSection) return;
       if (node.parentElement === dashboard) detailStack.appendChild(node);
@@ -2761,4 +2683,3 @@
 
 </body>
 </html>
-
