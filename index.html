@@ -1374,6 +1374,7 @@
             <div class="p9-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
                 <div id="r7-val" class="p9-val" style="font-size:15px; margin-top:1px;">--</div>
+                <div id="force-amount-display" style="font-size:8px; color:#888; margin-top:1px;">資金淨力：<span id="force-amount-val">--</span> 萬</div>
                 <div id="r7-delta-display" style="font-size:8px; color:#888; margin-top:1px;">(乖離: --)</div>
                 <div id="r7-thresholds-display" style="font-size:7px; color:#888; margin-top:1px; text-align:center; line-height:1; letter-spacing:0.3px;">
                     門檻: <span id="r7-th-val">--</span>
@@ -2697,6 +2698,18 @@
       if(r7El) { 
           r7El.innerText = (valP7>0?"+":"") + valP7.toLocaleString('en-US'); 
           r7El.className = "p9-val " + (valP7>0?"c-red":(valP7<0?"c-green":"")); 
+      }
+
+      let forceAmount = data.force_amount !== undefined ? Number(data.force_amount) : NaN;
+      let forceAmountEl = document.getElementById('force-amount-val');
+      if (forceAmountEl) {
+          if (Number.isFinite(forceAmount)) {
+              forceAmountEl.textContent = (forceAmount > 0 ? "+" : "") + Math.round(forceAmount).toLocaleString('en-US');
+              forceAmountEl.style.color = forceAmount > 0 ? "var(--red)" : (forceAmount < 0 ? "var(--green)" : "#888");
+          } else {
+              forceAmountEl.textContent = "--";
+              forceAmountEl.style.color = "#888";
+          }
       }
       
       let r7Delta = data.r7_delta !== undefined ? parseFloat(data.r7_delta) : 0;
