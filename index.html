@@ -166,7 +166,7 @@
     .radar-event-row { grid-column:1/-1; border-top:1px dashed #444; padding-top:4px; margin-top:1px; font-size:8px; line-height:1.35; color:#bbb; }
     .radar-position-row { grid-column:1/-1; color:#64d2ff; font-size:8px; text-align:center; padding-top:1px; }
 
-    /* === OCF 2.2.4 面板 === */
+    /* === OCF 2.2.5 面板 === */
     .ocf-battle-panel { margin-top:4px; padding:6px 0 0; border-top:1px solid #3a3a3c; width:100%; }
     .ocf-battle-header { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:5px; }
     .ocf-battle-kicker { color:#64d2ff; font-size:8px; font-weight:800; }
@@ -564,7 +564,7 @@
   font-size: 10px !important;
 }
 
-/* OCF 2.2.4 */
+/* OCF 2.2.5 */
 #v2-live-page .ocf-battle-kicker,
 #v2-live-page .ocf-command-label,
 #v2-live-page .ocf-command-sub,
@@ -1148,10 +1148,10 @@
             <div>跨月差: <span id="spread-next" style="color:#fff; font-weight:800; font-size:12px;">--</span></div>
         </div>
 
-        <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 2.2.4 固定戰場與盤中防守">
+        <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 2.2.5 固定戰場與盤中防守">
             <div class="ocf-battle-header">
                 <div>
-                    <div class="ocf-battle-kicker">OCF 2.2.4｜固定先驗 + 盤中防守確認</div>
+                    <div class="ocf-battle-kicker">OCF 2.2.5｜固定先驗 + 盤中防守確認</div>
                     <div class="ocf-battle-title">固定戰場藍圖</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -1767,11 +1767,11 @@
     }
 
     function getOCFActionContext(direction, supportState, resistanceState, isLive, campaignConflict, entryEligibilityKnown, entryEligible, conflictAge, advice) {
-        if (!isLive) return "OCF 2.2.4 尚未取得有效即時資料，BK2 與防守區均不可採用。";
+        if (!isLive) return "OCF 2.2.5 尚未取得有效即時資料，BK2 與防守區均不可採用。";
         if (/恢復.*驗證/.test(String(advice || ""))) return "短暫重啟狀態正在用新 RTD 重新驗證；方向與區域只供觀察，BK2 暫停新進場。";
         if (campaignConflict) {
             const ageText = conflictAge === null ? "" : `（已持續 ${formatRadarAge(conflictAge)}）`;
-            return `戰役方向仍保留，但近期選擇權證據反向衝突${ageText}；OCF 2.2.4 已禁止新進場，等待衝突解除或方向失效。`;
+            return `戰役方向仍保留，但近期選擇權證據反向衝突${ageText}；OCF 2.2.5 已禁止新進場，等待衝突解除或方向失效。`;
         }
         if (direction !== 0 && entryEligibilityKnown && !entryEligible) {
             return "戰役方向已鎖定，但目前選擇權進場脈絡尚未同向；只保留方向觀察，不可依方向單獨進場。";
@@ -1806,13 +1806,13 @@
         const statusElement = document.getElementById("ocf-model-status");
         if (statusElement) {
             if (isLive) {
-                statusElement.textContent = String(data.ocf_version || "OCF-2.2.4") + " 即時";
+                statusElement.textContent = String(data.ocf_version || "OCF-2.2.5") + " 即時";
                 statusElement.className = "ocf-model-badge is-live";
             } else if (fallbackActive) {
                 statusElement.textContent = "舊引擎備援中";
                 statusElement.className = "ocf-model-badge is-warn";
             } else {
-                statusElement.textContent = hasOCFData ? "暖機／資料不足" : "等待 OCF 2.2.4";
+                statusElement.textContent = hasOCFData ? "暖機／資料不足" : "等待 OCF 2.2.5";
                 statusElement.className = "ocf-model-badge is-stale";
             }
         }
@@ -3488,7 +3488,7 @@
     sniperCard.appendChild(targetSummary);
     coreGrid.appendChild(sniperCard);
 
-    /* 5. 下段模組 (TX Radar 與 OCF 2.2.4) */
+    /* 5. 下段模組 (TX Radar 與 OCF 2.2.5) */
     const intelGrid = el('div', 'v2-intel-grid');
     liveStack.appendChild(intelGrid);
 
@@ -3497,7 +3497,7 @@
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
 
-    const ocfCard = card('OCF 2.2.4 即時控制力', '方向、信心、防守區與BK2', 'v2-ocf-card');
+    const ocfCard = card('OCF 2.2.5 即時控制力', '方向、信心、防守區與BK2', 'v2-ocf-card');
     if (ocfPanel) ocfCard.appendChild(ocfPanel);
     if (ocfLocked) ocfCard.appendChild(ocfLocked);
     intelGrid.appendChild(ocfCard);
