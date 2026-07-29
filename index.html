@@ -165,6 +165,24 @@
     .radar-channel-row { grid-column:1/-1; border:1px solid #353539; background:rgba(0,0,0,.22); border-radius:5px; padding:4px 5px; font-size:9px; text-align:center; line-height:1.3; }
     .radar-event-row { grid-column:1/-1; border-top:1px dashed #444; padding-top:4px; margin-top:1px; font-size:8px; line-height:1.35; color:#bbb; }
     .radar-position-row { grid-column:1/-1; color:#64d2ff; font-size:8px; text-align:center; padding-top:1px; }
+    .radar-session-panel { border:1px solid #3a3a3c; border-left:3px solid #64d2ff; background:#202022; border-radius:6px; padding:5px 6px; margin-bottom:5px; }
+    .radar-session-panel.session-long { border-left-color:var(--red); background:rgba(255,69,58,.07); }
+    .radar-session-panel.session-short { border-left-color:var(--green); background:rgba(48,209,88,.07); }
+    .radar-session-panel.session-neutral { border-left-color:var(--yellow); background:rgba(255,214,10,.05); }
+    .radar-session-head { display:flex; align-items:center; justify-content:space-between; gap:5px; }
+    .radar-session-title { color:#d1d1d6; font-size:9px; font-weight:900; }
+    .radar-session-badge { border:1px solid #555; background:#2c2c2e; color:#d1d1d6; border-radius:3px; padding:1px 4px; font-size:8px; font-weight:900; white-space:nowrap; }
+    .radar-session-action { color:#d1d1d6; font-size:11px; font-weight:900; line-height:1.3; margin-top:3px; overflow-wrap:anywhere; }
+    .radar-session-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; margin-top:4px; }
+    .radar-session-item { min-width:0; background:rgba(255,255,255,.035); border:1px solid #343438; border-radius:4px; padding:3px 4px; }
+    .radar-session-label { display:block; color:#85858a; font-size:7px; line-height:1.2; }
+    .radar-session-value { display:block; color:#f2f2f7; font-size:9px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .radar-session-costs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:3px; margin-top:3px; }
+    .radar-session-cost { min-width:0; border:1px solid #3a3a3c; border-radius:4px; padding:3px 4px; font-size:8px; line-height:1.25; color:#aaa; }
+    .radar-session-cost strong { display:block; font-size:10px; margin-top:1px; }
+    .radar-session-cost.long strong { color:var(--red); }
+    .radar-session-cost.short strong { color:var(--green); }
+    .radar-session-foot { color:#8e8e93; font-size:7px; line-height:1.25; margin-top:3px; overflow-wrap:anywhere; }
     .radar-carry-panel { border:1px solid #3a3a3c; border-left:3px solid var(--yellow); background:#202022; border-radius:6px; padding:5px 6px; margin-bottom:5px; }
     .radar-carry-panel.carry-ready-long { border-left-color:var(--red); background:rgba(255,69,58,.07); }
     .radar-carry-panel.carry-ready-short { border-left-color:var(--green); background:rgba(48,209,88,.07); }
@@ -605,12 +623,17 @@
   font-size: 10px !important;
 }
 
+#v2-live-page .radar-session-title,
 #v2-live-page .radar-carry-title,
 #v2-live-page .radar-carry-value,
 #v2-live-page .radar-carry-cost strong {
   font-size: 10px !important;
 }
 
+#v2-live-page .radar-session-badge,
+#v2-live-page .radar-session-label,
+#v2-live-page .radar-session-cost,
+#v2-live-page .radar-session-foot,
 #v2-live-page .radar-carry-badge,
 #v2-live-page .radar-carry-label,
 #v2-live-page .radar-carry-cost,
@@ -619,6 +642,7 @@
   line-height: 1.3 !important;
 }
 
+#v2-live-page .radar-session-action,
 #v2-live-page .radar-carry-action {
   font-size: 12px !important;
 }
@@ -704,6 +728,7 @@
 
 /* Phone / very narrow window */
 @media (max-width: 620px) {
+  #v2-live-page .radar-session-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
   #v2-live-page .v2-market-compact-grid {
     grid-template-columns: minmax(0, 1fr) minmax(125px, .62fr);
     gap: 4px;
@@ -1734,10 +1759,32 @@
         FRESH_START: "全新啟動", PENDING_FIRST_TICK: "等待首筆行情核對", RECOVERED_GUARD: "快速恢復保護期", RECOVERED: "快速恢復完成", NEW_SESSION: "新盤重置"
     };
 
+    const SESSION_TRACK_STATE_ZH = {
+        WAITING_FOR_SESSION: "等待本盤資料",
+        WARMUP: "整盤累積中",
+        NEUTRAL: "整盤多空中性",
+        PROVISIONAL_LONG: "整盤暫定偏多",
+        PROVISIONAL_SHORT: "整盤暫定偏空",
+        READY_LONG: "整盤偏多",
+        READY_SHORT: "整盤偏空"
+    };
+
+    const SESSION_ALIGNMENT_ZH = {
+        UNRESOLVED: "整盤／近期尚未確認",
+        SESSION_LONG_TACTICAL_LONG: "整盤偏多／近期同向偏多",
+        SESSION_LONG_TACTICAL_SHORT: "整盤偏多／近期轉空",
+        SESSION_LONG_TACTICAL_NEUTRAL: "整盤偏多／近期未定",
+        SESSION_SHORT_TACTICAL_SHORT: "整盤偏空／近期同向偏空",
+        SESSION_SHORT_TACTICAL_LONG: "整盤偏空／近期轉多",
+        SESSION_SHORT_TACTICAL_NEUTRAL: "整盤偏空／近期未定",
+        SESSION_NEUTRAL: "整盤中性"
+    };
+
     const CARRY_STATE_ZH = {
         WAITING_FOR_DAY_SESSION: "等待日盤資料",
         BEFORE_TAIL_WINDOW: "等待 13:30",
         INSUFFICIENT_EVIDENCE: "資料不足",
+        PARTIAL_SESSION: "整盤資料不完整",
         COST_STRUCTURE_INCOMPLETE: "整盤成本未完整",
         SESSION_FLOW_NEUTRAL: "整盤流量中性",
         COST_CONTROL_UNRESOLVED: "成本控制未確認",
@@ -2272,9 +2319,75 @@
         return `${lowNumber.toFixed(0)}～${highNumber.toFixed(0)}`;
     }
 
+    function renderSessionCostPanel(data) {
+        const hasSessionSchema = ["19.5"].includes(String(data.radar_version || ""))
+            && String(data.model_revision || "") === "3.4-LIVE-SESSION";
+        const sessionData = hasSessionSchema ? data : {};
+        const state = hasSessionSchema
+            ? String(sessionData.main_cost_session_state || "WAITING_FOR_SESSION")
+            : "WAITING_FOR_SESSION";
+        const direction = hasSessionSchema
+            ? Math.sign(toFiniteNumberOrNull(sessionData.main_cost_session_direction) ?? 0)
+            : 0;
+        const confidence = hasSessionSchema
+            ? Math.max(0, Math.min(100, toFiniteNumberOrNull(sessionData.main_cost_session_confidence) ?? 0))
+            : 0;
+        const balance = hasSessionSchema
+            ? toFiniteNumberOrNull(sessionData.main_cost_session_balance)
+            : null;
+        const partial = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_partial);
+        const complete = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_coverage_complete);
+        const truncated = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_history_truncated);
+        const action = hasSessionSchema
+            ? String(sessionData.main_cost_session_action || "整盤成本累積中")
+            : "等待 TX Radar V19.5 整盤即時成本資料";
+        const alignmentCode = String(sessionData.main_cost_session_alignment || "UNRESOLVED");
+        const alignmentText = SESSION_ALIGNMENT_ZH[alignmentCode] || alignmentCode;
+        const panelClass = direction > 0 ? "session-long" : (direction < 0 ? "session-short" : "session-neutral");
+        const directionText = direction > 0 ? "偏多" : (direction < 0 ? "偏空" : "未定");
+        const directionColor = direction > 0 ? "var(--red)" : (direction < 0 ? "var(--green)" : "var(--yellow)");
+        const stateText = SESSION_TRACK_STATE_ZH[state] || state;
+        const coverageText = truncated ? "事件截斷" : (complete ? "完整盤" : (partial ? "部分盤" : "累積中"));
+        const mainRange = formatCarryRange(sessionData.main_cost_session_low, sessionData.main_cost_session_high);
+        const asof = toFiniteNumberOrNull(sessionData.main_cost_session_asof);
+        const asofText = asof !== null && asof > 0
+            ? new Date(asof * 1000).toLocaleTimeString("zh-TW", { hour12: false })
+            : "--";
+        const coverageStart = toFiniteNumberOrNull(sessionData.main_cost_session_coverage_started_at);
+        const coverageStartText = coverageStart !== null && coverageStart > 0
+            ? new Date(coverageStart * 1000).toLocaleTimeString("zh-TW", { hour12: false })
+            : "--";
+
+        return `
+            <div class="radar-session-panel ${panelClass}">
+                <div class="radar-session-head">
+                    <span class="radar-session-title">整盤即時主力成本（本盤開盤至目前）</span>
+                    <span class="radar-session-badge" style="color:${directionColor};">${escapeRadarHtml(stateText)}｜${escapeRadarHtml(coverageText)}</span>
+                </div>
+                <div class="radar-session-action" style="color:${directionColor};">${escapeRadarHtml(action)}</div>
+                <div class="radar-session-summary">
+                    <div class="radar-session-item"><span class="radar-session-label">整盤方向</span><span class="radar-session-value" style="color:${directionColor};">${directionText}</span></div>
+                    <div class="radar-session-item"><span class="radar-session-label">整盤Balance</span><span class="radar-session-value">${balance === null ? "--" : formatCarryBalance(balance)}</span></div>
+                    <div class="radar-session-item"><span class="radar-session-label">整盤主成本</span><span class="radar-session-value">${formatRadarNumber(sessionData.main_cost_session_cost, 0)}｜${mainRange}</span></div>
+                    <div class="radar-session-item"><span class="radar-session-label">信心／事件</span><span class="radar-session-value">${confidence.toFixed(0)}分／${Math.round(toFiniteNumberOrNull(sessionData.main_cost_session_event_count) ?? 0)}筆</span></div>
+                </div>
+                <div class="radar-session-costs">
+                    <div class="radar-session-cost long">整盤多方成本<strong>${formatCarryRange(sessionData.main_cost_session_long_low, sessionData.main_cost_session_long_high)}</strong><span>中心 ${formatRadarNumber(sessionData.main_cost_session_long_cost, 0)}｜ESS ${formatRadarNumber(sessionData.main_cost_session_long_effective_events, 1)}</span></div>
+                    <div class="radar-session-cost short">整盤空方成本<strong>${formatCarryRange(sessionData.main_cost_session_short_low, sessionData.main_cost_session_short_high)}</strong><span>中心 ${formatRadarNumber(sessionData.main_cost_session_short_cost, 0)}｜ESS ${formatRadarNumber(sessionData.main_cost_session_short_effective_events, 1)}</span></div>
+                </div>
+                <div class="radar-session-foot">
+                    整盤／近期：${escapeRadarHtml(alignmentText)}
+                    ｜總權重 ${formatRadarNumber(sessionData.main_cost_session_weight, 0)}
+                    ｜資料起點 ${escapeRadarHtml(coverageStartText)}
+                    ｜來源 ${escapeRadarHtml(String(sessionData.main_cost_session_source || "--"))}
+                    ｜更新 ${escapeRadarHtml(asofText)}
+                </div>
+            </div>`;
+    }
+
     function renderCarryPanel(data) {
-        const hasCarrySchema = String(data.radar_version || "") === "19.4"
-            && String(data.model_revision || "") === "3.3-TAIL-CARRY";
+        const hasCarrySchema = ["19.4", "19.5"].includes(String(data.radar_version || ""))
+            && ["3.3-TAIL-CARRY", "3.4-LIVE-SESSION"].includes(String(data.model_revision || ""));
         const carryData = hasCarrySchema ? data : {};
         const state = hasCarrySchema
             ? String(carryData.main_cost_carry_state || "WAITING_FOR_DAY_SESSION")
@@ -2292,7 +2405,7 @@
             : 0;
         const action = hasCarrySchema
             ? String(carryData.main_cost_carry_action || "等待日盤 13:30 尾盤判斷")
-            : "等待 TX Radar V19.4 跨盤資料";
+            : "等待 TX Radar V19.5 跨盤資料";
         const isNoChase = state === "LONG_CONTROL_NO_CHASE" || state === "SHORT_CONTROL_NO_CHASE";
         const isConflict = [
             "SESSION_CONTROL_CONFLICT", "LATE_FLOW_CONFLICT",
@@ -2453,13 +2566,14 @@
             const eventAge = eventTimestamp !== null && eventTimestamp > 0
                 ? Math.max(0, Date.now() / 1000 - eventTimestamp) : null;
 
-            const isPhase1 = ["19.3", "19.4"].includes(String(data.radar_version || ""))
+            const isPhase1 = ["19.3", "19.4", "19.5"].includes(String(data.radar_version || ""))
                 || Object.prototype.hasOwnProperty.call(data, "long_band_valid");
             const longBand = buildBandView(data, 'long');
             const shortBand = buildBandView(data, 'short');
             const channelValid = toRadarBoolean(data.channel_valid);
             const channelText = buildChannelText(data, longBand, shortBand);
             const positionText = buildPricePositionText(data.price, longBand, shortBand, channelValid);
+            const sessionCostHtml = renderSessionCostPanel(data);
             const carryHtml = renderCarryPanel(data);
 
             const recoveryStatus = translateRecoveryStatus(data.main_cost_recovery_status);
@@ -2515,9 +2629,10 @@
             const phase1Html = isPhase1 ? `
                 <div class="radar-phase-panel">
                     <div class="radar-phase-header">
-                        <span class="radar-phase-title">TX Radar V19.4 即時成本與跨盤層</span>
-                <span class="radar-version-badge">Radar ${escapeRadarHtml(data.radar_version || '19.4')} | Cost ${escapeRadarHtml(costVersionLabel)}</span>
+                        <span class="radar-phase-title">TX Radar V19.5 戰術／整盤即時成本與跨盤層</span>
+                <span class="radar-version-badge">Radar ${escapeRadarHtml(data.radar_version || '19.5')} | Cost ${escapeRadarHtml(costVersionLabel)}</span>
                     </div>
+                    ${sessionCostHtml}
                     ${carryHtml}
                     <div class="radar-model-grid">
                         <div class="radar-model-item"><div class="radar-model-label">恢復狀態</div><div class="radar-model-value">${escapeRadarHtml(recoveryStatus)}</div></div>
@@ -2568,7 +2683,7 @@
                 }
             }
         } catch (error) {
-            console.error('TX Radar V19.4 面板更新失敗:', error, data);
+            console.error('TX Radar V19.5 面板更新失敗:', error, data);
             ticker.innerHTML = '<span style="color:var(--yellow);">⚠️ 雷達資料格式異常，已保留頁面其他功能。</span>';
         }
     }
