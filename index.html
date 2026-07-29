@@ -166,7 +166,7 @@
     .radar-event-row { grid-column:1/-1; border-top:1px dashed #444; padding-top:4px; margin-top:1px; font-size:8px; line-height:1.35; color:#bbb; }
     .radar-position-row { grid-column:1/-1; color:#64d2ff; font-size:8px; text-align:center; padding-top:1px; }
 
-    /* === OCF 2.2.5 面板 === */
+    /* === OCF 2.2.7 面板 === */
     .ocf-battle-panel { margin-top:4px; padding:6px 0 0; border-top:1px solid #3a3a3c; width:100%; }
     .ocf-battle-header { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:5px; }
     .ocf-battle-kicker { color:#64d2ff; font-size:8px; font-weight:800; }
@@ -195,6 +195,8 @@
     .ocf-defense-state.state-confirming { color:var(--yellow); border-color:rgba(255,214,10,.6); background:rgba(255,214,10,.10); }
     .ocf-defense-card.support .ocf-defense-state.state-valid { color:var(--red); border-color:rgba(255,69,58,.65); background:rgba(255,69,58,.12); }
     .ocf-defense-card.resistance .ocf-defense-state.state-valid { color:var(--green); border-color:rgba(48,209,88,.65); background:rgba(48,209,88,.12); }
+    .ocf-defense-state.state-conflict { color:var(--yellow); border-color:rgba(255,214,10,.65); background:rgba(255,214,10,.12); }
+    .ocf-defense-state.state-superseded { color:#aaa; border-color:#555; background:#29292b; }
     .ocf-defense-state.state-failed { color:#ff9f0a; border-color:rgba(255,159,10,.65); background:rgba(255,159,10,.12); }
     .ocf-defense-state.state-stale { color:#aaa; border-color:#555; background:#29292b; }
     .ocf-defense-zone { color:#fff; font-size:14px; font-weight:900; line-height:1.2; margin-top:3px; overflow-wrap:anywhere; }
@@ -564,7 +566,7 @@
   font-size: 10px !important;
 }
 
-/* OCF 2.2.5 */
+/* OCF 2.2.7 */
 #v2-live-page .ocf-battle-kicker,
 #v2-live-page .ocf-command-label,
 #v2-live-page .ocf-command-sub,
@@ -1148,10 +1150,10 @@
             <div>跨月差: <span id="spread-next" style="color:#fff; font-weight:800; font-size:12px;">--</span></div>
         </div>
 
-        <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 2.2.5 固定戰場與盤中防守">
+        <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 2.2.7 固定戰場與盤中防守">
             <div class="ocf-battle-header">
                 <div>
-                    <div class="ocf-battle-kicker">OCF 2.2.5｜固定先驗 + 盤中防守確認</div>
+                    <div class="ocf-battle-kicker">OCF 2.2.7｜固定先驗 + 盤中防守確認</div>
                     <div class="ocf-battle-title">固定戰場藍圖</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -1185,7 +1187,7 @@
                     <div id="ocf-support-detail" class="ocf-defense-detail">等待 OCF 支撐資料</div>
                     <div class="ocf-meter"><span id="ocf-support-meter" class="ocf-meter-fill"></span></div>
                     <div class="ocf-defense-stats">
-                        <span class="ocf-defense-stat">確認<strong id="ocf-support-hits">0/3</strong></span>
+                        <span class="ocf-defense-stat">確認<strong id="ocf-support-hits">0/2</strong></span>
                         <span class="ocf-defense-stat">吸收<strong id="ocf-support-absorption">--</strong></span>
                         <span class="ocf-defense-stat">強度<strong id="ocf-support-strength">--</strong></span>
                     </div>
@@ -1201,7 +1203,7 @@
                     <div id="ocf-resistance-detail" class="ocf-defense-detail">等待 OCF 壓力資料</div>
                     <div class="ocf-meter"><span id="ocf-resistance-meter" class="ocf-meter-fill"></span></div>
                     <div class="ocf-defense-stats">
-                        <span class="ocf-defense-stat">確認<strong id="ocf-resistance-hits">0/3</strong></span>
+                        <span class="ocf-defense-stat">確認<strong id="ocf-resistance-hits">0/2</strong></span>
                         <span class="ocf-defense-stat">吸收<strong id="ocf-resistance-absorption">--</strong></span>
                         <span class="ocf-defense-stat">強度<strong id="ocf-resistance-strength">--</strong></span>
                     </div>
@@ -1698,6 +1700,14 @@
         4: { label: "防守有效", className: "state-valid" },
         5: { label: "防守失效", className: "state-failed" }
     };
+    const OCF_CONFIRM_BURSTS = 2;
+
+    function getOCFDefenseSemantic(stateDisplay) {
+        const text = String(stateDisplay || "");
+        if (/重疊戰區|多空爭奪/.test(text)) return "conflict";
+        if (/舊戰區|已被取代/.test(text)) return "superseded";
+        return "";
+    }
 
     function setOCFText(id, value) {
         const element = document.getElementById(id);
@@ -1723,13 +1733,20 @@
 
     function getOCFDefenseAction(side, stateCode, hits, isLive, stateDisplay) {
         const isSupport = side === "support";
+        const semantic = getOCFDefenseSemantic(stateDisplay);
         if (!isLive) return "資料未通過新鮮度，停止依此區域操作。";
         if (/恢復.*驗證/.test(String(stateDisplay || ""))) return "短暫重啟資料已載入，60 秒驗證完成前禁止進場。";
+        if (semantic === "conflict") return "支撐與壓力重疊爭奪中，OCF 已禁止 BK2 新進場。";
+        if (semantic === "superseded") return isSupport
+            ? "此舊支撐已被新壓力取代，不可再依此接多。"
+            : "此舊壓力已被新支撐取代，不可再依此放空。";
         if (stateCode === 1) return isSupport ? "候選區只觀察，不可直接接多。" : "候選區只觀察，不可直接放空。";
-        if (stateCode === 2) return isSupport ? "SP 吸收防守中，等待三次確認。" : "SC 吸收防守中，等待三次確認。";
+        if (stateCode === 2) return isSupport ? "SP 吸收防守中，等待兩次確認。" : "SC 吸收防守中，等待兩次確認。";
         if (stateCode === 3) {
-            if (hits >= 3) return isSupport ? "選擇權已確認，等待價格收復或守住支撐。" : "選擇權已確認，等待價格跌回或守住壓力。";
-            return `確認 ${hits}/3，尚不可提前進場。`;
+            if (hits >= OCF_CONFIRM_BURSTS || /強力防守|價格反應/.test(String(stateDisplay || ""))) {
+                return isSupport ? "選擇權已確認，等待價格反應持續成立。" : "選擇權已確認，等待價格反應持續成立。";
+            }
+            return `確認 ${hits}/${OCF_CONFIRM_BURSTS}，尚不可提前進場。`;
         }
         if (stateCode === 4) return isSupport ? "防守有效；BK2 同意後，回測不破可偏多。" : "防守有效；BK2 同意後，反彈不過可偏空。";
         if (stateCode === 5) return isSupport ? "支撐已失效，停止接多並等待新區域。" : "壓力已失效，停止放空並等待新區域。";
@@ -1741,23 +1758,39 @@
         const stateMeta = OCF_DEFENSE_STATES[stateNumber] || OCF_DEFENSE_STATES[0];
         const stateDisplay = String(data[`ocf_${side}_defense_state_display`] || "").trim();
         const detailDisplay = String(data[`ocf_${side}_defense_detail_display`] || "").trim();
-        const hits = Math.max(0, Math.min(3, Math.round(toFiniteNumberOrNull(data[`ocf_${side}_defense_hits`]) ?? 0)));
+        const hits = Math.max(0, Math.min(OCF_CONFIRM_BURSTS, Math.round(toFiniteNumberOrNull(data[`ocf_${side}_defense_hits`]) ?? 0)));
         const absorption = toFiniteNumberOrNull(data[`ocf_${side}_defense_absorption`]);
         const strength = toFiniteNumberOrNull(data[`ocf_${side}_defense_strength`]);
         const stateElement = document.getElementById(`ocf-${side}-state`);
         const meterElement = document.getElementById(`ocf-${side}-meter`);
+        const semantic = getOCFDefenseSemantic(stateDisplay);
 
         if (stateElement) {
             let visibleState = stateDisplay || stateMeta.label;
-            if (stateNumber === 3) visibleState = hits >= 3 ? "等待價格反應" : `確認中 ${hits}/3`;
-            if (visibleState.length > 8 && stateNumber !== 3) visibleState = stateMeta.label;
+            if (semantic === "conflict") {
+                visibleState = "多空爭奪";
+            } else if (semantic === "superseded") {
+                visibleState = "已被取代";
+            } else if (stateNumber === 3) {
+                visibleState = /強力防守/.test(stateDisplay)
+                    ? "強力防守"
+                    : (hits >= OCF_CONFIRM_BURSTS ? "等待價格反應" : `確認中 ${hits}/${OCF_CONFIRM_BURSTS}`);
+            } else if (visibleState.length > 8) {
+                visibleState = stateMeta.label;
+            }
             if (!isLive) visibleState = "資料暫停";
             stateElement.textContent = visibleState.replace(/\|/g, "｜");
-            stateElement.className = `ocf-defense-state ${isLive ? stateMeta.className : "state-stale"}`;
+            const semanticClass = semantic === "conflict"
+                ? "state-conflict"
+                : (semantic === "superseded" ? "state-superseded" : stateMeta.className);
+            stateElement.className = `ocf-defense-state ${isLive ? semanticClass : "state-stale"}`;
         }
         setOCFText(`ocf-${side}-zone`, formatOCFZone(data, side));
         setOCFText(`ocf-${side}-detail`, detailDisplay ? detailDisplay.replace(/\|/g, "｜") : "尚無防守細節");
-        setOCFText(`ocf-${side}-hits`, `${hits}/3`);
+        const confirmationText = stateNumber === 4 && hits < OCF_CONFIRM_BURSTS
+            ? "特強1次"
+            : `${hits}/${OCF_CONFIRM_BURSTS}`;
+        setOCFText(`ocf-${side}-hits`, confirmationText);
         setOCFText(`ocf-${side}-absorption`, absorption === null ? "--" : Math.round(absorption));
         setOCFText(`ocf-${side}-strength`, strength === null ? "--" : Math.round(strength));
         setOCFText(`ocf-${side}-action`, getOCFDefenseAction(side, stateNumber, hits, isLive, stateDisplay));
@@ -1766,28 +1799,41 @@
         return stateNumber;
     }
 
-    function getOCFActionContext(direction, supportState, resistanceState, isLive, campaignConflict, entryEligibilityKnown, entryEligible, conflictAge, advice) {
-        if (!isLive) return "OCF 2.2.5 尚未取得有效即時資料，BK2 與防守區均不可採用。";
+    function getOCFActionContext(direction, supportState, resistanceState, isLive, campaignConflict, entryEligibilityKnown, entryEligible, conflictAge, advice, supportDisplay, resistanceDisplay) {
+        if (!isLive) return "OCF 2.2.7 尚未取得有效即時資料，BK2 與防守區均不可採用。";
         if (/恢復.*驗證/.test(String(advice || ""))) return "短暫重啟狀態正在用新 RTD 重新驗證；方向與區域只供觀察，BK2 暫停新進場。";
+        const supportSemantic = getOCFDefenseSemantic(supportDisplay);
+        const resistanceSemantic = getOCFDefenseSemantic(resistanceDisplay);
+        if (supportSemantic === "conflict" || resistanceSemantic === "conflict") {
+            return "支撐與壓力在相同戰區形成多空爭奪；OCF 2.2.7 已禁止 BK2 新進場，等待其中一側失效。";
+        }
         if (campaignConflict) {
             const ageText = conflictAge === null ? "" : `（已持續 ${formatRadarAge(conflictAge)}）`;
-            return `戰役方向仍保留，但近期選擇權證據反向衝突${ageText}；OCF 2.2.5 已禁止新進場，等待衝突解除或方向失效。`;
+            return `戰役方向仍保留，但近期選擇權證據反向衝突${ageText}；OCF 2.2.7 已禁止新進場，等待衝突解除或方向失效。`;
+        }
+        const effectiveSupportState = supportSemantic === "superseded" ? 0 : supportState;
+        const effectiveResistanceState = resistanceSemantic === "superseded" ? 0 : resistanceState;
+        if (supportSemantic === "superseded" && effectiveResistanceState === 4) {
+            return "新壓力已接管舊支撐；舊支撐禁止接多，只等待空方 BK2 條件。";
+        }
+        if (resistanceSemantic === "superseded" && effectiveSupportState === 4) {
+            return "新支撐已接管舊壓力；舊壓力禁止放空，只等待多方 BK2 條件。";
         }
         if (direction !== 0 && entryEligibilityKnown && !entryEligible) {
             return "戰役方向已鎖定，但目前選擇權進場脈絡尚未同向；只保留方向觀察，不可依方向單獨進場。";
         }
-        if (supportState === 4 && resistanceState === 4) return "雙邊防守同時有效，視為區間控制；只執行 BK2 明確方向。";
-        if (supportState === 4) {
+        if (effectiveSupportState === 4 && effectiveResistanceState === 4) return "雙邊有效區未重疊，視為防守通道；只執行 BK2 明確方向。";
+        if (effectiveSupportState === 4) {
             if (direction > 0) return "主力方向與支撐防守一致；等待 BK2 與回測條件。";
             if (direction < 0) return "空方主力動向與多方支撐分歧，降低進場信任。";
             return "支撐已確認，但主力方向尚未鎖定；等待 BK2。";
         }
-        if (resistanceState === 4) {
+        if (effectiveResistanceState === 4) {
             if (direction < 0) return "主力方向與壓力防守一致；等待 BK2 與反彈條件。";
             if (direction > 0) return "多方主力動向與空方壓力分歧，降低進場信任。";
             return "壓力已確認，但主力方向尚未鎖定；等待 BK2。";
         }
-        if (supportState === 3 || resistanceState === 3) return "選擇權防守正在確認，尚未通過價格反應；不得提前進場。";
+        if (effectiveSupportState === 3 || effectiveResistanceState === 3) return "選擇權防守正在確認，尚未通過持續價格反應；不得提前進場。";
         return "目前只有候選區或無防守證據，區域本身不能當進場訊號。";
     }
 
@@ -1806,13 +1852,13 @@
         const statusElement = document.getElementById("ocf-model-status");
         if (statusElement) {
             if (isLive) {
-                statusElement.textContent = String(data.ocf_version || "OCF-2.2.5") + " 即時";
+                statusElement.textContent = String(data.ocf_version || "OCF-2.2.7") + " 即時";
                 statusElement.className = "ocf-model-badge is-live";
             } else if (fallbackActive) {
                 statusElement.textContent = "舊引擎備援中";
                 statusElement.className = "ocf-model-badge is-warn";
             } else {
-                statusElement.textContent = hasOCFData ? "暖機／資料不足" : "等待 OCF 2.2.5";
+                statusElement.textContent = hasOCFData ? "暖機／資料不足" : "等待 OCF 2.2.7";
                 statusElement.className = "ocf-model-badge is-stale";
             }
         }
@@ -1874,7 +1920,9 @@
             entryEligibilityKnown,
             entryEligible,
             conflictAge,
-            advice
+            advice,
+            data.ocf_support_defense_state_display,
+            data.ocf_resistance_defense_state_display
         ));
 
         const blueprintReady = toRadarBoolean(data.omi3_blueprint_ready);
@@ -3488,7 +3536,7 @@
     sniperCard.appendChild(targetSummary);
     coreGrid.appendChild(sniperCard);
 
-    /* 5. 下段模組 (TX Radar 與 OCF 2.2.5) */
+    /* 5. 下段模組 (TX Radar 與 OCF 2.2.7) */
     const intelGrid = el('div', 'v2-intel-grid');
     liveStack.appendChild(intelGrid);
 
@@ -3497,7 +3545,7 @@
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
 
-    const ocfCard = card('OCF 2.2.5 即時控制力', '方向、信心、防守區與BK2', 'v2-ocf-card');
+    const ocfCard = card('OCF 2.2.7 即時控制力', '方向、信心、防守區與BK2', 'v2-ocf-card');
     if (ocfPanel) ocfCard.appendChild(ocfPanel);
     if (ocfLocked) ocfCard.appendChild(ocfLocked);
     intelGrid.appendChild(ocfCard);
