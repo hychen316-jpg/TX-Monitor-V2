@@ -183,7 +183,7 @@
     .radar-session-cost.long strong { color:var(--red); }
     .radar-session-cost.short strong { color:var(--green); }
     .radar-session-foot { color:#8e8e93; font-size:7px; line-height:1.25; margin-top:3px; overflow-wrap:anywhere; }
-    /* === OCF 2.2.7 面板 === */
+    /* === OCF 動態版本面板 === */
     .ocf-battle-panel { margin-top:4px; padding:6px 0 0; border-top:1px solid #3a3a3c; width:100%; }
     .ocf-battle-header { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:5px; }
     .ocf-battle-kicker { color:#64d2ff; font-size:8px; font-weight:800; }
@@ -616,7 +616,7 @@
   font-size: 12px !important;
 }
 
-/* OCF 2.2.7 */
+/* OCF dynamic version */
 #v2-live-page .ocf-battle-kicker,
 #v2-live-page .ocf-command-label,
 #v2-live-page .ocf-command-sub,
@@ -1201,10 +1201,10 @@
             <div>跨月差: <span id="spread-next" style="color:#fff; font-weight:800; font-size:12px;">--</span></div>
         </div>
 
-        <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 2.2.7 固定戰場與盤中防守">
+        <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 固定戰場與盤中防守">
             <div class="ocf-battle-header">
                 <div>
-                    <div class="ocf-battle-kicker">OCF 2.2.7｜固定先驗 + 盤中防守確認</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF｜固定先驗 + 盤中防守確認</div>
                     <div class="ocf-battle-title">固定戰場藍圖</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -1959,17 +1959,34 @@
         }
     }
 
-    function getOCFActionContext(direction, supportState, resistanceState, isLive, campaignConflict, entryEligibilityKnown, entryEligible, conflictAge, advice, supportDisplay, resistanceDisplay) {
-        if (!isLive) return "OCF 2.2.7 尚未取得有效即時資料，BK2 與防守區均不可採用。";
+    function getOCFVersionLabel(data) {
+        const rawVersion = String(
+            (data && (data.ocf_version || data.mdi_version)) || ""
+        ).trim();
+        const versionMatch = rawVersion.match(/OCF[-\s]*([0-9]+(?:\.[0-9]+)+)/i);
+        return versionMatch ? `OCF ${versionMatch[1]}` : "OCF";
+    }
+
+    function applyOCFVersionLabel(data) {
+        const versionLabel = getOCFVersionLabel(data);
+        setOCFText("ocf-battle-version-title", `${versionLabel}｜固定先驗 + 盤中防守確認`);
+        setOCFText("v2-ocf-card-title", `${versionLabel} 即時控制力`);
+        const panel = document.getElementById("ocf-battle-panel");
+        if (panel) panel.setAttribute("aria-label", `${versionLabel} 固定戰場與盤中防守`);
+        return versionLabel;
+    }
+
+    function getOCFActionContext(direction, supportState, resistanceState, isLive, campaignConflict, entryEligibilityKnown, entryEligible, conflictAge, advice, supportDisplay, resistanceDisplay, versionLabel) {
+        if (!isLive) return `${versionLabel} 尚未取得有效即時資料，BK2 與防守區均不可採用。`;
         if (/恢復.*驗證/.test(String(advice || ""))) return "短暫重啟狀態正在用新 RTD 重新驗證；方向與區域只供觀察，BK2 暫停新進場。";
         const supportSemantic = getOCFDefenseSemantic(supportDisplay);
         const resistanceSemantic = getOCFDefenseSemantic(resistanceDisplay);
         if (supportSemantic === "conflict" || resistanceSemantic === "conflict") {
-            return "支撐與壓力在相同戰區形成多空爭奪；OCF 2.2.7 已禁止 BK2 新進場，等待其中一側失效。";
+            return `支撐與壓力在相同戰區形成多空爭奪；${versionLabel} 已禁止 BK2 新進場，等待其中一側失效。`;
         }
         if (campaignConflict) {
             const ageText = conflictAge === null ? "" : `（已持續 ${formatRadarAge(conflictAge)}）`;
-            return `戰役方向仍保留，但近期選擇權證據反向衝突${ageText}；OCF 2.2.7 已禁止新進場，等待衝突解除或方向失效。`;
+            return `戰役方向仍保留，但近期選擇權證據反向衝突${ageText}；${versionLabel} 已禁止新進場，等待衝突解除或方向失效。`;
         }
         const effectiveSupportState = supportSemantic === "superseded" ? 0 : supportState;
         const effectiveResistanceState = resistanceSemantic === "superseded" ? 0 : resistanceState;
@@ -2006,19 +2023,20 @@
     }
 
     function renderOCFBattlePanel(data) {
+        const versionLabel = applyOCFVersionLabel(data);
         const hasOCFData = Object.prototype.hasOwnProperty.call(data, "ocf_valid");
         const isLive = hasOCFData && toRadarBoolean(data.ocf_valid);
         const fallbackActive = toRadarBoolean(data.ocf_legacy_fallback);
         const statusElement = document.getElementById("ocf-model-status");
         if (statusElement) {
             if (isLive) {
-                statusElement.textContent = String(data.ocf_version || "OCF-2.2.8") + " 即時";
+                statusElement.textContent = `${versionLabel} 即時`;
                 statusElement.className = "ocf-model-badge is-live";
             } else if (fallbackActive) {
                 statusElement.textContent = "舊引擎備援中";
                 statusElement.className = "ocf-model-badge is-warn";
             } else {
-                statusElement.textContent = hasOCFData ? "暖機／資料不足" : "等待 OCF 2.2.7";
+                statusElement.textContent = hasOCFData ? "暖機／資料不足" : `等待 ${versionLabel}`;
                 statusElement.className = "ocf-model-badge is-stale";
             }
         }
@@ -2083,7 +2101,8 @@
             conflictAge,
             advice,
             data.ocf_support_defense_state_display,
-            data.ocf_resistance_defense_state_display
+            data.ocf_resistance_defense_state_display,
+            versionLabel
         ));
 
         const blueprintReady = toRadarBoolean(data.omi3_blueprint_ready);
@@ -3792,7 +3811,7 @@
     sniperCard.appendChild(targetSummary);
     coreGrid.appendChild(sniperCard);
 
-    /* 5. 下段模組 (TX Radar 與 OCF 2.2.7) */
+    /* 5. 下段模組 (TX Radar 與 OCF) */
     const intelGrid = el('div', 'v2-intel-grid');
     liveStack.appendChild(intelGrid);
 
@@ -3801,7 +3820,9 @@
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
 
-    const ocfCard = card('OCF 2.2.7 即時控制力', '方向、信心、防守區與BK2', 'v2-ocf-card');
+    const ocfCard = card('OCF 即時控制力', '方向、信心、防守區與BK2', 'v2-ocf-card');
+    const ocfCardTitle = ocfCard.querySelector('.v2-card-title > span');
+    if (ocfCardTitle) ocfCardTitle.id = 'v2-ocf-card-title';
     if (ocfPanel) ocfCard.appendChild(ocfPanel);
     if (ocfLocked) ocfCard.appendChild(ocfLocked);
     intelGrid.appendChild(ocfCard);
