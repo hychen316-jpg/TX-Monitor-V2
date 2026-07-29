@@ -209,6 +209,19 @@
     .ocf-defense-stat { color:#85858a; font-size:7px; line-height:1.2; }
     .ocf-defense-stat strong { display:block; color:#e5e5ea; font-size:8px; margin-top:1px; }
     .ocf-defense-action { color:#d1d1d6; border-top:1px dashed #3a3a3c; font-size:8px; font-weight:700; line-height:1.25; margin-top:4px; padding-top:3px; min-height:18px; }
+    .ocf-defense-balance { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; padding:5px 6px; border:1px solid #3a3a3c; border-left:3px solid #636366; border-radius:5px; background:#202022; }
+    .ocf-defense-balance.balance-bull { border-left-color:var(--red); background:rgba(255,69,58,.08); }
+    .ocf-defense-balance.balance-bear { border-left-color:var(--green); background:rgba(48,209,88,.08); }
+    .ocf-defense-balance.balance-even,
+    .ocf-defense-balance.balance-conflict { border-left-color:var(--yellow); background:rgba(255,214,10,.08); }
+    .ocf-defense-balance.balance-stale { border-left-color:#636366; background:#252527; opacity:.82; }
+    .ocf-defense-balance-main { min-width:0; }
+    .ocf-defense-balance-label { display:block; color:#8e8e93; font-size:7px; font-weight:800; }
+    .ocf-defense-balance-text { display:block; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-defense-balance-stats { display:flex; flex:0 0 auto; align-items:center; gap:7px; color:#8e8e93; font-size:7px; white-space:nowrap; }
+    .ocf-defense-balance-stats strong { color:#f2f2f7; font-size:9px; margin-left:2px; }
+    .ocf-defense-balance-stats .support-power strong { color:var(--red); }
+    .ocf-defense-balance-stats .resistance-power strong { color:var(--green); }
     .ocf-action-band { border:1px solid #3a3a3c; border-left:3px solid var(--yellow); border-radius:5px; background:#232325; margin-top:4px; padding:4px 6px; }
     .ocf-action-band.action-bull { border-left-color:var(--red); }
     .ocf-action-band.action-bear { border-left-color:var(--green); }
@@ -361,6 +374,8 @@
       .v2-c1c4-card .chip-card .big-val { font-size: 17px !important; }
       .ocf-command-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .ocf-command-item.direction { grid-column: 1 / -1; }
+      .ocf-defense-balance { align-items:flex-start; flex-direction:column; gap:4px; }
+      .ocf-defense-balance-stats { width:100%; justify-content:space-between; }
     }
 
   
@@ -1211,6 +1226,18 @@
                 </article>
             </div>
 
+            <div id="ocf-defense-balance" class="ocf-defense-balance balance-stale">
+                <div class="ocf-defense-balance-main">
+                    <span class="ocf-defense-balance-label">雙邊防守優勢（CI2）</span>
+                    <strong id="ocf-defense-balance-text" class="ocf-defense-balance-text">等待雙邊有效</strong>
+                </div>
+                <div class="ocf-defense-balance-stats">
+                    <span class="support-power">支撐<strong id="ocf-support-power">--</strong></span>
+                    <span class="resistance-power">壓力<strong id="ocf-resistance-power">--</strong></span>
+                    <span>差值<strong id="ocf-defense-power-gap">--</strong></span>
+                </div>
+            </div>
+
             <div id="ocf-action-band" class="ocf-action-band">
                 <div class="ocf-action-label">BK2 最終建議動作</div>
                 <div id="ocf-bk-advice" class="ocf-action-text" aria-live="polite">等待完整訊號</div>
@@ -1799,6 +1826,82 @@
         return stateNumber;
     }
 
+    function renderOCFDefenseBalance(data, isLive, supportState, resistanceState) {
+        const balanceElement = document.getElementById("ocf-defense-balance");
+        const textElement = document.getElementById("ocf-defense-balance-text");
+        const supportPower = toFiniteNumberOrNull(data.ocf_support_defense_power);
+        const resistancePower = toFiniteNumberOrNull(data.ocf_resistance_defense_power);
+        const calculatedGap = supportPower !== null && resistancePower !== null
+            ? supportPower - resistancePower
+            : null;
+        const powerGap = toFiniteNumberOrNull(data.ocf_defense_power_gap) ?? calculatedGap;
+        const backendDirection = toFiniteNumberOrNull(data.ocf_defense_power_direction);
+        const supportSemantic = getOCFDefenseSemantic(data.ocf_support_defense_state_display);
+        const resistanceSemantic = getOCFDefenseSemantic(data.ocf_resistance_defense_state_display);
+        const contested = supportSemantic === "conflict" || resistanceSemantic === "conflict";
+        const supportActive = supportState === 4 && supportSemantic !== "superseded";
+        const resistanceActive = resistanceState === 4 && resistanceSemantic !== "superseded";
+        const comparableFromStates = supportActive && resistanceActive;
+        const comparable = Object.prototype.hasOwnProperty.call(data, "ocf_defense_power_comparable")
+            ? toRadarBoolean(data.ocf_defense_power_comparable)
+            : comparableFromStates;
+        let direction = backendDirection === null
+            ? (powerGap !== null && powerGap >= 5 ? 1 : (powerGap !== null && powerGap <= -5 ? -1 : 0))
+            : Math.sign(backendDirection);
+        let displayText = String(data.ocf_defense_power_display || "").trim();
+
+        if (!isLive) {
+            displayText = "資料暫停";
+            direction = 0;
+        } else if (!displayText) {
+            if (supportSemantic === "superseded" && resistanceActive) {
+                displayText = "壓力接管";
+                direction = -1;
+            } else if (resistanceSemantic === "superseded" && supportActive) {
+                displayText = "支撐接管";
+                direction = 1;
+            } else if (supportActive && !resistanceActive) {
+                displayText = "僅支撐有效";
+                direction = 1;
+            } else if (resistanceActive && !supportActive) {
+                displayText = "僅壓力有效";
+                direction = -1;
+            } else if (!comparable || powerGap === null) {
+                displayText = "等待雙邊有效";
+                direction = 0;
+            } else if (powerGap >= 10) {
+                displayText = `支撐較強｜+${Math.round(powerGap)}`;
+            } else if (powerGap >= 5) {
+                displayText = `支撐略強｜+${Math.round(powerGap)}`;
+            } else if (powerGap <= -10) {
+                displayText = `壓力較強｜${Math.round(powerGap)}`;
+            } else if (powerGap <= -5) {
+                displayText = `壓力略強｜${Math.round(powerGap)}`;
+            } else {
+                displayText = `多空均衡｜${powerGap >= 0 ? "+" : ""}${Math.round(powerGap)}`;
+            }
+        }
+
+        if (contested && !/BK2.*禁止/.test(displayText)) {
+            displayText += "｜BK2仍禁止";
+        }
+        if (textElement) textElement.textContent = displayText.replace(/\|/g, "｜");
+        setOCFText("ocf-support-power", supportPower === null ? "--" : Math.round(supportPower));
+        setOCFText("ocf-resistance-power", resistancePower === null ? "--" : Math.round(resistancePower));
+        setOCFText("ocf-defense-power-gap", powerGap === null
+            ? "--"
+            : `${powerGap > 0 ? "+" : ""}${Math.round(powerGap)}`);
+
+        if (balanceElement) {
+            const balanceClass = !isLive
+                ? "balance-stale"
+                : (contested
+                    ? "balance-conflict"
+                    : (direction > 0 ? "balance-bull" : (direction < 0 ? "balance-bear" : "balance-even")));
+            balanceElement.className = `ocf-defense-balance ${balanceClass}`;
+        }
+    }
+
     function getOCFActionContext(direction, supportState, resistanceState, isLive, campaignConflict, entryEligibilityKnown, entryEligible, conflictAge, advice, supportDisplay, resistanceDisplay) {
         if (!isLive) return "OCF 2.2.7 尚未取得有效即時資料，BK2 與防守區均不可採用。";
         if (/恢復.*驗證/.test(String(advice || ""))) return "短暫重啟狀態正在用新 RTD 重新驗證；方向與區域只供觀察，BK2 暫停新進場。";
@@ -1901,6 +2004,7 @@
 
         const supportState = renderOCFDefenseSide(data, "support", isLive);
         const resistanceState = renderOCFDefenseSide(data, "resistance", isLive);
+        renderOCFDefenseBalance(data, isLive, supportState, resistanceState);
 
         const advice = String(data.mdi_execution_advice || data.omi_trade_advice || "").trim() || "等待完整訊號";
         const adviceClass = classifyOCFAdvice(advice);
