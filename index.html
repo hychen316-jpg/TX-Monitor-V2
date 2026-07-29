@@ -183,6 +183,55 @@
     .radar-session-cost.long strong { color:var(--red); }
     .radar-session-cost.short strong { color:var(--green); }
     .radar-session-foot { color:#8e8e93; font-size:7px; line-height:1.25; margin-top:3px; overflow-wrap:anywhere; }
+    .radar-command-shell { display:flex; flex-direction:column; gap:5px; width:100%; min-width:0; }
+    .radar-command-head { display:flex; align-items:center; justify-content:space-between; gap:8px; border-bottom:1px solid #3a3a3c; padding-bottom:4px; }
+    .radar-command-heading { min-width:0; }
+    .radar-command-title { color:#f2f2f7; font-size:11px; font-weight:900; line-height:1.2; }
+    .radar-command-subtitle { color:#85858a; font-size:8px; line-height:1.25; margin-top:1px; }
+    .radar-command-meta { display:flex; align-items:center; justify-content:flex-end; gap:5px; flex:0 0 auto; }
+    .radar-command-time { color:#8e8e93; font-size:9px; font-weight:800; white-space:nowrap; }
+    .radar-live-grid { display:grid; grid-template-columns:1.25fr 1.2fr .8fr 1.35fr; width:100%; border:1px solid #3a3a3c; background:#202022; }
+    .radar-live-item { min-width:0; padding:4px 6px; border-left:1px solid #3a3a3c; }
+    .radar-live-item:first-child { border-left:0; }
+    .radar-live-label { display:block; color:#85858a; font-size:8px; line-height:1.2; }
+    .radar-live-value { display:block; color:#f2f2f7; font-size:12px; font-weight:900; line-height:1.2; margin-top:1px; overflow-wrap:anywhere; }
+    .radar-live-meta { display:block; color:#8e8e93; font-size:8px; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .radar-cost-track-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; align-items:start; width:100%; }
+    .radar-cost-track { min-width:0; border:1px solid #3a3a3c; border-top:3px solid #64d2ff; background:#202022; padding:5px 6px; }
+    .radar-cost-track.tactical { border-top-color:#64d2ff; }
+    .radar-cost-track.session-long { border-top-color:var(--red); border-left:1px solid #3a3a3c; }
+    .radar-cost-track.session-short { border-top-color:var(--green); border-left:1px solid #3a3a3c; }
+    .radar-cost-track.session-neutral { border-top-color:var(--yellow); border-left:1px solid #3a3a3c; }
+    .radar-track-head { display:flex; align-items:flex-start; justify-content:space-between; gap:5px; }
+    .radar-track-title { color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.2; }
+    .radar-track-caption { color:#85858a; font-size:8px; line-height:1.2; margin-top:1px; }
+    .radar-track-badge { flex:0 0 auto; border:1px solid #4a4a4d; color:#d1d1d6; background:#29292b; padding:1px 4px; font-size:8px; font-weight:900; white-space:nowrap; }
+    .radar-track-action { border-left:3px solid #636366; background:rgba(255,255,255,.035); color:#d1d1d6; font-size:10px; font-weight:800; line-height:1.3; margin-top:4px; padding:3px 5px; overflow-wrap:anywhere; }
+    .radar-track-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; margin-top:4px; }
+    .radar-track-metric { min-width:0; border-top:1px solid #3a3a3c; padding:3px 2px 0; }
+    .radar-track-metric span { display:block; color:#85858a; font-size:7px; line-height:1.2; }
+    .radar-track-metric strong { display:block; color:#f2f2f7; font-size:9px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .radar-track-diagnostics { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:3px 8px; border-top:1px dashed #3a3a3c; color:#8e8e93; font-size:8px; line-height:1.3; margin-top:4px; padding-top:4px; }
+    .radar-track-diagnostics strong { color:#d1d1d6; font-weight:900; }
+    .radar-track-status { color:var(--yellow); font-size:9px; line-height:1.3; margin-top:4px; }
+    .radar-cross-read { border:1px solid #3a3a3c; border-left:3px solid #64d2ff; background:#202022; padding:4px 6px; color:#d1d1d6; font-size:9px; line-height:1.35; }
+    .radar-cross-read strong { color:#f2f2f7; }
+    .radar-session-panel.radar-cost-track { border-radius:0; margin:0; }
+    .radar-session-panel.radar-cost-track.session-long { background:rgba(255,69,58,.045); }
+    .radar-session-panel.radar-cost-track.session-short { background:rgba(48,209,88,.045); }
+    .radar-session-panel.radar-cost-track.session-neutral { background:rgba(255,214,10,.035); }
+    .radar-cost-track .radar-band-grid { margin-top:4px; }
+    .radar-cost-track .radar-band-card { border-radius:4px; background:rgba(255,255,255,.025); }
+    @media (max-width: 760px) {
+      .radar-cost-track-grid { grid-template-columns:1fr; }
+      .radar-live-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .radar-live-item:nth-child(3) { border-left:0; border-top:1px solid #3a3a3c; }
+      .radar-live-item:nth-child(4) { border-top:1px solid #3a3a3c; }
+    }
+    @media (max-width: 440px) {
+      .radar-track-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .radar-command-head { align-items:flex-start; }
+    }
     /* === OCF 動態版本面板 === */
     .ocf-battle-panel { margin-top:4px; padding:6px 0 0; border-top:1px solid #3a3a3c; width:100%; }
     .ocf-battle-header { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:5px; }
@@ -2339,33 +2388,50 @@
         const coverageStartText = coverageStart !== null && coverageStart > 0
             ? new Date(coverageStart * 1000).toLocaleTimeString("zh-TW", { hour12: false })
             : "--";
+        const longValid = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_long_valid);
+        const shortValid = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_short_valid);
+        const longCenter = toFiniteNumberOrNull(sessionData.main_cost_session_long_cost);
+        const shortCenter = toFiniteNumberOrNull(sessionData.main_cost_session_short_cost);
+        const longCenterText = longValid && longCenter !== null && longCenter > 0
+            ? formatRadarNumber(longCenter, 0) : "--";
+        const shortCenterText = shortValid && shortCenter !== null && shortCenter > 0
+            ? formatRadarNumber(shortCenter, 0) : "--";
 
         return `
-            <div class="radar-session-panel ${panelClass}">
-                <div class="radar-session-head">
-                    <span class="radar-session-title">整盤即時主力核心成本（本盤開盤至目前）</span>
-                    <span class="radar-session-badge" style="color:${directionColor};">${escapeRadarHtml(stateText)}｜${escapeRadarHtml(coverageText)}</span>
+            <section class="radar-session-panel radar-cost-track ${panelClass}">
+                <div class="radar-track-head">
+                    <div>
+                        <div class="radar-track-title">整盤核心成本</div>
+                        <div class="radar-track-caption">本盤開盤至目前的主力事件</div>
+                    </div>
+                    <span class="radar-track-badge" style="color:${directionColor};">${escapeRadarHtml(stateText)}｜${escapeRadarHtml(coverageText)}</span>
                 </div>
-                <div class="radar-session-action" style="color:${directionColor};">${escapeRadarHtml(action)}</div>
-                <div class="radar-session-summary">
-                    <div class="radar-session-item"><span class="radar-session-label">整盤方向</span><span class="radar-session-value" style="color:${directionColor};">${directionText}</span></div>
-                    <div class="radar-session-item"><span class="radar-session-label">整盤Balance</span><span class="radar-session-value">${balance === null ? "--" : formatSessionBalance(balance)}</span></div>
-                    <div class="radar-session-item"><span class="radar-session-label">方向主成本</span><span class="radar-session-value">${mainCostText}</span></div>
-                    <div class="radar-session-item"><span class="radar-session-label">信心／事件</span><span class="radar-session-value">${confidence.toFixed(0)}分／${Math.round(toFiniteNumberOrNull(sessionData.main_cost_session_event_count) ?? 0)}筆</span></div>
+                <div class="radar-track-action" style="color:${directionColor};border-left-color:${directionColor};">${escapeRadarHtml(action)}</div>
+                <div class="radar-track-metrics">
+                    <div class="radar-track-metric"><span>整盤方向</span><strong style="color:${directionColor};">${directionText}</strong></div>
+                    <div class="radar-track-metric"><span>整盤 Balance</span><strong>${balance === null ? "--" : formatSessionBalance(balance)}</strong></div>
+                    <div class="radar-track-metric"><span>方向主成本</span><strong>${mainCostText}</strong></div>
+                    <div class="radar-track-metric"><span>信心／事件</span><strong>${confidence.toFixed(0)}分／${Math.round(toFiniteNumberOrNull(sessionData.main_cost_session_event_count) ?? 0)}筆</strong></div>
                 </div>
                 <div class="radar-session-costs">
-                    <div class="radar-session-cost long">整盤多方核心成本<strong>${formatCostRange(sessionData.main_cost_session_long_low, sessionData.main_cost_session_long_high)}</strong><span>中心 ${formatRadarNumber(sessionData.main_cost_session_long_cost, 0)}｜±${longHalfWidth}點｜盤內分散 ${longDispersion}｜ESS ${formatRadarNumber(sessionData.main_cost_session_long_effective_events, 1)}</span></div>
-                    <div class="radar-session-cost short">整盤空方核心成本<strong>${formatCostRange(sessionData.main_cost_session_short_low, sessionData.main_cost_session_short_high)}</strong><span>中心 ${formatRadarNumber(sessionData.main_cost_session_short_cost, 0)}｜±${shortHalfWidth}點｜盤內分散 ${shortDispersion}｜ESS ${formatRadarNumber(sessionData.main_cost_session_short_effective_events, 1)}</span></div>
+                    <div class="radar-session-cost long">
+                        多方核心成本<strong>${longCenterText}</strong>
+                        <span>範圍 ${longValid ? formatCostRange(sessionData.main_cost_session_long_low, sessionData.main_cost_session_long_high) : "--"}</span>
+                        <span>｜±${longHalfWidth}點｜分散 ${longDispersion}｜ESS ${formatRadarNumber(sessionData.main_cost_session_long_effective_events, 1)}</span>
+                    </div>
+                    <div class="radar-session-cost short">
+                        空方核心成本<strong>${shortCenterText}</strong>
+                        <span>範圍 ${shortValid ? formatCostRange(sessionData.main_cost_session_short_low, sessionData.main_cost_session_short_high) : "--"}</span>
+                        <span>｜±${shortHalfWidth}點｜分散 ${shortDispersion}｜ESS ${formatRadarNumber(sessionData.main_cost_session_short_effective_events, 1)}</span>
+                    </div>
                 </div>
-                <div class="radar-session-foot">
-                    整盤／近期：${escapeRadarHtml(alignmentText)}
-                    ｜區間 ${escapeRadarHtml(bandMethodText)}（不是整盤成交高低範圍）
-                    ｜總權重 ${formatRadarNumber(sessionData.main_cost_session_weight, 0)}
-                    ｜資料起點 ${escapeRadarHtml(coverageStartText)}
-                    ｜來源 ${escapeRadarHtml(String(sessionData.main_cost_session_source || "--"))}
-                    ｜更新 ${escapeRadarHtml(asofText)}
+                <div class="radar-track-diagnostics">
+                    <span>整盤／近期：<strong>${escapeRadarHtml(alignmentText)}</strong></span>
+                    <span>估計法：<strong>${escapeRadarHtml(bandMethodText)}</strong></span>
+                    <span>總權重：<strong>${formatRadarNumber(sessionData.main_cost_session_weight, 0)}</strong></span>
                 </div>
-            </div>`;
+                <div class="radar-session-foot">資料起點 ${escapeRadarHtml(coverageStartText)}｜來源 ${escapeRadarHtml(String(sessionData.main_cost_session_source || "--"))}｜更新 ${escapeRadarHtml(asofText)}</div>
+            </section>`;
     }
 
     function updateRadarUI(data) {
@@ -2425,10 +2491,6 @@
             }
             const mainCostDirectionColor = mainCostDirectionValue > 0
                 ? 'var(--red)' : (mainCostDirectionValue < 0 ? 'var(--green)' : '#aaa');
-            const mainCostStateColor = mainCostState === "ACCUMULATING_LONG"
-                ? 'var(--red)' : (mainCostState === "DISTRIBUTING_SHORT"
-                    ? 'var(--green)' : (["CONFLICT", "OPENING_PROVISIONAL", "DIRECTION_PENDING"].includes(mainCostState)
-                        ? 'var(--yellow)' : '#aaa'));
             const confidenceNumber = toFiniteNumberOrNull(data.main_cost_confidence) ?? 0;
             const mainCostConfidence = Math.max(0, Math.min(100, confidenceNumber)).toFixed(1);
             const mainCostLow = toFiniteNumberOrNull(data.main_cost_low);
@@ -2466,6 +2528,13 @@
                 && sessionShortCoreCost !== null && sessionShortCoreCost > 0
                 ? formatRadarNumber(sessionShortCoreCost, 1)
                 : "--";
+            const tacticalMainCost = toFiniteNumberOrNull(
+                data.main_cost !== undefined && data.main_cost !== null
+                    ? data.main_cost : data.whale_cost
+            );
+            const tacticalMainCostText = tacticalMainCost !== null && tacticalMainCost > 0
+                ? formatRadarNumber(tacticalMainCost, 1)
+                : "--";
 
             const recoveryStatus = translateRecoveryStatus(data.main_cost_recovery_status);
             const confirmationRemaining = toFiniteNumberOrNull(data.main_cost_confirmation_remaining_seconds);
@@ -2500,64 +2569,89 @@
             const conflictWarning = isConflict ? `<span style="color:var(--yellow);font-size:10px;margin-left:4px;">(⚠️ 判定可能延遲)</span>` : '';
             const strategyHint = isConflict ? `<div style="padding:0 6px 4px 6px;color:#bbb;font-size:10px;text-align:right;">💡 Phase 1 策略：<span style="color:#fff;">請以跌破成本帶或重回區間作為進場參考</span></div>` : '';
 
-            const legacyModelHtml = `
-                <div style="display:flex;flex-direction:column;gap:2px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 6px;flex-wrap:wrap;gap:4px 10px;">
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">狀態: <span style="color:${mainCostStateColor};font-size:11px;font-weight:800;">${escapeRadarHtml(mainCostStateZH)}</span></span>
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">正式方向: <span style="color:${mainCostDirectionColor};font-size:11px;font-weight:800;">${escapeRadarHtml(mainCostDirection)}</span>${conflictWarning}</span>
-                        ${candidateDirectionValue !== 0 ? `<span style="color:#aaa;white-space:nowrap;font-size:10px;">候選方向: <span style="color:${candidateDirectionValue > 0 ? 'var(--red)' : 'var(--green)'};font-size:11px;font-weight:800;">${escapeRadarHtml(candidateDirection)}</span></span>` : ''}
-                        ${statusDisplayHtml !== '' ? statusDisplayHtml : ''}
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">翻轉模式: <span style="color:${fastReversalActive ? 'var(--purple)' : '#aaa'};font-size:11px;font-weight:800;">${escapeRadarHtml(confirmationModeZH)}</span></span>
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">快速Balance: <span style="color:${fastBalance > 0 ? 'var(--red)' : (fastBalance < 0 ? 'var(--green)' : '#aaa')};font-size:11px;font-weight:800;">${fastBalance.toFixed(3)}</span></span>
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">模型信心: <span style="color:#fff;font-size:11px;font-weight:800;">${mainCostConfidence}%</span></span>
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">成本區間: <span style="color:var(--yellow);font-size:11px;font-weight:800;">${mainCostRange}</span></span>
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">有效事件: <span style="color:#fff;font-size:11px;font-weight:800;">${mainCostAcceptedEvents}</span></span>
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">事件類型: <span style="color:#00d2ff;font-size:11px;font-weight:800;">${escapeRadarHtml(mainCostLastEventZH)}</span></span>
+            const tacticalPanelHtml = `
+                <section class="radar-cost-track tactical">
+                    <div class="radar-track-head">
+                        <div>
+                            <div class="radar-track-title">近期戰術成本</div>
+                            <div class="radar-track-caption">近期資金衰減軌與即時方向</div>
+                        </div>
+                        <span class="radar-track-badge" style="color:${mainCostDirectionColor};">${escapeRadarHtml(mainCostStateZH)}｜${escapeRadarHtml(mainCostDirection)}</span>
                     </div>
-                    ${strategyHint}
-                </div>`;
-
-            const phase1Html = isPhase1 ? `
-                <div class="radar-phase-panel">
-                    <div class="radar-phase-header">
-                        <span class="radar-phase-title">TX Radar V19.5 戰術／整盤核心成本</span>
-                <span class="radar-version-badge">Radar ${escapeRadarHtml(data.radar_version || '19.5')} | Cost ${escapeRadarHtml(costVersionLabel)}</span>
+                    <div class="radar-track-metrics">
+                        <div class="radar-track-metric"><span>正式方向</span><strong style="color:${mainCostDirectionColor};">${escapeRadarHtml(mainCostDirection)}${conflictWarning}</strong></div>
+                        <div class="radar-track-metric"><span>模型信心</span><strong>${mainCostConfidence}%</strong></div>
+                        <div class="radar-track-metric"><span>方向主成本</span><strong>${tacticalMainCostText}</strong></div>
+                        <div class="radar-track-metric"><span>快速 Balance</span><strong style="color:${fastBalance > 0 ? 'var(--red)' : (fastBalance < 0 ? 'var(--green)' : '#aaa')};">${fastBalance.toFixed(3)}</strong></div>
                     </div>
-                    ${sessionCostHtml}
-                    <div class="radar-model-grid">
-                        <div class="radar-model-item"><div class="radar-model-label">恢復狀態</div><div class="radar-model-value">${escapeRadarHtml(recoveryStatus)}</div></div>
-                        <div class="radar-model-item"><div class="radar-model-label">正式成本區</div><div class="radar-model-value" style="color:var(--yellow);">${mainCostRange}</div></div>
-                    </div>
-                    ${timingText ? `<div style="font-size:9px;color:var(--yellow);text-align:center;margin-bottom:4px;">⏱ ${escapeRadarHtml(timingText)}</div>` : ''}
                     <div class="radar-band-grid">
                         ${renderBandCard(longBand)}
                         ${renderBandCard(shortBand)}
-                        <div class="radar-channel-row">${escapeRadarHtml(channelText)}</div>
-                        <div class="radar-position-row">${escapeRadarHtml(positionText)}</div>
                         <div class="radar-event-row">
                             <div><span style="color:#888;">最新事件：</span><span style="color:#00d2ff;font-weight:800;">${escapeRadarHtml(mainCostLastEventZH)}</span></div>
                             <div style="margin-top:2px;color:#888;">事件成本 ${eventCost === null || eventCost <= 0 ? '--' : eventCost.toFixed(1)} · 事件量 ${eventVolume === null || eventVolume <= 0 ? '--' : `${eventVolume.toFixed(0)}口`} · 時間 ${formatRadarAge(eventAge)}</div>
                         </div>
                     </div>
+                    <div class="radar-track-diagnostics">
+                        <span>正式成本區：<strong>${mainCostRange}</strong></span>
+                        <span>近期證據多／空：<strong>${formatRadarNumber(data.whale_buy_vol, 0)}／${formatRadarNumber(data.whale_sell_vol, 0)}</strong></span>
+                        <span>有效事件：<strong>${mainCostAcceptedEvents}</strong></span>
+                        <span>恢復：<strong>${escapeRadarHtml(recoveryStatus)}</strong></span>
+                        <span>翻轉：<strong>${escapeRadarHtml(confirmationModeZH)}</strong></span>
+                    </div>
+                    ${candidateDirectionValue !== 0 ? `<div class="radar-track-status">候選方向：${escapeRadarHtml(candidateDirection)}</div>` : ''}
+                    ${statusDisplayHtml !== '' ? `<div class="radar-track-status">${statusDisplayHtml}</div>` : ''}
+                    ${timingText ? `<div class="radar-track-status">${escapeRadarHtml(timingText)}</div>` : ''}
+                    ${strategyHint}
+                </section>`;
+
+            const phase1Html = isPhase1 ? `
+                <div class="radar-phase-panel">
+                    <div class="radar-cost-track-grid">
+                        ${tacticalPanelHtml}
+                        ${sessionCostHtml}
+                    </div>
+                    <div class="radar-cross-read">
+                        <strong>${escapeRadarHtml(positionText)}</strong>
+                        ｜${escapeRadarHtml(channelText)}
+                    </div>
                 </div>` : '';
 
             ticker.innerHTML = `
-                <div style="display:flex;flex-direction:column;width:100%;gap:6px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">
-                        <div style="display:flex;gap:6px;align-items:center;white-space:nowrap;">
-                            <span style="color:#888;font-size:11px;">${escapeRadarHtml(data.t || '--:--')}</span>${statusBadge}
+                <div class="radar-command-shell">
+                    <div class="radar-command-head">
+                        <div class="radar-command-heading">
+                            <div class="radar-command-title">TX Radar V${escapeRadarHtml(data.radar_version || '19.5')}</div>
+                            <div class="radar-command-subtitle">近期戰術成本與整盤核心成本分軌</div>
                         </div>
-                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-                            <span style="color:${actionColor};white-space:nowrap;font-size:11px;">${actionIcon} ${escapeRadarHtml(actionStr)} <span style="font-size:14px;font-weight:800;">${formatRadarNumber(data.vol, 0)}</span>口</span>
-                            <span style="color:#aaa;white-space:nowrap;font-size:11px;">大戶淨單: <span style="color:${netColor};font-size:14px;font-weight:800;">${formatRadarNumber(currentNetWhale, 0)}</span><span style="color:${netSlopeColor};font-size:11px;margin-left:2px;font-weight:bold;">${netSlopeIcon}${Math.abs(netWhaleDiff).toFixed(0)}</span> (保留率${legacyRetention}%)</span>
+                        <div class="radar-command-meta">
+                            <span class="radar-version-badge">Cost ${escapeRadarHtml(costVersionLabel)}</span>
+                            <span class="radar-command-time">${escapeRadarHtml(data.t || '--:--')}</span>
+                            ${statusBadge}
                         </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);padding:4px 6px;border-radius:6px;flex-wrap:wrap;gap:4px;">
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">🛡️成本(舊): <span style="color:#888;">${formatRadarNumber(data.whale_cost_single, 1)}</span></span>
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">🎯整盤核心(多/空): <span style="color:var(--red);font-size:11px;font-weight:800;">${sessionLongCoreText}</span><span style="color:#555;margin:0 2px;">/</span><span style="color:var(--green);font-size:11px;font-weight:800;">${sessionShortCoreText}</span></span>
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">📊證據(多/空): <span style="color:var(--red);font-size:12px;font-weight:800;">${formatRadarNumber(data.whale_buy_vol, 0)}</span><span style="color:#555;margin:0 2px;">/</span><span style="color:var(--green);font-size:12px;font-weight:800;">${formatRadarNumber(data.whale_sell_vol, 0)}</span></span>
+                    <div class="radar-live-grid">
+                        <div class="radar-live-item">
+                            <span class="radar-live-label">即時內／外盤口數</span>
+                            <strong class="radar-live-value" style="color:${actionColor};">${actionIcon} ${escapeRadarHtml(actionStr)} ${formatRadarNumber(data.vol, 0)}口</strong>
+                            <span class="radar-live-meta">最新一筆主動成交方向</span>
+                        </div>
+                        <div class="radar-live-item">
+                            <span class="radar-live-label">大戶淨單</span>
+                            <strong class="radar-live-value" style="color:${netColor};">${formatRadarNumber(currentNetWhale, 0)} <span style="color:${netSlopeColor};font-size:9px;">${netSlopeIcon}${Math.abs(netWhaleDiff).toFixed(0)}</span></strong>
+                            <span class="radar-live-meta">保留率 ${legacyRetention}%</span>
+                        </div>
+                        <div class="radar-live-item">
+                            <span class="radar-live-label">成本(舊)</span>
+                            <strong class="radar-live-value">${formatRadarNumber(data.whale_cost_single, 1)}</strong>
+                            <span class="radar-live-meta">舊版單軌成本</span>
+                        </div>
+                        <div class="radar-live-item">
+                            <span class="radar-live-label">整盤核心成本（多／空）</span>
+                            <strong class="radar-live-value"><span style="color:var(--red);">${sessionLongCoreText}</span><span style="color:#636366;">／</span><span style="color:var(--green);">${sessionShortCoreText}</span></strong>
+                            <span class="radar-live-meta">通過整盤側別有效性才顯示</span>
+                        </div>
                     </div>
-                    ${legacyModelHtml}
                     ${phase1Html}
                 </div>`;
 
