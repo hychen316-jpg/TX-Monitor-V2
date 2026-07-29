@@ -2012,7 +2012,7 @@
         const statusElement = document.getElementById("ocf-model-status");
         if (statusElement) {
             if (isLive) {
-                statusElement.textContent = String(data.ocf_version || "OCF-2.2.7") + " 即時";
+                statusElement.textContent = String(data.ocf_version || "OCF-2.2.8") + " 即時";
                 statusElement.className = "ocf-model-badge is-live";
             } else if (fallbackActive) {
                 statusElement.textContent = "舊引擎備援中";
