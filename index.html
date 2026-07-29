@@ -2456,6 +2456,16 @@
             const channelText = buildChannelText(data, longBand, shortBand);
             const positionText = buildPricePositionText(data.price, longBand, shortBand, channelValid);
             const sessionCostHtml = renderSessionCostPanel(data);
+            const sessionLongCoreCost = toFiniteNumberOrNull(data.main_cost_session_long_cost);
+            const sessionShortCoreCost = toFiniteNumberOrNull(data.main_cost_session_short_cost);
+            const sessionLongCoreText = toRadarBoolean(data.main_cost_session_long_valid)
+                && sessionLongCoreCost !== null && sessionLongCoreCost > 0
+                ? formatRadarNumber(sessionLongCoreCost, 1)
+                : "--";
+            const sessionShortCoreText = toRadarBoolean(data.main_cost_session_short_valid)
+                && sessionShortCoreCost !== null && sessionShortCoreCost > 0
+                ? formatRadarNumber(sessionShortCoreCost, 1)
+                : "--";
 
             const recoveryStatus = translateRecoveryStatus(data.main_cost_recovery_status);
             const confirmationRemaining = toFiniteNumberOrNull(data.main_cost_confirmation_remaining_seconds);
@@ -2543,8 +2553,8 @@
                         </div>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);padding:4px 6px;border-radius:6px;flex-wrap:wrap;gap:4px;">
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">🛡️成本(舊/主): <span style="color:#888;">${formatRadarNumber(data.whale_cost_single, 1)}</span><span style="color:#555;margin:0 2px;">/</span><span style="color:var(--yellow);font-size:12px;font-weight:800;">${formatRadarNumber(data.whale_cost, 1)}</span></span>
-                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">🎯成本(買/賣): <span style="color:var(--red);font-size:11px;font-weight:800;">${formatRadarNumber(data.whale_buy_cost, 1)}</span><span style="color:#555;margin:0 2px;">/</span><span style="color:var(--green);font-size:11px;font-weight:800;">${formatRadarNumber(data.whale_sell_cost, 1)}</span></span>
+                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">🛡️成本(舊): <span style="color:#888;">${formatRadarNumber(data.whale_cost_single, 1)}</span></span>
+                        <span style="color:#aaa;white-space:nowrap;font-size:10px;">🎯整盤核心(多/空): <span style="color:var(--red);font-size:11px;font-weight:800;">${sessionLongCoreText}</span><span style="color:#555;margin:0 2px;">/</span><span style="color:var(--green);font-size:11px;font-weight:800;">${sessionShortCoreText}</span></span>
                         <span style="color:#aaa;white-space:nowrap;font-size:10px;">📊證據(多/空): <span style="color:var(--red);font-size:12px;font-weight:800;">${formatRadarNumber(data.whale_buy_vol, 0)}</span><span style="color:#555;margin:0 2px;">/</span><span style="color:var(--green);font-size:12px;font-weight:800;">${formatRadarNumber(data.whale_sell_vol, 0)}</span></span>
                     </div>
                     ${legacyModelHtml}
