@@ -304,6 +304,12 @@
     .ocf-prior-label { color:#777; font-size:7px; }
     .ocf-prior-value { color:#ddd; font-size:9px; font-weight:800; line-height:1.2; margin-top:1px; overflow-wrap:anywhere; }
 
+
+    /* OCF-Z2.0 LIVE: fixed-table and armed-entry emphasis only. */
+    #ocf-battle-panel .ocf-model-badge.is-live::before { content:"LIVE "; font-weight:900; }
+    #ocf-battle-panel .ocf-action-band.action-bull,
+    #ocf-battle-panel .ocf-action-band.action-bear { box-shadow: inset 0 0 12px rgba(100,210,255,.08); }
+
     /* =============================================================
        Dashboard V2: 導覽與版面結構
        ============================================================= */
@@ -1253,25 +1259,25 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z｜未來一日方向 + 目標</div>
-                    <div class="ocf-battle-title">暴 Z 預估戰場</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.0 LIVE｜固定 ATM 分界 + K±2權利金</div>
+                    <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
             </div>
 
             <div class="ocf-command-grid">
                 <div class="ocf-command-item direction">
-                    <span class="ocf-command-label">未來一日方向（CL2）</span>
+                    <span class="ocf-command-label">Z2 決策方向（可進場）</span>
                     <strong id="ocf-live-direction" class="ocf-command-value ocf-tone-neutral">--</strong>
                     <span id="ocf-live-mode" class="ocf-command-sub">SC／SP 調單：--</span>
                 </div>
                 <div class="ocf-command-item">
-                    <span class="ocf-command-label">模型信心／資料品質</span>
+                    <span class="ocf-command-label">信心／報價品質</span>
                     <strong id="ocf-live-confidence" class="ocf-command-value">--</strong>
                     <span id="ocf-live-event" class="ocf-command-sub">選擇權發動：--</span>
                 </div>
                 <div class="ocf-command-item">
-                    <span class="ocf-command-label">合成中樞／主目標</span>
+                    <span class="ocf-command-label">固定分界／主目標</span>
                     <strong id="ocf-target-strike" class="ocf-command-value">--</strong>
                     <span id="ocf-event-strength" class="ocf-command-sub">中樞：--</span>
                 </div>
@@ -1280,7 +1286,7 @@
             <div class="ocf-defense-grid">
                 <article id="ocf-support-card" class="ocf-defense-card support">
                     <div class="ocf-defense-head">
-                        <span class="ocf-defense-name">SP 支撐調單／殺多線</span>
+                        <span class="ocf-defense-name">SP 支撐成本／殺多 Trigger</span>
                         <span id="ocf-support-state" class="ocf-defense-state">--</span>
                     </div>
                     <div id="ocf-support-zone" class="ocf-defense-zone">--</div>
@@ -1296,7 +1302,7 @@
 
                 <article id="ocf-resistance-card" class="ocf-defense-card resistance">
                     <div class="ocf-defense-head">
-                        <span class="ocf-defense-name">SC 壓力調單／嘎空線</span>
+                        <span class="ocf-defense-name">SC 壓力成本／嘎空 Trigger</span>
                         <span id="ocf-resistance-state" class="ocf-defense-state">--</span>
                     </div>
                     <div id="ocf-resistance-zone" class="ocf-defense-zone">--</div>
@@ -1313,7 +1319,7 @@
 
             <div id="ocf-defense-balance" class="ocf-defense-balance balance-stale">
                 <div class="ocf-defense-balance-main">
-                    <span class="ocf-defense-balance-label">SC／SP 調單共振</span>
+                    <span class="ocf-defense-balance-label">SC／SP 調單決策樹</span>
                     <strong id="ocf-defense-balance-text" class="ocf-defense-balance-text">等待方向形成</strong>
                 </div>
                 <div class="ocf-defense-balance-stats">
@@ -1324,7 +1330,7 @@
             </div>
 
             <div id="ocf-action-band" class="ocf-action-band">
-                <div class="ocf-action-label">BK2 最終建議動作</div>
+                <div class="ocf-action-label">Z2 LIVE 最終進場動作</div>
                 <div id="ocf-bk-advice" class="ocf-action-text" aria-live="polite">等待完整訊號</div>
                 <div id="ocf-action-context" class="ocf-action-context">尚無有效防守確認，先觀察。</div>
             </div>
@@ -2020,10 +2026,10 @@
         const versionLabel = getOCFVersionLabel(data);
         const isZRange = /^OCF-Z/i.test(versionLabel);
         setOCFText("ocf-battle-version-title", isZRange
-            ? `${versionLabel}｜未來一日方向 + 目標`
+            ? `${versionLabel} LIVE｜固定 ATM 分界 + K±2權利金`
             : `${versionLabel}｜固定先驗 + 盤中防守確認`);
         setOCFText("v2-ocf-card-title", isZRange
-            ? `${versionLabel} 暴 Z 即時預估`
+            ? `${versionLabel} 暴 Z2 LIVE`
             : `${versionLabel} 即時控制力`);
         const panel = document.getElementById("ocf-battle-panel");
         if (panel) panel.setAttribute("aria-label", isZRange
@@ -2150,7 +2156,7 @@
         const ignitionText = ignitionDirection > 0 ? "多方" : (ignitionDirection < 0 ? "空方" : "尚未發動");
         setOCFText("ocf-live-event", `選擇權發動：${ignitionText}`);
         setOCFText("ocf-target-strike", formatOCFLevel(data.z_primary_target));
-        setOCFText("ocf-event-strength", `中樞：${formatOCFLevel(data.z_center)}｜發動 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}`);
+        setOCFText("ocf-event-strength", `固定分界：${formatOCFLevel(data.z_center)}｜發動 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}`);
 
         const spState = String(data.ocf_support_defense_state_display || "尚未形成").trim();
         const scState = String(data.ocf_resistance_defense_state_display || "尚未形成").trim();
@@ -2206,10 +2212,10 @@
         const context = !isLive
             ? "報價配對或資料新鮮度不足，方向與目標暫不可採用。"
             : (direction > 0
-                ? `預估偏多；等待嘎空線 ${formatOCFLevel(trigger)} 與選擇權多方發動同時確認，目標 ${formatOCFLevel(target)}。`
+                ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K+2C 目標 ${formatOCFLevel(target)}。`
                 : (direction < 0
-                    ? `預估偏空；等待殺多線 ${formatOCFLevel(trigger)} 與選擇權空方發動同時確認，目標 ${formatOCFLevel(target)}。`
-                    : "方向分數尚未通過鎖定門檻，只看上下預估區間，不進場。"));
+                    ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
+                    : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"));
         setOCFText("ocf-action-context", context);
         renderOCFFixedBlueprint(data);
     }
@@ -4041,7 +4047,7 @@
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
 
-    const ocfCard = card('OCF-Z 暴 Z 預估', '一日方向、目標、調單與 BK2', 'v2-ocf-card');
+    const ocfCard = card('OCF-Z2.0 暴 Z LIVE', '固定 ATM 分界、K±2權利金、調單與 Trigger', 'v2-ocf-card');
     const ocfCardTitle = ocfCard.querySelector('.v2-card-title > span');
     if (ocfCardTitle) ocfCardTitle.id = 'v2-ocf-card-title';
     if (ocfPanel) ocfCard.appendChild(ocfPanel);
