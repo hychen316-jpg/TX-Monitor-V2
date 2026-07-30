@@ -2166,19 +2166,36 @@
         }
 
         const directionDisplay = String(data.z_direction_display || "").trim().replace(/\|/g, "｜");
+        const scoreText = score === null
+            ? "--"
+            : `${score >= 0 ? "+" : ""}${formatRadarNumber(score, 1)}`;
+        const scoreOpposesLockedDirection = direction !== 0 && score !== null && Math.sign(score) === -direction;
+        const ignitionOpposesLockedDirection = direction !== 0 && ignitionDirection !== 0 && ignitionDirection === -direction;
         const fallbackDirection = direction > 0
-            ? `${score !== null && score >= 0 ? "+" : ""}${formatRadarNumber(score, 1)}｜預估偏多`
+            ? `${scoreText}｜預估偏多`
             : (direction < 0
-                ? `${formatRadarNumber(score, 1)}｜預估偏空`
-                : `${formatRadarNumber(score, 1)}｜方向未定`);
+                ? `${scoreText}｜預估偏空`
+                : `${scoreText}｜方向未定`);
+        let semanticDirectionDisplay = directionDisplay || fallbackDirection;
+        if (direction > 0 && ignitionOpposesLockedDirection) {
+            semanticDirectionDisplay = `${scoreText}｜原多方預測保留・即時空方發動`;
+        } else if (direction < 0 && ignitionOpposesLockedDirection) {
+            semanticDirectionDisplay = `${scoreText}｜原空方預測保留・即時多方發動`;
+        } else if (direction > 0 && scoreOpposesLockedDirection) {
+            semanticDirectionDisplay = `${scoreText}｜多方方向尚未翻轉・即時轉弱`;
+        } else if (direction < 0 && scoreOpposesLockedDirection) {
+            semanticDirectionDisplay = `${scoreText}｜空方方向尚未翻轉・即時轉強`;
+        }
         const directionElement = document.getElementById("ocf-live-direction");
         if (directionElement) {
-            directionElement.textContent = directionDisplay || fallbackDirection;
-            directionElement.className = "ocf-command-value " + (direction > 0
-                ? "ocf-tone-bull" : (direction < 0 ? "ocf-tone-bear" : "ocf-tone-neutral"));
+            directionElement.textContent = semanticDirectionDisplay;
+            directionElement.className = "ocf-command-value " + ((ignitionOpposesLockedDirection || scoreOpposesLockedDirection)
+                ? "ocf-tone-wait"
+                : (direction > 0 ? "ocf-tone-bull" : (direction < 0 ? "ocf-tone-bear" : "ocf-tone-neutral")));
         }
 
         const rollSummary = String(data.ocf_defense_power_display || "").trim().replace(/\|/g, "｜");
+        const noEffectiveRoll = /無明顯|尚未形成|無有效|方向未確認|等待位移/.test(rollSummary);
         setOCFText("ocf-live-mode", `SC／SP 調單：${rollSummary || "尚未形成"}`);
         setOCFText("ocf-live-confidence", `${confidence === null ? "--" : Math.round(confidence)}／${dataQuality === null ? "--" : Math.round(dataQuality)}`);
         const ignitionText = ignitionDirection > 0 ? "多方" : (ignitionDirection < 0 ? "空方" : "尚未發動");
@@ -2217,28 +2234,53 @@
         setOCFText("ocf-support-power", spRoll === null ? "--" : `${spRoll >= 0 ? "+" : ""}${formatRadarNumber(spRoll, 0)}`);
         setOCFText("ocf-resistance-power", scRoll === null ? "--" : `${scRoll >= 0 ? "+" : ""}${formatRadarNumber(scRoll, 0)}`);
         setOCFText("ocf-defense-power-gap", score === null ? "--" : `${score >= 0 ? "+" : ""}${formatRadarNumber(score, 1)}`);
-        setOCFText("ocf-defense-balance-text", direction > 0
-            ? "多方調單占優" : (direction < 0 ? "空方調單占優" : "方向尚未確認"));
+        const balanceDisplay = !isLive
+            ? "資料暫停"
+            : (noEffectiveRoll
+                ? "無有效調單｜等待位移確認"
+                : (rollSummary || (direction > 0
+                    ? "多方調單占優"
+                    : (direction < 0 ? "空方調單占優" : "方向尚未確認"))));
+        setOCFText("ocf-defense-balance-text", balanceDisplay);
         const balanceElement = document.getElementById("ocf-defense-balance");
         if (balanceElement) {
             balanceElement.className = `ocf-defense-balance ${!isLive
-                ? "balance-stale" : (direction > 0 ? "balance-bull" : (direction < 0 ? "balance-bear" : "balance-even"))}`;
+                ? "balance-stale"
+                : (noEffectiveRoll
+                    ? "balance-even"
+                    : (direction > 0 ? "balance-bull" : (direction < 0 ? "balance-bear" : "balance-even")))}`;
         }
 
         const advice = String(data.mdi_execution_advice || data.omi_trade_advice || "").trim() || "等待完整訊號";
         const adviceDisplay = advice.replace(/\|/g, "｜");
-        const adviceClass = classifyOCFAdvice(advice);
+        const holdingLong = /持有多單/.test(adviceDisplay);
+        const holdingShort = /持有空單/.test(adviceDisplay);
+        let semanticAdviceDisplay = adviceDisplay;
+        let semanticAdviceClass = classifyOCFAdvice(advice);
+        if (!holdingLong && !holdingShort) {
+            if (direction > 0 && ignitionOpposesLockedDirection) {
+                semanticAdviceDisplay = "原多方預測保留｜即時空方發動｜暫停多單確認";
+                semanticAdviceClass = "wait";
+            } else if (direction < 0 && ignitionOpposesLockedDirection) {
+                semanticAdviceDisplay = "原空方預測保留｜即時多方發動｜暫停空單確認";
+                semanticAdviceClass = "wait";
+            } else if (direction > 0 && scoreOpposesLockedDirection) {
+                semanticAdviceDisplay = "原多方預測保留｜即時轉弱｜等待多方重新同向";
+                semanticAdviceClass = "wait";
+            } else if (direction < 0 && scoreOpposesLockedDirection) {
+                semanticAdviceDisplay = "原空方預測保留｜即時轉強｜等待空方重新同向";
+                semanticAdviceClass = "wait";
+            }
+        }
         const actionBand = document.getElementById("ocf-action-band");
         const actionText = document.getElementById("ocf-bk-advice");
-        if (actionBand) actionBand.className = `ocf-action-band action-${adviceClass}`;
+        if (actionBand) actionBand.className = `ocf-action-band action-${semanticAdviceClass}`;
         if (actionText) {
-            actionText.textContent = adviceDisplay;
-            actionText.className = `ocf-action-text ocf-tone-${adviceClass}`;
+            actionText.textContent = semanticAdviceDisplay;
+            actionText.className = `ocf-action-text ocf-tone-${semanticAdviceClass}`;
         }
         const trigger = direction > 0 ? data.z_bull_trigger : data.z_bear_trigger;
         const target = direction > 0 ? data.z_upper_target : data.z_lower_target;
-        const holdingLong = /持有多單/.test(adviceDisplay);
-        const holdingShort = /持有空單/.test(adviceDisplay);
         const lockedTrigger = toFiniteNumberOrNull(
             data.sop_locked_execution_trigger ?? data.sop_locked_trigger ?? data.activation_trigger_level
         );
@@ -2253,11 +2295,19 @@
                 ? `本單進場鎖定 Trigger ${formatOCFLevel(lockedTrigger)}；目前嘎空 Trigger ${formatOCFLevel(data.z_bull_trigger)}。本單鎖定目標 ${lockedTargetText}；目前 K+2C 參考目標 ${formatOCFLevel(data.z_upper_target)}。`
                 : (holdingShort
                     ? `本單進場鎖定 Trigger ${formatOCFLevel(lockedTrigger)}；目前殺多 Trigger ${formatOCFLevel(data.z_bear_trigger)}。本單鎖定目標 ${lockedTargetText}；目前 K-2P 參考目標 ${formatOCFLevel(data.z_lower_target)}。`
-                    : (direction > 0
-                        ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K+2C 目標 ${formatOCFLevel(target)}。`
-                        : (direction < 0
-                            ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
-                            : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))));
+                    : (direction > 0 && ignitionOpposesLockedDirection
+                        ? `原多方預測尚未正式翻空，但即時空方點火 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}；目前暫停多單確認。須待點火恢復多方，再突破嘎空 Trigger ${formatOCFLevel(data.z_bull_trigger)} 並完成 2 次確認，才能進場。`
+                        : (direction < 0 && ignitionOpposesLockedDirection
+                            ? `原空方預測尚未正式翻多，但即時多方點火 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}；目前暫停空單確認。須待點火恢復空方，再跌破殺多 Trigger ${formatOCFLevel(data.z_bear_trigger)} 並完成 2 次確認，才能進場。`
+                            : (direction > 0 && scoreOpposesLockedDirection
+                                ? `原多方預測仍保留，但即時方向分已轉負；目前只觀察，不進場。須待方向分與點火恢復多方同向，再突破嘎空 Trigger ${formatOCFLevel(data.z_bull_trigger)} 並完成 2 次確認。`
+                                : (direction < 0 && scoreOpposesLockedDirection
+                                    ? `原空方預測仍保留，但即時方向分已轉正；目前只觀察，不進場。須待方向分與點火恢復空方同向，再跌破殺多 Trigger ${formatOCFLevel(data.z_bear_trigger)} 並完成 2 次確認。`
+                                    : (direction > 0
+                                        ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K+2C 目標 ${formatOCFLevel(target)}。`
+                                        : (direction < 0
+                                            ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
+                                            : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))))))));
         setOCFText("ocf-action-context", context);
         renderOCFFixedBlueprint(data);
     }
