@@ -266,6 +266,13 @@
     .ocf-defense-state.state-failed { color:#ff9f0a; border-color:rgba(255,159,10,.65); background:rgba(255,159,10,.12); }
     .ocf-defense-state.state-stale { color:#aaa; border-color:#555; background:#29292b; }
     .ocf-defense-zone { color:#fff; font-size:14px; font-weight:900; line-height:1.2; margin-top:3px; overflow-wrap:anywhere; }
+    .ocf-defense-main-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; margin-top:3px; border:1px solid #353538; border-radius:4px; background:rgba(0,0,0,.16); overflow:hidden; }
+    .ocf-defense-main-item { min-width:0; padding:4px 6px; }
+    .ocf-defense-main-item.trigger { border-left:1px solid #3a3a3c; }
+    .ocf-defense-main-label { display:block; color:#85858a; font-size:8px; font-weight:800; line-height:1.2; }
+    .ocf-defense-main-row .ocf-defense-zone { margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ocf-trigger-zone { color:var(--yellow); }
+    .ocf-defense-stats-compact { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .ocf-defense-detail { color:#9a9aa0; font-size:8px; line-height:1.25; min-height:10px; margin-top:1px; overflow-wrap:anywhere; }
     .ocf-meter { height:2px; background:#111; overflow:hidden; margin-top:4px; }
     .ocf-meter-fill { display:block; width:0; height:100%; transition:width .35s ease; }
@@ -705,6 +712,11 @@
 
 #v2-live-page .ocf-defense-zone {
   font-size: 15px !important;
+}
+
+#v2-live-page .ocf-defense-main-label {
+  font-size: 9px !important;
+  line-height: 1.25 !important;
 }
 
 #v2-live-page .ocf-defense-stat strong {
@@ -1286,14 +1298,22 @@
             <div class="ocf-defense-grid">
                 <article id="ocf-support-card" class="ocf-defense-card support">
                     <div class="ocf-defense-head">
-                        <span class="ocf-defense-name">SP 支撐成本／殺多 Trigger</span>
+                        <span class="ocf-defense-name">SP 支撐防線</span>
                         <span id="ocf-support-state" class="ocf-defense-state">--</span>
                     </div>
-                    <div id="ocf-support-zone" class="ocf-defense-zone">--</div>
+                    <div class="ocf-defense-main-row">
+                        <div class="ocf-defense-main-item">
+                            <span class="ocf-defense-main-label">支撐成本</span>
+                            <div id="ocf-support-zone" class="ocf-defense-zone">--</div>
+                        </div>
+                        <div class="ocf-defense-main-item trigger">
+                            <span class="ocf-defense-main-label">殺多 Trigger</span>
+                            <div id="ocf-support-hits" class="ocf-defense-zone ocf-trigger-zone">--</div>
+                        </div>
+                    </div>
                     <div id="ocf-support-detail" class="ocf-defense-detail">等待 SP 調單資料</div>
                     <div class="ocf-meter"><span id="ocf-support-meter" class="ocf-meter-fill"></span></div>
-                    <div class="ocf-defense-stats">
-                        <span class="ocf-defense-stat">殺多<strong id="ocf-support-hits">--</strong></span>
+                    <div class="ocf-defense-stats ocf-defense-stats-compact">
                         <span class="ocf-defense-stat">下緣<strong id="ocf-support-absorption">--</strong></span>
                         <span class="ocf-defense-stat">位移<strong id="ocf-support-strength">--</strong></span>
                     </div>
@@ -1302,14 +1322,22 @@
 
                 <article id="ocf-resistance-card" class="ocf-defense-card resistance">
                     <div class="ocf-defense-head">
-                        <span class="ocf-defense-name">SC 壓力成本／嘎空 Trigger</span>
+                        <span class="ocf-defense-name">SC 壓力防線</span>
                         <span id="ocf-resistance-state" class="ocf-defense-state">--</span>
                     </div>
-                    <div id="ocf-resistance-zone" class="ocf-defense-zone">--</div>
+                    <div class="ocf-defense-main-row">
+                        <div class="ocf-defense-main-item">
+                            <span class="ocf-defense-main-label">壓力成本</span>
+                            <div id="ocf-resistance-zone" class="ocf-defense-zone">--</div>
+                        </div>
+                        <div class="ocf-defense-main-item trigger">
+                            <span class="ocf-defense-main-label">嘎空 Trigger</span>
+                            <div id="ocf-resistance-hits" class="ocf-defense-zone ocf-trigger-zone">--</div>
+                        </div>
+                    </div>
                     <div id="ocf-resistance-detail" class="ocf-defense-detail">等待 SC 調單資料</div>
                     <div class="ocf-meter"><span id="ocf-resistance-meter" class="ocf-meter-fill"></span></div>
-                    <div class="ocf-defense-stats">
-                        <span class="ocf-defense-stat">嘎空<strong id="ocf-resistance-hits">--</strong></span>
+                    <div class="ocf-defense-stats ocf-defense-stats-compact">
                         <span class="ocf-defense-stat">上緣<strong id="ocf-resistance-absorption">--</strong></span>
                         <span class="ocf-defense-stat">位移<strong id="ocf-resistance-strength">--</strong></span>
                     </div>
