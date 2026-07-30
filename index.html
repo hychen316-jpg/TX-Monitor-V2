@@ -2237,13 +2237,27 @@
         }
         const trigger = direction > 0 ? data.z_bull_trigger : data.z_bear_trigger;
         const target = direction > 0 ? data.z_upper_target : data.z_lower_target;
+        const holdingLong = /持有多單/.test(adviceDisplay);
+        const holdingShort = /持有空單/.test(adviceDisplay);
+        const lockedTrigger = toFiniteNumberOrNull(
+            data.sop_locked_execution_trigger ?? data.sop_locked_trigger ?? data.activation_trigger_level
+        );
+        const lockedTargetOne = toFiniteNumberOrNull(data.omi3_target_one);
+        const lockedTargetTwo = toFiniteNumberOrNull(data.omi3_target_two);
+        const lockedTargetText = lockedTargetOne !== null && lockedTargetOne > 0
+            ? `${formatOCFLevel(lockedTargetOne)}${lockedTargetTwo !== null && lockedTargetTwo > 0 ? `／${formatOCFLevel(lockedTargetTwo)}` : ""}`
+            : "以上方持倉列為準";
         const context = !isLive
             ? "報價配對或資料新鮮度不足，方向與目標暫不可採用。"
-            : (direction > 0
-                ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K+2C 目標 ${formatOCFLevel(target)}。`
-                : (direction < 0
-                    ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
-                    : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"));
+            : (holdingLong
+                ? `本單進場鎖定 Trigger ${formatOCFLevel(lockedTrigger)}；目前嘎空 Trigger ${formatOCFLevel(data.z_bull_trigger)}。本單鎖定目標 ${lockedTargetText}；目前 K+2C 參考目標 ${formatOCFLevel(data.z_upper_target)}。`
+                : (holdingShort
+                    ? `本單進場鎖定 Trigger ${formatOCFLevel(lockedTrigger)}；目前殺多 Trigger ${formatOCFLevel(data.z_bear_trigger)}。本單鎖定目標 ${lockedTargetText}；目前 K-2P 參考目標 ${formatOCFLevel(data.z_lower_target)}。`
+                    : (direction > 0
+                        ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K+2C 目標 ${formatOCFLevel(target)}。`
+                        : (direction < 0
+                            ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
+                            : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))));
         setOCFText("ocf-action-context", context);
         renderOCFFixedBlueprint(data);
     }
