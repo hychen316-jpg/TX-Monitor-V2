@@ -303,6 +303,16 @@
     .ocf-action-label { color:#85858a; font-size:7px; font-weight:800; }
     .ocf-action-text { color:var(--yellow); font-size:11px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
     .ocf-action-context { color:#9a9aa0; font-size:8px; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-shadow-diagnostics { border:1px solid #3a3a3c; border-left:3px solid #64d2ff; background:rgba(10,132,255,.055); margin-top:4px; padding:5px 6px; }
+    .ocf-shadow-diagnostics.is-warn { border-left-color:var(--yellow); background:rgba(255,214,10,.06); }
+    .ocf-shadow-head { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+    .ocf-shadow-title { color:#d1d1d6; font-size:8px; font-weight:900; }
+    .ocf-shadow-badge { color:#64d2ff; border:1px solid rgba(100,210,255,.45); padding:1px 4px; font-size:7px; font-weight:900; white-space:nowrap; }
+    .ocf-shadow-diagnostics.is-warn .ocf-shadow-badge { color:var(--yellow); border-color:rgba(255,214,10,.55); }
+    .ocf-shadow-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:3px 6px; margin-top:4px; }
+    .ocf-shadow-item { min-width:0; color:#8e8e93; font-size:7px; line-height:1.3; overflow-wrap:anywhere; }
+    .ocf-shadow-item strong { color:#e5e5ea; font-size:8px; font-weight:800; }
+    .ocf-shadow-note { color:#777; font-size:7px; line-height:1.25; border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:3px; }
     .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:4px; }
     .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; }
     .ocf-prior-title { color:#8e8e93; font-size:8px; font-weight:800; }
@@ -456,6 +466,7 @@
       .ocf-command-item.direction { grid-column: 1 / -1; }
       .ocf-defense-balance { align-items:flex-start; flex-direction:column; gap:4px; }
       .ocf-defense-balance-stats { width:100%; justify-content:space-between; }
+      .ocf-shadow-grid { grid-template-columns:1fr; }
     }
 
   
@@ -1366,6 +1377,22 @@
                 <div id="ocf-action-context" class="ocf-action-context">尚無有效防守確認，先觀察。</div>
             </div>
 
+            <div id="ocf-shadow-diagnostics" class="ocf-shadow-diagnostics" hidden>
+                <div class="ocf-shadow-head">
+                    <span class="ocf-shadow-title">Z2 Shadow 訊號來源診斷</span>
+                    <span id="ocf-shadow-status" class="ocf-shadow-badge">觀察中</span>
+                </div>
+                <div class="ocf-shadow-grid">
+                    <div class="ocf-shadow-item">Best Pair<br><strong id="ocf-shadow-best">--</strong></div>
+                    <div class="ocf-shadow-item">固定 Anchor<br><strong id="ocf-shadow-anchor">--</strong></div>
+                    <div class="ocf-shadow-item">SC 來源<br><strong id="ocf-shadow-sc">--</strong></div>
+                    <div class="ocf-shadow-item">SP 來源<br><strong id="ocf-shadow-sp">--</strong></div>
+                    <div class="ocf-shadow-item">中心／Trigger 穩定度<br><strong id="ocf-shadow-stability">--</strong></div>
+                    <div class="ocf-shadow-item">Shadow 原因<br><strong id="ocf-shadow-reason">--</strong></div>
+                </div>
+                <div class="ocf-shadow-note">僅供診斷與回放；不影響方向、Trigger、進場、防守、目標或有效性判斷。</div>
+            </div>
+
             <div class="ocf-prior-band">
                 <div class="ocf-prior-head">
                     <span class="ocf-prior-title">上一盤固定先驗</span>
@@ -2177,6 +2204,102 @@
         setOCFText("fixed-defense-br2", formatOCFLevel(data.omi3_blueprint_defense));
     }
 
+    function renderZShadowDiagnostics(data) {
+        const panel = document.getElementById("ocf-shadow-diagnostics");
+        if (!panel) return;
+
+        const hasShadowData = [
+            "z_anchor_id",
+            "z_best_strike",
+            "z_sc_recent_peak_strike",
+            "z_sp_recent_peak_strike",
+            "z_center_future_gap"
+        ].some((key) => Object.prototype.hasOwnProperty.call(data, key));
+
+        panel.hidden = !hasShadowData;
+        if (!hasShadowData) return;
+
+        const num = (key) => toFiniteNumberOrNull(data[key]);
+        const flag = (key) => toRadarBoolean(data[key]);
+        const fmtSigned = (value, digits = 0) => value === null
+            ? "--"
+            : `${value >= 0 ? "+" : ""}${formatRadarNumber(value, digits)}`;
+        const fmtStrike = (value) => value !== null && value > 0
+            ? formatOCFLevel(value)
+            : "--";
+        const clusterText = (lowKey, highKey) => {
+            const low = num(lowKey);
+            const high = num(highKey);
+            if (low === null || low <= 0) return "--";
+            return high !== null && high > 0 && high !== low
+                ? `${fmtStrike(low)}-${fmtStrike(high)}`
+                : fmtStrike(low);
+        };
+
+        const bestStrike = num("z_best_strike");
+        const bestCall = num("z_best_call_mark");
+        const bestPut = num("z_best_put_mark");
+        const bestQuality = num("z_best_pair_quality");
+        setOCFText("ocf-shadow-best",
+            `K ${fmtStrike(bestStrike)}｜C ${bestCall === null ? "--" : formatRadarNumber(bestCall, 1)}｜P ${bestPut === null ? "--" : formatRadarNumber(bestPut, 1)}｜Q ${bestQuality === null ? "--" : Math.round(bestQuality)}`);
+
+        const anchorId = num("z_anchor_id");
+        const anchorStrike = num("z_anchor_strike");
+        const anchorCall = num("z_anchor_call_mark");
+        const anchorPut = num("z_anchor_put_mark");
+        const anchorCenter = num("z_anchor_center_raw");
+        const anchorAge = num("z_anchor_age_seconds");
+        const anchorReason = String(data.z_anchor_refresh_reason || "").trim() || "--";
+        const anchorChanged = flag("z_anchor_changed");
+        setOCFText("ocf-shadow-anchor",
+            `#${anchorId === null ? "--" : Math.round(anchorId)}｜K ${fmtStrike(anchorStrike)}｜C ${anchorCall === null ? "--" : formatRadarNumber(anchorCall, 1)}｜P ${anchorPut === null ? "--" : formatRadarNumber(anchorPut, 1)}｜中心 ${anchorCenter === null ? "--" : formatRadarNumber(anchorCenter, 1)}｜Age ${anchorAge === null ? "--" : Math.round(anchorAge)}s｜${anchorReason}${anchorChanged ? "｜本筆更新" : ""}`);
+
+        const scRecentPeak = num("z_sc_recent_peak_strike");
+        const scSessionPeak = num("z_sc_session_peak_strike");
+        const scPeakDelta = num("z_sc_peak_change_points");
+        const scCenterStep = num("z_sc_center_step");
+        setOCFText("ocf-shadow-sc",
+            `Peak ${fmtStrike(scRecentPeak)}/${fmtStrike(scSessionPeak)}｜ΔPeak ${fmtSigned(scPeakDelta)}｜ΔCenter ${fmtSigned(scCenterStep, 1)}｜群集 ${clusterText("z_sc_recent_cluster_low", "z_sc_recent_cluster_high")}`);
+
+        const spRecentPeak = num("z_sp_recent_peak_strike");
+        const spSessionPeak = num("z_sp_session_peak_strike");
+        const spPeakDelta = num("z_sp_peak_change_points");
+        const spCenterStep = num("z_sp_center_step");
+        setOCFText("ocf-shadow-sp",
+            `Peak ${fmtStrike(spRecentPeak)}/${fmtStrike(spSessionPeak)}｜ΔPeak ${fmtSigned(spPeakDelta)}｜ΔCenter ${fmtSigned(spCenterStep, 1)}｜群集 ${clusterText("z_sp_recent_cluster_low", "z_sp_recent_cluster_high")}`);
+
+        const centerGap = num("z_center_future_gap");
+        const bullStep = num("z_bull_trigger_step");
+        const bearStep = num("z_bear_trigger_step");
+        setOCFText("ocf-shadow-stability",
+            `中心差 ${centerGap === null ? "--" : formatRadarNumber(centerGap, 1)}｜嘎空Δ ${fmtSigned(bullStep)}｜殺多Δ ${fmtSigned(bearStep)}`);
+
+        const roleJump = flag("z_role_jump_shadow");
+        const triggerJump = flag("z_trigger_jump_shadow");
+        const rawReason = String(data.z_role_jump_reason || "").trim();
+        const shadowReasonZh = {
+            SC_PEAK_CHANGE: "SC Peak切換",
+            SP_PEAK_CHANGE: "SP Peak切換",
+            SC_CENTER_STEP: "SC中心跳動",
+            SP_CENTER_STEP: "SP中心跳動",
+            BULL_TRIGGER_STEP: "嘎空Trigger跳動",
+            BEAR_TRIGGER_STEP: "殺多Trigger跳動"
+        };
+        const reason = rawReason
+            ? rawReason.split("|").map((item) => shadowReasonZh[item] || item).join("｜")
+            : "無";
+        setOCFText("ocf-shadow-reason", reason);
+
+        const warned = roleJump || triggerJump;
+        panel.className = `ocf-shadow-diagnostics${warned ? " is-warn" : ""}`;
+        const status = document.getElementById("ocf-shadow-status");
+        if (status) {
+            status.textContent = warned
+                ? `${roleJump ? "角色跳變" : ""}${roleJump && triggerJump ? "＋" : ""}${triggerJump ? "Trigger跳變" : ""}`
+                : "穩定觀察";
+        }
+    }
+
     function renderZRangeBattlePanel(data, versionLabel) {
         const isLive = toRadarBoolean(data.z_valid);
         const usingPrevious = toRadarBoolean(data.z_using_previous_session);
@@ -2369,6 +2492,7 @@
         setOCFText("ocf-action-context", referenceContext
             ? `${referenceContext} ${context}`
             : context);
+        renderZShadowDiagnostics(data);
         renderOCFFixedBlueprint(data);
     }
 
