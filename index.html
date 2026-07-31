@@ -266,6 +266,7 @@
     .ocf-defense-state.state-failed { color:#ff9f0a; border-color:rgba(255,159,10,.65); background:rgba(255,159,10,.12); }
     .ocf-defense-state.state-stale { color:#aaa; border-color:#555; background:#29292b; }
     .ocf-defense-zone { color:#fff; font-size:14px; font-weight:900; line-height:1.2; margin-top:3px; overflow-wrap:anywhere; }
+    .ocf-basis-map { color:#64d2ff; font-size:8px; font-weight:800; line-height:1.25; margin-top:2px; overflow-wrap:anywhere; }
     .ocf-defense-main-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; margin-top:3px; border:1px solid #353538; border-radius:4px; background:rgba(0,0,0,.16); overflow:hidden; }
     .ocf-defense-main-item { min-width:0; padding:4px 6px; }
     .ocf-defense-main-item.trigger { border-left:1px solid #3a3a3c; }
@@ -1303,8 +1304,9 @@
                     </div>
                     <div class="ocf-defense-main-row">
                         <div class="ocf-defense-main-item">
-                            <span class="ocf-defense-main-label">支撐成本</span>
+                            <span class="ocf-defense-main-label">支撐成本（選擇權）</span>
                             <div id="ocf-support-zone" class="ocf-defense-zone">--</div>
+                            <div id="ocf-support-zone-mapped" class="ocf-basis-map" hidden></div>
                         </div>
                         <div class="ocf-defense-main-item trigger">
                             <span class="ocf-defense-main-label">殺多 Trigger</span>
@@ -1327,8 +1329,9 @@
                     </div>
                     <div class="ocf-defense-main-row">
                         <div class="ocf-defense-main-item">
-                            <span class="ocf-defense-main-label">壓力成本</span>
+                            <span class="ocf-defense-main-label">壓力成本（選擇權）</span>
                             <div id="ocf-resistance-zone" class="ocf-defense-zone">--</div>
+                            <div id="ocf-resistance-zone-mapped" class="ocf-basis-map" hidden></div>
                         </div>
                         <div class="ocf-defense-main-item trigger">
                             <span class="ocf-defense-main-label">嘎空 Trigger</span>
@@ -1898,6 +1901,35 @@
         return low === high ? lowText : `${lowText}-${highText}`;
     }
 
+    function mapOCFZoneToFuture(zoneText, basis) {
+        const numericBasis = toFiniteNumberOrNull(basis);
+        const rawText = String(zoneText || "").trim();
+        if (numericBasis === null || !rawText || rawText === "--") return "--";
+        let converted = false;
+        const mappedText = rawText.replace(/\d+(?:\.\d+)?/g, (token) => {
+            const level = Number(token);
+            if (!Number.isFinite(level) || level <= 0) return token;
+            converted = true;
+            return formatOCFLevel(level + numericBasis);
+        });
+        return converted ? mappedText : "--";
+    }
+
+    function renderOCFBasisMap(id, optionZoneText, usesSpotReference, referenceBasis) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        const basis = toFiniteNumberOrNull(referenceBasis);
+        const shouldShow = usesSpotReference && basis !== null && Math.abs(basis) > 0.01;
+        if (!shouldShow) {
+            element.textContent = "";
+            element.hidden = true;
+            return;
+        }
+        const mappedText = mapOCFZoneToFuture(optionZoneText, basis);
+        element.textContent = `期指映射：${mappedText}`;
+        element.hidden = false;
+    }
+
     function getOCFDefenseAction(side, stateCode, hits, isLive, stateDisplay) {
         const isSupport = side === "support";
         const semantic = getOCFDefenseSemantic(stateDisplay);
@@ -2215,15 +2247,23 @@
         setOCFText("ocf-live-confidence", `${confidence === null ? "--" : Math.round(confidence)}／${dataQuality === null ? "--" : Math.round(dataQuality)}`);
         const ignitionText = ignitionDirection > 0 ? "多方" : (ignitionDirection < 0 ? "空方" : "尚未發動");
         setOCFText("ocf-live-event", `選擇權發動：${ignitionText}`);
-        setOCFText("ocf-target-strike", formatOCFLevel(data.z_primary_target));
-        setOCFText("ocf-event-strength", `固定分界：${formatOCFLevel(data.z_center)}｜發動 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}`);
+        const primaryTarget = toFiniteNumberOrNull(data.z_primary_target);
+        const primaryTargetText = direction === 0 || primaryTarget === null || primaryTarget <= 0
+            ? "等待方向確認"
+            : formatOCFLevel(primaryTarget);
+        setOCFText("ocf-target-strike", `固定分界：${formatOCFLevel(data.z_center)}`);
+        setOCFText("ocf-event-strength", `主目標：${primaryTargetText}｜發動 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}`);
 
         const spState = String(data.ocf_support_defense_state_display || "尚未形成").trim();
         const scState = String(data.ocf_resistance_defense_state_display || "尚未形成").trim();
         setOCFText("ocf-support-state", spState);
         setOCFText("ocf-resistance-state", scState);
-        setOCFText("ocf-support-zone", String(data.ocf_support_defense_zone_display || "").trim() || formatOCFLevel(data.z_sp_recent_center));
-        setOCFText("ocf-resistance-zone", String(data.ocf_resistance_defense_zone_display || "").trim() || formatOCFLevel(data.z_sc_recent_center));
+        const supportOptionZone = String(data.ocf_support_defense_zone_display || "").trim() || formatOCFLevel(data.z_sp_recent_center);
+        const resistanceOptionZone = String(data.ocf_resistance_defense_zone_display || "").trim() || formatOCFLevel(data.z_sc_recent_center);
+        setOCFText("ocf-support-zone", supportOptionZone);
+        setOCFText("ocf-resistance-zone", resistanceOptionZone);
+        renderOCFBasisMap("ocf-support-zone-mapped", supportOptionZone, usesSpotReference, referenceBasis);
+        renderOCFBasisMap("ocf-resistance-zone-mapped", resistanceOptionZone, usesSpotReference, referenceBasis);
         setOCFText("ocf-support-detail", String(data.ocf_support_defense_detail_display || data.z_sp_roll_display || "").trim().replace(/\|/g, "｜") || "等待 SP 調單資料");
         setOCFText("ocf-resistance-detail", String(data.ocf_resistance_defense_detail_display || data.z_sc_roll_display || "").trim().replace(/\|/g, "｜") || "等待 SC 調單資料");
         setOCFText("ocf-support-hits", formatOCFLevel(data.z_bear_trigger));
