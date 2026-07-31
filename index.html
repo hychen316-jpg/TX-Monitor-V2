@@ -2156,12 +2156,27 @@
         const ignitionDirection = Math.sign(toFiniteNumberOrNull(data.z_ignition_direction) ?? 0);
         const scRoll = toFiniteNumberOrNull(data.z_sc_roll);
         const spRoll = toFiniteNumberOrNull(data.z_sp_roll);
+        const invalidReasonCode = String(data.z_invalid_reason || "").trim();
+        const usesSpotReference = toRadarBoolean(data.z_uses_spot_reference);
+        const referenceBasis = toFiniteNumberOrNull(data.z_reference_basis);
+        const referenceError = toFiniteNumberOrNull(data.z_reference_error_points);
+        const invalidReasonMap = {
+            PAIR_COUNT_LOW: "雙邊報價配對不足",
+            RAW_GEOMETRY_INVALID: "選擇權原始結構異常",
+            ANCHOR_NOT_READY: "Z2固定分界尚未建立",
+            CENTER_REFERENCE_GAP: "Z2中心偏離選擇權參考價",
+            EXECUTION_GEOMETRY_INVALID: "期貨座標轉換後結構異常",
+            MATRIX_STALE: "選擇權矩陣資料逾時"
+        };
+        const invalidReasonText = invalidReasonMap[invalidReasonCode] || "暖機／資料不足";
 
         const statusElement = document.getElementById("ocf-model-status");
         if (statusElement) {
             statusElement.textContent = isLive
-                ? (usingPrevious ? "上一盤預估驗證中" : `${versionLabel} 即時`)
-                : "暖機／報價不足";
+                ? (usingPrevious
+                    ? "上一盤預估驗證中"
+                    : (usesSpotReference ? `${versionLabel} 即時｜結算映射` : `${versionLabel} 即時`))
+                : invalidReasonText;
             statusElement.className = `ocf-model-badge ${isLive ? (usingPrevious ? "is-warn" : "is-live") : "is-stale"}`;
         }
 
@@ -2289,8 +2304,11 @@
         const lockedTargetText = lockedTargetOne !== null && lockedTargetOne > 0
             ? `${formatOCFLevel(lockedTargetOne)}${lockedTargetTwo !== null && lockedTargetTwo > 0 ? `／${formatOCFLevel(lockedTargetTwo)}` : ""}`
             : "以上方持倉列為準";
+        const referenceContext = usesSpotReference && !usingPrevious
+            ? `本盤採用現貨作為選擇權參考，已套用期現基差 ${referenceBasis === null ? "--" : `${referenceBasis >= 0 ? "+" : ""}${formatRadarNumber(referenceBasis, 1)}`} 點轉換為期貨執行座標。`
+            : "";
         const context = !isLive
-            ? "報價配對或資料新鮮度不足，方向與目標暫不可採用。"
+            ? `${invalidReasonText}${referenceError === null || referenceError <= 0 ? "" : `｜中心誤差 ${formatRadarNumber(referenceError, 1)} 點`}；方向與目標暫不可採用。`
             : (holdingLong
                 ? `本單進場鎖定 Trigger ${formatOCFLevel(lockedTrigger)}；目前嘎空 Trigger ${formatOCFLevel(data.z_bull_trigger)}。本單鎖定目標 ${lockedTargetText}；目前 K+2C 參考目標 ${formatOCFLevel(data.z_upper_target)}。`
                 : (holdingShort
@@ -2308,7 +2326,9 @@
                                         : (direction < 0
                                             ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
                                             : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))))))));
-        setOCFText("ocf-action-context", context);
+        setOCFText("ocf-action-context", referenceContext
+            ? `${referenceContext} ${context}`
+            : context);
         renderOCFFixedBlueprint(data);
     }
 
