@@ -266,20 +266,13 @@
     .ocf-defense-state.state-failed { color:#ff9f0a; border-color:rgba(255,159,10,.65); background:rgba(255,159,10,.12); }
     .ocf-defense-state.state-stale { color:#aaa; border-color:#555; background:#29292b; }
     .ocf-defense-zone { color:#fff; font-size:14px; font-weight:900; line-height:1.2; margin-top:3px; overflow-wrap:anywhere; }
+    .ocf-basis-map { color:#64d2ff; font-size:8px; font-weight:800; line-height:1.25; margin-top:2px; overflow-wrap:anywhere; }
     .ocf-defense-main-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; margin-top:3px; border:1px solid #353538; border-radius:4px; background:rgba(0,0,0,.16); overflow:hidden; }
     .ocf-defense-main-item { min-width:0; padding:4px 6px; }
     .ocf-defense-main-item.trigger { border-left:1px solid #3a3a3c; }
     .ocf-defense-main-label { display:block; color:#85858a; font-size:8px; font-weight:800; line-height:1.2; }
     .ocf-defense-main-row .ocf-defense-zone { margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .ocf-trigger-zone { color:var(--yellow); }
-    .ocf-stability-context {
-      margin-top:6px; padding:6px 8px; border-radius:6px;
-      border:1px solid rgba(255,255,255,0.10);
-      background:rgba(255,255,255,0.035); color:#aeb4bf;
-      font-size:10px; line-height:1.45; letter-spacing:0.05px;
-    }
-    .ocf-stability-context.is-ready { color:#9fe8bd; border-color:rgba(73,196,126,0.28); }
-    .ocf-stability-context.is-warn { color:#ffd27d; border-color:rgba(255,184,77,0.30); }
     .ocf-defense-stats-compact { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .ocf-defense-detail { color:#9a9aa0; font-size:8px; line-height:1.25; min-height:10px; margin-top:1px; overflow-wrap:anywhere; }
     .ocf-meter { height:2px; background:#111; overflow:hidden; margin-top:4px; }
@@ -1311,8 +1304,9 @@
                     </div>
                     <div class="ocf-defense-main-row">
                         <div class="ocf-defense-main-item">
-                            <span class="ocf-defense-main-label">支撐成本</span>
+                            <span class="ocf-defense-main-label">支撐成本（選擇權）</span>
                             <div id="ocf-support-zone" class="ocf-defense-zone">--</div>
+                            <div id="ocf-support-zone-mapped" class="ocf-basis-map" hidden></div>
                         </div>
                         <div class="ocf-defense-main-item trigger">
                             <span class="ocf-defense-main-label">殺多 Trigger</span>
@@ -1335,8 +1329,9 @@
                     </div>
                     <div class="ocf-defense-main-row">
                         <div class="ocf-defense-main-item">
-                            <span class="ocf-defense-main-label">壓力成本</span>
+                            <span class="ocf-defense-main-label">壓力成本（選擇權）</span>
                             <div id="ocf-resistance-zone" class="ocf-defense-zone">--</div>
+                            <div id="ocf-resistance-zone-mapped" class="ocf-basis-map" hidden></div>
                         </div>
                         <div class="ocf-defense-main-item trigger">
                             <span class="ocf-defense-main-label">嘎空 Trigger</span>
@@ -1369,7 +1364,6 @@
                 <div class="ocf-action-label">Z2 LIVE 最終進場動作</div>
                 <div id="ocf-bk-advice" class="ocf-action-text" aria-live="polite">等待完整訊號</div>
                 <div id="ocf-action-context" class="ocf-action-context">尚無有效防守確認，先觀察。</div>
-                <div id="ocf-stability-context" class="ocf-stability-context">StablePeak：等待診斷資料</div>
             </div>
 
             <div class="ocf-prior-band">
@@ -1907,6 +1901,35 @@
         return low === high ? lowText : `${lowText}-${highText}`;
     }
 
+    function mapOCFZoneToFuture(zoneText, basis) {
+        const numericBasis = toFiniteNumberOrNull(basis);
+        const rawText = String(zoneText || "").trim();
+        if (numericBasis === null || !rawText || rawText === "--") return "--";
+        let converted = false;
+        const mappedText = rawText.replace(/\d+(?:\.\d+)?/g, (token) => {
+            const level = Number(token);
+            if (!Number.isFinite(level) || level <= 0) return token;
+            converted = true;
+            return formatOCFLevel(level + numericBasis);
+        });
+        return converted ? mappedText : "--";
+    }
+
+    function renderOCFBasisMap(id, optionZoneText, usesSpotReference, referenceBasis) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        const basis = toFiniteNumberOrNull(referenceBasis);
+        const shouldShow = usesSpotReference && basis !== null && Math.abs(basis) > 0.01;
+        if (!shouldShow) {
+            element.textContent = "";
+            element.hidden = true;
+            return;
+        }
+        const mappedText = mapOCFZoneToFuture(optionZoneText, basis);
+        element.textContent = `期指映射：${mappedText}`;
+        element.hidden = false;
+    }
+
     function getOCFDefenseAction(side, stateCode, hits, isLive, stateDisplay) {
         const isSupport = side === "support";
         const semantic = getOCFDefenseSemantic(stateDisplay);
@@ -2165,12 +2188,27 @@
         const ignitionDirection = Math.sign(toFiniteNumberOrNull(data.z_ignition_direction) ?? 0);
         const scRoll = toFiniteNumberOrNull(data.z_sc_roll);
         const spRoll = toFiniteNumberOrNull(data.z_sp_roll);
+        const invalidReasonCode = String(data.z_invalid_reason || "").trim();
+        const usesSpotReference = toRadarBoolean(data.z_uses_spot_reference);
+        const referenceBasis = toFiniteNumberOrNull(data.z_reference_basis);
+        const referenceError = toFiniteNumberOrNull(data.z_reference_error_points);
+        const invalidReasonMap = {
+            PAIR_COUNT_LOW: "雙邊報價配對不足",
+            RAW_GEOMETRY_INVALID: "選擇權原始結構異常",
+            ANCHOR_NOT_READY: "Z2固定分界尚未建立",
+            CENTER_REFERENCE_GAP: "Z2中心偏離選擇權參考價",
+            EXECUTION_GEOMETRY_INVALID: "期貨座標轉換後結構異常",
+            MATRIX_STALE: "選擇權矩陣資料逾時"
+        };
+        const invalidReasonText = invalidReasonMap[invalidReasonCode] || "暖機／資料不足";
 
         const statusElement = document.getElementById("ocf-model-status");
         if (statusElement) {
             statusElement.textContent = isLive
-                ? (usingPrevious ? "上一盤預估驗證中" : `${versionLabel} 即時`)
-                : "暖機／報價不足";
+                ? (usingPrevious
+                    ? "上一盤預估驗證中"
+                    : (usesSpotReference ? `${versionLabel} 即時｜結算映射` : `${versionLabel} 即時`))
+                : invalidReasonText;
             statusElement.className = `ocf-model-badge ${isLive ? (usingPrevious ? "is-warn" : "is-live") : "is-stale"}`;
         }
 
@@ -2209,15 +2247,23 @@
         setOCFText("ocf-live-confidence", `${confidence === null ? "--" : Math.round(confidence)}／${dataQuality === null ? "--" : Math.round(dataQuality)}`);
         const ignitionText = ignitionDirection > 0 ? "多方" : (ignitionDirection < 0 ? "空方" : "尚未發動");
         setOCFText("ocf-live-event", `選擇權發動：${ignitionText}`);
-        setOCFText("ocf-target-strike", formatOCFLevel(data.z_primary_target));
-        setOCFText("ocf-event-strength", `固定分界：${formatOCFLevel(data.z_center)}｜發動 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}`);
+        const primaryTarget = toFiniteNumberOrNull(data.z_primary_target);
+        const primaryTargetText = direction === 0 || primaryTarget === null || primaryTarget <= 0
+            ? "等待方向確認"
+            : formatOCFLevel(primaryTarget);
+        setOCFText("ocf-target-strike", `固定分界：${formatOCFLevel(data.z_center)}`);
+        setOCFText("ocf-event-strength", `主目標：${primaryTargetText}｜發動 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}`);
 
         const spState = String(data.ocf_support_defense_state_display || "尚未形成").trim();
         const scState = String(data.ocf_resistance_defense_state_display || "尚未形成").trim();
         setOCFText("ocf-support-state", spState);
         setOCFText("ocf-resistance-state", scState);
-        setOCFText("ocf-support-zone", String(data.ocf_support_defense_zone_display || "").trim() || formatOCFLevel(data.z_sp_recent_center));
-        setOCFText("ocf-resistance-zone", String(data.ocf_resistance_defense_zone_display || "").trim() || formatOCFLevel(data.z_sc_recent_center));
+        const supportOptionZone = String(data.ocf_support_defense_zone_display || "").trim() || formatOCFLevel(data.z_sp_recent_center);
+        const resistanceOptionZone = String(data.ocf_resistance_defense_zone_display || "").trim() || formatOCFLevel(data.z_sc_recent_center);
+        setOCFText("ocf-support-zone", supportOptionZone);
+        setOCFText("ocf-resistance-zone", resistanceOptionZone);
+        renderOCFBasisMap("ocf-support-zone-mapped", supportOptionZone, usesSpotReference, referenceBasis);
+        renderOCFBasisMap("ocf-resistance-zone-mapped", resistanceOptionZone, usesSpotReference, referenceBasis);
         setOCFText("ocf-support-detail", String(data.ocf_support_defense_detail_display || data.z_sp_roll_display || "").trim().replace(/\|/g, "｜") || "等待 SP 調單資料");
         setOCFText("ocf-resistance-detail", String(data.ocf_resistance_defense_detail_display || data.z_sc_roll_display || "").trim().replace(/\|/g, "｜") || "等待 SC 調單資料");
         setOCFText("ocf-support-hits", formatOCFLevel(data.z_bear_trigger));
@@ -2288,12 +2334,7 @@
             actionText.textContent = semanticAdviceDisplay;
             actionText.className = `ocf-action-text ocf-tone-${semanticAdviceClass}`;
         }
-        const structuralTrigger = direction > 0 ? data.z_bull_trigger : data.z_bear_trigger;
-        const effectiveEntryTrigger = toFiniteNumberOrNull(data.z_entry_trigger_effective);
-        const tacticalTriggerSource = Math.trunc(toFiniteNumberOrNull(data.z_entry_trigger_source) ?? 0);
-        const trigger = effectiveEntryTrigger !== null && effectiveEntryTrigger > 0
-            ? effectiveEntryTrigger
-            : structuralTrigger;
+        const trigger = direction > 0 ? data.z_bull_trigger : data.z_bear_trigger;
         const target = direction > 0 ? data.z_upper_target : data.z_lower_target;
         const lockedTrigger = toFiniteNumberOrNull(
             data.sop_locked_execution_trigger ?? data.sop_locked_trigger ?? data.activation_trigger_level
@@ -2303,8 +2344,11 @@
         const lockedTargetText = lockedTargetOne !== null && lockedTargetOne > 0
             ? `${formatOCFLevel(lockedTargetOne)}${lockedTargetTwo !== null && lockedTargetTwo > 0 ? `／${formatOCFLevel(lockedTargetTwo)}` : ""}`
             : "以上方持倉列為準";
+        const referenceContext = usesSpotReference && !usingPrevious
+            ? `本盤採用現貨作為選擇權參考，已套用期現基差 ${referenceBasis === null ? "--" : `${referenceBasis >= 0 ? "+" : ""}${formatRadarNumber(referenceBasis, 1)}`} 點轉換為期貨執行座標。`
+            : "";
         const context = !isLive
-            ? "報價配對或資料新鮮度不足，方向與目標暫不可採用。"
+            ? `${invalidReasonText}${referenceError === null || referenceError <= 0 ? "" : `｜中心誤差 ${formatRadarNumber(referenceError, 1)} 點`}；方向與目標暫不可採用。`
             : (holdingLong
                 ? `本單進場鎖定 Trigger ${formatOCFLevel(lockedTrigger)}；目前嘎空 Trigger ${formatOCFLevel(data.z_bull_trigger)}。本單鎖定目標 ${lockedTargetText}；目前 K+2C 參考目標 ${formatOCFLevel(data.z_upper_target)}。`
                 : (holdingShort
@@ -2318,81 +2362,13 @@
                                 : (direction < 0 && scoreOpposesLockedDirection
                                     ? `原空方預測仍保留，但即時方向分已轉正；目前只觀察，不進場。須待方向分與點火恢復空方同向，再跌破殺多 Trigger ${formatOCFLevel(data.z_bear_trigger)} 並完成 2 次確認。`
                                     : (direction > 0
-                                        ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成確認後進場；若啟用戰術Trigger則需5筆／30秒；K+2C 目標 ${formatOCFLevel(target)}。`
+                                        ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K+2C 目標 ${formatOCFLevel(target)}。`
                                         : (direction < 0
-                                            ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成確認後進場；若啟用戰術Trigger則需5筆／30秒；K-2P 目標 ${formatOCFLevel(target)}。`
+                                            ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
                                             : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))))))));
-        setOCFText("ocf-action-context", context);
-
-        const trustCode = Math.trunc(toFiniteNumberOrNull(data.z_role_trust_block_code) ?? 0);
-        const trustLabels = {
-            0: "可信", 1: "方向未定", 2: "資料成熟中", 3: "Pair不足",
-            4: "矩陣過期", 5: "角色不可用", 6: "角色／Trigger候選中",
-            7: "角色資料逾時", 8: "Trigger穩定時間不足"
-        };
-        const graceUsed = Math.trunc(toFiniteNumberOrNull(data.z_formation_pair_grace_used) ?? 0);
-        const graceApplied = toRadarBoolean(data.z_formation_pair_grace_applied);
-        const activeCandidate = direction > 0
-            ? toFiniteNumberOrNull(data.z_bull_trigger_candidate)
-            : (direction < 0 ? toFiniteNumberOrNull(data.z_bear_trigger_candidate) : null);
-        const activeAnchor = direction > 0
-            ? toFiniteNumberOrNull(data.z_bull_trigger_candidate_anchor)
-            : (direction < 0 ? toFiniteNumberOrNull(data.z_bear_trigger_candidate_anchor) : null);
-        const activeCandidateHits = direction > 0
-            ? toFiniteNumberOrNull(data.z_bull_trigger_candidate_hits)
-            : (direction < 0 ? toFiniteNumberOrNull(data.z_bear_trigger_candidate_hits) : null);
-        const activeRequiredHits = direction > 0
-            ? toFiniteNumberOrNull(data.z_bull_trigger_candidate_required_hits)
-            : (direction < 0 ? toFiniteNumberOrNull(data.z_bear_trigger_candidate_required_hits) : null);
-        const activeRequiredSeconds = direction > 0
-            ? toFiniteNumberOrNull(data.z_bull_trigger_candidate_required_seconds)
-            : (direction < 0 ? toFiniteNumberOrNull(data.z_bear_trigger_candidate_required_seconds) : null);
-        const bullFormalTrigger = toFiniteNumberOrNull(data.z_bull_trigger);
-        const bearFormalTrigger = toFiniteNumberOrNull(data.z_bear_trigger);
-        const bullCappedShadow = toFiniteNumberOrNull(data.z_bull_trigger_capped_shadow);
-        const bearCappedShadow = toFiniteNumberOrNull(data.z_bear_trigger_capped_shadow);
-        const bullPullPoints = toFiniteNumberOrNull(data.z_bull_trigger_pull_points);
-        const bearPullPoints = toFiniteNumberOrNull(data.z_bear_trigger_pull_points);
-        const tacticalDirection = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_direction) ?? 0);
-        const tacticalTrigger = toFiniteNumberOrNull(data.z_tactical_pull_cap_trigger);
-        const tacticalAge = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_arm_age_seconds) ?? 0);
-        const tacticalExcess = toFiniteNumberOrNull(data.z_tactical_pull_cap_excess_points);
-        const tacticalBlockCode = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_block_code) ?? 0);
-        const tacticalFormation = toRadarBoolean(data.z_tactical_pull_cap_formation_active);
-        const tacticalSignal = toRadarBoolean(data.z_signal_uses_tactical_pull_cap);
-        const tacticalRequiredHits = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_required_hits) ?? 5);
-        const tacticalRequiredSeconds = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_required_seconds) ?? 30);
-        const tacticalMinDepth = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_min_break_depth) ?? 30);
-        const candidateText = activeCandidate !== null && activeCandidate > 0
-            ? `候選 ${formatOCFLevel(activeCandidate)}（Anchor ${formatOCFLevel(activeAnchor)}｜${Math.trunc(activeCandidateHits ?? 0)}/${Math.trunc(activeRequiredHits ?? 0)}筆｜${Math.trunc(activeRequiredSeconds ?? 0)}秒）`
-            : (direction === 0 ? "方向未定｜不建立Trigger候選" : "無Trigger候選");
-        const tacticalActive = tacticalDirection !== 0 && tacticalTrigger !== null && tacticalTrigger > 0;
-        const tacticalText = tacticalSignal
-            ? `本單使用戰術拉扯Trigger ${formatOCFLevel(lockedTrigger)}`
-            : (tacticalFormation
-                ? `戰術Trigger確認中 ${formatOCFLevel(tacticalTrigger)}｜${tacticalRequiredHits}筆／${tacticalRequiredSeconds}秒／有效突破${tacticalMinDepth}點`
-                : (tacticalActive
-                    ? `戰術Trigger已待命 ${formatOCFLevel(tacticalTrigger)}（${tacticalAge}秒｜超額拉扯 ${tacticalExcess === null ? "--" : Math.round(tacticalExcess)}點）`
-                    : `戰術拉扯未待命${tacticalBlockCode > 0 ? `（碼${tacticalBlockCode}）` : ""}`));
-        const shadowText = direction > 0 && bullCappedShadow !== null && bullCappedShadow > 0
-            ? `結構嘎空 ${formatOCFLevel(bullFormalTrigger)}｜2.5×上限 ${formatOCFLevel(bullCappedShadow)}｜${tacticalText}`
-            : (direction < 0 && bearCappedShadow !== null && bearCappedShadow > 0
-                ? `結構殺多 ${formatOCFLevel(bearFormalTrigger)}｜2.5×上限 ${formatOCFLevel(bearCappedShadow)}｜${tacticalText}`
-                : (bullCappedShadow !== null && bullCappedShadow > 0 && bearCappedShadow !== null && bearCappedShadow > 0
-                    ? `2.5×上限 嘎空 ${formatOCFLevel(bullCappedShadow)}／殺多 ${formatOCFLevel(bearCappedShadow)}｜${tacticalText}`
-                    : "角色拉扯資料等待中"));
-        const graceText = graceApplied
-            ? `Pair Grace本Tick啟用（${graceUsed}/1）`
-            : `Pair Grace ${graceUsed > 0 ? `已使用 ${graceUsed}/1` : "未使用"}`;
-        const holdingPosition = holdingLong || holdingShort;
-        const trustText = holdingPosition
-            ? "持倉中｜新進場閘門停用"
-            : (trustLabels[trustCode] || `阻擋碼 ${trustCode}`);
-        const stabilityElement = document.getElementById("ocf-stability-context");
-        if (stabilityElement) {
-            stabilityElement.textContent = `StablePeak：${trustText}｜${graceText}｜${candidateText}｜${shadowText}`;
-            stabilityElement.className = `ocf-stability-context ${(holdingPosition || trustCode === 0) ? "is-ready" : "is-warn"}`;
-        }
+        setOCFText("ocf-action-context", referenceContext
+            ? `${referenceContext} ${context}`
+            : context);
         renderOCFFixedBlueprint(data);
     }
 
