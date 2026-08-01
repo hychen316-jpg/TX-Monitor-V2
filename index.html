@@ -313,7 +313,7 @@
     .ocf-prior-value { color:#ddd; font-size:9px; font-weight:800; line-height:1.2; margin-top:1px; overflow-wrap:anywhere; }
 
 
-    /* OCF-Z2.0 LIVE: fixed-table and armed-entry emphasis only. */
+    /* OCF-Z2.1 LIVE: entry-integrity, campaign-completion, and observability display. */
     #ocf-battle-panel .ocf-model-badge.is-live::before { content:"LIVE "; font-weight:900; }
     #ocf-battle-panel .ocf-action-band.action-bull,
     #ocf-battle-panel .ocf-action-band.action-bear { box-shadow: inset 0 0 12px rgba(100,210,255,.08); }
@@ -1272,7 +1272,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.0 LIVE｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -2192,6 +2192,15 @@
         const usesSpotReference = toRadarBoolean(data.z_uses_spot_reference);
         const referenceBasis = toFiniteNumberOrNull(data.z_reference_basis);
         const referenceError = toFiniteNumberOrNull(data.z_reference_error_points);
+        const dataBlindSeconds = Math.max(0, Math.round(toFiniteNumberOrNull(data.z_data_blind_seconds) ?? 0));
+        const dataBlindLevel = Math.round(toFiniteNumberOrNull(data.z_data_blind_level) ?? 0);
+        const dataBlindBlocked = toRadarBoolean(data.z_data_blind_block_entry);
+        const campaignCompletedDirection = Math.sign(toFiniteNumberOrNull(data.z_campaign_completed_direction) ?? 0);
+        const campaignCompleted = toRadarBoolean(data.z_campaign_completed);
+        const trueCross = toRadarBoolean(data.z_true_cross);
+        const candidateOrigin = String(data.z_candidate_origin || "").trim();
+        const reentryRejectReason = String(data.z_reentry_reject_reason || "").trim();
+        const lockedTriggerZ21 = toFiniteNumberOrNull(data.z_locked_trigger_z21);
         const invalidReasonMap = {
             PAIR_COUNT_LOW: "雙邊報價配對不足",
             RAW_GEOMETRY_INVALID: "選擇權原始結構異常",
@@ -2204,12 +2213,16 @@
 
         const statusElement = document.getElementById("ocf-model-status");
         if (statusElement) {
-            statusElement.textContent = isLive
-                ? (usingPrevious
-                    ? "上一盤預估驗證中"
-                    : (usesSpotReference ? `${versionLabel} 即時｜結算映射` : `${versionLabel} 即時`))
-                : invalidReasonText;
-            statusElement.className = `ocf-model-badge ${isLive ? (usingPrevious ? "is-warn" : "is-live") : "is-stale"}`;
+            statusElement.textContent = dataBlindBlocked
+                ? `${versionLabel}｜DATA BLIND ${dataBlindSeconds}s｜禁止新進場`
+                : (dataBlindLevel > 0
+                    ? `${versionLabel}｜DATA BLIND ${dataBlindSeconds}s｜觀察`
+                    : (isLive
+                        ? (usingPrevious
+                            ? "上一盤預估驗證中"
+                            : (usesSpotReference ? `${versionLabel} 即時｜結算映射` : `${versionLabel} 即時`))
+                        : invalidReasonText));
+            statusElement.className = `ocf-model-badge ${dataBlindLevel > 0 ? "is-warn" : (isLive ? (usingPrevious ? "is-warn" : "is-live") : "is-stale")}`;
         }
 
         const directionDisplay = String(data.z_direction_display || "").trim().replace(/\|/g, "｜");
@@ -2313,7 +2326,23 @@
         let semanticAdviceDisplay = adviceDisplay;
         let semanticAdviceClass = classifyOCFAdvice(advice);
         if (!holdingLong && !holdingShort) {
-            if (direction > 0 && ignitionOpposesLockedDirection) {
+            if (dataBlindBlocked) {
+                semanticAdviceDisplay = `DATA BLIND ${dataBlindSeconds}s｜策略持續運算｜禁止新進場`;
+                semanticAdviceClass = "wait";
+            } else if (campaignCompleted && campaignCompletedDirection === direction && direction !== 0) {
+                semanticAdviceDisplay = `本盤${direction > 0 ? "多方" : "空方"} T2 已完成｜同方向再進場封鎖`;
+                semanticAdviceClass = "wait";
+            } else if (reentryRejectReason) {
+                const rejectMap = {
+                    REENTRY_NEEDS_TRUE_CROSS: "再進場需等待真正 Trigger 交叉",
+                    REENTRY_SCORE_LOW: "再進場方向分不足",
+                    REENTRY_AGREEMENT_LOW: "再進場成分一致度不足",
+                    REENTRY_OPPOSITE_IGNITION: "反向點火中，拒絕同向再進場",
+                    CAMPAIGN_TARGET_TWO_COMPLETE: "本盤 T2 已完成，同向再進場封鎖"
+                };
+                semanticAdviceDisplay = rejectMap[reentryRejectReason] || reentryRejectReason;
+                semanticAdviceClass = "wait";
+            } else if (direction > 0 && ignitionOpposesLockedDirection) {
                 semanticAdviceDisplay = "原多方預測保留｜即時空方發動｜暫停多單確認";
                 semanticAdviceClass = "wait";
             } else if (direction < 0 && ignitionOpposesLockedDirection) {
@@ -2347,6 +2376,13 @@
         const referenceContext = usesSpotReference && !usingPrevious
             ? `本盤採用現貨作為選擇權參考，已套用期現基差 ${referenceBasis === null ? "--" : `${referenceBasis >= 0 ? "+" : ""}${formatRadarNumber(referenceBasis, 1)}`} 點轉換為期貨執行座標。`
             : "";
+        const integrityParts = [];
+        if (candidateOrigin && candidateOrigin !== "NONE" && lockedTriggerZ21 !== null && lockedTriggerZ21 > 0) integrityParts.push(`候選來源 ${candidateOrigin}`);
+        if (trueCross) integrityParts.push("真正 Trigger 交叉");
+        if (lockedTriggerZ21 !== null && lockedTriggerZ21 > 0) integrityParts.push(`鎖定 Trigger ${formatOCFLevel(lockedTriggerZ21)}`);
+        if (dataBlindLevel > 0) integrityParts.push(`DATA BLIND ${dataBlindSeconds}s`);
+        if (campaignCompleted && campaignCompletedDirection !== 0) integrityParts.push(`${campaignCompletedDirection > 0 ? "多方" : "空方"} Campaign T2 完成`);
+        const integrityContext = integrityParts.length ? `Z2.1：${integrityParts.join("｜")}。` : "";
         const context = !isLive
             ? `${invalidReasonText}${referenceError === null || referenceError <= 0 ? "" : `｜中心誤差 ${formatRadarNumber(referenceError, 1)} 點`}；方向與目標暫不可採用。`
             : (holdingLong
@@ -2366,9 +2402,8 @@
                                         : (direction < 0
                                             ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
                                             : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))))))));
-        setOCFText("ocf-action-context", referenceContext
-            ? `${referenceContext} ${context}`
-            : context);
+        setOCFText("ocf-action-context", [referenceContext, integrityContext, context]
+            .filter(Boolean).join(" "));
         renderOCFFixedBlueprint(data);
     }
 
@@ -4199,7 +4234,7 @@
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
 
-    const ocfCard = card('OCF-Z2.0 暴 Z LIVE', '固定 ATM 分界、K±2權利金、調單與 Trigger', 'v2-ocf-card');
+    const ocfCard = card('OCF-Z2.1 暴 Z LIVE', '固定 ATM 分界、K±2權利金、調單與 Trigger', 'v2-ocf-card');
     const ocfCardTitle = ocfCard.querySelector('.v2-card-title > span');
     if (ocfCardTitle) ocfCardTitle.id = 'v2-ocf-card-title';
     if (ocfPanel) ocfCard.appendChild(ocfPanel);
