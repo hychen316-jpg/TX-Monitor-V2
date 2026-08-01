@@ -2288,7 +2288,12 @@
             actionText.textContent = semanticAdviceDisplay;
             actionText.className = `ocf-action-text ocf-tone-${semanticAdviceClass}`;
         }
-        const trigger = direction > 0 ? data.z_bull_trigger : data.z_bear_trigger;
+        const structuralTrigger = direction > 0 ? data.z_bull_trigger : data.z_bear_trigger;
+        const effectiveEntryTrigger = toFiniteNumberOrNull(data.z_entry_trigger_effective);
+        const tacticalTriggerSource = Math.trunc(toFiniteNumberOrNull(data.z_entry_trigger_source) ?? 0);
+        const trigger = effectiveEntryTrigger !== null && effectiveEntryTrigger > 0
+            ? effectiveEntryTrigger
+            : structuralTrigger;
         const target = direction > 0 ? data.z_upper_target : data.z_lower_target;
         const lockedTrigger = toFiniteNumberOrNull(
             data.sop_locked_execution_trigger ?? data.sop_locked_trigger ?? data.activation_trigger_level
@@ -2313,9 +2318,9 @@
                                 : (direction < 0 && scoreOpposesLockedDirection
                                     ? `原空方預測仍保留，但即時方向分已轉正；目前只觀察，不進場。須待方向分與點火恢復空方同向，再跌破殺多 Trigger ${formatOCFLevel(data.z_bear_trigger)} 並完成 2 次確認。`
                                     : (direction > 0
-                                        ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K+2C 目標 ${formatOCFLevel(target)}。`
+                                        ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成確認後進場；若啟用戰術Trigger則需5筆／30秒；K+2C 目標 ${formatOCFLevel(target)}。`
                                         : (direction < 0
-                                            ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
+                                            ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成確認後進場；若啟用戰術Trigger則需5筆／30秒；K-2P 目標 ${formatOCFLevel(target)}。`
                                             : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))))))));
         setOCFText("ocf-action-context", context);
 
@@ -2348,16 +2353,34 @@
         const bearCappedShadow = toFiniteNumberOrNull(data.z_bear_trigger_capped_shadow);
         const bullPullPoints = toFiniteNumberOrNull(data.z_bull_trigger_pull_points);
         const bearPullPoints = toFiniteNumberOrNull(data.z_bear_trigger_pull_points);
+        const tacticalDirection = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_direction) ?? 0);
+        const tacticalTrigger = toFiniteNumberOrNull(data.z_tactical_pull_cap_trigger);
+        const tacticalAge = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_arm_age_seconds) ?? 0);
+        const tacticalExcess = toFiniteNumberOrNull(data.z_tactical_pull_cap_excess_points);
+        const tacticalBlockCode = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_block_code) ?? 0);
+        const tacticalFormation = toRadarBoolean(data.z_tactical_pull_cap_formation_active);
+        const tacticalSignal = toRadarBoolean(data.z_signal_uses_tactical_pull_cap);
+        const tacticalRequiredHits = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_required_hits) ?? 5);
+        const tacticalRequiredSeconds = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_required_seconds) ?? 30);
+        const tacticalMinDepth = Math.trunc(toFiniteNumberOrNull(data.z_tactical_pull_cap_min_break_depth) ?? 30);
         const candidateText = activeCandidate !== null && activeCandidate > 0
             ? `候選 ${formatOCFLevel(activeCandidate)}（Anchor ${formatOCFLevel(activeAnchor)}｜${Math.trunc(activeCandidateHits ?? 0)}/${Math.trunc(activeRequiredHits ?? 0)}筆｜${Math.trunc(activeRequiredSeconds ?? 0)}秒）`
             : (direction === 0 ? "方向未定｜不建立Trigger候選" : "無Trigger候選");
+        const tacticalActive = tacticalDirection !== 0 && tacticalTrigger !== null && tacticalTrigger > 0;
+        const tacticalText = tacticalSignal
+            ? `本單使用戰術拉扯Trigger ${formatOCFLevel(lockedTrigger)}`
+            : (tacticalFormation
+                ? `戰術Trigger確認中 ${formatOCFLevel(tacticalTrigger)}｜${tacticalRequiredHits}筆／${tacticalRequiredSeconds}秒／有效突破${tacticalMinDepth}點`
+                : (tacticalActive
+                    ? `戰術Trigger已待命 ${formatOCFLevel(tacticalTrigger)}（${tacticalAge}秒｜超額拉扯 ${tacticalExcess === null ? "--" : Math.round(tacticalExcess)}點）`
+                    : `戰術拉扯未待命${tacticalBlockCode > 0 ? `（碼${tacticalBlockCode}）` : ""}`));
         const shadowText = direction > 0 && bullCappedShadow !== null && bullCappedShadow > 0
-            ? `嘎空拉扯上限Shadow ${formatOCFLevel(bullCappedShadow)}（正式 ${formatOCFLevel(bullFormalTrigger)}｜拉扯 ${bullPullPoints === null ? "--" : Math.round(bullPullPoints)}點，不參與交易）`
+            ? `結構嘎空 ${formatOCFLevel(bullFormalTrigger)}｜2.5×上限 ${formatOCFLevel(bullCappedShadow)}｜${tacticalText}`
             : (direction < 0 && bearCappedShadow !== null && bearCappedShadow > 0
-                ? `殺多拉扯上限Shadow ${formatOCFLevel(bearCappedShadow)}（正式 ${formatOCFLevel(bearFormalTrigger)}｜拉扯 ${bearPullPoints === null ? "--" : Math.round(bearPullPoints)}點，不參與交易）`
+                ? `結構殺多 ${formatOCFLevel(bearFormalTrigger)}｜2.5×上限 ${formatOCFLevel(bearCappedShadow)}｜${tacticalText}`
                 : (bullCappedShadow !== null && bullCappedShadow > 0 && bearCappedShadow !== null && bearCappedShadow > 0
-                    ? `拉扯上限Shadow 嘎空 ${formatOCFLevel(bullCappedShadow)}／殺多 ${formatOCFLevel(bearCappedShadow)}（不參與交易）`
-                    : "角色拉扯Shadow等待資料"));
+                    ? `2.5×上限 嘎空 ${formatOCFLevel(bullCappedShadow)}／殺多 ${formatOCFLevel(bearCappedShadow)}｜${tacticalText}`
+                    : "角色拉扯資料等待中"));
         const graceText = graceApplied
             ? `Pair Grace本Tick啟用（${graceUsed}/1）`
             : `Pair Grace ${graceUsed > 0 ? `已使用 ${graceUsed}/1` : "未使用"}`;
