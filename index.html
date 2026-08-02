@@ -303,6 +303,10 @@
     .ocf-action-label { color:#85858a; font-size:7px; font-weight:800; }
     .ocf-action-text { color:var(--yellow); font-size:11px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
     .ocf-action-context { color:#9a9aa0; font-size:8px; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-cross-shadow-diagnostic { color:#8e8e93; font-size:8px; line-height:1.25; margin-top:2px; overflow-wrap:anywhere; }
+    .ocf-cross-shadow-diagnostic.is-ready { color:#78a9e6; }
+    .ocf-cross-shadow-diagnostic.is-motion { color:#d2b45f; }
+    .ocf-cross-shadow-diagnostic.is-wait { color:#8e8e93; }
     .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:4px; }
     .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; }
     .ocf-prior-title { color:#8e8e93; font-size:8px; font-weight:800; }
@@ -1364,6 +1368,7 @@
                 <div class="ocf-action-label">Z2 LIVE 最終進場動作</div>
                 <div id="ocf-bk-advice" class="ocf-action-text" aria-live="polite">等待完整訊號</div>
                 <div id="ocf-action-context" class="ocf-action-context">尚無有效防守確認，先觀察。</div>
+                <div id="ocf-cross-shadow-diagnostic" class="ocf-cross-shadow-diagnostic is-wait">交叉診斷：Shadow資料累積中</div>
             </div>
 
             <div class="ocf-prior-band">
@@ -2198,6 +2203,14 @@
         const campaignCompletedDirection = Math.sign(toFiniteNumberOrNull(data.z_campaign_completed_direction) ?? 0);
         const campaignCompleted = toRadarBoolean(data.z_campaign_completed);
         const trueCross = toRadarBoolean(data.z_true_cross);
+        const physicalCrossReady = toRadarBoolean(data.z_physical_cross_ready);
+        const relativeBullCross = toRadarBoolean(data.z_relative_bull_cross_live);
+        const relativeBearCross = toRadarBoolean(data.z_relative_bear_cross_live);
+        const physicalBullCross = toRadarBoolean(data.z_physical_bull_cross_shadow);
+        const physicalBearCross = toRadarBoolean(data.z_physical_bear_cross_shadow);
+        const bullCrossOrigin = String(data.z_bull_cross_origin_code || "NOT_READY").trim();
+        const bearCrossOrigin = String(data.z_bear_cross_origin_code || "NOT_READY").trim();
+        const physicalCrossBuild = String(data.z_physical_cross_build || "").trim();
         const candidateOrigin = String(data.z_candidate_origin || "").trim();
         const reentryRejectReason = String(data.z_reentry_reject_reason || "").trim();
         const lockedTriggerZ21 = toFiniteNumberOrNull(data.z_locked_trigger_z21);
@@ -2363,6 +2376,30 @@
             actionText.textContent = semanticAdviceDisplay;
             actionText.className = `ocf-action-text ocf-tone-${semanticAdviceClass}`;
         }
+        const crossDiagnostic = document.getElementById("ocf-cross-shadow-diagnostic");
+        if (crossDiagnostic) {
+            let crossDiagnosticText = "交叉診斷：Shadow資料累積中";
+            let crossDiagnosticClass = "is-wait";
+            if (physicalCrossReady) {
+                if (physicalBullCross || physicalBearCross) {
+                    crossDiagnosticText = `交叉診斷：${physicalBullCross ? "多方" : "空方"}價格實際穿越｜LIVE=1 PHYS=1`;
+                    crossDiagnosticClass = "is-ready";
+                } else if (bullCrossOrigin === "TRIGGER_MOTION_ONLY" || bearCrossOrigin === "TRIGGER_MOTION_ONLY") {
+                    crossDiagnosticText = `交叉診斷：相對交叉｜Trigger移動型｜LIVE=1 PHYS=0`;
+                    crossDiagnosticClass = "is-motion";
+                } else if (bullCrossOrigin === "PRICE_CROSS_PREVIOUS_TRIGGER_ONLY" || bearCrossOrigin === "PRICE_CROSS_PREVIOUS_TRIGGER_ONLY") {
+                    crossDiagnosticText = "交叉診斷：價格僅穿越上一筆Trigger｜未站穩目前Trigger";
+                    crossDiagnosticClass = "is-motion";
+                } else {
+                    const relativeCross = relativeBullCross || relativeBearCross;
+                    crossDiagnosticText = `交叉診斷：本筆無交叉｜LIVE=${relativeCross ? 1 : 0} PHYS=0`;
+                    crossDiagnosticClass = "is-wait";
+                }
+            }
+            crossDiagnostic.textContent = crossDiagnosticText;
+            crossDiagnostic.className = `ocf-cross-shadow-diagnostic ${crossDiagnosticClass}`;
+            crossDiagnostic.title = physicalCrossBuild || "Physical Cross Shadow";
+        }
         const trigger = direction > 0 ? data.z_bull_trigger : data.z_bear_trigger;
         const target = direction > 0 ? data.z_upper_target : data.z_lower_target;
         const lockedTrigger = toFiniteNumberOrNull(
@@ -2378,7 +2415,7 @@
             : "";
         const integrityParts = [];
         if (candidateOrigin && candidateOrigin !== "NONE" && lockedTriggerZ21 !== null && lockedTriggerZ21 > 0) integrityParts.push(`候選來源 ${candidateOrigin}`);
-        if (trueCross) integrityParts.push("真正 Trigger 交叉");
+        if (trueCross) integrityParts.push("Live 相對 Trigger 交叉");
         if (lockedTriggerZ21 !== null && lockedTriggerZ21 > 0) integrityParts.push(`鎖定 Trigger ${formatOCFLevel(lockedTriggerZ21)}`);
         if (dataBlindLevel > 0) integrityParts.push(`DATA BLIND ${dataBlindSeconds}s`);
         if (campaignCompleted && campaignCompletedDirection !== 0) integrityParts.push(`${campaignCompletedDirection > 0 ? "多方" : "空方"} Campaign T2 完成`);
