@@ -1406,14 +1406,14 @@
       <div class="box req-level-4-flex" style="padding:5px 8px; flex-direction:row; align-items:center; gap:6px; border: 1px solid rgba(10, 132, 255, 0.4); box-shadow: inset 0 0 10px rgba(10, 132, 255, 0.1); background: linear-gradient(90deg, rgba(10,132,255,0.05) 0%, transparent 100%);">
           <div class="radar-static-container">
               <div id="radar-ticker" class="radar-ticker">
-                  <span style="color:#888;">連線中，等待 TX_Radar 實時數據... ⏳</span>
+                  <span style="color:#888;">連線中，等待 TX Radar LCC 即時成本資料... ⏳</span>
               </div>
           </div>
       </div>
       <div class="box upgrade-prompt lock-lvl-4" style="padding:6px; flex-direction:row; gap:8px;">
           <div style="font-size:14px;">📡</div>
           <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
-              <div style="font-size:10px; font-weight:bold; color:#aaa;">TX-Radar 實時冰山偵測 (即時面板)</div>
+              <div style="font-size:10px; font-weight:bold; color:#aaa;">TX Radar LCC 即時主力成本</div>
               <div class="upgrade-btn" style="font-size:8px; padding:2px 6px;">需 Level 4 解鎖</div>
           </div>
       </div>
@@ -2577,429 +2577,214 @@
         return `未知事件（${rawKind}）`;
     }
 
-    function buildBandView(data, side) {
-        const isLong = side === "long";
-        const center = toFiniteNumberOrNull(data[`recent_${side}_cost`]);
-        const low = toFiniteNumberOrNull(data[`${side}_cost_low`]);
-        const high = toFiniteNumberOrNull(data[`${side}_cost_high`]);
-        const valid = toRadarBoolean(data[`${side}_band_valid`]);
-        const weight = toFiniteNumberOrNull(data[`${side}_band_weight`]);
-        const eventCount = toFiniteNumberOrNull(data[`${side}_band_event_count`]) ?? 0;
-        const effectiveEvents = toFiniteNumberOrNull(data[`${side}_band_effective_events`]);
-        const age = toFiniteNumberOrNull(data[`${side}_band_age_seconds`]);
-        let statusText = "⚪ 無資料";
-        let statusClass = "empty";
-        if (valid) {
-            statusText = "✅ 有效";
-            statusClass = "valid";
-        } else if (center !== null && center > 0) {
-            statusText = "🟡 暫定";
-            statusClass = "provisional";
-        }
+
+    function lccModeText(mode) {
+        const value = String(mode || "WAITING");
+        if (value === "BOOK_TRADE") return "Tick＋五檔完整";
+        if (value === "TRADE_ONLY_PROXY") return "僅成交代理";
+        return "等待資料";
+    }
+
+    function lccSurface(data, key) {
+        const prefix = `lcc_${key}`;
         return {
-            side, isLong, center, low, high, valid, weight, eventCount,
-            effectiveEvents, age, statusText, statusClass
+            valid: toRadarBoolean(data[`${prefix}_valid`]),
+            center: toFiniteNumberOrNull(data[`${prefix}_center`]),
+            coreLow: toFiniteNumberOrNull(data[`${prefix}_core_low`]),
+            coreHigh: toFiniteNumberOrNull(data[`${prefix}_core_high`]),
+            zoneLow: toFiniteNumberOrNull(data[`${prefix}_zone_low`]),
+            zoneHigh: toFiniteNumberOrNull(data[`${prefix}_zone_high`]),
+            weight: toFiniteNumberOrNull(data[`${prefix}_weight`]) ?? 0,
+            ess: toFiniteNumberOrNull(data[`${prefix}_effective_evidence`]) ?? 0,
+            count: Math.round(toFiniteNumberOrNull(data[`${prefix}_evidence_count`]) ?? 0),
+            confidence: Math.max(0, Math.min(100, toFiniteNumberOrNull(data[`${prefix}_confidence`]) ?? 0)),
+            concentration: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_concentration`]) ?? 0)),
+            finalRatio: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_final_maturity_ratio`]) ?? 0)),
+            dataQuality: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_data_quality`]) ?? 0)),
+            defenseProbability: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_defense_probability`]) ?? 0.5)),
+            defenseTouches: Math.round(toFiniteNumberOrNull(data[`${prefix}_defense_touches`]) ?? 0),
+            source: String(data[`${prefix}_dominant_source`] || "--"),
+            secondaryCenter: toFiniteNumberOrNull(data[`${prefix}_secondary_center`]),
+            secondaryStrength: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_secondary_strength`]) ?? 0)),
         };
     }
 
-    function buildChannelText(data, longBand, shortBand) {
-        const channelValid = toRadarBoolean(data.channel_valid);
-        const channelWidth = toFiniteNumberOrNull(data.channel_width);
-        if (channelValid && channelWidth !== null) {
-            return `✅ 有效成本通道：${channelWidth.toFixed(1)}點`;
-        }
-        if (longBand.valid && shortBand.valid && longBand.high !== null && shortBand.low !== null && longBand.high >= shortBand.low) {
-            return "⚠️ 多空成本帶重疊，通道未成立";
-        }
-        return "⏳ 雙邊資料不足，通道尚未成立";
+    function lccRange(low, high, digits = 0) {
+        if (low === null || high === null || low <= 0 || high <= 0) return "--";
+        return `${low.toFixed(digits)}～${high.toFixed(digits)}`;
     }
 
-    function buildPricePositionText(price, longBand, shortBand, channelValid) {
-        const px = toFiniteNumberOrNull(price);
-        if (px === null) return "價格位置：--";
-        if (longBand.low !== null && longBand.high !== null && px >= longBand.low && px <= longBand.high) {
-            return "價格位置：位於多方成本帶內";
+    function renderLccSurface(surface, side) {
+        const isLong = side === "long";
+        const title = isLong ? "🔴 多方控制成本" : "🟢 空方控制成本";
+        const sideClass = isLong ? "long" : "short";
+        let statusText = "⚪ 無資料";
+        let statusClass = "empty";
+        if (surface.valid) {
+            statusText = "✅ 有效";
+            statusClass = "valid";
+        } else if (surface.center !== null && surface.center > 0) {
+            statusText = "🟡 累積中";
+            statusClass = "provisional";
         }
-        if (shortBand.low !== null && shortBand.high !== null && px >= shortBand.low && px <= shortBand.high) {
-            return "價格位置：位於空方成本帶內";
-        }
-        if (channelValid && longBand.high !== null && shortBand.low !== null && px > longBand.high && px < shortBand.low) {
-            return "價格位置：位於成本通道內";
-        }
-        if (longBand.low !== null && px < longBand.low) return "價格位置：位於多方成本帶下方";
-        if (shortBand.high !== null && px > shortBand.high) return "價格位置：位於空方成本帶上方";
-        return "價格位置：成本結構外側／尚待確認";
-    }
-
-    function renderBandCard(band) {
-        const title = band.isLong ? "🔴 多方成本帶" : "🟢 空方成本帶";
-        const center = band.center !== null && band.center > 0 ? band.center.toFixed(1) : "--";
-        const range = band.low !== null && band.high !== null && band.low > 0 && band.high > 0
-            ? `${band.low.toFixed(1)}～${band.high.toFixed(1)}` : "--";
-            
-        let essDisplay = band.effectiveEvents === null ? "--" : band.effectiveEvents.toFixed(2);
-        if (band.effectiveEvents !== null) {
-            if (band.effectiveEvents >= 2.0) {
-                const strongColor = band.isLong ? 'var(--red)' : 'var(--green)';
-                essDisplay = `<span style="color:${strongColor};font-weight:900;text-shadow:0 0 4px ${strongColor};">${essDisplay}</span>`;
-            }
-            else if (band.effectiveEvents < 1.0) essDisplay = `<span style="color:#888;font-weight:900;">${essDisplay}</span>`;
-            else essDisplay = `<span style="color:#fff;">${essDisplay}</span>`;
-        }
-        
-        let ageDisplay = formatRadarAge(band.age);
-        if (band.age !== null) {
-            if (band.age > 1800) ageDisplay = `<span style="color:var(--yellow);font-weight:900;">${ageDisplay}⚠️</span>`;
-            else if (band.age > 600) ageDisplay = `<span style="color:#aaa;font-weight:900;">${ageDisplay}</span>`;
-            else ageDisplay = `<span style="color:#fff;">${ageDisplay}</span>`;
-        }
-
+        const centerText = surface.center !== null && surface.center > 0
+            ? surface.center.toFixed(0) : "--";
+        const secondaryText = surface.secondaryCenter !== null && surface.secondaryCenter > 0
+            ? `${surface.secondaryCenter.toFixed(0)}（${(surface.secondaryStrength * 100).toFixed(0)}%）`
+            : "--";
+        const confidenceColor = surface.confidence >= 65
+            ? (isLong ? "var(--red)" : "var(--green)")
+            : (surface.confidence >= 45 ? "var(--yellow)" : "#8e8e93");
         return `
-            <div class="radar-band-card ${band.side}">
+            <div class="radar-band-card ${sideClass}">
                 <div class="radar-band-title">
                     <span>${title}</span>
-                    <span class="radar-band-status ${band.statusClass}">${band.statusText}</span>
+                    <span class="radar-band-status ${statusClass}">${statusText}</span>
                 </div>
-                <div class="radar-band-main">中心 ${center}</div>
-                <div class="radar-band-range">區間 ${range}</div>
+                <div class="radar-band-main">中心 ${centerText}</div>
+                <div class="radar-band-range">核心 ${lccRange(surface.coreLow, surface.coreHigh)}｜完整 ${lccRange(surface.zoneLow, surface.zoneHigh)}</div>
                 <div class="radar-band-meta">
-                    <span>事件：${Math.round(band.eventCount)}筆</span>
-                    <span>ESS：${essDisplay}</span>
-                    <span>權重：${band.weight === null ? "--" : band.weight.toFixed(1)}</span>
-                    <span>時效：${ageDisplay}</span>
+                    <span>信心：<strong style="color:${confidenceColor};">${surface.confidence.toFixed(0)}</strong></span>
+                    <span>ESS：${surface.ess.toFixed(2)}</span>
+                    <span>證據：${surface.count}筆</span>
+                    <span>權重：${surface.weight.toFixed(1)}</span>
+                    <span>集中：${(surface.concentration * 100).toFixed(0)}%</span>
+                    <span>成熟：${(surface.finalRatio * 100).toFixed(0)}%</span>
+                    <span>資料質量：${(surface.dataQuality * 100).toFixed(0)}%</span>
+                    <span>回測防守：${(surface.defenseProbability * 100).toFixed(0)}%／${surface.defenseTouches}次</span>
                 </div>
+                <div class="radar-event-row">來源 ${escapeRadarHtml(surface.source)}｜次要成本 ${secondaryText}</div>
             </div>`;
     }
 
-    function formatSessionBalance(value) {
-        const number = toFiniteNumberOrNull(value);
-        if (number === null) return "--";
-        const percentage = number * 100;
-        return `${percentage > 0 ? "+" : ""}${percentage.toFixed(1)}%`;
+    function lccPricePosition(price, surfaces) {
+        const px = toFiniteNumberOrNull(price);
+        if (px === null) return "價格位置：--";
+        const labels = [
+            [surfaces.shortLong, "短期多方"],
+            [surfaces.shortShort, "短期空方"],
+            [surfaces.sessionLong, "整盤多方"],
+            [surfaces.sessionShort, "整盤空方"],
+        ];
+        for (const [surface, label] of labels) {
+            if (surface.coreLow !== null && surface.coreHigh !== null && px >= surface.coreLow && px <= surface.coreHigh) {
+                return `價格位置：位於${label}核心成本區`;
+            }
+        }
+        for (const [surface, label] of labels) {
+            if (surface.zoneLow !== null && surface.zoneHigh !== null && px >= surface.zoneLow && px <= surface.zoneHigh) {
+                return `價格位置：位於${label}完整成本區`;
+            }
+        }
+        return "價格位置：目前不在四條主要成本區內";
     }
 
-    function formatCostRange(low, high) {
-        const lowNumber = toFiniteNumberOrNull(low);
-        const highNumber = toFiniteNumberOrNull(high);
-        if (lowNumber === null || highNumber === null || lowNumber <= 0 || highNumber <= 0) return "--";
-        return `${lowNumber.toFixed(0)}～${highNumber.toFixed(0)}`;
-    }
-
-    function renderSessionCostPanel(data) {
-        const hasSessionSchema = ["19.5"].includes(String(data.radar_version || ""))
-            && ["3.4-LIVE-SESSION", "3.5-SESSION-CORE"].includes(String(data.model_revision || ""));
-        const sessionData = hasSessionSchema ? data : {};
-        const state = hasSessionSchema
-            ? String(sessionData.main_cost_session_state || "WAITING_FOR_SESSION")
-            : "WAITING_FOR_SESSION";
-        const direction = hasSessionSchema
-            ? Math.sign(toFiniteNumberOrNull(sessionData.main_cost_session_direction) ?? 0)
-            : 0;
-        const confidence = hasSessionSchema
-            ? Math.max(0, Math.min(100, toFiniteNumberOrNull(sessionData.main_cost_session_confidence) ?? 0))
-            : 0;
-        const balance = hasSessionSchema
-            ? toFiniteNumberOrNull(sessionData.main_cost_session_balance)
-            : null;
-        const partial = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_partial);
-        const complete = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_coverage_complete);
-        const truncated = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_history_truncated);
-        const action = hasSessionSchema
-            ? String(sessionData.main_cost_session_action || "整盤成本累積中")
-            : "等待 TX Radar V19.5 整盤即時成本資料";
-        const alignmentCode = String(sessionData.main_cost_session_alignment || "UNRESOLVED");
-        const alignmentText = SESSION_ALIGNMENT_ZH[alignmentCode] || alignmentCode;
-        const panelClass = direction > 0 ? "session-long" : (direction < 0 ? "session-short" : "session-neutral");
-        const directionText = direction > 0 ? "偏多" : (direction < 0 ? "偏空" : "未定");
-        const directionColor = direction > 0 ? "var(--red)" : (direction < 0 ? "var(--green)" : "var(--yellow)");
-        const stateText = SESSION_TRACK_STATE_ZH[state] || state;
-        const coverageText = truncated ? "事件截斷" : (complete ? "完整盤" : (partial ? "部分盤" : "累積中"));
-        const mainRange = formatCostRange(sessionData.main_cost_session_low, sessionData.main_cost_session_high);
-        const mainCost = toFiniteNumberOrNull(sessionData.main_cost_session_cost);
-        const mainCostText = mainCost !== null && mainCost > 0 && mainRange !== "--"
-            ? `${mainCost.toFixed(0)}｜${mainRange}`
-            : "--";
-        const longHalfWidth = formatRadarNumber(sessionData.main_cost_session_long_half_width, 0);
-        const shortHalfWidth = formatRadarNumber(sessionData.main_cost_session_short_half_width, 0);
-        const longDispersion = formatRadarNumber(sessionData.main_cost_session_long_dispersion, 0);
-        const shortDispersion = formatRadarNumber(sessionData.main_cost_session_short_dispersion, 0);
-        const bandMethod = String(sessionData.main_cost_session_band_method || "");
-        const bandMethodText = bandMethod === "ROBUST_CENTER_ERROR"
-            ? "穩健中心估計帶"
-            : (bandMethod || "舊版分位帶");
-        const asof = toFiniteNumberOrNull(sessionData.main_cost_session_asof);
-        const asofText = asof !== null && asof > 0
-            ? new Date(asof * 1000).toLocaleTimeString("zh-TW", { hour12: false })
-            : "--";
-        const coverageStart = toFiniteNumberOrNull(sessionData.main_cost_session_coverage_started_at);
-        const coverageStartText = coverageStart !== null && coverageStart > 0
-            ? new Date(coverageStart * 1000).toLocaleTimeString("zh-TW", { hour12: false })
-            : "--";
-        const longValid = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_long_valid);
-        const shortValid = hasSessionSchema && toRadarBoolean(sessionData.main_cost_session_short_valid);
-        const longCenter = toFiniteNumberOrNull(sessionData.main_cost_session_long_cost);
-        const shortCenter = toFiniteNumberOrNull(sessionData.main_cost_session_short_cost);
-        const longCenterText = longValid && longCenter !== null && longCenter > 0
-            ? formatRadarNumber(longCenter, 0) : "--";
-        const shortCenterText = shortValid && shortCenter !== null && shortCenter > 0
-            ? formatRadarNumber(shortCenter, 0) : "--";
-
+    function renderLccTrack(title, caption, longSurface, shortSurface, trackClass) {
         return `
-            <section class="radar-session-panel radar-cost-track ${panelClass}">
+            <section class="radar-cost-track ${trackClass}">
                 <div class="radar-track-head">
                     <div>
-                        <div class="radar-track-title">整盤核心成本</div>
-                        <div class="radar-track-caption">本盤開盤至目前的主力事件</div>
+                        <div class="radar-track-title">${escapeRadarHtml(title)}</div>
+                        <div class="radar-track-caption">${escapeRadarHtml(caption)}</div>
                     </div>
-                    <span class="radar-track-badge" style="color:${directionColor};">${escapeRadarHtml(stateText)}｜${escapeRadarHtml(coverageText)}</span>
+                    <span class="radar-track-badge">多空分開估計</span>
                 </div>
-                <div class="radar-track-action" style="color:${directionColor};border-left-color:${directionColor};">${escapeRadarHtml(action)}</div>
-                <div class="radar-track-metrics">
-                    <div class="radar-track-metric"><span>整盤方向</span><strong style="color:${directionColor};">${directionText}</strong></div>
-                    <div class="radar-track-metric"><span>整盤 Balance</span><strong>${balance === null ? "--" : formatSessionBalance(balance)}</strong></div>
-                    <div class="radar-track-metric"><span>方向主成本</span><strong>${mainCostText}</strong></div>
-                    <div class="radar-track-metric"><span>信心／事件</span><strong>${confidence.toFixed(0)}分／${Math.round(toFiniteNumberOrNull(sessionData.main_cost_session_event_count) ?? 0)}筆</strong></div>
+                <div class="radar-band-grid" style="margin-top:4px;">
+                    ${renderLccSurface(longSurface, "long")}
+                    ${renderLccSurface(shortSurface, "short")}
                 </div>
-                <div class="radar-session-costs">
-                    <div class="radar-session-cost long">
-                        多方核心成本<strong>${longCenterText}</strong>
-                        <span>範圍 ${longValid ? formatCostRange(sessionData.main_cost_session_long_low, sessionData.main_cost_session_long_high) : "--"}</span>
-                        <span>｜±${longHalfWidth}點｜分散 ${longDispersion}｜ESS ${formatRadarNumber(sessionData.main_cost_session_long_effective_events, 1)}</span>
-                    </div>
-                    <div class="radar-session-cost short">
-                        空方核心成本<strong>${shortCenterText}</strong>
-                        <span>範圍 ${shortValid ? formatCostRange(sessionData.main_cost_session_short_low, sessionData.main_cost_session_short_high) : "--"}</span>
-                        <span>｜±${shortHalfWidth}點｜分散 ${shortDispersion}｜ESS ${formatRadarNumber(sessionData.main_cost_session_short_effective_events, 1)}</span>
-                    </div>
-                </div>
-                <div class="radar-track-diagnostics">
-                    <span>整盤／近期：<strong>${escapeRadarHtml(alignmentText)}</strong></span>
-                    <span>估計法：<strong>${escapeRadarHtml(bandMethodText)}</strong></span>
-                    <span>總權重：<strong>${formatRadarNumber(sessionData.main_cost_session_weight, 0)}</strong></span>
-                </div>
-                <div class="radar-session-foot">資料起點 ${escapeRadarHtml(coverageStartText)}｜來源 ${escapeRadarHtml(String(sessionData.main_cost_session_source || "--"))}｜更新 ${escapeRadarHtml(asofText)}</div>
             </section>`;
     }
 
     function updateRadarUI(data) {
         const ticker = document.getElementById('radar-ticker');
         if (!ticker || !data || typeof data !== 'object') return;
-
         try {
             const actionStr = String(data.action || "計算中");
             const actionColor = actionStr.includes('外盤') ? 'var(--red)' : (actionStr.includes('內盤') ? 'var(--green)' : '#aaa');
             const actionIcon = actionStr.includes('外盤') ? '🔥' : (actionStr.includes('內盤') ? '💀' : '⏳');
-            const legacyNetWhale = toFiniteNumberOrNull(
-                data.legacy_net_whale !== undefined && data.legacy_net_whale !== null
-                    ? data.legacy_net_whale : data.net_whale
-            ) ?? 0;
-            const legacyRetentionValue = toFiniteNumberOrNull(
-                data.legacy_retention !== undefined && data.legacy_retention !== null
-                    ? data.legacy_retention : data.retention
-            );
-            const legacyRetention = legacyRetentionValue === null
-                ? "0.0" : Math.max(0, Math.min(100, legacyRetentionValue)).toFixed(1);
-            const netColor = legacyNetWhale >= 0 ? 'var(--red)' : 'var(--green)';
-
-            const mainCostState = String(data.main_cost_state || "WAITING");
-            const mainCostStateZH = translateMainCostState(mainCostState);
-            const mainCostDirectionValue = Number(data.main_cost_direction || 0);
-            const candidateDirectionValue = Number(data.main_cost_candidate_direction || 0);
-            const mainCostDirection = translateDirection(mainCostDirectionValue, false);
-            const candidateDirection = translateDirection(candidateDirectionValue, true);
-            const fastReversalActive = toRadarBoolean(data.fast_reversal_active);
-            const breakoutActive = toRadarBoolean(data.breakout_active);
-            const breakoutDirectionValue = Number(data.breakout_direction || 0);
-            const confirmationMode = String(data.direction_confirmation_mode || "HOLD");
-            const confirmationModeZH = DIRECTION_CONFIRMATION_MODE_ZH[confirmationMode] || confirmationMode;
-            
-            const breakoutRequiredSeconds = toFiniteNumberOrNull(data.breakout_required_seconds) ?? 0;
-            const breakoutStableSeconds = toFiniteNumberOrNull(data.breakout_stable_seconds) ?? 0;
-            const directionConfirmationRequired = toFiniteNumberOrNull(data.direction_confirmation_required_seconds) ?? 0;
-            const directionConfirmationRemaining = toFiniteNumberOrNull(data.direction_confirmation_remaining_seconds) ?? 0;
-            const fastBalance = toFiniteNumberOrNull(data.fast_balance) ?? 0;
-            const mainCostVersion = String(data.main_cost_version || '3.2');
-            const modelRevision = String(data.model_revision || '');
-            const costVersionLabel = modelRevision && modelRevision !== mainCostVersion
-                ? `${mainCostVersion} / ${modelRevision}`
-                : mainCostVersion;
-            
-            let statusDisplayHtml = '';
-            if (breakoutDirectionValue !== 0 && !breakoutActive) {
-                statusDisplayHtml = `<span style="color:#aaa;white-space:nowrap;font-size:10px;">突破狀態: <span style="color:var(--yellow);font-size:11px;font-weight:800;">突破觀察中 ${breakoutStableSeconds.toFixed(1)} / ${breakoutRequiredSeconds.toFixed(1)}秒</span></span>`;
-            } else if (breakoutActive && !fastReversalActive) {
-                statusDisplayHtml = `<span style="color:#aaa;white-space:nowrap;font-size:10px;">突破狀態: <span style="color:var(--yellow);font-size:11px;font-weight:800;">價格突破成立，反向籌碼條件尚未完全滿足</span></span>`;
-            } else if (fastReversalActive) {
-                const confirmedSeconds = Math.max(0, directionConfirmationRequired - directionConfirmationRemaining);
-                statusDisplayHtml = `<span style="color:#aaa;white-space:nowrap;font-size:10px;">突破狀態: <span style="color:var(--purple);font-size:11px;font-weight:800;">強突破快速反轉確認中 (確認進度：已確認 ${confirmedSeconds.toFixed(1)} / 所需 ${directionConfirmationRequired.toFixed(1)}秒)</span></span>`;
-            } else if (candidateDirectionValue !== 0) {
-                const confirmedSeconds = Math.max(0, directionConfirmationRequired - directionConfirmationRemaining);
-                statusDisplayHtml = `<span style="color:#aaa;white-space:nowrap;font-size:10px;">候選方向: <span style="color:${candidateDirectionValue > 0 ? 'var(--red)' : 'var(--green)'};font-size:11px;font-weight:800;">${escapeRadarHtml(candidateDirection)}</span> (確認進度：已確認 ${confirmedSeconds.toFixed(1)} / 所需 ${directionConfirmationRequired.toFixed(1)}秒)</span>`;
-            }
-            const mainCostDirectionColor = mainCostDirectionValue > 0
-                ? 'var(--red)' : (mainCostDirectionValue < 0 ? 'var(--green)' : '#aaa');
-            const confidenceNumber = toFiniteNumberOrNull(data.main_cost_confidence) ?? 0;
-            const mainCostConfidence = Math.max(0, Math.min(100, confidenceNumber)).toFixed(1);
-            const mainCostLow = toFiniteNumberOrNull(data.main_cost_low);
-            const mainCostHigh = toFiniteNumberOrNull(data.main_cost_high);
-            const mainCostRange = mainCostLow !== null && mainCostHigh !== null && mainCostLow > 0 && mainCostHigh > 0
-                ? `${mainCostLow.toFixed(1)}～${mainCostHigh.toFixed(1)}` : "--";
-            const mainCostAcceptedEvents = Math.round(toFiniteNumberOrNull(data.main_cost_accepted_events) ?? 0);
-
-            const eventDirectionRaw = toFiniteNumberOrNull(data.main_cost_last_event_direction);
-            const eventDirection = eventDirectionRaw !== null && eventDirectionRaw !== 0
-                ? eventDirectionRaw : mainCostDirectionValue;
-            const rawEventKind = String(data.main_cost_last_event || "");
-            const mainCostLastEventZH = translateMainCostEvent(rawEventKind, eventDirection);
-            const eventCost = toFiniteNumberOrNull(data.main_cost_last_event_cost);
-            const eventVolume = toFiniteNumberOrNull(data.main_cost_last_event_volume);
-            const eventTimestamp = toFiniteNumberOrNull(data.main_cost_last_event_at);
-            const eventAge = eventTimestamp !== null && eventTimestamp > 0
-                ? Math.max(0, Date.now() / 1000 - eventTimestamp) : null;
-
-            const isPhase1 = ["19.3", "19.4", "19.5"].includes(String(data.radar_version || ""))
-                || Object.prototype.hasOwnProperty.call(data, "long_band_valid");
-            const longBand = buildBandView(data, 'long');
-            const shortBand = buildBandView(data, 'short');
-            const channelValid = toRadarBoolean(data.channel_valid);
-            const channelText = buildChannelText(data, longBand, shortBand);
-            const positionText = buildPricePositionText(data.price, longBand, shortBand, channelValid);
-            const sessionCostHtml = renderSessionCostPanel(data);
-            const sessionLongCoreCost = toFiniteNumberOrNull(data.main_cost_session_long_cost);
-            const sessionShortCoreCost = toFiniteNumberOrNull(data.main_cost_session_short_cost);
-            const sessionLongCoreText = toRadarBoolean(data.main_cost_session_long_valid)
-                && sessionLongCoreCost !== null && sessionLongCoreCost > 0
-                ? formatRadarNumber(sessionLongCoreCost, 1)
+            const netWhale = toFiniteNumberOrNull(data.legacy_net_whale !== undefined ? data.legacy_net_whale : data.net_whale) ?? 0;
+            const retention = Math.max(0, Math.min(100, toFiniteNumberOrNull(data.legacy_retention !== undefined ? data.legacy_retention : data.retention) ?? 0));
+            const netColor = netWhale >= 0 ? 'var(--red)' : 'var(--green)';
+            const mode = String(data.lcc_data_mode || "WAITING");
+            const modeText = lccModeText(mode);
+            const modeColor = mode === "BOOK_TRADE" ? "#64d2ff" : (mode === "TRADE_ONLY_PROXY" ? "var(--yellow)" : "#8e8e93");
+            const fair = toFiniteNumberOrNull(data.lcc_fair_price);
+            const trade = toFiniteNumberOrNull(data.lcc_trade_price);
+            const lccTimestamp = toFiniteNumberOrNull(data.lcc_timestamp);
+            const updateText = lccTimestamp !== null && lccTimestamp > 0
+                ? new Date(lccTimestamp * 1000).toLocaleTimeString("zh-TW", {hour12:false})
                 : "--";
-            const sessionShortCoreText = toRadarBoolean(data.main_cost_session_short_valid)
-                && sessionShortCoreCost !== null && sessionShortCoreCost > 0
-                ? formatRadarNumber(sessionShortCoreCost, 1)
-                : "--";
-            const tacticalMainCost = toFiniteNumberOrNull(
-                data.main_cost !== undefined && data.main_cost !== null
-                    ? data.main_cost : data.whale_cost
-            );
-            const tacticalMainCostText = tacticalMainCost !== null && tacticalMainCost > 0
-                ? formatRadarNumber(tacticalMainCost, 1)
-                : "--";
+            const tickUpdates = Math.round(toFiniteNumberOrNull(data.lcc_tick_updates) ?? 0);
+            const bookUpdates = Math.round(toFiniteNumberOrNull(data.lcc_book_updates) ?? 0);
+            const activeEvidence = Math.round(toFiniteNumberOrNull(data.lcc_active_evidence) ?? 0);
+            const pendingEpisodes = Math.round(toFiniteNumberOrNull(data.lcc_pending_episodes) ?? 0);
+            const queueSize = Math.round(toFiniteNumberOrNull(data.lcc_queue_size) ?? 0);
+            const droppedEvents = Math.round(toFiniteNumberOrNull(data.lcc_dropped_events) ?? 0);
+            const version = String(data.lcc_version || "LCC-0.1-CLEANROOM");
+            const contract = String(data.lcc_contract || "--");
+            const recovery = translateRecoveryStatus(data.lcc_recovery_status || "FRESH_START");
+            const limitations = String(data.lcc_limitations || "公開成交與委託簿推估控制成本，非帳戶真實持倉成本。")
+                .replace("Probabilistic control costs from public trades/order book; not account-level position costs.", "公開成交與委託簿推估控制成本，非帳戶真實持倉成本。");
 
-            const recoveryStatus = translateRecoveryStatus(data.main_cost_recovery_status);
-            const confirmationRemaining = toFiniteNumberOrNull(data.main_cost_confirmation_remaining_seconds);
-            const openingRemaining = toFiniteNumberOrNull(data.main_cost_opening_remaining_seconds);
-            const recoveryGuardRemaining = toFiniteNumberOrNull(data.main_cost_recovery_guard_seconds);
-
-            let timingText = '';
-            if (mainCostState === 'DIRECTION_PENDING' && confirmationRemaining !== null) {
-                timingText = `確認剩餘 ${confirmationRemaining.toFixed(1)}秒`;
-            } else if (mainCostState === 'OPENING_PROVISIONAL' && openingRemaining !== null) {
-                timingText = `開盤觀察剩餘 ${openingRemaining.toFixed(1)}秒`;
-            } else if (recoveryGuardRemaining !== null && recoveryGuardRemaining > 0) {
-                timingText = `恢復保護剩餘 ${recoveryGuardRemaining.toFixed(1)}秒`;
-            }
-
-            let currentNetWhale = legacyNetWhale;
-            let netWhaleDiff = 0;
-            if (window.lastNetWhaleRadar !== undefined && window.lastNetWhaleRadar !== null) {
-                netWhaleDiff = currentNetWhale - window.lastNetWhaleRadar;
-            }
-            window.lastNetWhaleRadar = currentNetWhale;
-            let netSlopeIcon = "➖";
-            let netSlopeColor = "#888";
-            if (netWhaleDiff > 0) { netSlopeIcon = "🔼"; netSlopeColor = "var(--red)"; }
-            else if (netWhaleDiff < 0) { netSlopeIcon = "🔽"; netSlopeColor = "var(--green)"; }
-
-            const isTrigger = toRadarBoolean(data.is_trigger) || (String(data.status || 'SCAN') !== 'SCAN');
+            const surfaces = {
+                shortLong: lccSurface(data, "short_long"),
+                shortShort: lccSurface(data, "short_short"),
+                sessionLong: lccSurface(data, "session_long"),
+                sessionShort: lccSurface(data, "session_short"),
+            };
+            const positionText = lccPricePosition(data.price ?? trade ?? fair, surfaces);
+            const isTrigger = toRadarBoolean(data.is_trigger) || String(data.status || 'SCAN') !== 'SCAN';
             const statusBadge = isTrigger
-                ? `<span style="background:var(--red);color:#fff;padding:2px 4px;border-radius:4px;font-size:10px;">${escapeRadarHtml(data.status || '觸發')}</span>` : '';
-
-            const isConflict = mainCostState === 'CONFLICT';
-            const conflictWarning = isConflict ? `<span style="color:var(--yellow);font-size:10px;margin-left:4px;">(⚠️ 判定可能延遲)</span>` : '';
-            const strategyHint = isConflict ? `<div style="padding:0 6px 4px 6px;color:#bbb;font-size:10px;text-align:right;">💡 Phase 1 策略：<span style="color:#fff;">請以跌破成本帶或重回區間作為進場參考</span></div>` : '';
-
-            const tacticalPanelHtml = `
-                <section class="radar-cost-track tactical">
-                    <div class="radar-track-head">
-                        <div>
-                            <div class="radar-track-title">近期戰術成本</div>
-                            <div class="radar-track-caption">近期資金衰減軌與即時方向</div>
-                        </div>
-                        <span class="radar-track-badge" style="color:${mainCostDirectionColor};">${escapeRadarHtml(mainCostStateZH)}｜${escapeRadarHtml(mainCostDirection)}</span>
-                    </div>
-                    <div class="radar-track-metrics">
-                        <div class="radar-track-metric"><span>正式方向</span><strong style="color:${mainCostDirectionColor};">${escapeRadarHtml(mainCostDirection)}${conflictWarning}</strong></div>
-                        <div class="radar-track-metric"><span>模型信心</span><strong>${mainCostConfidence}%</strong></div>
-                        <div class="radar-track-metric"><span>方向主成本</span><strong>${tacticalMainCostText}</strong></div>
-                        <div class="radar-track-metric"><span>快速 Balance</span><strong style="color:${fastBalance > 0 ? 'var(--red)' : (fastBalance < 0 ? 'var(--green)' : '#aaa')};">${fastBalance.toFixed(3)}</strong></div>
-                    </div>
-                    <div class="radar-band-grid">
-                        ${renderBandCard(longBand)}
-                        ${renderBandCard(shortBand)}
-                        <div class="radar-event-row">
-                            <div><span style="color:#888;">最新事件：</span><span style="color:#00d2ff;font-weight:800;">${escapeRadarHtml(mainCostLastEventZH)}</span></div>
-                            <div style="margin-top:2px;color:#888;">事件成本 ${eventCost === null || eventCost <= 0 ? '--' : eventCost.toFixed(1)} · 事件量 ${eventVolume === null || eventVolume <= 0 ? '--' : `${eventVolume.toFixed(0)}口`} · 時間 ${formatRadarAge(eventAge)}</div>
-                        </div>
-                    </div>
-                    <div class="radar-track-diagnostics">
-                        <span>正式成本區：<strong>${mainCostRange}</strong></span>
-                        <span>近期證據多／空：<strong>${formatRadarNumber(data.whale_buy_vol, 0)}／${formatRadarNumber(data.whale_sell_vol, 0)}</strong></span>
-                        <span>有效事件：<strong>${mainCostAcceptedEvents}</strong></span>
-                        <span>恢復：<strong>${escapeRadarHtml(recoveryStatus)}</strong></span>
-                        <span>翻轉：<strong>${escapeRadarHtml(confirmationModeZH)}</strong></span>
-                    </div>
-                    ${candidateDirectionValue !== 0 ? `<div class="radar-track-status">候選方向：${escapeRadarHtml(candidateDirection)}</div>` : ''}
-                    ${statusDisplayHtml !== '' ? `<div class="radar-track-status">${statusDisplayHtml}</div>` : ''}
-                    ${timingText ? `<div class="radar-track-status">${escapeRadarHtml(timingText)}</div>` : ''}
-                    ${strategyHint}
-                </section>`;
-
-            const phase1Html = isPhase1 ? `
-                <div class="radar-phase-panel">
-                    <div class="radar-cost-track-grid">
-                        ${tacticalPanelHtml}
-                        ${sessionCostHtml}
-                    </div>
-                    <div class="radar-cross-read">
-                        <strong>${escapeRadarHtml(positionText)}</strong>
-                        ｜${escapeRadarHtml(channelText)}
-                    </div>
-                </div>` : '';
+                ? `<span style="background:var(--red);color:#fff;padding:2px 4px;border-radius:4px;font-size:10px;">${escapeRadarHtml(data.status || '觸發')}</span>`
+                : '';
 
             ticker.innerHTML = `
                 <div class="radar-command-shell">
                     <div class="radar-command-head">
                         <div class="radar-command-heading">
-                            <div class="radar-command-title">TX Radar V${escapeRadarHtml(data.radar_version || '19.5')}</div>
-                            <div class="radar-command-subtitle">近期戰術成本與整盤核心成本分軌</div>
+                            <div class="radar-command-title">TX Radar V19.5｜Clean-room LCC 即時主力成本</div>
+                            <div class="radar-command-subtitle">同一實體合約 Tick＋五檔 BidAsk｜短期與整盤、多方與空方完全分軌</div>
                         </div>
                         <div class="radar-command-meta">
-                            <span class="radar-version-badge">Cost ${escapeRadarHtml(costVersionLabel)}</span>
-                            <span class="radar-command-time">${escapeRadarHtml(data.t || '--:--')}</span>
+                            <span class="radar-version-badge">${escapeRadarHtml(version)}</span>
+                            <span class="radar-command-time">${escapeRadarHtml(updateText)}</span>
                             ${statusBadge}
                         </div>
                     </div>
                     <div class="radar-live-grid">
                         <div class="radar-live-item">
-                            <span class="radar-live-label">即時內／外盤口數</span>
+                            <span class="radar-live-label">即時成交</span>
                             <strong class="radar-live-value" style="color:${actionColor};">${actionIcon} ${escapeRadarHtml(actionStr)} ${formatRadarNumber(data.vol, 0)}口</strong>
-                            <span class="radar-live-meta">最新一筆主動成交方向</span>
+                            <span class="radar-live-meta">成交價 ${trade !== null && trade > 0 ? trade.toFixed(0) : '--'}｜公平價 ${fair !== null && fair > 0 ? fair.toFixed(1) : '--'}</span>
                         </div>
                         <div class="radar-live-item">
-                            <span class="radar-live-label">大戶淨單</span>
-                            <strong class="radar-live-value" style="color:${netColor};">${formatRadarNumber(currentNetWhale, 0)} <span style="color:${netSlopeColor};font-size:9px;">${netSlopeIcon}${Math.abs(netWhaleDiff).toFixed(0)}</span></strong>
-                            <span class="radar-live-meta">保留率 ${legacyRetention}%</span>
+                            <span class="radar-live-label">原 TX Radar 大戶淨單</span>
+                            <strong class="radar-live-value" style="color:${netColor};">${formatRadarNumber(netWhale, 0)}</strong>
+                            <span class="radar-live-meta">保留率 ${retention.toFixed(1)}%（不參與 LCC 成本）</span>
                         </div>
                         <div class="radar-live-item">
-                            <span class="radar-live-label">成本(舊)</span>
-                            <strong class="radar-live-value">${formatRadarNumber(data.whale_cost_single, 1)}</strong>
-                            <span class="radar-live-meta">舊版單軌成本</span>
+                            <span class="radar-live-label">LCC 資料模式</span>
+                            <strong class="radar-live-value" style="color:${modeColor};">${escapeRadarHtml(modeText)}</strong>
+                            <span class="radar-live-meta">Tick ${tickUpdates}｜五檔 ${bookUpdates}</span>
                         </div>
                         <div class="radar-live-item">
-                            <span class="radar-live-label">整盤核心成本（多／空）</span>
-                            <strong class="radar-live-value"><span style="color:var(--red);">${sessionLongCoreText}</span><span style="color:#636366;">／</span><span style="color:var(--green);">${sessionShortCoreText}</span></strong>
-                            <span class="radar-live-meta">通過整盤側別有效性才顯示</span>
+                            <span class="radar-live-label">成本證據</span>
+                            <strong class="radar-live-value">${activeEvidence}／${pendingEpisodes}</strong>
+                            <span class="radar-live-meta">成熟／待驗證｜${escapeRadarHtml(contract)}</span>
                         </div>
                     </div>
-                    ${phase1Html}
+                    <div class="radar-phase-panel">
+                        <div class="radar-cost-track-grid">
+                            ${renderLccTrack("短期主力控制成本", "近期有效訂單流與價格影響，快速衰減", surfaces.shortLong, surfaces.shortShort, "tactical")}
+                            ${renderLccTrack("整盤主力控制成本", "本盤成熟控制證據，慢速衰減", surfaces.sessionLong, surfaces.sessionShort, "session-neutral")}
+                        </div>
+                        <div class="radar-cross-read">
+                            <strong>${escapeRadarHtml(positionText)}</strong>
+                            ｜模式 ${escapeRadarHtml(modeText)}｜恢復 ${escapeRadarHtml(recovery)}｜佇列 ${queueSize}｜丟棄 ${droppedEvents}
+                        </div>
+                        <div class="radar-session-foot">${escapeRadarHtml(limitations)}</div>
+                    </div>
                 </div>`;
 
             if (isTrigger) {
@@ -3014,8 +2799,8 @@
                 }
             }
         } catch (error) {
-            console.error('TX Radar V19.5 面板更新失敗:', error, data);
-            ticker.innerHTML = '<span style="color:var(--yellow);">⚠️ 雷達資料格式異常，已保留頁面其他功能。</span>';
+            console.error('TX Radar LCC 面板更新失敗:', error, data);
+            ticker.innerHTML = '<span style="color:var(--yellow);">⚠️ LCC 資料格式異常，已保留頁面其他功能。</span>';
         }
     }
 
@@ -4266,7 +4051,7 @@
     const intelGrid = el('div', 'v2-intel-grid');
     liveStack.appendChild(intelGrid);
 
-    const radarCard = card('TX Radar 戰術與整盤成本', '近期戰術成本帶、整盤核心成本與方向一致性', 'v2-radar-card');
+    const radarCard = card('TX Radar LCC 主力成本', 'Tick＋五檔 BidAsk 的短期／整盤多空控制成本', 'v2-radar-card');
     if (radarBox) radarCard.appendChild(radarBox);
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
