@@ -307,6 +307,11 @@
     .ocf-cross-shadow-diagnostic.is-ready { color:#78a9e6; }
     .ocf-cross-shadow-diagnostic.is-motion { color:#d2b45f; }
     .ocf-cross-shadow-diagnostic.is-wait { color:#8e8e93; }
+    .ocf-recovery-diagnostic { color:#8e8e93; font-size:8px; line-height:1.25; margin-top:2px; overflow-wrap:anywhere; }
+    .ocf-recovery-diagnostic.is-pending { color:#d2b45f; }
+    .ocf-recovery-diagnostic.is-guard { color:#78a9e6; }
+    .ocf-recovery-diagnostic.is-verified { color:#30d158; }
+    .ocf-recovery-diagnostic.is-rejected { color:#ff9f0a; }
     .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:4px; }
     .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; }
     .ocf-prior-title { color:#8e8e93; font-size:8px; font-weight:800; }
@@ -1369,6 +1374,7 @@
                 <div id="ocf-bk-advice" class="ocf-action-text" aria-live="polite">等待完整訊號</div>
                 <div id="ocf-action-context" class="ocf-action-context">尚無有效防守確認，先觀察。</div>
                 <div id="ocf-cross-shadow-diagnostic" class="ocf-cross-shadow-diagnostic is-wait">交叉診斷：Shadow資料累積中</div>
+                <div id="ocf-recovery-diagnostic" class="ocf-recovery-diagnostic">CTX30：尚無恢復事件</div>
             </div>
 
             <div class="ocf-prior-band">
@@ -2211,6 +2217,16 @@
         const bullCrossOrigin = String(data.z_bull_cross_origin_code || "NOT_READY").trim();
         const bearCrossOrigin = String(data.z_bear_cross_origin_code || "NOT_READY").trim();
         const physicalCrossBuild = String(data.z_physical_cross_build || "").trim();
+        const decisionRecoveryStatus = String(data.z_decision_recovery_status || "").trim();
+        const decisionRecoveryPending = toRadarBoolean(data.z_decision_recovery_pending);
+        const decisionRecoveryGuardActive = toRadarBoolean(data.z_decision_recovery_guard_active);
+        const decisionRecoveryCheckpointAge = Math.max(0, Math.round(toFiniteNumberOrNull(data.z_decision_recovery_checkpoint_age_seconds) ?? 0));
+        const decisionRecoveryFreshTicks = Math.max(0, Math.round(toFiniteNumberOrNull(data.z_decision_recovery_fresh_ticks) ?? 0));
+        const decisionRecoveryStoredDirection = Math.sign(toFiniteNumberOrNull(data.z_decision_recovery_stored_direction) ?? 0);
+        const decisionRecoveryStoredScore = toFiniteNumberOrNull(data.z_decision_recovery_stored_score);
+        const decisionRecoveryAppliedAge = Math.max(0, Math.round(toFiniteNumberOrNull(data.z_decision_recovery_applied_age_seconds) ?? 0));
+        const decisionRecoveryVerified = toRadarBoolean(data.z_decision_recovery_verified);
+        const decisionRecoveryBuild = String(data.z_decision_recovery_build || "").trim();
         const candidateOrigin = String(data.z_candidate_origin || "").trim();
         const reentryRejectReason = String(data.z_reentry_reject_reason || "").trim();
         const lockedTriggerZ21 = toFiniteNumberOrNull(data.z_locked_trigger_z21);
@@ -2399,6 +2415,35 @@
             crossDiagnostic.textContent = crossDiagnosticText;
             crossDiagnostic.className = `ocf-cross-shadow-diagnostic ${crossDiagnosticClass}`;
             crossDiagnostic.title = physicalCrossBuild || "Physical Cross Shadow";
+        }
+        const recoveryDiagnostic = document.getElementById("ocf-recovery-diagnostic");
+        if (recoveryDiagnostic) {
+            let recoveryText = "CTX30：尚無恢復事件";
+            let recoveryClass = "";
+            const storedDirectionText = decisionRecoveryStoredDirection > 0
+                ? "偏多"
+                : (decisionRecoveryStoredDirection < 0 ? "偏空" : "未定");
+            const storedScoreText = decisionRecoveryStoredScore === null
+                ? "--"
+                : `${decisionRecoveryStoredScore >= 0 ? "+" : ""}${formatRadarNumber(decisionRecoveryStoredScore, 1)}`;
+            if (decisionRecoveryPending) {
+                recoveryText = `CTX30：等待新鮮資料 ${decisionRecoveryFreshTicks}/3｜Checkpoint ${decisionRecoveryCheckpointAge}s｜${storedDirectionText} ${storedScoreText}`;
+                recoveryClass = "is-pending";
+            } else if (decisionRecoveryGuardActive) {
+                recoveryText = `CTX30：脈絡已恢復｜Guard ${decisionRecoveryAppliedAge}/20s｜暫停新進場`;
+                recoveryClass = "is-guard";
+            } else if (decisionRecoveryVerified) {
+                recoveryText = "CTX30：恢復脈絡已完成新鮮資料驗證";
+                recoveryClass = "is-verified";
+            } else if (decisionRecoveryStatus && !["SAVED", "LOADED"].includes(decisionRecoveryStatus)) {
+                recoveryText = `CTX30：${decisionRecoveryStatus}`;
+                recoveryClass = "is-rejected";
+            } else if (decisionRecoveryStatus === "SAVED") {
+                recoveryText = `CTX30：決策Checkpoint已更新｜${storedDirectionText} ${storedScoreText}`;
+            }
+            recoveryDiagnostic.textContent = recoveryText;
+            recoveryDiagnostic.className = `ocf-recovery-diagnostic ${recoveryClass}`.trim();
+            recoveryDiagnostic.title = decisionRecoveryBuild || "Z2 Decision Context Recovery";
         }
         const trigger = direction > 0 ? data.z_bull_trigger : data.z_bear_trigger;
         const target = direction > 0 ? data.z_upper_target : data.z_lower_target;
