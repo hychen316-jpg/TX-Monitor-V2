@@ -2228,6 +2228,9 @@
         const decisionRecoveryVerified = toRadarBoolean(data.z_decision_recovery_verified);
         const decisionRecoveryBuild = String(data.z_decision_recovery_build || "").trim();
         const candidateOrigin = String(data.z_candidate_origin || "").trim();
+        const rawExecutionAdvice = String(data.mdi_execution_advice || data.execution_advice || "");
+        const triggerRelocationWaiting = rawExecutionAdvice.includes("TRIGGER_RELOCATION_WAIT_RETEST");
+        const oppositeIgnitionBlocked = rawExecutionAdvice.includes("OPPOSITE_IGNITION_BLOCK_ENTRY");
         const reentryRejectReason = String(data.z_reentry_reject_reason || "").trim();
         const lockedTriggerZ21 = toFiniteNumberOrNull(data.z_locked_trigger_z21);
         const invalidReasonMap = {
@@ -2259,7 +2262,7 @@
             ? "--"
             : `${score >= 0 ? "+" : ""}${formatRadarNumber(score, 1)}`;
         const scoreOpposesLockedDirection = direction !== 0 && score !== null && Math.sign(score) === -direction;
-        const ignitionOpposesLockedDirection = direction !== 0 && ignitionDirection !== 0 && ignitionDirection === -direction;
+        const ignitionOpposesLockedDirection = direction !== 0 && ignitionDirection !== 0 && ignitionDirection === -direction && ignition !== null && Math.abs(ignition) >= 12;
         const fallbackDirection = direction > 0
             ? `${scoreText}｜預估偏多`
             : (direction < 0
@@ -2361,9 +2364,15 @@
             } else if (campaignCompleted && campaignCompletedDirection === direction && direction !== 0) {
                 semanticAdviceDisplay = `本盤${direction > 0 ? "多方" : "空方"} T2 已完成｜同方向再進場封鎖`;
                 semanticAdviceClass = "wait";
+            } else if (triggerRelocationWaiting) {
+                semanticAdviceDisplay = `${direction > 0 ? "嘎空" : "殺多"} Trigger 重新定位｜不計入突破｜等待價格回測後 Physical 重突破`;
+                semanticAdviceClass = "wait";
+            } else if (oppositeIgnitionBlocked) {
+                semanticAdviceDisplay = `Z2 ${direction > 0 ? "多方" : "空方"}方向保留｜即時反向點火｜Core 已暫停進場確認`;
+                semanticAdviceClass = "wait";
             } else if (reentryRejectReason) {
                 const rejectMap = {
-                    REENTRY_NEEDS_TRUE_CROSS: "再進場需等待真正 Trigger 交叉",
+                    REENTRY_NEEDS_TRUE_CROSS: "再進場需等待價格 Physical Trigger 交叉",
                     REENTRY_SCORE_LOW: "再進場方向分不足",
                     REENTRY_AGREEMENT_LOW: "再進場成分一致度不足",
                     REENTRY_OPPOSITE_IGNITION: "反向點火中，拒絕同向再進場",
@@ -2401,7 +2410,7 @@
                     crossDiagnosticText = `交叉診斷：${physicalBullCross ? "多方" : "空方"}價格實際穿越｜LIVE=1 PHYS=1`;
                     crossDiagnosticClass = "is-ready";
                 } else if (bullCrossOrigin === "TRIGGER_MOTION_ONLY" || bearCrossOrigin === "TRIGGER_MOTION_ONLY") {
-                    crossDiagnosticText = `交叉診斷：相對交叉｜Trigger移動型｜LIVE=1 PHYS=0`;
+                    crossDiagnosticText = `交叉診斷：Trigger重新定位｜不計入進場確認｜LIVE=1 PHYS=0`;
                     crossDiagnosticClass = "is-motion";
                 } else if (bullCrossOrigin === "PRICE_CROSS_PREVIOUS_TRIGGER_ONLY" || bearCrossOrigin === "PRICE_CROSS_PREVIOUS_TRIGGER_ONLY") {
                     crossDiagnosticText = "交叉診斷：價格僅穿越上一筆Trigger｜未站穩目前Trigger";
@@ -2460,7 +2469,7 @@
             : "";
         const integrityParts = [];
         if (candidateOrigin && candidateOrigin !== "NONE" && lockedTriggerZ21 !== null && lockedTriggerZ21 > 0) integrityParts.push(`候選來源 ${candidateOrigin}`);
-        if (trueCross) integrityParts.push("Live 相對 Trigger 交叉");
+        if (trueCross) integrityParts.push("Live 價格 Physical Trigger 交叉");
         if (lockedTriggerZ21 !== null && lockedTriggerZ21 > 0) integrityParts.push(`鎖定 Trigger ${formatOCFLevel(lockedTriggerZ21)}`);
         if (dataBlindLevel > 0) integrityParts.push(`DATA BLIND ${dataBlindSeconds}s`);
         if (campaignCompleted && campaignCompletedDirection !== 0) integrityParts.push(`${campaignCompletedDirection > 0 ? "多方" : "空方"} Campaign T2 完成`);
@@ -2471,7 +2480,11 @@
                 ? `本單進場鎖定 Trigger ${formatOCFLevel(lockedTrigger)}；目前嘎空 Trigger ${formatOCFLevel(data.z_bull_trigger)}。本單鎖定目標 ${lockedTargetText}；目前 K+2C 參考目標 ${formatOCFLevel(data.z_upper_target)}。`
                 : (holdingShort
                     ? `本單進場鎖定 Trigger ${formatOCFLevel(lockedTrigger)}；目前殺多 Trigger ${formatOCFLevel(data.z_bear_trigger)}。本單鎖定目標 ${lockedTargetText}；目前 K-2P 參考目標 ${formatOCFLevel(data.z_lower_target)}。`
-                    : (direction > 0 && ignitionOpposesLockedDirection
+                    : (triggerRelocationWaiting
+                        ? `${direction > 0 ? "嘎空" : "殺多"} Trigger 已重新定位，但這不是價格突破。Core 正等待價格回測新 Trigger，之後形成 Physical 重突破且無強烈反向點火，才會開始 2 次確認。`
+                        : (oppositeIgnitionBlocked
+                            ? `Z2 ${direction > 0 ? "多方" : "空方"}方向仍保留，但即時反向點火已達阻擋門檻；Core 已暫停進場，不會讓同向調單覆蓋強烈反向點火。`
+                            : (direction > 0 && ignitionOpposesLockedDirection
                         ? `原多方預測尚未正式翻空，但即時空方點火 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}；目前暫停多單確認。須待點火恢復多方，再突破嘎空 Trigger ${formatOCFLevel(data.z_bull_trigger)} 並完成 2 次確認，才能進場。`
                         : (direction < 0 && ignitionOpposesLockedDirection
                             ? `原空方預測尚未正式翻多，但即時多方點火 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}；目前暫停空單確認。須待點火恢復空方，再跌破殺多 Trigger ${formatOCFLevel(data.z_bear_trigger)} 並完成 2 次確認，才能進場。`
@@ -2480,10 +2493,10 @@
                                 : (direction < 0 && scoreOpposesLockedDirection
                                     ? `原空方預測仍保留，但即時方向分已轉正；目前只觀察，不進場。須待方向分與點火恢復空方同向，再跌破殺多 Trigger ${formatOCFLevel(data.z_bear_trigger)} 並完成 2 次確認。`
                                     : (direction > 0
-                                        ? `Z2 偏多：期貨上破嘎空 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K+2C 目標 ${formatOCFLevel(target)}。`
+                                        ? `Z2 偏多：價格實際向上穿越嘎空 Trigger ${formatOCFLevel(trigger)}，且無強烈空方點火後完成 2 次確認進場；若 Trigger 自行重新定位，須先回測再 Physical 重突破。K+2C 目標 ${formatOCFLevel(target)}。`
                                         : (direction < 0
-                                            ? `Z2 偏空：期貨下破殺多 Trigger ${formatOCFLevel(trigger)}，且點火／調單同向完成 2 次確認後進場；K-2P 目標 ${formatOCFLevel(target)}。`
-                                            : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))))))));
+                                            ? `Z2 偏空：價格實際向下穿越殺多 Trigger ${formatOCFLevel(trigger)}，且無強烈多方點火後完成 2 次確認進場；若 Trigger 自行重新定位，須先回測再 Physical 重突破。K-2P 目標 ${formatOCFLevel(target)}。`
+                                            : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))))))))));
         setOCFText("ocf-action-context", [referenceContext, integrityContext, context]
             .filter(Boolean).join(" "));
         renderOCFFixedBlueprint(data);
