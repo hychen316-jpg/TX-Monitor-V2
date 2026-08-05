@@ -2227,6 +2227,28 @@
         const decisionRecoveryAppliedAge = Math.max(0, Math.round(toFiniteNumberOrNull(data.z_decision_recovery_applied_age_seconds) ?? 0));
         const decisionRecoveryVerified = toRadarBoolean(data.z_decision_recovery_verified);
         const decisionRecoveryBuild = String(data.z_decision_recovery_build || "").trim();
+        const scExecutionPeak = toFiniteNumberOrNull(data.z_sc_l2_shadow_peak);
+        const spExecutionPeak = toFiniteNumberOrNull(data.z_sp_l2_shadow_peak);
+        const scExecutionRelativeWeight = toFiniteNumberOrNull(data.z_sc_l2_shadow_peak_relative_weight);
+        const spExecutionRelativeWeight = toFiniteNumberOrNull(data.z_sp_l2_shadow_peak_relative_weight);
+        const scExecutionCandidateStrike = toFiniteNumberOrNull(data.z_sc_l2_shadow_candidate_strike);
+        const spExecutionCandidateStrike = toFiniteNumberOrNull(data.z_sp_l2_shadow_candidate_strike);
+        const scExecutionCandidateAge = Math.max(-1, Math.round(toFiniteNumberOrNull(data.z_sc_l2_shadow_candidate_age_seconds) ?? -1));
+        const spExecutionCandidateAge = Math.max(-1, Math.round(toFiniteNumberOrNull(data.z_sp_l2_shadow_candidate_age_seconds) ?? -1));
+        const scExecutionPeakAvailable = toRadarBoolean(data.z_sc_l2_shadow_peak_available);
+        const spExecutionPeakAvailable = toRadarBoolean(data.z_sp_l2_shadow_peak_available);
+        const bullTriggerExecutionPeakActive = toRadarBoolean(data.z_l2_shadow_bull_trigger_eligible);
+        const bearTriggerExecutionPeakActive = toRadarBoolean(data.z_l2_shadow_bear_trigger_eligible);
+        const l2PeakBuild = String(data.z_l2_shadow_build || "").trim();
+        const l2ShadowBullTrigger = toFiniteNumberOrNull(data.z_l2_shadow_bull_trigger);
+        const l2ShadowBearTrigger = toFiniteNumberOrNull(data.z_l2_shadow_bear_trigger);
+        const l2ShadowBullPhysicalCross = toRadarBoolean(data.z_l2_shadow_bull_physical_cross);
+        const l2ShadowBearPhysicalCross = toRadarBoolean(data.z_l2_shadow_bear_physical_cross);
+        const l2ShadowCandidateDirection = Number(data.z_l2_shadow_candidate_direction || 0);
+        const l2ShadowCandidateHits = Number(data.z_l2_shadow_candidate_hits || 0);
+        const l2ShadowLockedTrigger = toFiniteNumberOrNull(data.z_l2_shadow_locked_trigger);
+        const l2ShadowEntrySignal = toRadarBoolean(data.z_l2_shadow_entry_signal);
+        const l2ShadowCandidateAge = Number(data.z_l2_shadow_candidate_age_seconds || -1);
         const candidateOrigin = String(data.z_candidate_origin || "").trim();
         const rawExecutionAdvice = String(data.mdi_execution_advice || data.execution_advice || "");
         const triggerRelocationWaiting = rawExecutionAdvice.includes("TRIGGER_RELOCATION_WAIT_RETEST");
@@ -2309,8 +2331,20 @@
         setOCFText("ocf-resistance-zone", resistanceOptionZone);
         renderOCFBasisMap("ocf-support-zone-mapped", supportOptionZone, usesSpotReference, referenceBasis);
         renderOCFBasisMap("ocf-resistance-zone-mapped", resistanceOptionZone, usesSpotReference, referenceBasis);
-        setOCFText("ocf-support-detail", String(data.ocf_support_defense_detail_display || data.z_sp_roll_display || "").trim().replace(/\|/g, "｜") || "等待 SP 調單資料");
-        setOCFText("ocf-resistance-detail", String(data.ocf_resistance_defense_detail_display || data.z_sc_roll_display || "").trim().replace(/\|/g, "｜") || "等待 SC 調單資料");
+        const supportDetailBase = String(data.ocf_support_defense_detail_display || data.z_sp_roll_display || "").trim().replace(/\|/g, "｜") || "等待 SP 調單資料";
+        const resistanceDetailBase = String(data.ocf_resistance_defense_detail_display || data.z_sc_roll_display || "").trim().replace(/\|/g, "｜") || "等待 SC 調單資料";
+        const supportL2Text = spExecutionPeakAvailable && spExecutionPeak !== null && spExecutionPeak > 0
+            ? `｜L2 Shadow峰 ${formatOCFLevel(spExecutionPeak)}${spExecutionRelativeWeight === null ? "" : `（${Math.round(spExecutionRelativeWeight * 100)}%）`}`
+            : (spExecutionCandidateStrike !== null && spExecutionCandidateStrike > 0
+                ? `｜L2 Shadow候選 ${formatOCFLevel(spExecutionCandidateStrike)} ${Math.max(0, spExecutionCandidateAge)}s/30s`
+                : "");
+        const resistanceL2Text = scExecutionPeakAvailable && scExecutionPeak !== null && scExecutionPeak > 0
+            ? `｜L2 Shadow峰 ${formatOCFLevel(scExecutionPeak)}${scExecutionRelativeWeight === null ? "" : `（${Math.round(scExecutionRelativeWeight * 100)}%）`}`
+            : (scExecutionCandidateStrike !== null && scExecutionCandidateStrike > 0
+                ? `｜L2 Shadow候選 ${formatOCFLevel(scExecutionCandidateStrike)} ${Math.max(0, scExecutionCandidateAge)}s/30s`
+                : "");
+        setOCFText("ocf-support-detail", supportDetailBase + supportL2Text);
+        setOCFText("ocf-resistance-detail", resistanceDetailBase + resistanceL2Text);
         setOCFText("ocf-support-hits", formatOCFLevel(data.z_bear_trigger));
         setOCFText("ocf-support-absorption", formatOCFLevel(data.z_lower_target));
         setOCFText("ocf-support-strength", spRoll === null ? "--" : `${spRoll >= 0 ? "+" : ""}${formatRadarNumber(spRoll, 0)}`);
@@ -2423,7 +2457,8 @@
             }
             crossDiagnostic.textContent = crossDiagnosticText;
             crossDiagnostic.className = `ocf-cross-shadow-diagnostic ${crossDiagnosticClass}`;
-            crossDiagnostic.title = physicalCrossBuild || "Physical Cross Shadow";
+            crossDiagnostic.title = [physicalCrossBuild || "Physical Cross Shadow", l2PeakBuild]
+                .filter(Boolean).join("｜");
         }
         const recoveryDiagnostic = document.getElementById("ocf-recovery-diagnostic");
         if (recoveryDiagnostic) {
@@ -2469,6 +2504,21 @@
             : "";
         const integrityParts = [];
         if (candidateOrigin && candidateOrigin !== "NONE" && lockedTriggerZ21 !== null && lockedTriggerZ21 > 0) integrityParts.push(`候選來源 ${candidateOrigin}`);
+        if (bullTriggerExecutionPeakActive && scExecutionPeak !== null && scExecutionPeak > 0) {
+            integrityParts.push(`L2 Shadow多方理論Trigger ${formatOCFLevel(l2ShadowBullTrigger || scExecutionPeak)}（不參與進場）`);
+        }
+        if (bearTriggerExecutionPeakActive && spExecutionPeak !== null && spExecutionPeak > 0) {
+            integrityParts.push(`L2 Shadow空方理論Trigger ${formatOCFLevel(l2ShadowBearTrigger || spExecutionPeak)}（不參與進場）`);
+        }
+        if (l2ShadowCandidateDirection !== 0) {
+            const shadowSide = l2ShadowCandidateDirection > 0 ? "多" : "空";
+            const shadowEntry = l2ShadowEntrySignal ? "｜理論2/2成立" : "";
+            const shadowAge = l2ShadowCandidateAge >= 0 ? `｜${l2ShadowCandidateAge}s` : "";
+            integrityParts.push(`L2 Shadow ${shadowSide}候選 ${l2ShadowCandidateHits}/2｜鎖定 ${formatOCFLevel(l2ShadowLockedTrigger)}${shadowAge}${shadowEntry}（僅紀錄）`);
+        }
+        if (l2ShadowBullPhysicalCross || l2ShadowBearPhysicalCross) {
+            integrityParts.push(`L2 Shadow Physical Cross：${l2ShadowBullPhysicalCross ? "多" : "空"}（不下單）`);
+        }
         if (trueCross) integrityParts.push("Live 價格 Physical Trigger 交叉");
         if (lockedTriggerZ21 !== null && lockedTriggerZ21 > 0) integrityParts.push(`鎖定 Trigger ${formatOCFLevel(lockedTriggerZ21)}`);
         if (dataBlindLevel > 0) integrityParts.push(`DATA BLIND ${dataBlindSeconds}s`);
@@ -4114,7 +4164,7 @@
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
 
-    const ocfCard = card('OCF-Z2.1 暴 Z LIVE', '固定 ATM 分界、K±2權利金、調單與 Trigger', 'v2-ocf-card');
+    const ocfCard = card('OCF-Z2.1 暴 Z LIVE', '原版正式交易｜L2隔離Shadow紀錄｜TriggerGuard', 'v2-ocf-card');
     const ocfCardTitle = ocfCard.querySelector('.v2-card-title > span');
     if (ocfCardTitle) ocfCardTitle.id = 'v2-ocf-card-title';
     if (ocfPanel) ocfCard.appendChild(ocfPanel);
