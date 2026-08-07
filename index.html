@@ -325,35 +325,6 @@
     .ocf-entry-guard-band.guard-pause .ocf-entry-guard-status { color:var(--yellow); }
     .ocf-entry-guard-band.guard-suspended .ocf-entry-guard-status { color:#ff9f0a; }
     .ocf-entry-guard-band.guard-conflict .ocf-entry-guard-status { color:#ff453a; }
-    .ocf-transition-band { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; padding:5px 6px; border:1px solid #3a3a3c; border-left:3px solid #30d158; border-radius:5px; background:rgba(48,209,88,.04); }
-    .ocf-transition-band.transition-valid { border-left-color:#30d158; background:rgba(48,209,88,.04); }
-    .ocf-transition-band.transition-weakening { border-left-color:var(--yellow); background:rgba(255,214,10,.08); }
-    .ocf-transition-band.transition-hold { border-left-color:#ff9f0a; background:rgba(255,159,10,.09); }
-    .ocf-transition-band.transition-confirmed { border-left-color:#bf5af2; background:rgba(191,90,242,.09); }
-    .ocf-transition-band.transition-fast { border-left-color:#ff453a; background:rgba(255,69,58,.09); }
-    .ocf-transition-main { min-width:0; }
-    .ocf-transition-label { display:block; color:#8e8e93; font-size:7px; font-weight:800; }
-    .ocf-transition-status { display:block; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
-    .ocf-transition-detail { flex:0 1 58%; color:#9a9aa0; font-size:8px; line-height:1.25; text-align:right; overflow-wrap:anywhere; }
-    .ocf-transition-band.transition-valid .ocf-transition-status { color:#30d158; }
-    .ocf-transition-band.transition-weakening .ocf-transition-status { color:var(--yellow); }
-    .ocf-transition-band.transition-hold .ocf-transition-status { color:#ff9f0a; }
-    .ocf-transition-band.transition-confirmed .ocf-transition-status { color:#bf5af2; }
-    .ocf-transition-band.transition-fast .ocf-transition-status { color:#ff453a; }
-    .ocf-pullback-band { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; padding:5px 6px; border:1px solid #3a3a3c; border-left:3px solid #636366; border-radius:5px; background:#202022; }
-    .ocf-pullback-band.pullback-idle { border-left-color:#636366; }
-    .ocf-pullback-band.pullback-touch { border-left-color:#64d2ff; background:rgba(100,210,255,.07); }
-    .ocf-pullback-band.pullback-confirm { border-left-color:#bf5af2; background:rgba(191,90,242,.08); }
-    .ocf-pullback-band.pullback-ready { border-left-color:#30d158; background:rgba(48,209,88,.07); }
-    .ocf-pullback-band.pullback-active { border-left-color:#0a84ff; background:rgba(10,132,255,.09); }
-    .ocf-pullback-main { min-width:0; }
-    .ocf-pullback-label { display:block; color:#8e8e93; font-size:7px; font-weight:800; }
-    .ocf-pullback-status { display:block; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
-    .ocf-pullback-detail { flex:0 1 58%; color:#9a9aa0; font-size:8px; line-height:1.25; text-align:right; overflow-wrap:anywhere; }
-    .ocf-pullback-band.pullback-touch .ocf-pullback-status { color:#64d2ff; }
-    .ocf-pullback-band.pullback-confirm .ocf-pullback-status { color:#bf5af2; }
-    .ocf-pullback-band.pullback-ready .ocf-pullback-status { color:#30d158; }
-    .ocf-pullback-band.pullback-active .ocf-pullback-status { color:#0a84ff; }
     .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:4px; }
     .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; }
     .ocf-prior-title { color:#8e8e93; font-size:8px; font-weight:800; }
@@ -1323,7 +1294,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Structural Transition v1.0 + Entry Guard v1.1 + Pullback v1.0｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Entry / Execution Guard v1.1｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -1347,28 +1318,12 @@
                 </div>
             </div>
 
-            <div id="ocf-transition-band" class="ocf-transition-band transition-valid">
-                <div class="ocf-transition-main">
-                    <span class="ocf-transition-label">Structural Transition v1.0｜方向延遲監控</span>
-                    <strong id="ocf-transition-status" class="ocf-transition-status" aria-live="polite">VALID｜正式方向可維持</strong>
-                </div>
-                <div id="ocf-transition-detail" class="ocf-transition-detail">16分=轉向確認｜18分=Fast Reverse證據；轉向成立即封鎖舊方向新單</div>
-            </div>
-
             <div id="ocf-entry-guard-band" class="ocf-entry-guard-band">
                 <div class="ocf-entry-guard-main">
                     <span class="ocf-entry-guard-label">Entry / Execution Guard v1.1</span>
                     <strong id="ocf-entry-guard-status" class="ocf-entry-guard-status" aria-live="polite">等待Guard資料</strong>
                 </div>
                 <div id="ocf-entry-guard-detail" class="ocf-entry-guard-detail">結構方向與執行權限分離</div>
-            </div>
-
-            <div id="ocf-pullback-band" class="ocf-pullback-band pullback-idle">
-                <div class="ocf-pullback-main">
-                    <span class="ocf-pullback-label">Symmetric Pullback Entry v1.0｜成本區承接／摜壓</span>
-                    <strong id="ocf-pullback-status" class="ocf-pullback-status" aria-live="polite">IDLE｜等待回撤結構</strong>
-                </div>
-                <div id="ocf-pullback-detail" class="ocf-pullback-detail">Long：SP支撐→SC近端T1｜Short：SC壓力→SP近端T1</div>
             </div>
 
             <div class="ocf-defense-grid">
@@ -2320,18 +2275,6 @@
         const zStatusDisplayRaw = String(data.z_status_display || "").trim();
         const entryGuardMatch = zStatusDisplayRaw.match(/(?:^|\|)ENTRY_GUARD=([^|]+)/);
         const entryGuardToken = entryGuardMatch ? entryGuardMatch[1].trim() : "UNKNOWN";
-        const pullbackMatch = zStatusDisplayRaw.match(/(?:^|\|)PULLBACK_ENTRY=([^|]+)/);
-        const pullbackToken = pullbackMatch ? pullbackMatch[1].trim() : "UNKNOWN";
-        const transitionMatch = zStatusDisplayRaw.match(/(?:^|\|)STRUCT_TRANSITION=([^|]+)/);
-        const transitionToken = transitionMatch ? transitionMatch[1].trim() : "UNKNOWN";
-        const transitionTargetLong = /_(?:LONG)$/.test(transitionToken);
-        const transitionTargetShort = /_(?:SHORT)$/.test(transitionToken);
-        const transitionBlocked = /^(?:WEAKENING|DATA_HOLD|TRANSITION|FAST_REVERSE)_/.test(transitionToken);
-        const entryTypeStatusMatch = zStatusDisplayRaw.match(/(?:^|\|)ENTRY_TYPE=([^|]+)/);
-        const entryTypeAdviceMatch = rawExecutionAdvice.match(/(?:^|\|)ENTRY_TYPE=([^|]+)/);
-        const entryTypeToken = entryTypeStatusMatch
-            ? entryTypeStatusMatch[1].trim()
-            : (entryTypeAdviceMatch ? entryTypeAdviceMatch[1].trim() : "");
         const triggerRelocationWaiting = rawExecutionAdvice.includes("TRIGGER_RELOCATION_WAIT_RETEST");
         const oppositeIgnitionBlocked = rawExecutionAdvice.includes("OPPOSITE_IGNITION_BLOCK_ENTRY");
         const reentryRejectReason = String(data.z_reentry_reject_reason || "").trim();
@@ -2372,15 +2315,7 @@
                 ? `${scoreText}｜預估偏空`
                 : `${scoreText}｜方向未定`);
         let semanticDirectionDisplay = directionDisplay || fallbackDirection;
-        if (transitionToken.startsWith("FAST_REVERSE_")) {
-            semanticDirectionDisplay = `${scoreText}｜${direction > 0 ? "多方" : "空方"}結構保留・${transitionTargetLong ? "多方" : "空方"}快速反轉確認`;
-        } else if (transitionToken.startsWith("TRANSITION_")) {
-            semanticDirectionDisplay = `${scoreText}｜${direction > 0 ? "多方" : "空方"}結構保留・${transitionTargetLong ? "多方" : "空方"}轉向確認中`;
-        } else if (transitionToken.startsWith("DATA_HOLD_")) {
-            semanticDirectionDisplay = `${scoreText}｜${direction > 0 ? "多方" : "空方"}結構保留・資料Hold中・${transitionTargetLong ? "多方" : "空方"}證據增強`;
-        } else if (transitionToken.startsWith("WEAKENING_")) {
-            semanticDirectionDisplay = `${scoreText}｜${direction > 0 ? "多方" : "空方"}結構保留・${transitionTargetLong ? "多方" : "空方"}轉向警戒`;
-        } else if (direction > 0 && ignitionOpposesLockedDirection) {
+        if (direction > 0 && ignitionOpposesLockedDirection) {
             semanticDirectionDisplay = `${scoreText}｜原多方預測保留・即時空方發動`;
         } else if (direction < 0 && ignitionOpposesLockedDirection) {
             semanticDirectionDisplay = `${scoreText}｜原空方預測保留・即時多方發動`;
@@ -2396,33 +2331,6 @@
                 ? "ocf-tone-wait"
                 : (direction > 0 ? "ocf-tone-bull" : (direction < 0 ? "ocf-tone-bear" : "ocf-tone-neutral")));
         }
-
-        const transitionBand = document.getElementById("ocf-transition-band");
-        const transitionStatus = document.getElementById("ocf-transition-status");
-        const transitionDetail = document.getElementById("ocf-transition-detail");
-        let transitionClass = "transition-valid";
-        let transitionStatusText = transitionToken === "UNKNOWN" ? "WAIT｜等待Transition資料" : "VALID｜正式方向可維持";
-        let transitionDetailText = "正式Z2方向維持原慢速核心；Transition只負責提早降級舊方向執行權限";
-        if (transitionToken.startsWith("WEAKENING_")) {
-            transitionClass = "transition-weakening";
-            transitionStatusText = `WEAKENING｜${transitionTargetLong ? "多方" : "空方"}轉向警戒`;
-            transitionDetailText = "反向Raw/Score＋價格/FMF證據已持續20秒；舊方向新進場與再進場封鎖，不強制平倉";
-        } else if (transitionToken.startsWith("DATA_HOLD_")) {
-            transitionClass = "transition-hold";
-            transitionStatusText = `DATA HOLD｜${transitionTargetLong ? "多方" : "空方"}證據增強`;
-            transitionDetailText = "資料有效性/信心不足但反向結構與價格已共振；舊方向不再視為正常確認";
-        } else if (transitionToken.startsWith("TRANSITION_")) {
-            transitionClass = "transition-confirmed";
-            transitionStatusText = `TRANSITION CONFIRMED｜${transitionTargetLong ? "多方" : "空方"}`;
-            transitionDetailText = "反向Z2 Score≥16＋Raw≥20＋價格/FMF確認持續20秒；停止舊方向所有新執行";
-        } else if (transitionToken.startsWith("FAST_REVERSE_")) {
-            transitionClass = "transition-fast";
-            transitionStatusText = `FAST REVERSE｜${transitionTargetLong ? "多方" : "空方"}高可信`;
-            transitionDetailText = "反向Z2 Score≥18條件已持續20秒；v1.0仍不直接重寫正式Direction/Trigger，只記錄counterfactual";
-        }
-        if (transitionBand) transitionBand.className = `ocf-transition-band ${transitionClass}`;
-        if (transitionStatus) transitionStatus.textContent = transitionStatusText;
-        if (transitionDetail) transitionDetail.textContent = transitionDetailText;
 
         const guardBand = document.getElementById("ocf-entry-guard-band");
         const guardStatus = document.getElementById("ocf-entry-guard-status");
@@ -2466,44 +2374,6 @@
         if (guardBand) guardBand.className = `ocf-entry-guard-band ${guardClass}`;
         if (guardStatus) guardStatus.textContent = guardStatusText;
         if (guardDetail) guardDetail.textContent = guardDetailText;
-
-        const pullbackBand = document.getElementById("ocf-pullback-band");
-        const pullbackStatus = document.getElementById("ocf-pullback-status");
-        const pullbackDetail = document.getElementById("ocf-pullback-detail");
-        let pullbackClass = "pullback-idle";
-        let pullbackStatusText = "IDLE｜等待回撤結構";
-        let pullbackDetailText = direction > 0
-            ? "多方：等待下殺進SP支撐成本區後Reclaim＋FMF買盤確認"
-            : (direction < 0
-                ? "空方：等待反彈進SC壓力成本區後Reclaim＋FMF賣盤確認"
-                : "等待Z2結構方向；Pullback Entry不取代原Breakout Entry");
-        if (entryTypeToken === "PULLBACK_SUPPORT_LONG") {
-            pullbackClass = "pullback-active";
-            pullbackStatusText = "ACTIVE｜支撐承接多單";
-            pullbackDetailText = "正式Pullback Long｜Defense=SP失效側｜T1=SC壓力近端｜T2=SC壓力遠端（進場時凍結）";
-        } else if (entryTypeToken === "PULLBACK_RESISTANCE_SHORT") {
-            pullbackClass = "pullback-active";
-            pullbackStatusText = "ACTIVE｜壓力摜壓空單";
-            pullbackDetailText = "正式Pullback Short｜Defense=SC失效側｜T1=SP支撐近端｜T2=SP支撐遠端（進場時凍結）";
-        } else if (!isLive || pullbackToken === "UNKNOWN") {
-            pullbackClass = "pullback-idle";
-            pullbackStatusText = !isLive ? "WAIT｜Z2尚未LIVE" : "WAIT｜等待Pullback狀態";
-        } else if (pullbackToken === "TOUCHED") {
-            pullbackClass = "pullback-touch";
-            pullbackStatusText = direction > 0 ? "TOUCHED｜SP支撐候選" : (direction < 0 ? "TOUCHED｜SC壓力候選" : "TOUCHED｜成本區候選");
-            pullbackDetailText = "已進入己方成本區；禁止直接摸底／摸頭，等待極值穩定、至少50點Reclaim與FMF/Flow同向";
-        } else if (pullbackToken.startsWith("CONFIRMING_")) {
-            pullbackClass = "pullback-confirm";
-            pullbackStatusText = `${pullbackToken.replace("CONFIRMING_", "CONFIRMING ")}｜承接/摜壓確認`;
-            pullbackDetailText = "Pullback 2/2確認中｜Entry Guard仍必須ALLOW｜RR與30～120點結構風險需通過";
-        } else if (pullbackToken === "READY") {
-            pullbackClass = "pullback-ready";
-            pullbackStatusText = "READY｜Pullback正式進場條件成立";
-            pullbackDetailText = "成本區Reclaim＋FMF/Flow＋結構RR均通過；目標與Defense在進場瞬間凍結";
-        }
-        if (pullbackBand) pullbackBand.className = `ocf-pullback-band ${pullbackClass}`;
-        if (pullbackStatus) pullbackStatus.textContent = pullbackStatusText;
-        if (pullbackDetail) pullbackDetail.textContent = pullbackDetailText;
 
         const rollSummary = String(data.ocf_defense_power_display || "").trim().replace(/\|/g, "｜");
         const noEffectiveRoll = /無明顯|尚未形成|無有效|方向未確認|等待位移/.test(rollSummary);
@@ -2589,10 +2459,7 @@
         let semanticAdviceDisplay = adviceDisplay;
         let semanticAdviceClass = classifyOCFAdvice(advice);
         if (!holdingLong && !holdingShort) {
-            if (transitionBlocked) {
-                semanticAdviceDisplay = `${direction > 0 ? "多方" : (direction < 0 ? "空方" : "原")}正式結構保留｜Structural Transition=${transitionToken}｜舊方向新進場／再進場已封鎖`;
-                semanticAdviceClass = "wait";
-            } else if (entryGuardToken === "ENTRY_FMF_HARD_CONFLICT") {
+            if (entryGuardToken === "ENTRY_FMF_HARD_CONFLICT") {
                 semanticAdviceDisplay = `Z2 ${direction > 0 ? "多方" : (direction < 0 ? "空方" : "")}結構保留｜FMF反向攻擊｜暫停2/2，等待重新確認`;
                 semanticAdviceClass = "wait";
             } else if (entryGuardToken === "ENTRY_COUNTER_LIQUIDITY_PAUSE") {
@@ -2603,12 +2470,6 @@
                 semanticAdviceClass = "wait";
             } else if (entryGuardToken.startsWith("OLD_DIRECTION_BLOCKED_D")) {
                 semanticAdviceDisplay = "正式方向已更新｜舊方向執行權限封鎖｜等待新方向合法Trigger路徑";
-                semanticAdviceClass = "wait";
-            } else if (pullbackToken.startsWith("CONFIRMING_")) {
-                semanticAdviceDisplay = `${direction > 0 ? "SP支撐承接多" : (direction < 0 ? "SC壓力摜壓空" : "Pullback")}候選｜${pullbackToken.replace("_", " ")}｜等待第二次確認與結構RR`;
-                semanticAdviceClass = "wait";
-            } else if (pullbackToken === "TOUCHED") {
-                semanticAdviceDisplay = `${direction > 0 ? "下殺進SP支撐成本區" : (direction < 0 ? "反彈進SC壓力成本區" : "成本區已觸及")}｜不直接接刀／摸頭｜等待50點Reclaim＋FMF/Flow確認`;
                 semanticAdviceClass = "wait";
             } else if (dataBlindBlocked) {
                 semanticAdviceDisplay = `DATA BLIND ${dataBlindSeconds}s｜策略持續運算｜禁止新進場`;
@@ -2742,9 +2603,6 @@
         if (dataBlindLevel > 0) integrityParts.push(`DATA BLIND ${dataBlindSeconds}s`);
         if (campaignCompleted && campaignCompletedDirection !== 0) integrityParts.push(`${campaignCompletedDirection > 0 ? "多方" : "空方"} Campaign T2 完成`);
         if (entryGuardToken !== "UNKNOWN") integrityParts.push(`Entry Guard ${entryGuardToken}`);
-        if (pullbackToken !== "UNKNOWN") integrityParts.push(`Pullback ${pullbackToken}`);
-        if (transitionToken !== "UNKNOWN") integrityParts.push(`Transition ${transitionToken}`);
-        if (entryTypeToken) integrityParts.push(`Entry ${entryTypeToken}`);
         const integrityContext = integrityParts.length ? `Z2.1：${integrityParts.join("｜")}。` : "";
         const context = !isLive
             ? `${invalidReasonText}${referenceError === null || referenceError <= 0 ? "" : `｜中心誤差 ${formatRadarNumber(referenceError, 1)} 點`}；方向與目標暫不可採用。`
@@ -4335,17 +4193,6 @@
     statusValue.textContent = '等待即時資料';
     statusCard.appendChild(statusValue);
     liveStack.appendChild(statusCard);
-
-    /* 3. 將「第一頁綜合決策資訊」搬移到盤中指揮摘要下方 */
-    const summaryCard = card('第一頁綜合決策資訊', '僅彙整既有模組，不新增交易分數', 'v2-final-summary');
-    const summaryGrid = el('div', 'v2-summary-grid');
-    summaryGrid.innerHTML =
-      '<div class="v2-summary-item"><div class="v2-summary-label">C1～C4</div><div id="v2-summary-c" class="v2-summary-value">--</div></div>' +
-      '<div class="v2-summary-item"><div class="v2-summary-label">P9／R7</div><div id="v2-summary-force" class="v2-summary-value">--</div></div>' +
-      '<div class="v2-summary-item"><div class="v2-summary-label">狙擊重鎮</div><div id="v2-summary-target" class="v2-summary-value">--</div></div>' +
-      '<div class="v2-summary-item"><div class="v2-summary-label">OCF／BK2</div><div id="ocf-command-summary" class="v2-summary-value">--</div></div>';
-    summaryCard.appendChild(summaryGrid);
-    liveStack.appendChild(summaryCard);
 
     /* 4. 中段三核心模組 (C1~C4, P9/R7, 狙擊重鎮) */
     const coreGrid = el('div', 'v2-core-grid');
