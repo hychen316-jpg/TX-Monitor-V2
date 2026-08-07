@@ -312,6 +312,19 @@
     .ocf-recovery-diagnostic.is-guard { color:#78a9e6; }
     .ocf-recovery-diagnostic.is-verified { color:#30d158; }
     .ocf-recovery-diagnostic.is-rejected { color:#ff9f0a; }
+    .ocf-entry-guard-band { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; padding:5px 6px; border:1px solid #3a3a3c; border-left:3px solid #636366; border-radius:5px; background:#202022; }
+    .ocf-entry-guard-band.guard-valid { border-left-color:#30d158; background:rgba(48,209,88,.06); }
+    .ocf-entry-guard-band.guard-pause { border-left-color:var(--yellow); background:rgba(255,214,10,.08); }
+    .ocf-entry-guard-band.guard-suspended { border-left-color:#ff9f0a; background:rgba(255,159,10,.09); }
+    .ocf-entry-guard-band.guard-conflict { border-left-color:#ff453a; background:rgba(255,69,58,.09); }
+    .ocf-entry-guard-main { min-width:0; }
+    .ocf-entry-guard-label { display:block; color:#8e8e93; font-size:7px; font-weight:800; }
+    .ocf-entry-guard-status { display:block; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-entry-guard-detail { flex:0 1 58%; color:#9a9aa0; font-size:8px; line-height:1.25; text-align:right; overflow-wrap:anywhere; }
+    .ocf-entry-guard-band.guard-valid .ocf-entry-guard-status { color:#30d158; }
+    .ocf-entry-guard-band.guard-pause .ocf-entry-guard-status { color:var(--yellow); }
+    .ocf-entry-guard-band.guard-suspended .ocf-entry-guard-status { color:#ff9f0a; }
+    .ocf-entry-guard-band.guard-conflict .ocf-entry-guard-status { color:#ff453a; }
     .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:4px; }
     .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; }
     .ocf-prior-title { color:#8e8e93; font-size:8px; font-weight:800; }
@@ -1281,7 +1294,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Entry / Execution Guard v1.1｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -1289,7 +1302,7 @@
 
             <div class="ocf-command-grid">
                 <div class="ocf-command-item direction">
-                    <span class="ocf-command-label">Z2 決策方向（可進場）</span>
+                    <span class="ocf-command-label">Z2 結構方向（不等於執行許可）</span>
                     <strong id="ocf-live-direction" class="ocf-command-value ocf-tone-neutral">--</strong>
                     <span id="ocf-live-mode" class="ocf-command-sub">SC／SP 調單：--</span>
                 </div>
@@ -1303,6 +1316,14 @@
                     <strong id="ocf-target-strike" class="ocf-command-value">--</strong>
                     <span id="ocf-event-strength" class="ocf-command-sub">中樞：--</span>
                 </div>
+            </div>
+
+            <div id="ocf-entry-guard-band" class="ocf-entry-guard-band">
+                <div class="ocf-entry-guard-main">
+                    <span class="ocf-entry-guard-label">Entry / Execution Guard v1.1</span>
+                    <strong id="ocf-entry-guard-status" class="ocf-entry-guard-status" aria-live="polite">等待Guard資料</strong>
+                </div>
+                <div id="ocf-entry-guard-detail" class="ocf-entry-guard-detail">結構方向與執行權限分離</div>
             </div>
 
             <div class="ocf-defense-grid">
@@ -1370,7 +1391,7 @@
             </div>
 
             <div id="ocf-action-band" class="ocf-action-band">
-                <div class="ocf-action-label">Z2 LIVE 最終進場動作</div>
+                <div class="ocf-action-label">Z2 LIVE 執行決策</div>
                 <div id="ocf-bk-advice" class="ocf-action-text" aria-live="polite">等待完整訊號</div>
                 <div id="ocf-action-context" class="ocf-action-context">尚無有效防守確認，先觀察。</div>
                 <div id="ocf-cross-shadow-diagnostic" class="ocf-cross-shadow-diagnostic is-wait">交叉診斷：Shadow資料累積中</div>
@@ -2251,6 +2272,9 @@
         const l2ShadowCandidateAge = Number(data.z_l2_shadow_candidate_age_seconds || -1);
         const candidateOrigin = String(data.z_candidate_origin || "").trim();
         const rawExecutionAdvice = String(data.mdi_execution_advice || data.execution_advice || "");
+        const zStatusDisplayRaw = String(data.z_status_display || "").trim();
+        const entryGuardMatch = zStatusDisplayRaw.match(/(?:^|\|)ENTRY_GUARD=([^|]+)/);
+        const entryGuardToken = entryGuardMatch ? entryGuardMatch[1].trim() : "UNKNOWN";
         const triggerRelocationWaiting = rawExecutionAdvice.includes("TRIGGER_RELOCATION_WAIT_RETEST");
         const oppositeIgnitionBlocked = rawExecutionAdvice.includes("OPPOSITE_IGNITION_BLOCK_ENTRY");
         const reentryRejectReason = String(data.z_reentry_reject_reason || "").trim();
@@ -2307,6 +2331,49 @@
                 ? "ocf-tone-wait"
                 : (direction > 0 ? "ocf-tone-bull" : (direction < 0 ? "ocf-tone-bear" : "ocf-tone-neutral")));
         }
+
+        const guardBand = document.getElementById("ocf-entry-guard-band");
+        const guardStatus = document.getElementById("ocf-entry-guard-status");
+        const guardDetail = document.getElementById("ocf-entry-guard-detail");
+        let guardClass = "guard-valid";
+        let guardStatusText = "ALLOW｜可執行";
+        let guardDetailText = "結構方向有效，Entry Guard目前無阻擋";
+        if (!isLive) {
+            guardClass = "guard-pause";
+            guardStatusText = "WAIT｜資料未就緒";
+            guardDetailText = "Z2尚未LIVE，不建立新進場";
+        } else if (entryGuardToken === "ENTRY_FMF_HARD_CONFLICT") {
+            guardClass = "guard-pause";
+            guardStatusText = "PAUSE｜FMF反向攻擊";
+            guardDetailText = "暫停2/2；不改Z2結構方向，等待反向ATTACK解除後重新確認";
+        } else if (entryGuardToken === "ENTRY_COUNTER_LIQUIDITY_PAUSE") {
+            guardClass = "guard-pause";
+            guardStatusText = "PAUSE｜極端位置＋反向流動性";
+            guardDetailText = "暫停追高／殺低；等待回測、流動性重新同向或新的Physical Cross";
+        } else if (entryGuardToken.startsWith("EXEC_SUSPENDED_D") || entryGuardToken === "OPPOSITE_TRIGGER_EXECUTION_SUSPENDED" || rawExecutionAdvice.includes("EXECUTION_SUSPENDED")) {
+            guardClass = "guard-suspended";
+            guardStatusText = "SUSPENDED｜原方向暫停執行";
+            guardDetailText = direction < 0
+                ? "空方結構可保留，但嘎空Trigger已形成反向失效確認；禁止新空單／再追空，不自動平倉"
+                : (direction > 0
+                    ? "多方結構可保留，但殺多Trigger已形成反向失效確認；禁止新多單／再追多，不自動平倉"
+                    : "反向Trigger已形成執行失效確認；禁止失效方向的新進場，不自動反手");
+        } else if (entryGuardToken === "ACTIVE_DIRECTION_CONFLICT" || rawExecutionAdvice.includes("ACTIVE_DIRECTION_CONFLICT")) {
+            guardClass = "guard-conflict";
+            guardStatusText = "CONFLICT｜持倉與正式方向衝突";
+            guardDetailText = "禁止舊方向再進場；既有持倉維持原Defense規則，不因Guard自動平倉或反手";
+        } else if (entryGuardToken.startsWith("OLD_DIRECTION_BLOCKED_D")) {
+            guardClass = "guard-suspended";
+            guardStatusText = "BLOCKED｜舊方向禁止再進";
+            guardDetailText = "正式Z2方向已更新；舊方向執行權限維持封鎖，等待新的合法進場路徑";
+        } else if (entryGuardToken === "UNKNOWN") {
+            guardClass = "guard-pause";
+            guardStatusText = "WAIT｜等待Guard狀態";
+            guardDetailText = "尚未收到ENTRY_GUARD狀態；請確認使用EntryExecutionGuard v1.1 Core";
+        }
+        if (guardBand) guardBand.className = `ocf-entry-guard-band ${guardClass}`;
+        if (guardStatus) guardStatus.textContent = guardStatusText;
+        if (guardDetail) guardDetail.textContent = guardDetailText;
 
         const rollSummary = String(data.ocf_defense_power_display || "").trim().replace(/\|/g, "｜");
         const noEffectiveRoll = /無明顯|尚未形成|無有效|方向未確認|等待位移/.test(rollSummary);
@@ -2392,7 +2459,19 @@
         let semanticAdviceDisplay = adviceDisplay;
         let semanticAdviceClass = classifyOCFAdvice(advice);
         if (!holdingLong && !holdingShort) {
-            if (dataBlindBlocked) {
+            if (entryGuardToken === "ENTRY_FMF_HARD_CONFLICT") {
+                semanticAdviceDisplay = `Z2 ${direction > 0 ? "多方" : (direction < 0 ? "空方" : "")}結構保留｜FMF反向攻擊｜暫停2/2，等待重新確認`;
+                semanticAdviceClass = "wait";
+            } else if (entryGuardToken === "ENTRY_COUNTER_LIQUIDITY_PAUSE") {
+                semanticAdviceDisplay = `Z2 ${direction > 0 ? "多方" : (direction < 0 ? "空方" : "")}結構保留｜極端位置出現反向流動性｜暫停追價，等待回測／重新Physical Cross`;
+                semanticAdviceClass = "wait";
+            } else if (entryGuardToken.startsWith("EXEC_SUSPENDED_D") || entryGuardToken === "OPPOSITE_TRIGGER_EXECUTION_SUSPENDED") {
+                semanticAdviceDisplay = `${direction > 0 ? "多方" : (direction < 0 ? "空方" : "原")}結構保留｜反向Trigger執行失效確認｜禁止同方向新進場／再進場`;
+                semanticAdviceClass = "wait";
+            } else if (entryGuardToken.startsWith("OLD_DIRECTION_BLOCKED_D")) {
+                semanticAdviceDisplay = "正式方向已更新｜舊方向執行權限封鎖｜等待新方向合法Trigger路徑";
+                semanticAdviceClass = "wait";
+            } else if (dataBlindBlocked) {
                 semanticAdviceDisplay = `DATA BLIND ${dataBlindSeconds}s｜策略持續運算｜禁止新進場`;
                 semanticAdviceClass = "wait";
             } else if (campaignCompleted && campaignCompletedDirection === direction && direction !== 0) {
@@ -2523,6 +2602,7 @@
         if (lockedTriggerZ21 !== null && lockedTriggerZ21 > 0) integrityParts.push(`鎖定 Trigger ${formatOCFLevel(lockedTriggerZ21)}`);
         if (dataBlindLevel > 0) integrityParts.push(`DATA BLIND ${dataBlindSeconds}s`);
         if (campaignCompleted && campaignCompletedDirection !== 0) integrityParts.push(`${campaignCompletedDirection > 0 ? "多方" : "空方"} Campaign T2 完成`);
+        if (entryGuardToken !== "UNKNOWN") integrityParts.push(`Entry Guard ${entryGuardToken}`);
         const integrityContext = integrityParts.length ? `Z2.1：${integrityParts.join("｜")}。` : "";
         const context = !isLive
             ? `${invalidReasonText}${referenceError === null || referenceError <= 0 ? "" : `｜中心誤差 ${formatRadarNumber(referenceError, 1)} 點`}；方向與目標暫不可採用。`
