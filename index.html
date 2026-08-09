@@ -1664,6 +1664,181 @@
 }
 
 </style>
+
+<style id="v11-hierarchy-polish">
+/* =============================================================
+   Dashboard V11: hierarchy polish only
+   No Firebase path / calculation / permission changes.
+   ============================================================= */
+
+/* Stronger hierarchy in the top decision strip. */
+#v2-live-page .v2-ocf-card .ocf-command-grid {
+  grid-template-columns: minmax(0,1.62fr) minmax(0,.72fr) minmax(0,.88fr) !important;
+  gap: 5px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-command-item.direction {
+  border-left: 3px solid #64d2ff;
+  background: linear-gradient(90deg,rgba(10,132,255,.10),rgba(255,255,255,.025));
+}
+#v2-live-page .v2-ocf-card .ocf-command-item.direction .ocf-command-value {
+  font-size: 19px !important;
+  letter-spacing: .1px;
+}
+#v2-live-page .v2-ocf-card .ocf-command-item.direction .ocf-command-label {
+  color: #a7dfff !important;
+  font-size: 9px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-command-item:not(.direction) .ocf-command-value {
+  font-size: 13px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-command-sub {
+  opacity: .76;
+}
+
+/* SP / SC: numbers first, diagnostics second. */
+#v2-live-page .v2-ocf-card .ocf-defense-card {
+  padding: 7px 8px 6px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-name {
+  font-size: 11px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-zone {
+  font-size: 19px !important;
+  font-weight: 950 !important;
+}
+#v2-live-page .v2-ocf-card .ocf-trigger-zone {
+  font-size: 22px !important;
+  font-weight: 950 !important;
+  letter-spacing: .3px;
+  text-shadow: 0 0 8px rgba(255,214,10,.22);
+}
+#v2-live-page .v2-ocf-card .ocf-defense-main-label {
+  font-size: 8px !important;
+  opacity: .76;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-detail {
+  font-size: 8px !important;
+  opacity: .68;
+  min-height: 9px !important;
+  margin-top: 1px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-stats {
+  margin-top: 2px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-stat {
+  opacity: .74;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-action {
+  font-size: 8px !important;
+  opacity: .72;
+  margin-top: 2px !important;
+  padding-top: 2px !important;
+  min-height: 13px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-meter {
+  margin-top: 2px !important;
+}
+
+/* Formal action is concise; raw diagnostics are truly secondary. */
+#v2-live-page .v10-action-compact {
+  font-size: 15px !important;
+  line-height: 1.18 !important;
+  padding: 1px 0 2px;
+}
+#v2-live-page .ocf-action-context {
+  font-size: 8px !important;
+  opacity: .74;
+}
+#v2-live-page .ocf-tech-toggle {
+  margin-top: 3px !important;
+  padding-top: 2px !important;
+}
+#v2-live-page .ocf-tech-toggle > summary {
+  font-size: 8px !important;
+  opacity: .82;
+}
+#v2-live-page .ocf-tech-toggle:not([open]) > :not(summary) {
+  display: none !important;
+}
+
+/* V11 compact system cockpit in the right rail. */
+#v2-live-page .v11-system-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 4px;
+  margin-top: 2px;
+}
+#v2-live-page .v11-system-cell {
+  min-width: 0;
+  padding: 5px 6px;
+  border: 1px solid #343438;
+  border-radius: 5px;
+  background: rgba(0,0,0,.16);
+}
+#v2-live-page .v11-system-cell span {
+  display:block;
+  color:#777;
+  font-size:7px;
+  line-height:1.15;
+  font-weight:800;
+}
+#v2-live-page .v11-system-cell strong {
+  display:block;
+  margin-top:2px;
+  color:#f2f2f7;
+  font-size:12px;
+  line-height:1.15;
+  font-weight:950;
+  overflow-wrap:anywhere;
+}
+#v2-live-page .v11-system-cell.is-ok { border-left:3px solid #30d158; }
+#v2-live-page .v11-system-cell.is-warn { border-left:3px solid #ffd60a; }
+#v2-live-page .v11-system-cell.is-block { border-left:3px solid #ff453a; }
+#v2-live-page .v11-system-cell.is-info { border-left:3px solid #64d2ff; }
+#v2-live-page .v11-flat-safety {
+  margin-top:4px;
+  padding:3px 5px;
+  border-top:1px dashed #343438;
+  color:#8e8e93;
+  font-size:8px;
+  line-height:1.2;
+}
+#v2-live-page .v11-flat-safety strong { color:#30d158; font-size:9px; }
+#v2-live-page .v11-system-details {
+  margin-top:4px;
+  border-top:1px dashed #343438;
+  padding-top:3px;
+}
+#v2-live-page .v11-system-details > summary {
+  list-style:none;
+  cursor:pointer;
+  color:#777;
+  font-size:8px;
+  font-weight:800;
+}
+#v2-live-page .v11-system-details > summary::-webkit-details-marker { display:none; }
+#v2-live-page .v11-system-details > summary::after { content:' ▾'; color:#64d2ff; }
+#v2-live-page .v11-system-details[open] > summary::after { content:' ▴'; }
+#v2-live-page .v11-system-details:not([open]) > :not(summary) { display:none !important; }
+#v2-live-page .v11-system-details .ocf-session-band,
+#v2-live-page .v11-system-details .ocf-recovery-diagnostic {
+  margin-top:4px !important;
+}
+
+/* Slightly reduce low-priority rail prose; never shrink the data values. */
+#v2-live-page .v10-side-subtitle { display:none !important; }
+#v2-live-page .v10-side-title {
+  font-size:11px !important;
+  margin-bottom:3px !important;
+}
+#v2-live-page .v10-prior-block .ocf-prior-label { opacity:.72; }
+
+@media (max-width: 700px) {
+  #v2-live-page .v11-system-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #v2-live-page .v2-ocf-card .ocf-command-grid { grid-template-columns:1fr !important; }
+}
+</style>
+
 </head>
 <body>
 
@@ -4983,8 +5158,14 @@
 
       const updateCompactAdvice = function() {
         const raw = String(v10RawAdvice.textContent || '').trim();
-        const first = raw.split('|')[0].trim();
-        compactAdvice.textContent = first || '等待完整訊號';
+        const parts = raw.split(/[|｜]/).map(s => s.trim()).filter(Boolean);
+        let compactParts = [];
+        for (const part of parts) {
+          if (/^(OCF-|LIVE=|配對|ATM=|ANCHOR_|REF=|BASIS=|Z ERR|PAIR_|BLIND=|CAMPAIGN_|TRUE_|RELOCATION_|資料品質|CTX30=|ENTRY_GUARD=|STRUCT_|PULLBACK_)/i.test(part)) break;
+          compactParts.push(part);
+          if (compactParts.length >= 2) break;
+        }
+        compactAdvice.textContent = (compactParts.join('｜') || parts[0] || '等待完整訊號');
       };
       updateCompactAdvice();
       new MutationObserver(updateCompactAdvice).observe(v10RawAdvice, {childList:true, subtree:true, characterData:true});
@@ -5094,6 +5275,153 @@
     document.addEventListener('DOMContentLoaded', initDashboardV2, { once: true });
   } else {
     initDashboardV2();
+  }
+})();
+</script>
+
+
+<script id="v11-hierarchy-polish-script">
+(function(){
+  'use strict';
+
+  function cleanToken(value) {
+    return String(value || '').replace(/\s+/g,' ').trim();
+  }
+  function firstToken(value) {
+    const parts = cleanToken(value).split(/[|｜]/).map(s => s.trim()).filter(Boolean);
+    return parts[0] || '--';
+  }
+  function classifyCell(cell, value) {
+    if (!cell) return;
+    const t = cleanToken(value).toUpperCase();
+    cell.classList.remove('is-ok','is-warn','is-block','is-info');
+    if (/REJECT|BLOCK|MISSING|ERROR|INVALID|STALE/.test(t)) cell.classList.add('is-block');
+    else if (/PENDING|GUARD|CAUTION|CLOSE|WAIT|HOLD/.test(t)) cell.classList.add('is-warn');
+    else if (/ALLOW|VALID|READY|NORMAL|RETAINED|VERIFIED/.test(t)) cell.classList.add('is-ok');
+    else cell.classList.add('is-info');
+  }
+  function recoverySummary(value) {
+    const t = cleanToken(value);
+    const u = t.toUpperCase();
+    if (!t || t === '--') return 'READY';
+    if (/REJECT/.test(u)) return 'REJECT';
+    if (/PENDING/.test(u)) return 'PENDING';
+    if (/GUARD/.test(u)) return 'GUARD';
+    if (/VERIFIED|恢復完成|已恢復/.test(u+t)) return 'VERIFIED';
+    if (/尚無恢復事件|無恢復事件/.test(t)) return 'READY';
+    return firstToken(t).replace(/^CTX30[:：]?\s*/i,'') || 'READY';
+  }
+  function carrySummary(sessionStatus, sessionDetail) {
+    const t = (cleanToken(sessionStatus)+' '+cleanToken(sessionDetail)).toUpperCase();
+    if (/CARRY[^A-Z0-9]*REJECT|NIGHT_DAY_CARRY_REJECT/.test(t)) return 'REJECT';
+    if (/CARRY[^A-Z0-9]*ALLOW|NIGHT_DAY_CARRY_ARMED|NIGHT_DAY_CARRY_ALLOW/.test(t)) return 'ALLOW';
+    if (/CLOSE[_ ]?MGMT|04:30|NEW_ENTRY_BLOCKED/.test(t)) return 'CLOSE MGMT';
+    return '--';
+  }
+
+  function initV11(){
+    /* Make the top labels shorter without touching any IDs or values. */
+    const dirItem = document.querySelector('#ocf-battle-panel .ocf-command-item.direction');
+    if (dirItem) {
+      const label = dirItem.querySelector('.ocf-command-label');
+      if (label) label.textContent = 'Z2 FORMAL DIRECTION';
+    }
+    const cmdItems = document.querySelectorAll('#ocf-battle-panel .ocf-command-item');
+    if (cmdItems[1]) {
+      const label = cmdItems[1].querySelector('.ocf-command-label');
+      if (label) label.textContent = '信心 / 品質';
+    }
+    if (cmdItems[2]) {
+      const label = cmdItems[2].querySelector('.ocf-command-label');
+      if (label) label.textContent = '主目標 / 固定分界';
+    }
+
+    /* Price geometry labels: keep only what matters during execution. */
+    const spName = document.querySelector('#ocf-support-card .ocf-defense-name');
+    const scName = document.querySelector('#ocf-resistance-card .ocf-defense-name');
+    if (spName) spName.textContent = 'SP 支撐';
+    if (scName) scName.textContent = 'SC 壓力';
+    const spLabels = document.querySelectorAll('#ocf-support-card .ocf-defense-main-label');
+    const scLabels = document.querySelectorAll('#ocf-resistance-card .ocf-defense-main-label');
+    if (spLabels[0]) spLabels[0].textContent = 'SP 成本帶';
+    if (scLabels[0]) scLabels[0].textContent = 'SC 成本帶';
+
+    /* Raw technical diagnostics are closed on every fresh page construction. */
+    const rawDetails = document.querySelector('.ocf-tech-toggle');
+    if (rawDetails) rawDetails.removeAttribute('open');
+
+    /* V10 already moved the original dynamic nodes into the side system block.
+       V11 creates large readable summaries, while preserving those originals
+       inside a diagnostic disclosure so Firebase update targets remain untouched. */
+    const systemBlock = document.querySelector('.v10-system-block');
+    const sessionBand = document.getElementById('ocf-session-band');
+    const sessionStatus = document.getElementById('ocf-session-status');
+    const sessionDetail = document.getElementById('ocf-session-detail');
+    const recoveryDiag = document.getElementById('ocf-recovery-diagnostic');
+    if (systemBlock && !document.getElementById('v11-system-grid')) {
+      const title = systemBlock.querySelector('.v10-side-title');
+      if (title) title.textContent = 'SYSTEM';
+      const oldMeta = systemBlock.querySelector('.v10-system-meta');
+      if (oldMeta) oldMeta.remove();
+
+      const grid = document.createElement('div');
+      grid.id = 'v11-system-grid';
+      grid.className = 'v11-system-grid';
+      grid.innerHTML = [
+        '<div class="v11-system-cell" id="v11-session-cell"><span>Session</span><strong id="v11-session-value">--</strong></div>',
+        '<div class="v11-system-cell" id="v11-carry-cell"><span>N→D Carry</span><strong id="v11-carry-value">--</strong></div>',
+        '<div class="v11-system-cell" id="v11-recovery-cell"><span>Recovery</span><strong id="v11-recovery-value">READY</strong></div>',
+        '<div class="v11-system-cell is-ok"><span>Firebase</span><strong>RETAINED</strong></div>'
+      ].join('');
+      const flat = document.createElement('div');
+      flat.className = 'v11-flat-safety';
+      flat.innerHTML = 'Flat Safety：<strong>RECOVERY GUARDED</strong>';
+
+      const details = document.createElement('details');
+      details.className = 'v11-system-details';
+      const summary = document.createElement('summary');
+      summary.textContent = '系統細節 / Carry Reason';
+      details.appendChild(summary);
+      details.removeAttribute('open');
+
+      if (sessionBand) details.appendChild(sessionBand);
+      if (recoveryDiag) details.appendChild(recoveryDiag);
+      systemBlock.appendChild(grid);
+      systemBlock.appendChild(flat);
+      systemBlock.appendChild(details);
+
+      function refreshSystem(){
+        const sessionRaw = sessionStatus ? sessionStatus.textContent : '--';
+        const detailRaw = sessionDetail ? sessionDetail.textContent : '';
+        const recoveryRaw = recoveryDiag ? recoveryDiag.textContent : '';
+        const sessionValue = document.getElementById('v11-session-value');
+        const carryValue = document.getElementById('v11-carry-value');
+        const recoveryValue = document.getElementById('v11-recovery-value');
+        const sessionCell = document.getElementById('v11-session-cell');
+        const carryCell = document.getElementById('v11-carry-cell');
+        const recoveryCell = document.getElementById('v11-recovery-cell');
+        const s = firstToken(sessionRaw);
+        const c = carrySummary(sessionRaw, detailRaw);
+        const r = recoverySummary(recoveryRaw);
+        if (sessionValue) sessionValue.textContent = s;
+        if (carryValue) carryValue.textContent = c;
+        if (recoveryValue) recoveryValue.textContent = r;
+        classifyCell(sessionCell, s);
+        classifyCell(carryCell, c === '--' ? 'NORMAL' : c);
+        classifyCell(recoveryCell, r);
+      }
+      refreshSystem();
+      const obs = new MutationObserver(refreshSystem);
+      if (sessionStatus) obs.observe(sessionStatus,{childList:true,subtree:true,characterData:true});
+      if (sessionDetail) obs.observe(sessionDetail,{childList:true,subtree:true,characterData:true});
+      if (recoveryDiag) obs.observe(recoveryDiag,{childList:true,subtree:true,characterData:true});
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initV11, {once:true});
+  } else {
+    initV11();
   }
 })();
 </script>
