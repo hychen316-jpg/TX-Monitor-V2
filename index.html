@@ -354,6 +354,28 @@
     .ocf-pullback-band.pullback-confirm .ocf-pullback-status { color:#bf5af2; }
     .ocf-pullback-band.pullback-ready .ocf-pullback-status { color:#30d158; }
     .ocf-pullback-band.pullback-active .ocf-pullback-status { color:#0a84ff; }
+    .ocf-wave-band, .ocf-session-band { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; padding:5px 6px; border:1px solid #3a3a3c; border-left:3px solid #636366; border-radius:5px; background:#202022; }
+    .ocf-wave-main, .ocf-session-main { min-width:0; }
+    .ocf-wave-label, .ocf-session-label { display:block; color:#8e8e93; font-size:7px; font-weight:800; }
+    .ocf-wave-status, .ocf-session-status { display:block; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-wave-detail, .ocf-session-detail { flex:0 1 58%; color:#9a9aa0; font-size:8px; line-height:1.25; text-align:right; overflow-wrap:anywhere; }
+    .ocf-wave-band.wave-formal { border-left-color:#64d2ff; background:rgba(100,210,255,.05); }
+    .ocf-wave-band.wave-eligible { border-left-color:#30d158; background:rgba(48,209,88,.06); }
+    .ocf-wave-band.wave-excluded { border-left-color:#8e8e93; background:rgba(142,142,147,.06); }
+    .ocf-wave-band.wave-event { border-left-color:#bf5af2; background:rgba(191,90,242,.09); }
+    .ocf-wave-band.wave-warning { border-left-color:var(--yellow); background:rgba(255,214,10,.08); }
+    .ocf-wave-band.wave-eligible .ocf-wave-status { color:#30d158; }
+    .ocf-wave-band.wave-event .ocf-wave-status { color:#bf5af2; }
+    .ocf-wave-band.wave-warning .ocf-wave-status { color:var(--yellow); }
+    .ocf-session-band.session-normal { border-left-color:#64d2ff; background:rgba(100,210,255,.04); }
+    .ocf-session-band.session-close { border-left-color:var(--yellow); background:rgba(255,214,10,.08); }
+    .ocf-session-band.session-carry { border-left-color:#30d158; background:rgba(48,209,88,.07); }
+    .ocf-session-band.session-reject { border-left-color:#ff9f0a; background:rgba(255,159,10,.09); }
+    .ocf-session-band.session-recovery { border-left-color:#bf5af2; background:rgba(191,90,242,.08); }
+    .ocf-session-band.session-close .ocf-session-status { color:var(--yellow); }
+    .ocf-session-band.session-carry .ocf-session-status { color:#30d158; }
+    .ocf-session-band.session-reject .ocf-session-status { color:#ff9f0a; }
+    .ocf-session-band.session-recovery .ocf-session-status { color:#bf5af2; }
     .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:4px; }
     .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; }
     .ocf-prior-title { color:#8e8e93; font-size:8px; font-weight:800; }
@@ -1323,7 +1345,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Structural Transition v1.0 + Entry Guard v1.1 + Pullback v1.0｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Transition v1.1 Latched + Entry Guard v1.1 + Pullback v1.0 + Wave v1.1 + N2D Carry v1.0｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -1349,10 +1371,10 @@
 
             <div id="ocf-transition-band" class="ocf-transition-band transition-valid">
                 <div class="ocf-transition-main">
-                    <span class="ocf-transition-label">Structural Transition v1.0｜方向延遲監控</span>
+                    <span class="ocf-transition-label">Structural Transition v1.1 Latched｜方向延遲監控</span>
                     <strong id="ocf-transition-status" class="ocf-transition-status" aria-live="polite">VALID｜正式方向可維持</strong>
                 </div>
-                <div id="ocf-transition-detail" class="ocf-transition-detail">16分=轉向確認｜18分=Fast Reverse證據；轉向成立即封鎖舊方向新單</div>
+                <div id="ocf-transition-detail" class="ocf-transition-detail">16分=轉向確認｜18分=Fast Reverse；Confirmed/Fast Reverse 在同一 Formal Direction 下 Latched，不再降回 VALID</div>
             </div>
 
             <div id="ocf-entry-guard-band" class="ocf-entry-guard-band">
@@ -1369,6 +1391,23 @@
                     <strong id="ocf-pullback-status" class="ocf-pullback-status" aria-live="polite">IDLE｜等待回撤結構</strong>
                 </div>
                 <div id="ocf-pullback-detail" class="ocf-pullback-detail">Long：SP支撐→SC近端T1｜Short：SC壓力→SP近端T1</div>
+            </div>
+
+
+            <div id="ocf-wave-band" class="ocf-wave-band wave-formal">
+                <div class="ocf-wave-main">
+                    <span class="ocf-wave-label">Wave Profit Protection v1.1 Formal｜Trigger-origin Only</span>
+                    <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜W1 MFE Gate 0.60R</strong>
+                </div>
+                <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF 10s→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip且1.25R→+0.50R</div>
+            </div>
+
+            <div id="ocf-session-band" class="ocf-session-band session-normal">
+                <div class="ocf-session-main">
+                    <span class="ocf-session-label">Session / Night→Day Carry v1.0｜Close0430</span>
+                    <strong id="ocf-session-status" class="ocf-session-status" aria-live="polite">NORMAL｜依正式時段規則</strong>
+                </div>
+                <div id="ocf-session-detail" class="ocf-session-detail">日盤收盤前10分鐘停止新Entry｜夜盤04:30後禁止新增曝險，04:55執行Conditional Carry</div>
             </div>
 
             <div class="ocf-defense-grid">
@@ -2327,6 +2366,20 @@
         const transitionTargetLong = /_(?:LONG)$/.test(transitionToken);
         const transitionTargetShort = /_(?:SHORT)$/.test(transitionToken);
         const transitionBlocked = /^(?:WEAKENING|DATA_HOLD|TRANSITION|FAST_REVERSE)_/.test(transitionToken);
+        const n2dCarryBuildMatch = zStatusDisplayRaw.match(/(?:^|\|)N2D_CARRY_BUILD=([^|]+)/);
+        const n2dCarryBuild = n2dCarryBuildMatch ? n2dCarryBuildMatch[1].trim() : "";
+        const nightCloseManagement = /(?:^|\|)NIGHT_CLOSE_MGMT=1(?:\||$)/.test(zStatusDisplayRaw)
+            || rawExecutionAdvice.includes("NIGHT_CLOSE_MANAGEMENT_ZONE");
+        const executionAdviceTokens = rawExecutionAdvice.split("|").map(token => token.trim()).filter(Boolean);
+        const carryAllowIndex = executionAdviceTokens.indexOf("NIGHT_DAY_CARRY_ARMED");
+        const carryRejectIndex = executionAdviceTokens.indexOf("NIGHT_DAY_CARRY_REJECT");
+        const positionRecoveryInAdvice = executionAdviceTokens.some(token => token.startsWith("POSITION_RECOVERY"));
+        const carryStageToken = carryAllowIndex >= 0 ? (executionAdviceTokens[carryAllowIndex + 1] || "") : "";
+        const carryReasonTokens = carryAllowIndex >= 0
+            ? executionAdviceTokens.slice(carryAllowIndex + 2)
+            : (carryRejectIndex >= 0 ? executionAdviceTokens.slice(carryRejectIndex + 1) : []);
+        const carryReasonRaw = carryReasonTokens.join("|");
+        const lastExitReason = String(data.z_last_exit_reason || "").trim();
         const entryTypeStatusMatch = zStatusDisplayRaw.match(/(?:^|\|)ENTRY_TYPE=([^|]+)/);
         const entryTypeAdviceMatch = rawExecutionAdvice.match(/(?:^|\|)ENTRY_TYPE=([^|]+)/);
         const entryTypeToken = entryTypeStatusMatch
@@ -2414,11 +2467,11 @@
         } else if (transitionToken.startsWith("TRANSITION_")) {
             transitionClass = "transition-confirmed";
             transitionStatusText = `TRANSITION CONFIRMED｜${transitionTargetLong ? "多方" : "空方"}`;
-            transitionDetailText = "反向Z2 Score≥16＋Raw≥20＋價格/FMF確認持續20秒；停止舊方向所有新執行";
+            transitionDetailText = "反向Z2 Score≥16＋Raw≥20＋價格/FMF確認持續20秒；v1.1 Latched：同一Formal Direction下不再降回VALID，停止舊方向所有新執行";
         } else if (transitionToken.startsWith("FAST_REVERSE_")) {
             transitionClass = "transition-fast";
             transitionStatusText = `FAST REVERSE｜${transitionTargetLong ? "多方" : "空方"}高可信`;
-            transitionDetailText = "反向Z2 Score≥18條件已持續20秒；v1.0仍不直接重寫正式Direction/Trigger，只記錄counterfactual";
+            transitionDetailText = "反向Z2 Score≥18條件已持續20秒；v1.1 Latched且可由Confirmed升級，仍不直接重寫正式Direction/Trigger";
         }
         if (transitionBand) transitionBand.className = `ocf-transition-band ${transitionClass}`;
         if (transitionStatus) transitionStatus.textContent = transitionStatusText;
@@ -2504,6 +2557,99 @@
         if (pullbackBand) pullbackBand.className = `ocf-pullback-band ${pullbackClass}`;
         if (pullbackStatus) pullbackStatus.textContent = pullbackStatusText;
         if (pullbackDetail) pullbackDetail.textContent = pullbackDetailText;
+
+        // Hotfix 2026-08-09: keep Wave display self-contained so optional UI cannot reference later TDZ declarations.
+        const waveBand = document.getElementById("ocf-wave-band");
+        const waveStatus = document.getElementById("ocf-wave-status");
+        const waveDetail = document.getElementById("ocf-wave-detail");
+        const waveAdviceDisplay = String(data.mdi_execution_advice || data.omi_trade_advice || "").trim().replace(/\|/g, "｜");
+        const waveHoldingLong = /持有多單/.test(waveAdviceDisplay);
+        const waveHoldingShort = /持有空單/.test(waveAdviceDisplay);
+        const activePullbackTrade = entryTypeToken === "PULLBACK_SUPPORT_LONG" || entryTypeToken === "PULLBACK_RESISTANCE_SHORT";
+        const activeTriggerTrade = entryTypeToken === "BREAKOUT_LONG" || entryTypeToken === "BREAKOUT_SHORT";
+        let waveClass = "wave-formal";
+        let waveStatusText = "FORMAL｜W1 MFE Gate 0.60R";
+        let waveDetailText = "W1：0.60R＋反向FMF 10s→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip且1.25R→+0.50R";
+        if (activePullbackTrade && (waveHoldingLong || waveHoldingShort)) {
+            waveClass = "wave-excluded";
+            waveStatusText = "EXCLUDED｜Pullback Entry不套Wave";
+            waveDetailText = "Formal規格：Wave Profit Protection只套用Trigger-origin交易；Pullback沿用自身Defense/Exit管理";
+        } else if (activeTriggerTrade && (waveHoldingLong || waveHoldingShort)) {
+            waveClass = "wave-eligible";
+            waveStatusText = "TRIGGER-ORIGIN｜Wave v1.1 Formal";
+            waveDetailText = "是否進入Wave Mode仍由VBA以TargetR>4判定；目前Firebase未上傳即時TargetR/stage/MFE，畫面不推測W1/W2/W3狀態";
+        } else if (waveHoldingLong || waveHoldingShort) {
+            waveClass = "wave-warning";
+            waveStatusText = "FORMAL ACTIVE｜即時stage未上傳";
+            waveDetailText = "持倉存在，但現有Firebase介面不足以可靠重建Wave stage/MFE；避免用畫面推論取代Formal VBA狀態";
+        } else if (lastExitReason === "WAVE_PROFIT_DEFENSE") {
+            waveClass = "wave-event";
+            waveStatusText = "LAST EXIT｜WAVE_PROFIT_DEFENSE";
+            waveDetailText = "上一筆正式Exit由Wave動態Defense觸發；目前Firebase未上傳Wave stage/MFE，畫面不臆測stage";
+        }
+        if (waveBand) waveBand.className = `ocf-wave-band ${waveClass}`;
+        if (waveStatus) waveStatus.textContent = waveStatusText;
+        if (waveDetail) waveDetail.textContent = waveDetailText;
+
+        const carryReasonMap = {
+            WEEKEND: "週末／星期五夜盤禁止Carry",
+            EXPIRY_DAY: "結算日禁止Carry",
+            HOLIDAY_BLOCK_PATH_UNAVAILABLE: "Holiday block路徑不可用，Fail-Closed",
+            HOLIDAY_BLOCK_FILE_MISSING: "Holiday block檔不存在，Fail-Closed",
+            HOLIDAY_BLOCK_FILE: "命中人工長假阻擋日期",
+            HOLIDAY_BLOCK_FILE_ERROR: "Holiday block檔讀取錯誤，Fail-Closed",
+            TARGET_TWO_COMPLETE: "T2已完成",
+            DEFENSE_ALREADY_BROKEN: "Defense已失守",
+            Z2_INVALID: "Z2結構無效",
+            Z2_DATA_BLIND: "Z2資料盲區過高",
+            CARRY_STAGE_INVALID: "Carry stage無效",
+            STRUCT_VALIDITY_STALE_OR_INVALID: "Structural Validity為STALE/INVALID",
+            OPPOSITE_TRANSITION_CONFIRMED: "反向Structural Transition已確認",
+            FORMAL_OPPOSITE_STRONG: "Formal Z2已形成強反向結構",
+            FMF_PLUS_STRUCTURE_CONFLICT: "FMF與Structure同時反向",
+            INITIAL_RISK_UNKNOWN: "Initial Risk無法確認",
+            PRET1_PROVEN_BUT_Z2_NEUTRAL_WEAK: "PRE-T1已有進展但Neutral結構不足",
+            PRET1_PROVEN_FORMAL_DIRECTION_CONFLICT: "PRE-T1 Formal方向衝突",
+            PRET1_LT_050R_STRUCTURE_NOT_STRONG: "PRE-T1 MFE<0.50R，同向結構不足",
+            PRET1_LT_050R_STRUCT_NOT_VALID: "PRE-T1 MFE<0.50R，Structural Validity非VALID",
+            PRET1_LT_050R_TRANSITION_ACTIVE: "PRE-T1 MFE<0.50R，Transition已轉弱",
+            PRET1_LT_050R_FMF_HARD_CONFLICT: "PRE-T1 MFE<0.50R，FMF hard conflict",
+            PRET1_LT_050R_STRONG_STRUCTURE: "PRE-T1 MFE<0.50R，但強同向結構通過",
+            PRET1_MFE_GE_050R: "PRE-T1 MFE≥0.50R，具波段證明",
+            POST_T1_PROTECTED: "T1已達且Defense在BE/獲利側",
+            NO_PRECLOSE_CARRY_DECISION: "收盤前未取得有效Carry決策"
+        };
+        const carryReasonBase = carryReasonRaw.split("|")[0] || "";
+        const carryReasonText = carryReasonMap[carryReasonBase] || carryReasonBase || "--";
+        const carryHasFmfCaution = carryReasonRaw.includes("FMF_CAUTION");
+        const sessionBand = document.getElementById("ocf-session-band");
+        const sessionStatus = document.getElementById("ocf-session-status");
+        const sessionDetail = document.getElementById("ocf-session-detail");
+        let sessionClass = "session-normal";
+        let sessionStatusText = "NORMAL｜依正式時段規則";
+        let sessionDetailText = n2dCarryBuild
+            ? `Night→Day ${n2dCarryBuild}｜日盤10分鐘cutoff；夜盤04:30後禁止新增曝險，04:55 Conditional Carry`
+            : "日盤收盤前10分鐘停止新Entry｜夜盤04:30後禁止新增曝險，04:55執行Conditional Carry";
+        if (positionRecoveryInAdvice) {
+            sessionClass = "session-recovery";
+            sessionStatusText = "RECOVERY HOLD｜禁止把未恢復狀態視為Flat";
+            sessionDetailText = "Position Recovery進行中；既有券商持倉應維持HOLD，等待VBA恢復權威狀態";
+        } else if (carryAllowIndex >= 0) {
+            sessionClass = "session-carry";
+            sessionStatusText = `CARRY ALLOW｜${carryStageToken || "N2D"}`;
+            sessionDetailText = `${carryReasonText}${carryHasFmfCaution ? "｜FMF CAUTION（非單獨否決）" : ""}`;
+        } else if (carryRejectIndex >= 0) {
+            sessionClass = "session-reject";
+            sessionStatusText = "CARRY REJECT｜04:55將SESSION_CLOSE";
+            sessionDetailText = carryReasonText;
+        } else if (nightCloseManagement) {
+            sessionClass = "session-close";
+            sessionStatusText = "CLOSE MANAGEMENT｜04:30後禁止新增曝險";
+            sessionDetailText = "Breakout／Pullback／Re-entry／任何新Exposure全部封鎖；既有持倉Defense、Wave、Pre-T1、Local Tick Stop與Targets正常管理";
+        }
+        if (sessionBand) sessionBand.className = `ocf-session-band ${sessionClass}`;
+        if (sessionStatus) sessionStatus.textContent = sessionStatusText;
+        if (sessionDetail) sessionDetail.textContent = sessionDetailText;
 
         const rollSummary = String(data.ocf_defense_power_display || "").trim().replace(/\|/g, "｜");
         const noEffectiveRoll = /無明顯|尚未形成|無有效|方向未確認|等待位移/.test(rollSummary);
