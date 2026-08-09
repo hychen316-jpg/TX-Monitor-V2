@@ -1410,6 +1410,259 @@
   font-weight: 900 !important;
 }
 
+
+
+/* =============================================================
+   Dashboard V10: OCF cockpit + right-side auxiliary rail
+   Presentation-only. Existing Firebase IDs and update logic stay intact.
+   ============================================================= */
+#v2-live-page .v2-intel-grid {
+  grid-template-columns: minmax(0, 2.35fr) minmax(300px, 1fr) !important;
+  align-items: stretch !important;
+}
+#v2-live-page .v2-ocf-card,
+#v2-live-page .v2-radar-card {
+  align-self: stretch;
+}
+#v2-live-page .v2-radar-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Top OCF command hierarchy: direction first, then confidence/formal context. */
+#v2-live-page .v2-ocf-card .ocf-command-grid {
+  grid-template-columns: minmax(0,1.45fr) minmax(0,.72fr) minmax(0,.93fr) !important;
+  gap: 5px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-command-item.direction .ocf-command-value {
+  font-size: 17px !important;
+  line-height: 1.12 !important;
+}
+#v2-live-page .v2-ocf-card .ocf-command-item:not(.direction) .ocf-command-value {
+  font-size: 14px !important;
+}
+
+/* Four execution/structure monitors become a compact 2x2 cockpit. */
+#v2-live-page .ocf-state-matrix {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 5px;
+  margin-top: 5px;
+}
+#v2-live-page .ocf-state-matrix > .ocf-transition-band,
+#v2-live-page .ocf-state-matrix > .ocf-entry-guard-band,
+#v2-live-page .ocf-state-matrix > .ocf-pullback-band,
+#v2-live-page .ocf-state-matrix > .ocf-wave-band {
+  margin-top: 0 !important;
+  min-height: 57px;
+  align-items: flex-start !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  gap: 3px !important;
+  padding: 6px 8px !important;
+}
+#v2-live-page .ocf-state-matrix .ocf-transition-detail,
+#v2-live-page .ocf-state-matrix .ocf-entry-guard-detail,
+#v2-live-page .ocf-state-matrix .ocf-pullback-detail,
+#v2-live-page .ocf-state-matrix .ocf-wave-detail {
+  width: 100%;
+  flex: none !important;
+  text-align: left !important;
+  font-size: 9px !important;
+  line-height: 1.28 !important;
+}
+#v2-live-page .ocf-state-matrix .ocf-transition-status,
+#v2-live-page .ocf-state-matrix .ocf-entry-guard-status,
+#v2-live-page .ocf-state-matrix .ocf-pullback-status,
+#v2-live-page .ocf-state-matrix .ocf-wave-status {
+  font-size: 12px !important;
+}
+
+/* SP / SC are the primary price-action geometry: increase visual weight. */
+#v2-live-page .v2-ocf-card .ocf-defense-grid {
+  gap: 6px !important;
+  margin-top: 6px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-card {
+  padding: 7px 8px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-name {
+  font-size: 10px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-zone {
+  font-size: 18px !important;
+  line-height: 1.12 !important;
+}
+#v2-live-page .v2-ocf-card .ocf-trigger-zone {
+  font-size: 20px !important;
+  font-weight: 950 !important;
+  text-shadow: 0 0 7px rgba(255,214,10,.18);
+}
+#v2-live-page .v2-ocf-card .ocf-defense-main-label {
+  font-size: 9px !important;
+}
+#v2-live-page .v2-ocf-card .ocf-defense-detail,
+#v2-live-page .v2-ocf-card .ocf-defense-action {
+  font-size: 9px !important;
+}
+
+/* Formal action stays visible; raw technical string moves under a details toggle. */
+#v2-live-page .v10-action-compact {
+  color: var(--yellow);
+  font-size: 14px !important;
+  font-weight: 950;
+  line-height: 1.25;
+  margin-top: 2px;
+}
+#v2-live-page .ocf-tech-toggle {
+  margin-top: 4px;
+  border-top: 1px dashed #3a3a3c;
+  padding-top: 3px;
+}
+#v2-live-page .ocf-tech-toggle > summary {
+  list-style: none;
+  cursor: pointer;
+  color: #8e8e93;
+  font-size: 9px;
+  font-weight: 850;
+  user-select: none;
+}
+#v2-live-page .ocf-tech-toggle > summary::-webkit-details-marker { display:none; }
+#v2-live-page .ocf-tech-toggle > summary::after { content:' ▾'; color:#64d2ff; }
+#v2-live-page .ocf-tech-toggle[open] > summary::after { content:' ▴'; }
+#v2-live-page .ocf-tech-toggle .ocf-action-text {
+  margin-top: 4px;
+  font-size: 10px !important;
+  color: #d2b45f !important;
+  line-height: 1.3 !important;
+  overflow-wrap: anywhere;
+}
+#v2-live-page .ocf-tech-toggle .ocf-cross-shadow-diagnostic {
+  margin-top: 3px;
+  font-size: 9px !important;
+}
+
+/* Right rail uses the formerly empty vertical space. */
+#v2-live-page .v10-side-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 1px;
+}
+#v2-live-page .v10-side-block {
+  border: 1px solid #3a3a3c;
+  border-radius: 6px;
+  background: rgba(255,255,255,.025);
+  padding: 6px 7px;
+}
+#v2-live-page .v10-side-title {
+  color: #d1d1d6;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+#v2-live-page .v10-side-subtitle {
+  color: #7f7f85;
+  font-size: 8px;
+  line-height: 1.25;
+  margin-top: -2px;
+  margin-bottom: 4px;
+}
+
+/* Prior blueprint becomes a compact 2x2 side-rail card. */
+#v2-live-page .v10-side-rail .ocf-prior-band {
+  border-top: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+#v2-live-page .v10-side-rail .ocf-prior-grid {
+  grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  gap: 4px !important;
+}
+#v2-live-page .v10-side-rail .ocf-prior-item {
+  padding: 4px 5px;
+  border: 1px solid #333;
+  border-radius: 5px;
+  background: rgba(0,0,0,.16);
+}
+#v2-live-page .v10-side-rail .ocf-prior-title { font-size: 10px !important; }
+#v2-live-page .v10-side-rail .ocf-prior-status { font-size: 8px !important; }
+#v2-live-page .v10-side-rail .ocf-prior-label { font-size: 8px !important; }
+#v2-live-page .v10-side-rail .ocf-prior-value { font-size: 11px !important; }
+
+/* Session/Carry and Recovery are auxiliary system state, optimized for narrow rail. */
+#v2-live-page .v10-system-block .ocf-session-band {
+  margin: 0 !important;
+  padding: 5px 6px !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px !important;
+}
+#v2-live-page .v10-system-block .ocf-session-detail {
+  width: 100%;
+  flex: none !important;
+  text-align: left !important;
+  font-size: 8px !important;
+  line-height: 1.28 !important;
+}
+#v2-live-page .v10-system-block .ocf-session-status {
+  font-size: 11px !important;
+}
+#v2-live-page .v10-system-block .ocf-recovery-diagnostic {
+  margin-top: 5px !important;
+  padding: 5px 6px;
+  border: 1px solid #343438;
+  border-left: 3px solid #636366;
+  border-radius: 5px;
+  background: rgba(0,0,0,.16);
+  font-size: 9px !important;
+  line-height: 1.3 !important;
+}
+#v2-live-page .v10-system-meta {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 4px;
+  margin-top: 5px;
+}
+#v2-live-page .v10-system-meta > div {
+  min-width: 0;
+  padding: 4px 5px;
+  border-top: 1px solid #343438;
+}
+#v2-live-page .v10-system-meta span {
+  display: block;
+  color: #777;
+  font-size: 7px;
+  line-height: 1.2;
+}
+#v2-live-page .v10-system-meta strong {
+  display: block;
+  margin-top: 1px;
+  color: #d1d1d6;
+  font-size: 9px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1320px) {
+  #v2-live-page .v2-intel-grid {
+    grid-template-columns: minmax(0,2fr) minmax(285px,.92fr) !important;
+  }
+}
+@media (max-width: 1180px) {
+  #v2-live-page .v2-intel-grid { grid-template-columns: 1fr !important; }
+  #v2-live-page .ocf-state-matrix { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #v2-live-page .v10-side-rail { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 700px) {
+  #v2-live-page .ocf-state-matrix,
+  #v2-live-page .v10-side-rail { grid-template-columns: 1fr !important; }
+  #v2-live-page .v2-ocf-card .ocf-command-grid { grid-template-columns: 1fr !important; }
+  #v2-live-page .v2-ocf-card .ocf-defense-grid { grid-template-columns: 1fr !important; }
+}
+
 </style>
 </head>
 <body>
@@ -4693,6 +4946,81 @@
     if (radarBox) radarCard.appendChild(radarBox);
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
+
+
+    /* V10 cockpit composition: move existing nodes only; keep their IDs/update bindings. */
+    const v10TransitionBand = document.getElementById('ocf-transition-band');
+    const v10GuardBand = document.getElementById('ocf-entry-guard-band');
+    const v10PullbackBand = document.getElementById('ocf-pullback-band');
+    const v10WaveBand = document.getElementById('ocf-wave-band');
+    const v10DefenseGrid = ocfPanel ? ocfPanel.querySelector('.ocf-defense-grid') : null;
+    if (ocfPanel && v10DefenseGrid) {
+      const stateMatrix = el('div', 'ocf-state-matrix');
+      [v10TransitionBand, v10GuardBand, v10PullbackBand, v10WaveBand].forEach(function(node) {
+        if (node) stateMatrix.appendChild(node);
+      });
+      if (stateMatrix.childNodes.length) ocfPanel.insertBefore(stateMatrix, v10DefenseGrid);
+    }
+
+    /* Keep the formal decision concise; raw diagnostics remain available on demand. */
+    const v10ActionBand = document.getElementById('ocf-action-band');
+    const v10RawAdvice = document.getElementById('ocf-bk-advice');
+    const v10ActionContext = document.getElementById('ocf-action-context');
+    const v10CrossDiag = document.getElementById('ocf-cross-shadow-diagnostic');
+    if (v10ActionBand && v10RawAdvice) {
+      const compactAdvice = el('div', 'v10-action-compact', 'ocf-bk-advice-compact');
+      compactAdvice.textContent = '等待完整訊號';
+      v10ActionBand.insertBefore(compactAdvice, v10RawAdvice);
+
+      const techToggle = document.createElement('details');
+      techToggle.className = 'ocf-tech-toggle';
+      const techSummary = document.createElement('summary');
+      techSummary.textContent = '技術診斷 / Raw Status';
+      techToggle.appendChild(techSummary);
+      techToggle.appendChild(v10RawAdvice);
+      if (v10CrossDiag) techToggle.appendChild(v10CrossDiag);
+      v10ActionBand.appendChild(techToggle);
+
+      const updateCompactAdvice = function() {
+        const raw = String(v10RawAdvice.textContent || '').trim();
+        const first = raw.split('|')[0].trim();
+        compactAdvice.textContent = first || '等待完整訊號';
+      };
+      updateCompactAdvice();
+      new MutationObserver(updateCompactAdvice).observe(v10RawAdvice, {childList:true, subtree:true, characterData:true});
+    }
+
+    /* Fill the right-side vertical space with existing low-frequency auxiliary state. */
+    const v10SideRail = el('div', 'v10-side-rail');
+    radarCard.appendChild(v10SideRail);
+
+    const v10PriorBand = ocfPanel ? ocfPanel.querySelector('.ocf-prior-band') : null;
+    if (v10PriorBand) {
+      const priorBlock = el('section', 'v10-side-block v10-prior-block');
+      const priorSub = el('div', 'v10-side-subtitle');
+      priorSub.textContent = '低頻參考｜不參與當下 Formal Direction';
+      priorBlock.appendChild(priorSub);
+      priorBlock.appendChild(v10PriorBand);
+      v10SideRail.appendChild(priorBlock);
+    }
+
+    const v10SystemBlock = el('section', 'v10-side-block v10-system-block');
+    const v10SystemTitle = el('div', 'v10-side-title');
+    v10SystemTitle.textContent = 'System / Recovery / Carry';
+    const v10SystemSub = el('div', 'v10-side-subtitle');
+    v10SystemSub.textContent = '盤間安全狀態與延續管理';
+    v10SystemBlock.appendChild(v10SystemTitle);
+    v10SystemBlock.appendChild(v10SystemSub);
+
+    const v10SessionBand = document.getElementById('ocf-session-band');
+    const v10RecoveryDiag = document.getElementById('ocf-recovery-diagnostic');
+    if (v10SessionBand) v10SystemBlock.appendChild(v10SessionBand);
+    if (v10RecoveryDiag) v10SystemBlock.appendChild(v10RecoveryDiag);
+
+    const v10SystemMeta = el('div', 'v10-system-meta');
+    v10SystemMeta.innerHTML = '<div><span>資料呈現</span><strong>Firebase Retained</strong></div><div><span>Flat Safety</span><strong>Recovery Guard</strong></div>';
+    v10SystemBlock.appendChild(v10SystemMeta);
+    v10SideRail.appendChild(v10SystemBlock);
 
     const historyNote = el('div', 'v2-page-note');
     historyNote.textContent = '原有時間軸與歷史推移圖表集中於此頁；圖表資料來源、Canvas ID及Chart.js實例均保持不變。';
