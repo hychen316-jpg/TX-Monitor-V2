@@ -941,11 +941,137 @@
 #v2-live-page .v2-force-card { grid-column: span 5 !important; }
 #v2-live-page .v2-sniper-card { grid-column: span 3 !important; }
 
-/* Radar needs more horizontal room than OCF. */
+/* Dashboard V9: primary decision area. OCF is the main live workspace; LCC is secondary. */
 #v2-live-page .v2-intel-grid {
   grid-template-columns:
-    minmax(0, 1.16fr)
-    minmax(0, 0.84fr) !important;
+    minmax(0, 2.35fr)
+    minmax(285px, 1fr) !important;
+  align-items: start;
+}
+
+#v2-live-page .v2-ocf-card {
+  order: 1;
+}
+
+#v2-live-page .v2-radar-card {
+  order: 2;
+}
+
+/* OCF gets the visual priority and can use readable type at desktop width. */
+#v2-live-page .v2-ocf-card .ocf-command-value { font-size: 13px !important; }
+#v2-live-page .v2-ocf-card .ocf-transition-status,
+#v2-live-page .v2-ocf-card .ocf-entry-guard-status,
+#v2-live-page .v2-ocf-card .ocf-pullback-status { font-size: 11px !important; }
+#v2-live-page .v2-ocf-card .ocf-defense-zone { font-size: 16px !important; }
+#v2-live-page .v2-ocf-card .ocf-action-text { font-size: 12px !important; }
+
+/* LCC compact card: keep the latest Firebase values visible, hide diagnostics until requested. */
+#v2-live-page .radar-compact-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+#v2-live-page .radar-compact-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #3a3a3c;
+}
+#v2-live-page .radar-compact-title {
+  color: #f2f2f7;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+#v2-live-page .radar-compact-sub {
+  color: #85858a;
+  font-size: 8px;
+  line-height: 1.25;
+  margin-top: 2px;
+}
+#v2-live-page .radar-compact-time {
+  flex: 0 0 auto;
+  color: #8e8e93;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+#v2-live-page .radar-compact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+#v2-live-page .radar-compact-cost {
+  min-width: 0;
+  border: 1px solid #3a3a3c;
+  background: rgba(255,255,255,.028);
+  padding: 5px 6px;
+  border-radius: 5px;
+}
+#v2-live-page .radar-compact-cost.long { border-left: 3px solid var(--red); }
+#v2-live-page .radar-compact-cost.short { border-left: 3px solid var(--green); }
+#v2-live-page .radar-compact-cost-label {
+  display: block;
+  color: #8e8e93;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+#v2-live-page .radar-compact-cost strong {
+  display: block;
+  color: #f2f2f7;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.15;
+  margin-top: 2px;
+}
+#v2-live-page .radar-compact-cost small {
+  display: block;
+  color: #9a9aa0;
+  font-size: 8px;
+  line-height: 1.25;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+#v2-live-page .radar-compact-status {
+  border-left: 3px solid #64d2ff;
+  background: rgba(100,210,255,.055);
+  padding: 5px 6px;
+  font-size: 9px;
+  line-height: 1.35;
+  color: #d1d1d6;
+}
+#v2-live-page .radar-compact-status strong { color: #f2f2f7; }
+#v2-live-page .radar-detail-toggle {
+  margin-top: 1px;
+  border: 1px solid #3a3a3c;
+  border-radius: 5px;
+  background: #202022;
+  overflow: hidden;
+}
+#v2-live-page .radar-detail-toggle > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 8px;
+  color: #64d2ff;
+  font-size: 9px;
+  font-weight: 900;
+  text-align: center;
+}
+#v2-live-page .radar-detail-toggle > summary::-webkit-details-marker { display: none; }
+#v2-live-page .radar-detail-toggle > summary::after { content: ' ▾'; color: #8e8e93; }
+#v2-live-page .radar-detail-toggle[open] > summary::after { content: ' ▴'; }
+#v2-live-page .radar-detail-body {
+  border-top: 1px solid #3a3a3c;
+  padding: 5px;
+}
+/* When LCC details are opened, give the detailed diagnostics a full-width row. */
+#v2-live-page .v2-intel-grid:has(.v2-radar-card .radar-detail-toggle[open]) {
+  grid-template-columns: 1fr !important;
 }
 
 /* Important events/actions should never be rendered at 7-8px on desktop. */
@@ -1017,6 +1143,13 @@
   #v2-live-page .v2-intel-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+@media (max-width: 1320px) {
+  #v2-live-page .v2-intel-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(270px, .9fr) !important;
+  }
+  #v2-live-page .radar-compact-grid { grid-template-columns: 1fr; }
 }
 
 /* Mobile: keep the existing single-column behavior. */
@@ -3172,6 +3305,18 @@
             </section>`;
     }
 
+    function renderLccCompactCost(label, surface, side) {
+        const centerText = surface.center !== null && surface.center > 0 ? surface.center.toFixed(0) : "--";
+        const coreText = lccRange(surface.coreLow, surface.coreHigh);
+        const statusText = surface.valid ? "有效" : ((surface.center !== null && surface.center > 0) ? "累積中" : "無資料");
+        return `
+            <div class="radar-compact-cost ${side}">
+                <span class="radar-compact-cost-label">${escapeRadarHtml(label)}｜${statusText}</span>
+                <strong>${centerText}</strong>
+                <small>核心 ${coreText}</small>
+            </div>`;
+    }
+
     function updateRadarUI(data) {
         const ticker = document.getElementById('radar-ticker');
         if (!ticker || !data || typeof data !== 'object') return;
@@ -3216,7 +3361,25 @@
                 : '';
 
             ticker.innerHTML = `
-                <div class="radar-command-shell">
+                <div class="radar-compact-shell">
+                    <div class="radar-compact-head">
+                        <div>
+                            <div class="radar-compact-title">TX Radar LCC｜主力成本摘要</div>
+                            <div class="radar-compact-sub">${escapeRadarHtml(modeText)}｜${escapeRadarHtml(contract)}｜完整資料保留在下方展開區</div>
+                        </div>
+                        <span class="radar-compact-time">${escapeRadarHtml(updateText)}</span>
+                    </div>
+                    <div class="radar-compact-grid">
+                        ${renderLccCompactCost("短期多方", surfaces.shortLong, "long")}
+                        ${renderLccCompactCost("短期空方", surfaces.shortShort, "short")}
+                        ${renderLccCompactCost("整盤多方", surfaces.sessionLong, "long")}
+                        ${renderLccCompactCost("整盤空方", surfaces.sessionShort, "short")}
+                    </div>
+                    <div class="radar-compact-status"><strong>${escapeRadarHtml(positionText)}</strong><br>資料 ${escapeRadarHtml(modeText)}｜恢復 ${escapeRadarHtml(recovery)}${statusBadge ? '｜事件觸發' : ''}</div>
+                    <details class="radar-detail-toggle">
+                        <summary>展開 LCC 完整診斷</summary>
+                        <div class="radar-detail-body">
+                            <div class="radar-command-shell">
                     <div class="radar-command-head">
                         <div class="radar-command-heading">
                             <div class="radar-command-title">TX Radar V19.5｜Clean-room LCC 即時主力成本</div>
@@ -3261,6 +3424,9 @@
                         </div>
                         <div class="radar-session-foot">${escapeRadarHtml(limitations)}</div>
                     </div>
+                            </div>
+                        </div>
+                    </details>
                 </div>`;
 
             if (isTrigger) {
@@ -4516,17 +4682,17 @@
     const intelGrid = el('div', 'v2-intel-grid');
     liveStack.appendChild(intelGrid);
 
-    const radarCard = card('TX Radar LCC 主力成本', 'Tick＋五檔 BidAsk 的短期／整盤多空控制成本', 'v2-radar-card');
-    if (radarBox) radarCard.appendChild(radarBox);
-    if (radarLocked) radarCard.appendChild(radarLocked);
-    intelGrid.appendChild(radarCard);
-
-    const ocfCard = card('OCF-Z2.1 暴 Z LIVE', '原版正式交易｜L2隔離Shadow紀錄｜TriggerGuard', 'v2-ocf-card');
+    const ocfCard = card('OCF-Z2.1 暴 Z LIVE', '主決策區｜Direction・Trigger・Defense・Guard・Transition・Wave・Carry', 'v2-ocf-card');
     const ocfCardTitle = ocfCard.querySelector('.v2-card-title > span');
     if (ocfCardTitle) ocfCardTitle.id = 'v2-ocf-card-title';
     if (ocfPanel) ocfCard.appendChild(ocfPanel);
     if (ocfLocked) ocfCard.appendChild(ocfLocked);
     intelGrid.appendChild(ocfCard);
+
+    const radarCard = card('TX Radar LCC 主力成本', '輔助觀察｜預設摘要；需要時展開完整 LCC 診斷', 'v2-radar-card');
+    if (radarBox) radarCard.appendChild(radarBox);
+    if (radarLocked) radarCard.appendChild(radarLocked);
+    intelGrid.appendChild(radarCard);
 
     const historyNote = el('div', 'v2-page-note');
     historyNote.textContent = '原有時間軸與歷史推移圖表集中於此頁；圖表資料來源、Canvas ID及Chart.js實例均保持不變。';
