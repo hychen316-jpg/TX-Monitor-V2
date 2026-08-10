@@ -5098,5 +5098,222 @@
 })();
 </script>
 
+
+<style id="mme-v02-style">
+/* === MME v0.2 Firebase Shadow UI: presentation-only add-on for Cockpit V10 === */
+#v2-live-page .mme-live-band {
+  margin: 5px 0 4px;
+  padding: 7px 8px;
+  border: 1px solid #3a3a3c;
+  border-left: 4px solid #64d2ff;
+  border-radius: 7px;
+  background: linear-gradient(135deg, rgba(100,210,255,.075), rgba(255,255,255,.018));
+  box-sizing: border-box;
+}
+#v2-live-page .mme-live-band.mme-risk { border-left-color:#ff9f0a; background:linear-gradient(135deg,rgba(255,159,10,.10),rgba(255,255,255,.015)); }
+#v2-live-page .mme-live-band.mme-danger { border-left-color:#ff453a; background:linear-gradient(135deg,rgba(255,69,58,.10),rgba(255,255,255,.015)); }
+#v2-live-page .mme-live-band.mme-bull { border-left-color:#30d158; background:linear-gradient(135deg,rgba(48,209,88,.08),rgba(255,255,255,.015)); }
+#v2-live-page .mme-live-band.mme-harvest { border-left-color:#bf5af2; background:linear-gradient(135deg,rgba(191,90,242,.09),rgba(255,255,255,.015)); }
+#v2-live-page .mme-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:5px; }
+#v2-live-page .mme-title { font-size:10px; color:#aaa; font-weight:800; letter-spacing:.25px; }
+#v2-live-page .mme-transport { font-size:9px; font-weight:800; color:#64d2ff; white-space:nowrap; }
+#v2-live-page .mme-transport.stale { color:#ff9f0a; }
+#v2-live-page .mme-transport.offline { color:#ff453a; }
+#v2-live-page .mme-hero { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:end; gap:12px; }
+#v2-live-page .mme-primary { font-size:18px; line-height:1.05; font-weight:950; color:#fff; overflow-wrap:anywhere; }
+#v2-live-page .mme-hero-kpi { min-width:76px; text-align:right; }
+#v2-live-page .mme-kpi-label { display:block; font-size:8px; color:#777; font-weight:700; }
+#v2-live-page .mme-kpi-value { display:block; margin-top:1px; font:800 14px/1.05 Consolas,monospace; color:#ffd60a; }
+#v2-live-page .mme-evidence-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin-top:6px; }
+#v2-live-page .mme-evidence { padding:4px 5px; border:1px solid #2c2c2e; border-radius:5px; background:rgba(255,255,255,.025); min-width:0; }
+#v2-live-page .mme-evidence span { display:block; font-size:8px; color:#777; font-weight:700; }
+#v2-live-page .mme-evidence strong { display:block; margin-top:1px; font-size:10px; color:#ddd; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#v2-live-page .mme-risk-row { display:grid; grid-template-columns:1fr 1fr auto; gap:5px; align-items:center; margin-top:5px; }
+#v2-live-page .mme-risk-item { display:flex; align-items:center; gap:5px; min-width:0; }
+#v2-live-page .mme-risk-label { font-size:8px; color:#888; white-space:nowrap; }
+#v2-live-page .mme-risk-track { height:5px; flex:1; min-width:35px; background:#1c1c1e; border-radius:9px; overflow:hidden; }
+#v2-live-page .mme-risk-fill { height:100%; width:0%; border-radius:9px; transition:width .25s ease; }
+#v2-live-page #mme-bull-risk-fill { background:#ff9f0a; }
+#v2-live-page #mme-bear-risk-fill { background:#64d2ff; }
+#v2-live-page .mme-risk-num { font:800 9px/1 Consolas,monospace; color:#ddd; min-width:26px; text-align:right; }
+#v2-live-page .mme-breach { font:800 9px/1.2 Consolas,monospace; color:#aaa; white-space:nowrap; }
+#v2-live-page .mme-foot { margin-top:4px; display:flex; justify-content:space-between; gap:8px; font-size:8px; color:#666; }
+#v2-live-page .mme-last-event { color:#aaa; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+#v2-live-page .mme-last-event.orange { color:#ff9f0a; }
+#v2-live-page .mme-last-event.red { color:#ff6961; }
+#v2-live-page .mme-build { white-space:nowrap; color:#555; }
+@media (max-width:900px) {
+  #v2-live-page .mme-evidence-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #v2-live-page .mme-hero { grid-template-columns:1fr auto; }
+  #v2-live-page .mme-hero-kpi:last-child { display:none; }
+}
+</style>
+<script id="mme-v02-script">
+(function installMMEFirebasePanel(){
+  'use strict';
+  const MME_REALTIME_NODE = 'mme_realtime';
+  const MME_EVENTS_NODE = 'mme_events';
+  let mmeSyncStarted = false;
+  let mmeLastData = null;
+  let mmeLastEvent = null;
+
+  function make(tag, cls, id, text){
+    const n=document.createElement(tag);
+    if(cls) n.className=cls;
+    if(id) n.id=id;
+    if(text!==undefined) n.textContent=text;
+    return n;
+  }
+  function fmt(v, digits){
+    const n=Number(v);
+    return Number.isFinite(n) ? n.toFixed(digits||0) : '--';
+  }
+  function signed(v, digits){
+    const n=Number(v);
+    return Number.isFinite(n) ? ((n>=0?'+':'')+n.toFixed(digits||0)) : '--';
+  }
+  function dur(sec){
+    const s=Math.max(0,Number(sec)||0);
+    if(s<60) return Math.round(s)+'s';
+    const m=Math.floor(s/60), r=Math.round(s%60);
+    return m+'m'+String(r).padStart(2,'0')+'s';
+  }
+  function stateClass(s){
+    s=String(s||'').toUpperCase();
+    if(s.includes('TRAP_CONFIRMED')) return 'mme-danger';
+    if(s.includes('TRAP_RISK')) return 'mme-risk';
+    if(s.includes('TWO_SIDED_HARVESTING')) return 'mme-harvest';
+    if(s.includes('LONG') || s.includes('BULL_SQUEEZE')) return 'mme-bull';
+    return '';
+  }
+  const ZH={
+    FORMAL_LONG:'正式多方', FORMAL_SHORT:'正式空方', BULLISH_BIAS:'結構偏多', SLIGHT_BULLISH:'結構微多',
+    BEARISH_BIAS:'結構偏空', SLIGHT_BEARISH:'結構微空', NEUTRAL:'結構中性',
+    STRONG_LONG:'強多執行', LONG:'偏多執行', STRONG_SHORT:'強空執行', SHORT:'偏空執行', BALANCED:'執行平衡',
+    STATIC:'結構牆靜態', MIXED:'牆位混合', RELOCATING_UP:'結構上移', RELOCATING_DOWN:'結構下移',
+    SC_RELOCATING_UP:'SC上移', SP_RELOCATING_DOWN:'SP下移', OPENING_MIGRATION:'開盤遷移', WARMUP:'暖機',
+    INSIDE:'Trigger內', ABOVE_BULL_TEST:'測試嘎空', ABOVE_BULL_ACCEPTED:'嘎空接受3m', ABOVE_BULL_STRONG:'嘎空接受10m+',
+    BELOW_BEAR_TEST:'測試殺多', BELOW_BEAR_ACCEPTED:'殺多接受3m', BELOW_BEAR_STRONG:'殺多接受10m+'
+  };
+  function zh(v){ return ZH[String(v||'')] || String(v||'--'); }
+
+  function buildPanel(){
+    if(document.getElementById('mme-live-band')) return;
+    const ocf=document.getElementById('ocf-battle-panel');
+    if(!ocf) return;
+    const band=make('section','mme-live-band','mme-live-band');
+    const head=make('div','mme-head');
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.2 Shadow・Firebase'));
+    head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
+    band.appendChild(head);
+
+    const hero=make('div','mme-hero');
+    hero.appendChild(make('div','mme-primary','mme-primary','等待 MME 資料'));
+    const bias=make('div','mme-hero-kpi'); bias.innerHTML='<span class="mme-kpi-label">Mainforce Bias</span><strong class="mme-kpi-value" id="mme-bias">--</strong>'; hero.appendChild(bias);
+    const conf=make('div','mme-hero-kpi'); conf.innerHTML='<span class="mme-kpi-label">Confidence</span><strong class="mme-kpi-value" id="mme-confidence">--</strong>'; hero.appendChild(conf);
+    band.appendChild(hero);
+
+    const grid=make('div','mme-evidence-grid');
+    [['STRUCTURE','mme-structure'],['EXECUTION','mme-execution'],['WALL / RELOCATION','mme-wall'],['ACCEPTANCE','mme-acceptance']].forEach(function(x){
+      const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; grid.appendChild(c);
+    });
+    band.appendChild(grid);
+
+    const rr=make('div','mme-risk-row');
+    rr.innerHTML='<div class="mme-risk-item"><span class="mme-risk-label">誘多風險</span><div class="mme-risk-track"><div id="mme-bull-risk-fill" class="mme-risk-fill"></div></div><strong id="mme-bull-risk" class="mme-risk-num">--</strong></div>'+
+      '<div class="mme-risk-item"><span class="mme-risk-label">誘空風險</span><div class="mme-risk-track"><div id="mme-bear-risk-fill" class="mme-risk-fill"></div></div><strong id="mme-bear-risk" class="mme-risk-num">--</strong></div>'+
+      '<div id="mme-breach" class="mme-breach">Trigger外 --</div>';
+    band.appendChild(rr);
+
+    const foot=make('div','mme-foot');
+    foot.appendChild(make('div','mme-last-event','mme-last-event','Last alert：--'));
+    foot.appendChild(make('div','mme-build','mme-build','--'));
+    band.appendChild(foot);
+
+    const matrix=ocf.querySelector('.ocf-state-matrix');
+    if(matrix) ocf.insertBefore(band,matrix);
+    else {
+      const cmd=ocf.querySelector('.ocf-command-grid');
+      if(cmd && cmd.nextSibling) ocf.insertBefore(band,cmd.nextSibling); else ocf.appendChild(band);
+    }
+  }
+
+  function render(data){
+    if(!data) return;
+    mmeLastData=data;
+    buildPanel();
+    const band=document.getElementById('mme-live-band');
+    if(!band) return;
+    band.className='mme-live-band '+stateClass(data.primary_state || data.regime_state);
+    document.getElementById('mme-primary').textContent=data.primary_state_zh || data.primary_state || 'MME等待判讀';
+    document.getElementById('mme-bias').textContent=signed(data.mindset_bias,0)+'｜'+(data.mindset_bias_label||'');
+    document.getElementById('mme-confidence').textContent=fmt(data.confidence,0);
+    document.getElementById('mme-structure').textContent=zh(data.structural_state)+' '+signed(data.structural_score,0);
+    document.getElementById('mme-execution').textContent=zh(data.execution_state)+' '+signed(data.execution_score,0);
+    document.getElementById('mme-wall').textContent=zh(data.wall_state)+' '+signed(data.wall_score,0);
+    document.getElementById('mme-acceptance').textContent=zh(data.acceptance_state)+' '+signed(data.acceptance_score,0);
+    const br=Math.max(0,Math.min(100,Number(data.bull_trap_risk)||0));
+    const sr=Math.max(0,Math.min(100,Number(data.bear_trap_risk)||0));
+    document.getElementById('mme-bull-risk').textContent=fmt(br,0)+'%';
+    document.getElementById('mme-bear-risk').textContent=fmt(sr,0)+'%';
+    document.getElementById('mme-bull-risk-fill').style.width=br+'%';
+    document.getElementById('mme-bear-risk-fill').style.width=sr+'%';
+    const bs=Number(data.bull_breach_seconds)||0, ss=Number(data.bear_breach_seconds)||0;
+    let breach='Trigger內';
+    if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
+    document.getElementById('mme-breach').textContent=breach;
+    document.getElementById('mme-build').textContent=(data.build||'MME')+'｜'+(data.timestamp||'--');
+    updateFreshness();
+  }
+
+  function renderEvent(ev){
+    if(!ev) return;
+    mmeLastEvent=ev;
+    const n=document.getElementById('mme-last-event');
+    if(!n) return;
+    const level=String(ev.level||'').toUpperCase();
+    n.className='mme-last-event '+(level==='RED'?'red':(level==='ORANGE'?'orange':''));
+    n.textContent='Last alert：'+(level?level+' ':'')+(ev.code||'')+'｜'+(ev.detail||'');
+  }
+
+  function updateFreshness(){
+    const n=document.getElementById('mme-transport');
+    if(!n || !mmeLastData) return;
+    let ageMs=NaN;
+    const fb=Number(mmeLastData.firebase_server_ts);
+    if(Number.isFinite(fb) && fb>0) ageMs=Date.now()-fb;
+    if(!Number.isFinite(ageMs)) {
+      const raw=String(mmeLastData.timestamp||'').replace(' ','T');
+      const t=Date.parse(raw); if(Number.isFinite(t)) ageMs=Date.now()-t;
+    }
+    if(!Number.isFinite(ageMs)) { n.className='mme-transport'; n.textContent='Firebase Retained'; return; }
+    const sec=Math.max(0,ageMs/1000);
+    if(sec<=20) { n.className='mme-transport'; n.textContent='● LIVE '+Math.round(sec)+'s'; }
+    else { n.className='mme-transport stale'; n.textContent='● RETAINED / STALE '+dur(sec); }
+  }
+
+  function startMMESync(){
+    if(mmeSyncStarted) return;
+    if(typeof db==='undefined' || !db) return;
+    mmeSyncStarted=true;
+    buildPanel();
+    db.ref(MME_REALTIME_NODE).on('value',function(s){ if(s.val()) render(s.val()); });
+    db.ref(MME_EVENTS_NODE).limitToLast(1).on('child_added',function(s){ if(s.val()) renderEvent(s.val()); });
+    window.setInterval(updateFreshness,10000);
+  }
+
+  buildPanel();
+  // Attach to the exact point where the original dashboard starts Firebase listeners after approved login.
+  if(typeof startDataSync==='function') {
+    const originalStartDataSync=startDataSync;
+    startDataSync=function(){ originalStartDataSync(); startMMESync(); };
+  }
+  // Safety fallback for already-authenticated fast reloads; does not duplicate due to mmeSyncStarted.
+  if(typeof auth!=='undefined' && auth && typeof auth.onAuthStateChanged==='function') {
+    auth.onAuthStateChanged(function(user){ if(user) setTimeout(startMMESync,150); });
+  }
+})();
+</script>
+
 </body>
 </html>
