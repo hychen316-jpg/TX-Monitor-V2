@@ -1684,7 +1684,7 @@
       <input type="password" id="login-pass" class="auth-input" placeholder="密碼">
       <button onclick="doLogin()" class="auth-btn">進入戰情室</button>
       <div class="error-msg" id="login-msg"></div>
-      <div class="toggle-link" onclick="showRegister()">沒有帳號？點此註冊</div>
+      <div class="toggle-link" onclick="showRegister()" style="display:none;">沒有帳號？點此註冊</div>
     </div>
     <div id="register-form" class="auth-box" style="display:none;">
       <div class="auth-title">📝 註冊新帳號</div>
@@ -2150,6 +2150,12 @@
     const NODE_ALPHA    = 'monitor_realtime/alpha_data';
     const NODE_RADAR    = 'radar_realtime';
 
+    // OWNER-ONLY build: no other Firebase Auth account may unlock or start data listeners.
+    const DASHBOARD_OWNER_EMAIL = 'hych316@gmail.com';
+    function isDashboardOwner(user) {
+        return !!user && String(user.email || '').trim().toLowerCase() === DASHBOARD_OWNER_EMAIL;
+    }
+
     let chartPrice = null; let chartChip = null; let chartP6 = null; let chartWall = null; let chartHeat = null; let chartSkew = null; let chartSniper = null;
     let p9SlopeHistory = [];
     let lastCrossVwap = "--";
@@ -2213,6 +2219,18 @@
       const logoutBtn = document.getElementById('logout-btn');
       
       if (user) {
+        if (!isDashboardOwner(user)) {
+            overlay.style.display = 'flex';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+            if(document.getElementById('pending-msg-box')) document.getElementById('pending-msg-box').style.display = 'none';
+            dashboard.classList.remove('unlocked', 'lvl2', 'lvl3', 'lvl4');
+            logoutBtn.style.display = 'none';
+            document.getElementById('login-msg').innerText = '⛔ 此版本僅限指定擁有者帳號使用。';
+            auth.signOut();
+            return;
+        }
+
         if (!user.emailVerified) {
             document.getElementById('login-form').style.display = 'block';
             document.getElementById('register-form').style.display = 'none';
@@ -2279,29 +2297,34 @@
       const email = document.getElementById('login-email').value;
       const pass = document.getElementById('login-pass').value;
       const msgBox = document.getElementById('login-msg');
+      if (String(email || '').trim().toLowerCase() !== DASHBOARD_OWNER_EMAIL) {
+          msgBox.innerText = "⛔ 此版本僅限指定擁有者帳號使用。";
+          return;
+      }
       msgBox.innerText = "驗證中...";
       auth.signInWithEmailAndPassword(email, pass).catch((error) => { msgBox.innerText = "❌ 登入失敗: " + error.code; });
     }
 
     function doRegister() {
-      const email = document.getElementById('reg-email').value;
-      const pass = document.getElementById('reg-pass').value;
       const msgBox = document.getElementById('reg-msg');
-      if (pass.length < 6) { msgBox.innerText = "⚠️ 密碼太短"; return; }
-      msgBox.innerText = "建立帳號中...";
-      auth.createUserWithEmailAndPassword(email, pass).then((cred) => {
-          cred.user.sendEmailVerification().then(() => {
-             msgBox.innerHTML = "✅ 驗證信已發送！請去信箱確認。";
-             setTimeout(() => { showLogin(); auth.signOut(); }, 5000);
-          });
-      }).catch((e) => { msgBox.innerText = e.message; });
+      if (msgBox) msgBox.innerText = "⛔ 此私人版本不開放新帳號註冊。";
+      showLogin();
     }
 
     function doLogout() { if(confirm("確定登出？")) { auth.signOut(); location.reload(); } }
-    function showRegister() { document.getElementById('login-form').style.display='none'; document.getElementById('register-form').style.display='block'; }
+    function showRegister() {
+      document.getElementById('register-form').style.display='none';
+      document.getElementById('login-form').style.display='block';
+      const msgBox = document.getElementById('login-msg');
+      if (msgBox) msgBox.innerText = "⛔ 此私人版本不開放新帳號註冊。";
+    }
     function showLogin() { document.getElementById('login-form').style.display='block'; document.getElementById('register-form').style.display='none'; }
 
     function startDataSync() {
+      if (!isDashboardOwner(auth.currentUser)) {
+          console.warn('OWNER-ONLY: dashboard Firebase listeners blocked for non-owner account.');
+          return;
+      }
       db.ref(NODE_REALTIME).on('value', (s) => { if(s.val()) updateUI(s.val()); });
       db.ref(NODE_HISTORY).on('value', (s) => { 
           if(s.val()) {
@@ -5306,6 +5329,11 @@
   function startMMESync(){
     if(mmeSyncStarted) return;
     if(typeof db==='undefined' || !db) return;
+    if(typeof auth==='undefined' || !auth || !auth.currentUser ||
+       String(auth.currentUser.email || '').trim().toLowerCase() !== 'hych316@gmail.com') {
+      console.warn('OWNER-ONLY: MME Firebase listener blocked for non-owner account.');
+      return;
+    }
     mmeSyncStarted=true;
     buildPanel();
     db.ref(MME_REALTIME_NODE).on('value',
@@ -5340,7 +5368,11 @@
   }
   // Safety fallback for already-authenticated fast reloads; does not duplicate due to mmeSyncStarted.
   if(typeof auth!=='undefined' && auth && typeof auth.onAuthStateChanged==='function') {
-    auth.onAuthStateChanged(function(user){ if(user) setTimeout(startMMESync,150); });
+    auth.onAuthStateChanged(function(user){
+      if(user && String(user.email || '').trim().toLowerCase() === 'hych316@gmail.com') {
+        setTimeout(startMMESync,150);
+      }
+    });
   }
 })();
 </script>
