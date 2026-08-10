@@ -2151,7 +2151,7 @@
     const NODE_RADAR    = 'radar_realtime';
 
     // OWNER-ONLY build: no other Firebase Auth account may unlock or start data listeners.
-    const DASHBOARD_OWNER_EMAIL = 'hych316@gmail.com';
+    const DASHBOARD_OWNER_EMAIL = 'hychen316@gmail.com';
     function isDashboardOwner(user) {
         return !!user && String(user.email || '').trim().toLowerCase() === DASHBOARD_OWNER_EMAIL;
     }
@@ -5330,7 +5330,7 @@
     if(mmeSyncStarted) return;
     if(typeof db==='undefined' || !db) return;
     if(typeof auth==='undefined' || !auth || !auth.currentUser ||
-       String(auth.currentUser.email || '').trim().toLowerCase() !== 'hych316@gmail.com') {
+       String(auth.currentUser.email || '').trim().toLowerCase() !== 'hychen316@gmail.com') {
       console.warn('OWNER-ONLY: MME Firebase listener blocked for non-owner account.');
       return;
     }
@@ -5369,7 +5369,7 @@
   // Safety fallback for already-authenticated fast reloads; does not duplicate due to mmeSyncStarted.
   if(typeof auth!=='undefined' && auth && typeof auth.onAuthStateChanged==='function') {
     auth.onAuthStateChanged(function(user){
-      if(user && String(user.email || '').trim().toLowerCase() === 'hych316@gmail.com') {
+      if(user && String(user.email || '').trim().toLowerCase() === 'hychen316@gmail.com') {
         setTimeout(startMMESync,150);
       }
     });
