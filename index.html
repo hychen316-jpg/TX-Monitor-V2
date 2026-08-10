@@ -5151,7 +5151,7 @@
 <script id="mme-v02-script">
 (function installMMEFirebasePanel(){
   'use strict';
-  const MME_REALTIME_NODE = 'mme_realtime';
+  const MME_REALTIME_NODE = 'monitor_realtime/mme';
   const MME_EVENTS_NODE = 'mme_events';
   let mmeSyncStarted = false;
   let mmeLastData = null;
@@ -5203,7 +5203,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.2 Shadow・Firebase'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.2.2 Shadow・Firebase'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -5263,6 +5263,7 @@
     if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
     document.getElementById('mme-breach').textContent=breach;
     document.getElementById('mme-build').textContent=(data.build||'MME')+'｜'+(data.timestamp||'--');
+    if(data.last_event) renderEvent(data.last_event);
     updateFreshness();
   }
 
@@ -5297,8 +5298,27 @@
     if(typeof db==='undefined' || !db) return;
     mmeSyncStarted=true;
     buildPanel();
-    db.ref(MME_REALTIME_NODE).on('value',function(s){ if(s.val()) render(s.val()); });
-    db.ref(MME_EVENTS_NODE).limitToLast(1).on('child_added',function(s){ if(s.val()) renderEvent(s.val()); });
+    db.ref(MME_REALTIME_NODE).on('value',
+      function(s){
+        if(s.val()) render(s.val());
+        else {
+          const n=document.getElementById('mme-transport');
+          if(n){ n.className='mme-transport offline'; n.textContent='MME NODE EMPTY'; }
+        }
+      },
+      function(err){
+        const n=document.getElementById('mme-transport');
+        if(n){ n.className='mme-transport offline'; n.textContent='MME READ ERROR '+String(err && err.code || ''); }
+        const p=document.getElementById('mme-primary');
+        if(p) p.textContent='Firebase MME 讀取失敗';
+        console.error('MME Firebase read error',err);
+      }
+    );
+    // Event history is optional. Current alert is also retained inside monitor_realtime/mme.last_event.
+    db.ref(MME_EVENTS_NODE).limitToLast(1).on('child_added',
+      function(s){ if(s.val()) renderEvent(s.val()); },
+      function(err){ console.warn('MME event history read unavailable',err && err.code); }
+    );
     window.setInterval(updateFreshness,10000);
   }
 
