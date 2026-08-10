@@ -1663,6 +1663,16 @@
   #v2-live-page .v2-ocf-card .ocf-defense-grid { grid-template-columns: 1fr !important; }
 }
 
+
+/* =============================================================
+   Sticky live market row: keep the first 3 market blocks visible
+   while scrolling the first/live page. Presentation only.
+   ============================================================= */
+#v2-live-page .v2-market-slot {
+  position: sticky;
+  top: 38px; /* directly below the existing sticky 3-tab navigation */
+  z-index: 940;
+}
 </style>
 </head>
 <body>
