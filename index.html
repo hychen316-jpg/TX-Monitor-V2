@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10-PRET1-ADVERSE-SHADOW-v0.1-FIREBASE-OBS-BOTTOM-APPEND">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10-HMF-FORMAL-v1.2-LAGSAFE-SLOW-FAST-PRET1-SHADOW-BOTTOM-APPEND">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -355,11 +355,11 @@
     .ocf-pullback-band.pullback-confirm .ocf-pullback-status { color:#bf5af2; }
     .ocf-pullback-band.pullback-ready .ocf-pullback-status { color:#30d158; }
     .ocf-pullback-band.pullback-active .ocf-pullback-status { color:#0a84ff; }
-    .ocf-wave-band, .ocf-adverse-band, .ocf-session-band { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; padding:5px 6px; border:1px solid #3a3a3c; border-left:3px solid #636366; border-radius:5px; background:#202022; }
-    .ocf-wave-main, .ocf-adverse-main, .ocf-session-main { min-width:0; }
-    .ocf-wave-label, .ocf-adverse-label, .ocf-session-label { display:block; color:#8e8e93; font-size:7px; font-weight:800; }
-    .ocf-wave-status, .ocf-adverse-status, .ocf-session-status { display:block; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
-    .ocf-wave-detail, .ocf-adverse-detail, .ocf-session-detail { flex:0 1 58%; color:#9a9aa0; font-size:8px; line-height:1.25; text-align:right; overflow-wrap:anywhere; }
+    .ocf-wave-band, .ocf-adverse-band, .ocf-hmf-band, .ocf-session-band { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; padding:5px 6px; border:1px solid #3a3a3c; border-left:3px solid #636366; border-radius:5px; background:#202022; }
+    .ocf-wave-main, .ocf-adverse-main, .ocf-hmf-main, .ocf-session-main { min-width:0; }
+    .ocf-wave-label, .ocf-adverse-label, .ocf-hmf-label, .ocf-session-label { display:block; color:#8e8e93; font-size:7px; font-weight:800; }
+    .ocf-wave-status, .ocf-adverse-status, .ocf-hmf-status, .ocf-session-status { display:block; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-wave-detail, .ocf-adverse-detail, .ocf-hmf-detail, .ocf-session-detail { flex:0 1 58%; color:#9a9aa0; font-size:8px; line-height:1.25; text-align:right; overflow-wrap:anywhere; }
     .ocf-wave-band.wave-formal { border-left-color:#64d2ff; background:rgba(100,210,255,.05); }
     .ocf-wave-band.wave-eligible { border-left-color:#30d158; background:rgba(48,209,88,.06); }
     .ocf-wave-band.wave-excluded { border-left-color:#8e8e93; background:rgba(142,142,147,.06); }
@@ -379,6 +379,15 @@
     .ocf-adverse-band.adverse-armed .ocf-adverse-status { color:#ff9f0a; }
     .ocf-adverse-band.adverse-event .ocf-adverse-status { color:#bf5af2; }
     .ocf-adverse-band.adverse-error .ocf-adverse-status { color:#ff453a; }
+    .ocf-hmf-band.hmf-idle { border-left-color:#636366; background:rgba(142,142,147,.04); }
+    .ocf-hmf-band.hmf-proven { border-left-color:#64d2ff; background:rgba(100,210,255,.06); }
+    .ocf-hmf-band.hmf-watch { border-left-color:var(--yellow); background:rgba(255,214,10,.09); }
+    .ocf-hmf-band.hmf-lock1 { border-left-color:#ff9f0a; background:rgba(255,159,10,.11); }
+    .ocf-hmf-band.hmf-lock2 { border-left-color:#ff453a; background:rgba(255,69,58,.11); }
+    .ocf-hmf-band.hmf-lock1 .ocf-hmf-status { color:#ff9f0a; }
+    .ocf-hmf-band.hmf-lock2 .ocf-hmf-status { color:#ff453a; }
+    .ocf-hmf-band.hmf-watch .ocf-hmf-status { color:var(--yellow); }
+    .ocf-hmf-band.hmf-proven .ocf-hmf-status { color:#64d2ff; }
     #v2-live-page > .v2-live-stack > .v10-adverse-footer {
       width:100%; box-sizing:border-box; margin-top:6px; flex:none;
     }
@@ -1756,7 +1765,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Transition v1.1 Latched + Entry Guard v1.2 + Pullback v1.0 + Wave v1.1 + N2D Carry v1.0｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Transition v1.1 Latched + Entry Guard v1.2 + Pullback v1.0 + Wave v1.4 + HMF v1.2 + N2D Carry v1.0｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -1807,10 +1816,10 @@
 
             <div id="ocf-wave-band" class="ocf-wave-band wave-formal">
                 <div class="ocf-wave-main">
-                    <span class="ocf-wave-label">Wave Profit Protection v1.1 Formal｜Trigger-origin Only</span>
+                    <span class="ocf-wave-label">Wave Profit Protection v1.4 Formal｜Trigger-origin Only</span>
                     <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜W1 MFE Gate 0.60R</strong>
                 </div>
-                <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF 10s→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip且1.25R→+0.50R</div>
+                <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利</div>
             </div>
 
             <div id="ocf-session-band" class="ocf-session-band session-normal">
@@ -2150,6 +2159,15 @@
             <strong id="ocf-adverse-status" class="ocf-adverse-status" aria-live="polite">WAIT｜等待Shadow資料</strong>
         </div>
         <div id="ocf-adverse-detail" class="ocf-adverse-detail">MFE≥0.60R＋回吐≥0.20R＋同向Flow被反向Absorption/Replenishment吸收｜SHADOW ONLY，不控制實單</div>
+    </div>
+
+    <!-- Append-only Formal HMF card: below all existing optimized layout and the research card. -->
+    <div id="ocf-hmf-band" class="ocf-hmf-band hmf-idle v10-adverse-footer">
+        <div class="ocf-hmf-main">
+            <span class="ocf-hmf-label">High-MFE Giveback Protection v1.2 FORMAL｜LagSafe Slow＋Fast 高獲利回吐鎖利</span>
+            <strong id="ocf-hmf-status" class="ocf-hmf-status" aria-live="polite">WAIT｜等待Formal HMF資料</strong>
+        </div>
+        <div id="ocf-hmf-detail" class="ocf-hmf-detail">Slow：高MFE/近T1＋30s/3m反向流｜Fast：≥2R、120s內回吐≥1R＋反向FMF/Flow30≥60；10s完成快照確認｜FORMAL tighten-only</div>
     </div>
 
   </div>
@@ -3012,14 +3030,14 @@
         const activeTriggerTrade = entryTypeToken === "BREAKOUT_LONG" || entryTypeToken === "BREAKOUT_SHORT";
         let waveClass = "wave-formal";
         let waveStatusText = "FORMAL｜W1 MFE Gate 0.60R";
-        let waveDetailText = "W1：0.60R＋反向FMF 10s→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip且1.25R→+0.50R";
+        let waveDetailText = "W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利";
         if (activePullbackTrade && (waveHoldingLong || waveHoldingShort)) {
             waveClass = "wave-excluded";
             waveStatusText = "EXCLUDED｜Pullback Entry不套Wave";
             waveDetailText = "Formal規格：Wave Profit Protection只套用Trigger-origin交易；Pullback沿用自身Defense/Exit管理";
         } else if (activeTriggerTrade && (waveHoldingLong || waveHoldingShort)) {
             waveClass = "wave-eligible";
-            waveStatusText = "TRIGGER-ORIGIN｜Wave v1.1 Formal";
+            waveStatusText = "TRIGGER-ORIGIN｜Wave v1.4 + HMF v1.2 LagSafe Formal";
             waveDetailText = "是否進入Wave Mode仍由VBA以TargetR>4判定；目前Firebase未上傳即時TargetR/stage/MFE，畫面不推測W1/W2/W3狀態";
         } else if (waveHoldingLong || waveHoldingShort) {
             waveClass = "wave-warning";
@@ -3033,6 +3051,66 @@
         if (waveBand) waveBand.className = `ocf-wave-band ${waveClass}`;
         if (waveStatus) waveStatus.textContent = waveStatusText;
         if (waveDetail) waveDetail.textContent = waveDetailText;
+
+        // High-MFE Giveback Protection v1.0: FORMAL tighten-only defense observability.
+        const hmfBand = document.getElementById("ocf-hmf-band");
+        const hmfStatus = document.getElementById("ocf-hmf-status");
+        const hmfDetail = document.getElementById("ocf-hmf-detail");
+        const hmfBuild = String(data.hmf_formal_build || "").trim();
+        const hmfEligible = Number(data.hmf_formal_eligible || 0);
+        const hmfQualified = Number(data.hmf_formal_qualified || 0);
+        const hmfStageCode = Number(data.hmf_formal_stage_code || 0);
+        const hmfStage = String(data.hmf_formal_stage || "").trim();
+        const hmfT1Progress = Number(data.hmf_formal_t1_progress || 0);
+        const hmfCurrentR = Number(data.hmf_formal_current_profit_r || 0);
+        const hmfMfeR = Number(data.hmf_formal_mfe_r || 0);
+        const hmfGivebackR = Number(data.hmf_formal_giveback_r || 0);
+        const hmfFlow30 = Number(data.hmf_formal_flow30 || 0);
+        const hmfFlow3m = Number(data.hmf_formal_flow3m || 0);
+        const hmfDeterioration = Number(data.hmf_formal_deterioration_now || 0);
+        const hmfDeteriorationAge = Number(data.hmf_formal_deterioration_age || 0);
+        const hmfFloorR = Number(data.hmf_formal_floor_r || 0);
+        const hmfLastEvent = String(data.hmf_formal_last_event || "").trim();
+        const hmfFastPeakAge = Number(data.hmf_formal_fast_peak_age || 0);
+        const hmfFastQualified = Number(data.hmf_formal_fast_qualified || 0);
+        const hmfFastCondition = Number(data.hmf_formal_fast_condition_now || 0);
+        const hmfFastConditionAge = Number(data.hmf_formal_fast_condition_age || 0);
+        const hmfFastOppFlow30 = Number(data.hmf_formal_fast_opposite_flow30 || 0);
+        const hmfFastPeakAgeOk = Number(data.hmf_formal_fast_peak_age_ok || 0);
+        const hmfFmt = (v, digits=2) => Number.isFinite(Number(v)) ? Number(v).toFixed(digits) : "--";
+        let hmfClass = "hmf-idle";
+        let hmfStatusText = "WAIT｜等待Formal HMF資料";
+        let hmfDetailText = "Slow：高MFE/近T1＋30s/3m反向流｜Fast：≥2R、120s內回吐≥1R＋反向FMF/Flow30≥60；10s完成快照確認｜FORMAL tighten-only";
+        if (!hmfBuild || hmfBuild === "UNAVAILABLE") {
+            hmfClass = "hmf-idle";
+        } else if (hmfStageCode >= 6) {
+            hmfClass = "hmf-lock2";
+            hmfStatusText = `LOCK2｜正式鎖利 ${hmfFmt(hmfFloorR)}R`;
+        } else if (hmfStageCode >= 5) {
+            hmfClass = "hmf-lock1";
+            hmfStatusText = `LOCK1｜正式鎖利 ${hmfFmt(hmfFloorR)}R`;
+        } else if (hmfFastCondition === 1) {
+            hmfClass = "hmf-watch";
+            hmfStatusText = `FAST WATCH｜快速回吐 ${Math.max(0,Math.round(hmfFastConditionAge))}/10s`;
+        } else if (hmfDeterioration === 1) {
+            hmfClass = "hmf-watch";
+            hmfStatusText = `SLOW WATCH｜高MFE惡化 ${Math.max(0,Math.round(hmfDeteriorationAge))}/20s`;
+        } else if (hmfQualified === 1 || hmfFastQualified === 1) {
+            hmfClass = "hmf-proven";
+            hmfStatusText = hmfFastQualified === 1 ? "PROVEN｜Fast 2R+監控已啟用" : "PROVEN｜Slow高MFE監控已啟用";
+        } else if (hmfEligible === 1) {
+            hmfClass = "hmf-idle";
+            hmfStatusText = "TRACKING｜等待高MFE／近T1資格";
+        } else {
+            hmfClass = "hmf-idle";
+            hmfStatusText = "IDLE｜目前不適用";
+        }
+        if (hmfBuild && hmfBuild !== "UNAVAILABLE") {
+            hmfDetailText = `MFE ${hmfFmt(hmfMfeR)}R｜目前 ${hmfFmt(hmfCurrentR)}R｜回吐 ${hmfFmt(hmfGivebackR)}R｜T1 ${hmfFmt(hmfT1Progress*100,0)}%｜Flow30 ${hmfFmt(hmfFlow30,1)} / 3m ${hmfFmt(hmfFlow3m,1)}｜Fast Opp30 ${hmfFmt(hmfFastOppFlow30,1)}・PeakAge ${Math.max(0,Math.round(hmfFastPeakAge))}s${hmfFastPeakAgeOk===1 ? "✓" : ""}｜Floor ${hmfFmt(hmfFloorR)}R${hmfLastEvent ? `｜${hmfLastEvent.replace(/_/g," ")}` : ""}｜FORMAL`;
+        }
+        if (hmfBand) hmfBand.className = `ocf-hmf-band ${hmfClass} v10-adverse-footer`;
+        if (hmfStatus) hmfStatus.textContent = hmfStatusText;
+        if (hmfDetail) hmfDetail.textContent = hmfDetailText;
 
         // Pre-T1 Adverse Defense v0.1: Shadow-only observability. Never drives Formal defense/exit.
         const adverseBand = document.getElementById("ocf-adverse-band");
@@ -5066,16 +5144,20 @@
     intelGrid.appendChild(ocfCard);
 
     const v10AdverseBand = document.getElementById('ocf-adverse-band');
+    const v10HmfBand = document.getElementById('ocf-hmf-band');
 
     const radarCard = card('TX Radar LCC 主力成本', '輔助觀察｜預設摘要；需要時展開完整 LCC 診斷', 'v2-radar-card');
     if (radarBox) radarCard.appendChild(radarBox);
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
 
-    /* Append-only Shadow observability: full-width at the very bottom of Live page.
+    /* Append-only Shadow + Formal HMF observability: full-width at the very bottom of Live page.
        It is intentionally excluded from every existing optimized grid/state matrix. */
     if (v10AdverseBand) {
       liveStack.appendChild(v10AdverseBand);
+    }
+    if (v10HmfBand) {
+      liveStack.appendChild(v10HmfBand);
     }
 
 
