@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10-PRET1-ADVERSE-SHADOW-v0.1-FIREBASE-OBS-BOTTOM-APPEND">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -354,11 +355,11 @@
     .ocf-pullback-band.pullback-confirm .ocf-pullback-status { color:#bf5af2; }
     .ocf-pullback-band.pullback-ready .ocf-pullback-status { color:#30d158; }
     .ocf-pullback-band.pullback-active .ocf-pullback-status { color:#0a84ff; }
-    .ocf-wave-band, .ocf-session-band { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; padding:5px 6px; border:1px solid #3a3a3c; border-left:3px solid #636366; border-radius:5px; background:#202022; }
-    .ocf-wave-main, .ocf-session-main { min-width:0; }
-    .ocf-wave-label, .ocf-session-label { display:block; color:#8e8e93; font-size:7px; font-weight:800; }
-    .ocf-wave-status, .ocf-session-status { display:block; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
-    .ocf-wave-detail, .ocf-session-detail { flex:0 1 58%; color:#9a9aa0; font-size:8px; line-height:1.25; text-align:right; overflow-wrap:anywhere; }
+    .ocf-wave-band, .ocf-adverse-band, .ocf-session-band { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; padding:5px 6px; border:1px solid #3a3a3c; border-left:3px solid #636366; border-radius:5px; background:#202022; }
+    .ocf-wave-main, .ocf-adverse-main, .ocf-session-main { min-width:0; }
+    .ocf-wave-label, .ocf-adverse-label, .ocf-session-label { display:block; color:#8e8e93; font-size:7px; font-weight:800; }
+    .ocf-wave-status, .ocf-adverse-status, .ocf-session-status { display:block; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-wave-detail, .ocf-adverse-detail, .ocf-session-detail { flex:0 1 58%; color:#9a9aa0; font-size:8px; line-height:1.25; text-align:right; overflow-wrap:anywhere; }
     .ocf-wave-band.wave-formal { border-left-color:#64d2ff; background:rgba(100,210,255,.05); }
     .ocf-wave-band.wave-eligible { border-left-color:#30d158; background:rgba(48,209,88,.06); }
     .ocf-wave-band.wave-excluded { border-left-color:#8e8e93; background:rgba(142,142,147,.06); }
@@ -367,6 +368,20 @@
     .ocf-wave-band.wave-eligible .ocf-wave-status { color:#30d158; }
     .ocf-wave-band.wave-event .ocf-wave-status { color:#bf5af2; }
     .ocf-wave-band.wave-warning .ocf-wave-status { color:var(--yellow); }
+    .ocf-adverse-band.adverse-idle { border-left-color:#636366; background:rgba(142,142,147,.04); }
+    .ocf-adverse-band.adverse-proving { border-left-color:#64d2ff; background:rgba(100,210,255,.05); }
+    .ocf-adverse-band.adverse-watch { border-left-color:var(--yellow); background:rgba(255,214,10,.08); }
+    .ocf-adverse-band.adverse-armed { border-left-color:#ff9f0a; background:rgba(255,159,10,.10); }
+    .ocf-adverse-band.adverse-event { border-left-color:#bf5af2; background:rgba(191,90,242,.09); }
+    .ocf-adverse-band.adverse-error { border-left-color:#ff453a; background:rgba(255,69,58,.10); }
+    .ocf-adverse-band.adverse-proving .ocf-adverse-status { color:#64d2ff; }
+    .ocf-adverse-band.adverse-watch .ocf-adverse-status { color:var(--yellow); }
+    .ocf-adverse-band.adverse-armed .ocf-adverse-status { color:#ff9f0a; }
+    .ocf-adverse-band.adverse-event .ocf-adverse-status { color:#bf5af2; }
+    .ocf-adverse-band.adverse-error .ocf-adverse-status { color:#ff453a; }
+    #v2-live-page > .v2-live-stack > .v10-adverse-footer {
+      width:100%; box-sizing:border-box; margin-top:6px; flex:none;
+    }
     .ocf-session-band.session-normal { border-left-color:#64d2ff; background:rgba(100,210,255,.04); }
     .ocf-session-band.session-close { border-left-color:var(--yellow); background:rgba(255,214,10,.08); }
     .ocf-session-band.session-carry { border-left-color:#30d158; background:rgba(48,209,88,.07); }
@@ -1741,7 +1756,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Transition v1.1 Latched + Entry Guard v1.1 + Pullback v1.0 + Wave v1.1 + N2D Carry v1.0｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Transition v1.1 Latched + Entry Guard v1.2 + Pullback v1.0 + Wave v1.1 + N2D Carry v1.0｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -1775,7 +1790,7 @@
 
             <div id="ocf-entry-guard-band" class="ocf-entry-guard-band">
                 <div class="ocf-entry-guard-main">
-                    <span class="ocf-entry-guard-label">Entry / Execution Guard v1.1</span>
+                    <span class="ocf-entry-guard-label">Entry / Execution Guard v1.2</span>
                     <strong id="ocf-entry-guard-status" class="ocf-entry-guard-status" aria-live="polite">等待Guard資料</strong>
                 </div>
                 <div id="ocf-entry-guard-detail" class="ocf-entry-guard-detail">結構方向與執行權限分離</div>
@@ -2126,6 +2141,15 @@
     <div class="split-chart-box upgrade-prompt lock-lvl-4" id="skew-chart-locked" style="margin-top:2px; height:80px;">
         <div>🔒 莊家選擇權偏態圖表</div>
         <div class="upgrade-btn">需要 Level 4</div>
+    </div>
+
+    <!-- Append-only research card: kept outside all existing optimized grids. -->
+    <div id="ocf-adverse-band" class="ocf-adverse-band adverse-idle v10-adverse-footer">
+        <div class="ocf-adverse-main">
+            <span class="ocf-adverse-label">Pre-T1 Adverse Defense v0.1 SHADOW｜主力防守／吸收偵測</span>
+            <strong id="ocf-adverse-status" class="ocf-adverse-status" aria-live="polite">WAIT｜等待Shadow資料</strong>
+        </div>
+        <div id="ocf-adverse-detail" class="ocf-adverse-detail">MFE≥0.60R＋回吐≥0.20R＋同向Flow被反向Absorption/Replenishment吸收｜SHADOW ONLY，不控制實單</div>
     </div>
 
   </div>
@@ -2933,7 +2957,7 @@
         } else if (entryGuardToken === "UNKNOWN") {
             guardClass = "guard-pause";
             guardStatusText = "WAIT｜等待Guard狀態";
-            guardDetailText = "尚未收到ENTRY_GUARD狀態；請確認使用EntryExecutionGuard v1.1 Core";
+            guardDetailText = "尚未收到ENTRY_GUARD狀態；請確認使用EntryExecutionGuard v1.2 Latched Opposite-Recovery Core";
         }
         if (guardBand) guardBand.className = `ocf-entry-guard-band ${guardClass}`;
         if (guardStatus) guardStatus.textContent = guardStatusText;
@@ -3009,6 +3033,72 @@
         if (waveBand) waveBand.className = `ocf-wave-band ${waveClass}`;
         if (waveStatus) waveStatus.textContent = waveStatusText;
         if (waveDetail) waveDetail.textContent = waveDetailText;
+
+        // Pre-T1 Adverse Defense v0.1: Shadow-only observability. Never drives Formal defense/exit.
+        const adverseBand = document.getElementById("ocf-adverse-band");
+        const adverseStatus = document.getElementById("ocf-adverse-status");
+        const adverseDetail = document.getElementById("ocf-adverse-detail");
+        const adverseBuild = String(data.pret1_adverse_build || "").trim();
+        const adverseInitialized = Number(data.pret1_adverse_initialized || 0);
+        const adverseActive = Number(data.pret1_adverse_active || 0);
+        const adverseArmed = Number(data.pret1_adverse_armed || 0);
+        const adverseConditionNow = Number(data.pret1_adverse_condition_now || 0);
+        const adverseConditionAge = Number(data.pret1_adverse_condition_age || 0);
+        const adverseMfeR = Number(data.pret1_adverse_mfe_r || 0);
+        const adverseRetraceR = Number(data.pret1_adverse_retrace_r || 0);
+        const adverseFlow30 = Number(data.pret1_adverse_same_flow30 || 0);
+        const adverseAbsorption = Number(data.pret1_adverse_absorption || 0);
+        const adverseReplenishment = Number(data.pret1_adverse_replenishment || 0);
+        const adverseBeDefense = Number(data.pret1_adverse_be_defense || 0);
+        const adverseAdaptiveDefense = Number(data.pret1_adverse_adaptive_defense || 0);
+        const adverseAdaptiveFloorR = Number(data.pret1_adverse_adaptive_floor_r || 0);
+        const adverseBeBreached = Number(data.pret1_adverse_be_breached || 0);
+        const adverseAdaptiveBreached = Number(data.pret1_adverse_adaptive_breached || 0);
+        const adverseLastEvent = String(data.pret1_adverse_last_event || "").trim();
+        const adverseLastError = String(data.pret1_adverse_last_error || "").trim();
+        const adverseFmt = (v, digits=2) => Number.isFinite(Number(v)) ? Number(v).toFixed(digits) : "--";
+        const adversePx = (v) => Number(v) > 0 ? Math.round(Number(v)).toString() : "--";
+
+        let adverseClass = "adverse-idle";
+        let adverseStatusText = "WAIT｜等待Shadow資料";
+        let adverseDetailText = "MFE≥0.60R＋回吐≥0.20R＋同向Flow被反向Absorption/Replenishment吸收｜SHADOW ONLY，不控制實單";
+        if (!adverseBuild || adverseBuild === "UNAVAILABLE" || adverseInitialized !== 1) {
+            adverseClass = "adverse-idle";
+            adverseStatusText = "WAIT｜Pre-T1 Shadow尚未連線";
+        } else if (adverseLastError) {
+            adverseClass = "adverse-error";
+            adverseStatusText = "ERROR｜Pre-T1 Shadow診斷異常";
+            adverseDetailText = `${adverseLastError}｜SHADOW ONLY，不影響Formal交易`;
+        } else if (adverseActive !== 1) {
+            adverseClass = (adverseBeBreached || adverseAdaptiveBreached) ? "adverse-event" : "adverse-idle";
+            adverseStatusText = adverseLastEvent ? `IDLE｜${adverseLastEvent.replace(/_/g," ")}` : "IDLE｜目前無Formal持倉";
+            adverseDetailText = `${adverseBuild}｜只觀察，不控制實單Defense/Exit`;
+        } else if (adverseArmed === 1) {
+            adverseClass = (adverseBeBreached || adverseAdaptiveBreached) ? "adverse-event" : "adverse-armed";
+            adverseStatusText = (adverseBeBreached || adverseAdaptiveBreached)
+                ? "EVENT｜Shadow防守價已被回測"
+                : "CONFIRMED｜偵測到Pre-T1反向主力防守";
+            adverseDetailText = `MFE ${adverseFmt(adverseMfeR)}R｜回吐 ${adverseFmt(adverseRetraceR)}R｜Flow30 ${adverseFmt(adverseFlow30,1)}｜反向吸收 ${adverseFmt(adverseAbsorption,1)} / 補單 ${adverseFmt(adverseReplenishment,1)}｜Shadow BE ${adversePx(adverseBeDefense)}｜Adaptive ${adversePx(adverseAdaptiveDefense)} (${adverseFmt(adverseAdaptiveFloorR)}R)｜SHADOW ONLY`;
+        } else if (adverseConditionNow === 1) {
+            adverseClass = "adverse-watch";
+            adverseStatusText = `WATCH｜主力防守共振 ${Math.max(0,Math.round(adverseConditionAge))}/10s`;
+            adverseDetailText = `MFE ${adverseFmt(adverseMfeR)}R｜回吐 ${adverseFmt(adverseRetraceR)}R｜Flow30 ${adverseFmt(adverseFlow30,1)}｜反向吸收 ${adverseFmt(adverseAbsorption,1)} / 補單 ${adverseFmt(adverseReplenishment,1)}｜滿10秒才Armed`;
+        } else if (adverseMfeR < 0.60) {
+            adverseClass = "adverse-proving";
+            adverseStatusText = `PROVING｜MFE ${adverseFmt(adverseMfeR)}R / 0.60R`;
+            adverseDetailText = `行情尚未充分證明｜目前回吐 ${adverseFmt(adverseRetraceR)}R｜不提前移動Formal Defense`;
+        } else if (adverseRetraceR < 0.20) {
+            adverseClass = "adverse-proving";
+            adverseStatusText = `PROVEN｜MFE已達 ${adverseFmt(adverseMfeR)}R`;
+            adverseDetailText = `尚未出現0.20R以上回吐｜Flow30 ${adverseFmt(adverseFlow30,1)}｜繼續讓波段延伸，不機械式拉BE`;
+        } else {
+            adverseClass = "adverse-watch";
+            adverseStatusText = "WATCH｜等待吸收/補單共振";
+            adverseDetailText = `MFE ${adverseFmt(adverseMfeR)}R｜回吐 ${adverseFmt(adverseRetraceR)}R｜Flow30 ${adverseFmt(adverseFlow30,1)}｜反向吸收 ${adverseFmt(adverseAbsorption,1)} / 補單 ${adverseFmt(adverseReplenishment,1)}`;
+        }
+        if (adverseBand) adverseBand.className = `ocf-adverse-band ${adverseClass}`;
+        if (adverseStatus) adverseStatus.textContent = adverseStatusText;
+        if (adverseDetail) adverseDetail.textContent = adverseDetailText;
 
         const carryReasonMap = {
             WEEKEND: "週末／星期五夜盤禁止Carry",
@@ -4975,10 +5065,18 @@
     if (ocfLocked) ocfCard.appendChild(ocfLocked);
     intelGrid.appendChild(ocfCard);
 
+    const v10AdverseBand = document.getElementById('ocf-adverse-band');
+
     const radarCard = card('TX Radar LCC 主力成本', '輔助觀察｜預設摘要；需要時展開完整 LCC 診斷', 'v2-radar-card');
     if (radarBox) radarCard.appendChild(radarBox);
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
+
+    /* Append-only Shadow observability: full-width at the very bottom of Live page.
+       It is intentionally excluded from every existing optimized grid/state matrix. */
+    if (v10AdverseBand) {
+      liveStack.appendChild(v10AdverseBand);
+    }
 
 
     /* V10 cockpit composition: move existing nodes only; keep their IDs/update bindings. */
