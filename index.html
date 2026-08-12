@@ -5312,8 +5312,8 @@
 </script>
 
 
-<style id="mme-v02-style">
-/* === MME v0.2 Firebase Shadow UI: presentation-only add-on for Cockpit V10 === */
+<style id="mme-v04-style">
+/* === MME v0.4 Phase-Aware Forecast Shadow UI: presentation-only add-on for Cockpit V10 === */
 #v2-live-page .mme-live-band {
   margin: 5px 0 4px;
   padding: 7px 8px;
@@ -5341,6 +5341,9 @@
 #v2-live-page .mme-evidence { padding:4px 5px; border:1px solid #2c2c2e; border-radius:5px; background:rgba(255,255,255,.025); min-width:0; }
 #v2-live-page .mme-evidence span { display:block; font-size:8px; color:#777; font-weight:700; }
 #v2-live-page .mme-evidence strong { display:block; margin-top:1px; font-size:10px; color:#ddd; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#v2-live-page .mme-forecast-grid { margin-top:4px; }
+#v2-live-page .mme-forecast-grid .mme-evidence { border-color:#3a3a3c; }
+#v2-live-page .mme-forecast-grid #mme-forecast { color:#ffd60a; }
 #v2-live-page .mme-risk-row { display:grid; grid-template-columns:1fr 1fr auto; gap:5px; align-items:center; margin-top:5px; }
 #v2-live-page .mme-risk-item { display:flex; align-items:center; gap:5px; min-width:0; }
 #v2-live-page .mme-risk-label { font-size:8px; color:#888; white-space:nowrap; }
@@ -5361,7 +5364,7 @@
   #v2-live-page .mme-hero-kpi:last-child { display:none; }
 }
 </style>
-<script id="mme-v02-script">
+<script id="mme-v04-script">
 (function installMMEFirebasePanel(){
   'use strict';
   const MME_REALTIME_NODE = 'monitor_realtime/mme';
@@ -5416,14 +5419,14 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.2.2 Shadow・Firebase'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.4 Phase-Aware Forecast Shadow・Firebase'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
     const hero=make('div','mme-hero');
     hero.appendChild(make('div','mme-primary','mme-primary','等待 MME 資料'));
     const bias=make('div','mme-hero-kpi'); bias.innerHTML='<span class="mme-kpi-label">Mainforce Bias</span><strong class="mme-kpi-value" id="mme-bias">--</strong>'; hero.appendChild(bias);
-    const conf=make('div','mme-hero-kpi'); conf.innerHTML='<span class="mme-kpi-label">Confidence</span><strong class="mme-kpi-value" id="mme-confidence">--</strong>'; hero.appendChild(conf);
+    const conf=make('div','mme-hero-kpi'); conf.innerHTML='<span class="mme-kpi-label">Evidence Quality</span><strong class="mme-kpi-value" id="mme-confidence">--</strong>'; hero.appendChild(conf);
     band.appendChild(hero);
 
     const grid=make('div','mme-evidence-grid');
@@ -5431,6 +5434,12 @@
       const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; grid.appendChild(c);
     });
     band.appendChild(grid);
+
+    const fgrid=make('div','mme-evidence-grid mme-forecast-grid');
+    [['TREND PHASE','mme-phase'],['30M FORECAST','mme-forecast'],['FORECAST SCORE','mme-forecast-conf'],['STATE FRESHNESS','mme-freshness']].forEach(function(x){
+      const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; fgrid.appendChild(c);
+    });
+    band.appendChild(fgrid);
 
     const rr=make('div','mme-risk-row');
     rr.innerHTML='<div class="mme-risk-item"><span class="mme-risk-label">誘多風險</span><div class="mme-risk-track"><div id="mme-bull-risk-fill" class="mme-risk-fill"></div></div><strong id="mme-bull-risk" class="mme-risk-num">--</strong></div>'+
@@ -5460,11 +5469,34 @@
     band.className='mme-live-band '+stateClass(data.primary_state || data.regime_state);
     document.getElementById('mme-primary').textContent=data.primary_state_zh || data.primary_state || 'MME等待判讀';
     document.getElementById('mme-bias').textContent=signed(data.mindset_bias,0)+'｜'+(data.mindset_bias_label||'');
-    document.getElementById('mme-confidence').textContent=fmt(data.confidence,0);
+    const eq=(data.evidence_quality!==undefined?data.evidence_quality:data.confidence);
+    document.getElementById('mme-confidence').textContent=fmt(eq,0)+(data.evidence_quality_label?'｜'+data.evidence_quality_label:'');
     document.getElementById('mme-structure').textContent=zh(data.structural_state)+' '+signed(data.structural_score,0);
     document.getElementById('mme-execution').textContent=zh(data.execution_state)+' '+signed(data.execution_score,0);
     document.getElementById('mme-wall').textContent=zh(data.wall_state)+' '+signed(data.wall_score,0);
     document.getElementById('mme-acceptance').textContent=zh(data.acceptance_state)+' '+signed(data.acceptance_score,0);
+    const phase=document.getElementById('mme-phase');
+    if(phase) phase.textContent=data.trend_phase_zh || data.trend_phase || '--';
+    const fc=document.getElementById('mme-forecast');
+    if(fc){
+      const fdir=String(data.forecast_direction_label||'').trim();
+      const fstate=data.forecast_state_zh || data.forecast_state || 'NO_FORECAST_EDGE';
+      const fh=Number(data.forecast_horizon_minutes)||0;
+      fc.textContent=(fdir && Number(data.forecast_direction)!==0 ? fdir+'｜' : '')+fstate+(fh>0?'｜'+fh+'m':'');
+    }
+    const fconf=document.getElementById('mme-forecast-conf');
+    if(fconf){
+      const score=fmt(data.forecast_confidence,0);
+      const edge=data.forecast_edge||'NONE';
+      const eligible=(Number(data.forecast_model_eligible)===1?'Eligible':'NoDirGate');
+      fconf.textContent=score+'｜'+edge+'｜'+eligible;
+    }
+    const fresh=document.getElementById('mme-freshness');
+    if(fresh){
+      const pa=Number(data.primary_state_age_seconds)||0, fa=Number(data.formal_direction_age_seconds)||0;
+      const ext=Number(data.trigger_extension_points);
+      fresh.textContent='P '+dur(pa)+' / F '+dur(fa)+(Number.isFinite(ext)?'｜Ext '+signed(ext,0)+'pt':'');
+    }
     const br=Math.max(0,Math.min(100,Number(data.bull_trap_risk)||0));
     const sr=Math.max(0,Math.min(100,Number(data.bear_trap_risk)||0));
     document.getElementById('mme-bull-risk').textContent=fmt(br,0)+'%';
