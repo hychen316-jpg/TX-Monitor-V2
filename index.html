@@ -5337,6 +5337,23 @@
 #v2-live-page .mme-hero-kpi { min-width:76px; text-align:right; }
 #v2-live-page .mme-kpi-label { display:block; font-size:8px; color:#777; font-weight:700; }
 #v2-live-page .mme-kpi-value { display:block; margin-top:1px; font:800 14px/1.05 Consolas,monospace; color:#ffd60a; }
+#v2-live-page .mme-quick-wrap { margin-top:6px; padding:5px; border:1px solid #454547; border-radius:6px; background:rgba(255,255,255,.025); }
+#v2-live-page .mme-quick-title { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px; }
+#v2-live-page .mme-quick-title strong { font-size:9px; color:#f2f2f7; letter-spacing:.2px; }
+#v2-live-page .mme-quick-title span { font-size:8px; color:#777; }
+#v2-live-page .mme-quick-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
+#v2-live-page .mme-quick-card { padding:5px 6px; border:1px solid #3a3a3c; border-radius:5px; background:#161618; min-width:0; }
+#v2-live-page .mme-quick-card .step { display:block; font-size:8px; color:#8e8e93; font-weight:850; letter-spacing:.15px; }
+#v2-live-page .mme-quick-card strong { display:block; margin-top:2px; font-size:12px; line-height:1.15; color:#f2f2f7; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#v2-live-page .mme-quick-card small { display:block; margin-top:2px; font-size:8px; color:#6e6e73; white-space:nowrap; }
+#v2-live-page .mme-quick-card.q-bull { border-color:rgba(48,209,88,.65); background:rgba(48,209,88,.08); }
+#v2-live-page .mme-quick-card.q-bull strong { color:#30d158; }
+#v2-live-page .mme-quick-card.q-bear { border-color:rgba(255,69,58,.65); background:rgba(255,69,58,.08); }
+#v2-live-page .mme-quick-card.q-bear strong { color:#ff6961; }
+#v2-live-page .mme-quick-card.q-warn { border-color:rgba(255,159,10,.7); background:rgba(255,159,10,.08); }
+#v2-live-page .mme-quick-card.q-warn strong { color:#ffb340; }
+#v2-live-page .mme-quick-card.q-neutral strong { color:#d1d1d6; }
+#v2-live-page .mme-quick-summary { margin-top:4px; padding:3px 5px; border-left:3px solid #64d2ff; background:rgba(100,210,255,.04); font-size:9px; color:#c7c7cc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 #v2-live-page .mme-evidence-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin-top:6px; }
 #v2-live-page .mme-evidence { padding:4px 5px; border:1px solid #2c2c2e; border-radius:5px; background:rgba(255,255,255,.025); min-width:0; }
 #v2-live-page .mme-evidence span { display:block; font-size:8px; color:#777; font-weight:700; }
@@ -5359,6 +5376,7 @@
 #v2-live-page .mme-last-event.red { color:#ff6961; }
 #v2-live-page .mme-build { white-space:nowrap; color:#555; }
 @media (max-width:900px) {
+  #v2-live-page .mme-quick-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   #v2-live-page .mme-evidence-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   #v2-live-page .mme-hero { grid-template-columns:1fr auto; }
   #v2-live-page .mme-hero-kpi:last-child { display:none; }
@@ -5429,6 +5447,25 @@
     const conf=make('div','mme-hero-kpi'); conf.innerHTML='<span class="mme-kpi-label">Evidence Quality</span><strong class="mme-kpi-value" id="mme-confidence">--</strong>'; hero.appendChild(conf);
     band.appendChild(hero);
 
+    const quick=make('div','mme-quick-wrap');
+    const qtitle=make('div','mme-quick-title');
+    qtitle.innerHTML='<strong>實戰四步｜一眼判讀</strong><span>心態 → 力道 → 階段 → 30M</span>';
+    quick.appendChild(qtitle);
+    const qgrid=make('div','mme-quick-grid');
+    [
+      ['① 心態','mme-q-mind','看大結構'],
+      ['② 力道','mme-q-exec','看是否發動'],
+      ['③ 階段','mme-q-phase','看能不能追'],
+      ['④ 30M','mme-q-forecast','看未來風險']
+    ].forEach(function(x){
+      const c=make('div','mme-quick-card q-neutral');
+      c.innerHTML='<span class="step">'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small>'+x[2]+'</small>';
+      qgrid.appendChild(c);
+    });
+    quick.appendChild(qgrid);
+    quick.appendChild(make('div','mme-quick-summary','mme-q-summary','一句話：等待 MME 資料'));
+    band.appendChild(quick);
+
     const grid=make('div','mme-evidence-grid');
     [['STRUCTURE','mme-structure'],['EXECUTION','mme-execution'],['WALL / RELOCATION','mme-wall'],['ACCEPTANCE','mme-acceptance']].forEach(function(x){
       const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; grid.appendChild(c);
@@ -5471,6 +5508,42 @@
     document.getElementById('mme-bias').textContent=signed(data.mindset_bias,0)+'｜'+(data.mindset_bias_label||'');
     const eq=(data.evidence_quality!==undefined?data.evidence_quality:data.confidence);
     document.getElementById('mme-confidence').textContent=fmt(eq,0)+(data.evidence_quality_label?'｜'+data.evidence_quality_label:'');
+
+    function qset(id,text,kind){
+      const el=document.getElementById(id);
+      if(!el) return;
+      el.textContent=text||'--';
+      const card=el.closest('.mme-quick-card');
+      if(card) card.className='mme-quick-card '+(kind||'q-neutral');
+    }
+    const primaryText=data.primary_state_zh || data.primary_state || '等待判讀';
+    const biasN=Number(data.mindset_bias)||0;
+    let mindKind='q-neutral';
+    if(biasN>=10) mindKind='q-bull'; else if(biasN<=-10) mindKind='q-bear';
+    qset('mme-q-mind',primaryText,mindKind);
+
+    const execText=zh(data.execution_state);
+    const execN=Number(data.execution_score)||0;
+    let execKind='q-neutral';
+    if(execN>=18) execKind='q-bull'; else if(execN<=-18) execKind='q-bear';
+    qset('mme-q-exec',execText,execKind);
+
+    const phaseText=data.trend_phase_zh || data.trend_phase || '無可信趨勢結構';
+    const phaseU=String(data.trend_phase||'').toUpperCase();
+    let phaseKind='q-neutral';
+    if(phaseU.includes('MATURE') || phaseU.includes('DIVERGENCE')) phaseKind='q-warn';
+    if(phaseU.includes('DISTRIBUTION') || phaseU.includes('REVERSAL') || phaseU.includes('TRAP')) phaseKind='q-bear';
+    qset('mme-q-phase',phaseText,phaseKind);
+
+    const fdirN=Number(data.forecast_direction)||0;
+    const fstateQuick=data.forecast_state_zh || data.forecast_state || '暫無可驗證方向優勢';
+    const fdirQuick=String(data.forecast_direction_label||'').trim();
+    const forecastText=(fdirQuick && fdirN!==0 ? fdirQuick+'｜' : '')+fstateQuick;
+    qset('mme-q-forecast',forecastText,fdirN>0?'q-bull':(fdirN<0?'q-bear':'q-neutral'));
+
+    const qsum=document.getElementById('mme-q-summary');
+    if(qsum) qsum.textContent='一句話：'+primaryText+'｜'+execText+'｜'+phaseText+'｜'+forecastText;
+
     document.getElementById('mme-structure').textContent=zh(data.structural_state)+' '+signed(data.structural_score,0);
     document.getElementById('mme-execution').textContent=zh(data.execution_state)+' '+signed(data.execution_score,0);
     document.getElementById('mme-wall').textContent=zh(data.wall_state)+' '+signed(data.wall_score,0);
