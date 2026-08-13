@@ -5504,13 +5504,13 @@
     quick.appendChild(qtitle);
     const qgrid=make('div','mme-quick-grid');
     [
-      ['① 心態','mme-q-mind','看大結構'],
-      ['② 力道','mme-q-exec','看是否發動'],
-      ['③ 階段','mme-q-phase','看能不能追'],
-      ['④ 30M','mme-q-forecast','看未來風險']
+      ['① 心態','mme-q-mind','mme-q-mind-meta','看大結構'],
+      ['② 力道','mme-q-exec','mme-q-exec-meta','看是否發動'],
+      ['③ 階段','mme-q-phase','mme-q-phase-meta','看能不能追'],
+      ['④ 30M','mme-q-forecast','mme-q-forecast-meta','看未來風險']
     ].forEach(function(x){
       const c=make('div','mme-quick-card q-neutral');
-      c.innerHTML='<span class="step">'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small>'+x[2]+'</small>';
+      c.innerHTML='<span class="step">'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">'+x[3]+'</small>';
       qgrid.appendChild(c);
     });
     quick.appendChild(qgrid);
@@ -5602,6 +5602,18 @@
     const fdirQuick=String(data.forecast_direction_label||'').trim();
     const forecastText=(fdirQuick && fdirN!==0 ? fdirQuick+'｜' : '')+fstateQuick;
     qset('mme-q-forecast',forecastText,fdirN>0?'q-bull':(fdirN<0?'q-bear':'q-neutral'));
+
+    const mindMeta=document.getElementById('mme-q-mind-meta');
+    if(mindMeta) mindMeta.textContent='Bias '+signed(biasN,0)+'｜看大結構';
+    const execMeta=document.getElementById('mme-q-exec-meta');
+    if(execMeta) execMeta.textContent='Exec '+signed(execN,0)+'｜看是否發動';
+    const phaseMeta=document.getElementById('mme-q-phase-meta');
+    if(phaseMeta){
+      const extN=Number(data.trigger_extension_points);
+      phaseMeta.textContent='Ext '+(Number.isFinite(extN)?signed(extN,0)+'pt':'--')+'｜看能不能追';
+    }
+    const forecastMeta=document.getElementById('mme-q-forecast-meta');
+    if(forecastMeta) forecastMeta.textContent='Score '+fmt(data.forecast_confidence,0)+'｜看未來風險';
 
     const qsum=document.getElementById('mme-q-summary');
     if(qsum) qsum.textContent='一句話：'+primaryText+'｜'+execText+'｜'+phaseText+'｜'+forecastText;
