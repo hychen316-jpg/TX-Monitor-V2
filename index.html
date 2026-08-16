@@ -400,6 +400,90 @@
     .ocf-session-band.session-carry .ocf-session-status { color:#30d158; }
     .ocf-session-band.session-reject .ocf-session-status { color:#ff9f0a; }
     .ocf-session-band.session-recovery .ocf-session-status { color:#bf5af2; }
+
+
+    /* === Z2 execution details: compact collapsible summary === */
+    #v2-live-page .ocf-exec-detail-toggle {
+      margin-top:4px;
+      border:1px solid #3a3a3c;
+      border-left:3px solid #64d2ff;
+      border-radius:5px;
+      background:#202022;
+      overflow:hidden;
+    }
+    #v2-live-page .ocf-exec-detail-summary {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-height:27px;
+      padding:3px 6px;
+      cursor:pointer;
+      user-select:none;
+      list-style:none;
+      color:#d1d1d6;
+    }
+    #v2-live-page .ocf-exec-detail-summary::-webkit-details-marker { display:none; }
+    #v2-live-page .ocf-exec-detail-heading {
+      flex:0 0 auto;
+      color:#8e8e93;
+      font-size:8px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    #v2-live-page .ocf-exec-summary-chips {
+      display:flex;
+      align-items:center;
+      gap:4px;
+      min-width:0;
+      flex:1 1 auto;
+      overflow:hidden;
+    }
+    #v2-live-page .ocf-exec-summary-chip {
+      display:inline-flex;
+      align-items:center;
+      gap:3px;
+      min-width:0;
+      padding:1px 4px;
+      border:1px solid #454549;
+      border-radius:3px;
+      background:#29292b;
+      color:#d1d1d6;
+      font-size:8px;
+      line-height:1.25;
+      white-space:nowrap;
+    }
+    #v2-live-page .ocf-exec-summary-chip b { color:#777; font-size:7px; }
+    #v2-live-page .ocf-exec-summary-chip strong {
+      max-width:90px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      font-size:8px;
+      font-weight:900;
+    }
+    #v2-live-page .ocf-exec-summary-chip.tone-ok { color:#30d158; border-color:rgba(48,209,88,.45); background:rgba(48,209,88,.06); }
+    #v2-live-page .ocf-exec-summary-chip.tone-info { color:#64d2ff; border-color:rgba(100,210,255,.45); background:rgba(100,210,255,.06); }
+    #v2-live-page .ocf-exec-summary-chip.tone-warn { color:#ffd60a; border-color:rgba(255,214,10,.55); background:rgba(255,214,10,.08); }
+    #v2-live-page .ocf-exec-summary-chip.tone-danger { color:#ff453a; border-color:rgba(255,69,58,.55); background:rgba(255,69,58,.08); }
+    #v2-live-page .ocf-exec-summary-chip.tone-neutral { color:#aaa; }
+    #v2-live-page .ocf-exec-detail-summary::after {
+      content:'展開 ▾';
+      flex:0 0 auto;
+      color:#8e8e93;
+      font-size:8px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    #v2-live-page .ocf-exec-detail-toggle[open] .ocf-exec-detail-summary::after { content:'收合 ▴'; }
+    #v2-live-page .ocf-exec-detail-toggle[open] .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
+    #v2-live-page .ocf-exec-detail-body { padding:0 4px 4px; }
+    #v2-live-page .ocf-exec-detail-body > .ocf-transition-band,
+    #v2-live-page .ocf-exec-detail-body > .ocf-entry-guard-band,
+    #v2-live-page .ocf-exec-detail-body > .ocf-pullback-band,
+    #v2-live-page .ocf-exec-detail-body > .ocf-wave-band { margin-top:4px; }
+    @media (max-width:760px) {
+      #v2-live-page .ocf-exec-detail-heading { display:none; }
+      #v2-live-page .ocf-exec-summary-chip strong { max-width:62px; }
+    }
     .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:4px; }
     .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; }
     .ocf-prior-title { color:#8e8e93; font-size:8px; font-weight:800; }
@@ -1941,38 +2025,50 @@
                 </div>
             </div>
 
-            <div id="ocf-transition-band" class="ocf-transition-band transition-valid">
-                <div class="ocf-transition-main">
-                    <span class="ocf-transition-label">Structural Transition v1.1 Latched｜方向延遲監控</span>
-                    <strong id="ocf-transition-status" class="ocf-transition-status" aria-live="polite">VALID｜正式方向可維持</strong>
-                </div>
-                <div id="ocf-transition-detail" class="ocf-transition-detail">16分=轉向確認｜18分=Fast Reverse；Confirmed/Fast Reverse 在同一 Formal Direction 下 Latched，不再降回 VALID</div>
-            </div>
+            <details id="ocf-exec-detail-toggle" class="ocf-exec-detail-toggle">
+                <summary class="ocf-exec-detail-summary">
+                    <span class="ocf-exec-detail-heading">Z2 執行細節</span>
+                    <span class="ocf-exec-summary-chips" aria-label="Transition Guard Pullback Wave 狀態摘要">
+                        <span id="ocf-transition-summary-chip" class="ocf-exec-summary-chip tone-ok"><b>T</b><strong id="ocf-transition-summary">VALID</strong></span>
+                        <span id="ocf-entry-guard-summary-chip" class="ocf-exec-summary-chip tone-neutral"><b>G</b><strong id="ocf-entry-guard-summary">--</strong></span>
+                        <span id="ocf-pullback-summary-chip" class="ocf-exec-summary-chip tone-neutral"><b>P</b><strong id="ocf-pullback-summary">IDLE</strong></span>
+                        <span id="ocf-wave-summary-chip" class="ocf-exec-summary-chip tone-info"><b>W</b><strong id="ocf-wave-summary">FORMAL</strong></span>
+                    </span>
+                </summary>
+                <div class="ocf-exec-detail-body">
+                    <div id="ocf-transition-band" class="ocf-transition-band transition-valid">
+                        <div class="ocf-transition-main">
+                            <span class="ocf-transition-label">Structural Transition v1.1 Latched｜方向延遲監控</span>
+                            <strong id="ocf-transition-status" class="ocf-transition-status" aria-live="polite">VALID｜正式方向可維持</strong>
+                        </div>
+                        <div id="ocf-transition-detail" class="ocf-transition-detail">16分=轉向確認｜18分=Fast Reverse；Confirmed/Fast Reverse 在同一 Formal Direction 下 Latched，不再降回 VALID</div>
+                    </div>
 
-            <div id="ocf-entry-guard-band" class="ocf-entry-guard-band">
-                <div class="ocf-entry-guard-main">
-                    <span class="ocf-entry-guard-label">Entry / Execution Guard v1.2</span>
-                    <strong id="ocf-entry-guard-status" class="ocf-entry-guard-status" aria-live="polite">等待Guard資料</strong>
-                </div>
-                <div id="ocf-entry-guard-detail" class="ocf-entry-guard-detail">結構方向與執行權限分離</div>
-            </div>
+                    <div id="ocf-entry-guard-band" class="ocf-entry-guard-band">
+                        <div class="ocf-entry-guard-main">
+                            <span class="ocf-entry-guard-label">Entry / Execution Guard v1.2</span>
+                            <strong id="ocf-entry-guard-status" class="ocf-entry-guard-status" aria-live="polite">等待Guard資料</strong>
+                        </div>
+                        <div id="ocf-entry-guard-detail" class="ocf-entry-guard-detail">結構方向與執行權限分離</div>
+                    </div>
 
-            <div id="ocf-pullback-band" class="ocf-pullback-band pullback-idle">
-                <div class="ocf-pullback-main">
-                    <span class="ocf-pullback-label">Symmetric Pullback Entry v1.0｜成本區承接／摜壓</span>
-                    <strong id="ocf-pullback-status" class="ocf-pullback-status" aria-live="polite">IDLE｜等待回撤結構</strong>
-                </div>
-                <div id="ocf-pullback-detail" class="ocf-pullback-detail">Long：SP支撐→SC近端T1｜Short：SC壓力→SP近端T1</div>
-            </div>
+                    <div id="ocf-pullback-band" class="ocf-pullback-band pullback-idle">
+                        <div class="ocf-pullback-main">
+                            <span class="ocf-pullback-label">Symmetric Pullback Entry v1.0｜成本區承接／摜壓</span>
+                            <strong id="ocf-pullback-status" class="ocf-pullback-status" aria-live="polite">IDLE｜等待回撤結構</strong>
+                        </div>
+                        <div id="ocf-pullback-detail" class="ocf-pullback-detail">Long：SP支撐→SC近端T1｜Short：SC壓力→SP近端T1</div>
+                    </div>
 
-
-            <div id="ocf-wave-band" class="ocf-wave-band wave-formal">
-                <div class="ocf-wave-main">
-                    <span class="ocf-wave-label">Wave Profit Protection v1.4 Formal｜Trigger-origin Only</span>
-                    <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜W1 MFE Gate 0.60R</strong>
+                    <div id="ocf-wave-band" class="ocf-wave-band wave-formal">
+                        <div class="ocf-wave-main">
+                            <span class="ocf-wave-label">Wave Profit Protection v1.4 Formal｜Trigger-origin Only</span>
+                            <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜W1 MFE Gate 0.60R</strong>
+                        </div>
+                        <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利</div>
+                    </div>
                 </div>
-                <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利</div>
-            </div>
+            </details>
 
             <div id="ocf-session-band" class="ocf-session-band session-normal">
                 <div class="ocf-session-main">
@@ -5583,6 +5679,48 @@
   #v2-live-page .mme-detail-body { padding-top:5px; }
 
 </style>
+<script id="ocf-exec-collapsible-summary-script">
+(function installOcfExecCollapsibleSummary(){
+  'use strict';
+  const specs=[
+    ['ocf-transition-status','ocf-transition-summary','ocf-transition-summary-chip'],
+    ['ocf-entry-guard-status','ocf-entry-guard-summary','ocf-entry-guard-summary-chip'],
+    ['ocf-pullback-status','ocf-pullback-summary','ocf-pullback-summary-chip'],
+    ['ocf-wave-status','ocf-wave-summary','ocf-wave-summary-chip']
+  ];
+  function compactStatus(text){
+    const raw=String(text||'').trim();
+    if(!raw) return '--';
+    const first=raw.split('｜')[0].trim();
+    if(/^等待/i.test(first)) return 'WAIT';
+    return first.length>16 ? first.slice(0,16) : first;
+  }
+  function toneFor(text){
+    const t=String(text||'').toUpperCase();
+    if(/CONFLICT|BLOCK|REJECT|SUSPEND|ERROR|INVALID|FAST REVERSE/.test(t)) return 'tone-danger';
+    if(/WEAK|PAUSE|WATCH|HOLD|WARNING|CONFIRM|ARMED|EVENT/.test(t)) return 'tone-warn';
+    if(/ALLOW|VALID|READY|ELIGIBLE/.test(t)) return 'tone-ok';
+    if(/FORMAL|ACTIVE|PROVEN|TOUCH/.test(t)) return 'tone-info';
+    return 'tone-neutral';
+  }
+  function syncOne(srcId,dstId,chipId){
+    const src=document.getElementById(srcId), dst=document.getElementById(dstId), chip=document.getElementById(chipId);
+    if(!src || !dst || !chip) return;
+    const sync=function(){
+      const text=String(src.textContent||'').trim();
+      dst.textContent=compactStatus(text);
+      chip.className='ocf-exec-summary-chip '+toneFor(text);
+      chip.title=text || '--';
+    };
+    sync();
+    new MutationObserver(sync).observe(src,{childList:true,characterData:true,subtree:true,attributes:true});
+  }
+  function init(){ specs.forEach(function(x){ syncOne(x[0],x[1],x[2]); }); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
+</script>
+
 <script id="mme-v051-script">
 (function installMMEFirebasePanel(){
   'use strict';
