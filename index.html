@@ -5424,7 +5424,7 @@
   #v2-live-page .mme-detail-body { padding-top:5px; }
 
 </style>
-<script id="mme-v05-script">
+<script id="mme-v051-script">
 (function installMMEFirebasePanel(){
   'use strict';
   const MME_REALTIME_NODE = 'monitor_realtime/mme';
@@ -5491,7 +5491,8 @@
     BELOW_BEAR_TEST:'測試殺多', BELOW_BEAR_ACCEPTED:'殺多接受3m', BELOW_BEAR_STRONG:'殺多接受10m+',
     SESSION_UNCLEAR:'整盤心態未定', SESSION_LONG:'整盤主力偏多', SESSION_SHORT:'整盤主力偏空',
     SESSION_TWO_SIDED:'整盤雙向/震盪', SESSION_REVERSAL_CANDIDATE:'整盤反轉候選',
-    SESSION_REVERSAL_CONFIRMED:'整盤反轉確認'
+    SESSION_REVERSAL_CONFIRMED:'整盤反轉確認',
+    REVERSAL_WATCH:'整盤反轉監看', WEAKENING:'原整盤心態弱化', LOCKED:'穩定整盤判讀', UNRESOLVED:'整盤判讀未定'
   };
   function zh(v){ return ZH[String(v||'')] || String(v||'--'); }
 
@@ -5501,7 +5502,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5 Session Intent Memory + Phase Forecast Shadow・Firebase｜整盤紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 Day Early Read + Reversal Watch Shadow・Firebase｜整盤紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -5517,7 +5518,7 @@
     quick.appendChild(qtitle);
     const qgrid=make('div','mme-quick-grid');
     [
-      ['① 整盤心態','mme-q-mind','mme-q-mind-meta','看 Session Intent'],
+      ['① 整盤判讀','mme-q-mind','mme-q-mind-meta','Sticky + Early Read'],
       ['② 力道','mme-q-exec','mme-q-exec-meta','看是否發動'],
       ['③ 階段','mme-q-phase','mme-q-phase-meta','看能不能追'],
       ['④ 30M','mme-q-forecast','mme-q-forecast-meta','看未來風險']
@@ -5532,7 +5533,7 @@
 
     const detail=make('details','mme-detail-toggle','mme-detail-toggle');
     const detailSummary=make('summary','mme-detail-summary',null);
-    detailSummary.innerHTML='<span>MME 詳細資訊</span><small>SESSION / FAST / STRUCTURE / EXECUTION / FORECAST / RISK</small>';
+    detailSummary.innerHTML='<span>MME 詳細資訊</span><small>SESSION / EARLY READ / WARNING / FAST / STRUCTURE / EXECUTION / FORECAST / RISK</small>';
     detail.appendChild(detailSummary);
     const detailBody=make('div','mme-detail-body');
 
@@ -5541,6 +5542,11 @@
       const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; sgrid.appendChild(c);
     });
     detailBody.appendChild(sgrid);
+    const egrid=make('div','mme-evidence-grid');
+    [['LIVE READ','mme-session-live-read'],['INSTANT SCORE','mme-session-instant'],['EARLY WARNING','mme-session-warning'],['ADVERSE','mme-session-adverse']].forEach(function(x){
+      const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; egrid.appendChild(c);
+    });
+    detailBody.appendChild(egrid);
     detailBody.appendChild(make('div','mme-session-reason','mme-session-reason','Session Intent：等待資料'));
 
     const grid=make('div','mme-evidence-grid');
@@ -5587,12 +5593,19 @@
     const sessionScore=hasSession ? Number(data.session_intent_score) : Number(data.mindset_bias);
     const sessionRecent=hasSession ? Number(data.session_intent_recent_score) : Number(data.mindset_bias);
     const sessionConf=hasSession ? Number(data.session_intent_confidence) : Number(data.evidence_quality!==undefined?data.evidence_quality:data.confidence);
-    const sessionWarn=String(sessionState).toUpperCase().includes('REVERSAL_CANDIDATE');
+    const hasEarly=(data.session_intent_read_state!==undefined && String(data.session_intent_read_state||'').trim()!=='');
+    const earlyState=hasEarly ? String(data.session_intent_read_state||'') : 'LOCKED';
+    const earlyDir=hasEarly ? (Number(data.session_intent_read_direction)||0) : sessionDir;
+    const warningState=hasEarly ? String(data.session_intent_warning_state||'NONE').toUpperCase() : 'NONE';
+    const warningActive=warningState!=='NONE';
+    const sessionWarn=String(sessionState).toUpperCase().includes('REVERSAL_CANDIDATE') || warningActive;
 
-    band.className='mme-live-band '+(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state));
+    band.className='mme-live-band '+(warningActive?'mme-risk':(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state)));
     const primaryEl=document.getElementById('mme-primary');
-    primaryEl.textContent=hasSession ? (data.session_intent_state_zh || zh(sessionState)) : (data.primary_state_zh || data.primary_state || 'MME等待判讀');
-    setMmeDirClass(primaryEl,sessionDir,sessionWarn);
+    const stickyText=hasSession ? (data.session_intent_state_zh || zh(sessionState)) : (data.primary_state_zh || data.primary_state || 'MME等待判讀');
+    const warningText=warningActive ? (data.session_intent_warning_state_zh || zh(warningState)) : '';
+    primaryEl.textContent=stickyText+(warningText?'｜⚠ '+warningText:'');
+    setMmeDirClass(primaryEl,warningActive?earlyDir:sessionDir,sessionWarn);
     const scoreEl=document.getElementById('mme-session-score');
     scoreEl.textContent=signed(sessionScore,0)+(hasSession?'｜R '+signed(sessionRecent,0):'｜Fast');
     setMmeDirClass(scoreEl,sessionScore,sessionWarn);
@@ -5607,13 +5620,14 @@
       const card=el.closest('.mme-quick-card');
       if(card) card.className='mme-quick-card '+(kind||'q-neutral');
     }
-    const primaryText=hasSession ? (data.session_intent_state_zh || zh(sessionState)) : (data.primary_state_zh || data.primary_state || '等待判讀');
+    const primaryText=stickyText;
+    const earlyText=hasEarly ? (data.session_intent_read_state_zh || zh(earlyState)) : primaryText;
     const biasN=Number(data.mindset_bias)||0;
     let mindKind='q-neutral';
     if(sessionWarn) mindKind='q-warn';
     else if(String(sessionState).toUpperCase().includes('TWO_SIDED')) mindKind='q-warn';
-    else if(sessionDir>0) mindKind='q-bull'; else if(sessionDir<0) mindKind='q-bear';
-    qset('mme-q-mind',primaryText,mindKind);
+    else if(earlyDir>0) mindKind='q-bull'; else if(earlyDir<0) mindKind='q-bear';
+    qset('mme-q-mind',earlyText,mindKind);
 
     const execText=zh(data.execution_state);
     const execN=Number(data.execution_score)||0;
@@ -5637,7 +5651,7 @@
     qset('mme-q-forecast',forecastText,forecastKind);
 
     const mindMeta=document.getElementById('mme-q-mind-meta');
-    if(mindMeta) mindMeta.textContent=hasSession ? ('Score '+signed(sessionScore,0)+'｜Recent '+signed(sessionRecent,0)+'｜Conf '+fmt(sessionConf,0)) : ('Fast Bias '+signed(biasN,0)+'｜v0.4 fallback');
+    if(mindMeta) mindMeta.textContent=hasSession ? ('Sticky '+(sessionDir>0?'多':(sessionDir<0?'空':'未定'))+'｜Score '+signed(sessionScore,0)+'｜Recent '+signed(sessionRecent,0)) : ('Fast Bias '+signed(biasN,0)+'｜v0.4 fallback');
     const execMeta=document.getElementById('mme-q-exec-meta');
     if(execMeta) execMeta.textContent='Exec '+signed(execN,0)+'｜看是否發動';
     const phaseMeta=document.getElementById('mme-q-phase-meta');
@@ -5649,7 +5663,7 @@
     if(forecastMeta) forecastMeta.textContent='Score '+fmt(data.forecast_confidence,0)+'｜看未來風險';
 
     const qsum=document.getElementById('mme-q-summary');
-    if(qsum) qsum.textContent='一句話：整盤 '+primaryText+'｜即時 '+execText+'｜'+phaseText+'｜'+forecastText;
+    if(qsum) qsum.textContent='一句話：整盤 '+primaryText+'｜Early '+earlyText+(warningText?'｜⚠ '+warningText:'')+'｜即時 '+execText+'｜'+phaseText+'｜'+forecastText;
 
     const sScoreDetail=document.getElementById('mme-session-score-detail');
     if(sScoreDetail){ sScoreDetail.textContent=signed(sessionScore,1); setMmeDirClass(sScoreDetail,sessionScore,sessionWarn); }
@@ -5659,8 +5673,16 @@
     if(sConfDetail) sConfDetail.textContent=fmt(sessionConf,0)+(hasSession && data.session_intent_confidence_label?'｜'+data.session_intent_confidence_label:'');
     const sAgeFlips=document.getElementById('mme-session-age-flips');
     if(sAgeFlips) sAgeFlips.textContent=hasSession ? (dur(Number(data.session_intent_age_seconds)||0)+'｜Flip '+fmt(data.session_intent_flip_count,0)) : 'v0.4 fallback';
+    const liveRead=document.getElementById('mme-session-live-read');
+    if(liveRead){ liveRead.textContent=hasEarly ? (data.session_intent_read_state_zh || zh(earlyState)) : 'v0.5 fallback'; setMmeDirClass(liveRead,earlyDir,warningActive); }
+    const instantEl=document.getElementById('mme-session-instant');
+    if(instantEl){ instantEl.textContent=hasEarly ? signed(data.session_intent_instant_score,1) : '--'; setMmeDirClass(instantEl,data.session_intent_instant_score,false); }
+    const warningEl=document.getElementById('mme-session-warning');
+    if(warningEl){ warningEl.textContent=hasEarly ? (data.session_intent_warning_state_zh || zh(warningState)) : '--'; setMmeDirClass(warningEl,Number(data.session_intent_warning_direction)||0,warningActive); }
+    const adverseEl=document.getElementById('mme-session-adverse');
+    if(adverseEl) adverseEl.textContent=hasEarly ? fmt(data.session_intent_adverse_points,0)+'pt' : '--';
     const sReason=document.getElementById('mme-session-reason');
-    if(sReason) sReason.textContent=hasSession ? ('Session Intent：'+(data.session_intent_reason||'--')+'｜EQ '+fmt(data.session_intent_evidence_quality,0)) : 'Session Intent：尚未收到 v0.5 欄位，顯示 v0.4 fallback';
+    if(sReason) sReason.textContent=hasSession ? ('Session Intent：'+(data.session_intent_reason||'--')+'｜EQ '+fmt(data.session_intent_evidence_quality,0)+(hasEarly&&data.session_intent_warning_reason?'｜'+data.session_intent_warning_reason:'')) : 'Session Intent：尚未收到 v0.5 欄位，顯示 v0.4 fallback';
 
     const fastPrimary=document.getElementById('mme-fast-primary');
     if(fastPrimary){ fastPrimary.textContent=data.primary_state_zh || data.primary_state || '--'; setMmeDirClass(fastPrimary,biasN,false); }
