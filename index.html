@@ -424,9 +424,6 @@
       color:#d1d1d6;
     }
     
-    #dashboard button.ocf-exec-detail-summary {
-      width:100%; border:0; background:transparent; text-align:left; font-family:inherit;
-    }
     #dashboard .ocf-exec-detail-heading {
       flex:0 0 auto;
       color:#8e8e93;
@@ -469,13 +466,8 @@
     #dashboard .ocf-exec-summary-chip.tone-warn { color:#ffd60a; border-color:rgba(255,214,10,.55); background:rgba(255,214,10,.08); }
     #dashboard .ocf-exec-summary-chip.tone-danger { color:#ff453a; border-color:rgba(255,69,58,.55); background:rgba(255,69,58,.08); }
     #dashboard .ocf-exec-summary-chip.tone-neutral { color:#aaa; }
-    #dashboard .ocf-exec-detail-check {
-      position:absolute !important;
-      width:1px !important;
-      height:1px !important;
-      opacity:0 !important;
-      pointer-events:none !important;
-    }
+    #dashboard .ocf-exec-detail-summary::-webkit-details-marker { display:none; }
+    #dashboard .ocf-exec-detail-summary::marker { content:''; }
     #dashboard .ocf-exec-detail-summary::after {
       content:'展開 ▾';
       flex:0 0 auto;
@@ -484,11 +476,10 @@
       font-weight:800;
       white-space:nowrap;
     }
-    #dashboard #ocf-exec-detail-check:checked + .ocf-exec-detail-summary::after { content:'收合 ▴'; }
-    #dashboard #ocf-exec-detail-check:checked + .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
+    #dashboard .ocf-exec-detail-toggle[open] > .ocf-exec-detail-summary::after { content:'收合 ▴'; }
+    #dashboard .ocf-exec-detail-toggle[open] > .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
     #dashboard .ocf-exec-detail-body { padding:0 4px 4px; }
-    #dashboard #ocf-exec-detail-check:not(:checked) ~ .ocf-exec-detail-body { display:none !important; }
-    #dashboard #ocf-exec-detail-check:checked ~ .ocf-exec-detail-body { display:block !important; }
+    #dashboard .ocf-exec-detail-toggle:not([open]) > .ocf-exec-detail-body { display:none !important; }
     #dashboard .ocf-exec-detail-body > .ocf-transition-band,
     #dashboard .ocf-exec-detail-body > .ocf-entry-guard-band,
     #dashboard .ocf-exec-detail-body > .ocf-pullback-band,
@@ -2038,9 +2029,8 @@
                 </div>
             </div>
 
-            <div id="ocf-exec-detail-toggle" class="ocf-exec-detail-toggle">
-                <input id="ocf-exec-detail-check" class="ocf-exec-detail-check" type="checkbox" aria-controls="ocf-exec-detail-body">
-                <label id="ocf-exec-detail-toggle-btn" for="ocf-exec-detail-check" class="ocf-exec-detail-summary">
+            <details id="ocf-exec-detail-toggle" class="ocf-exec-detail-toggle">
+                <summary id="ocf-exec-detail-toggle-btn" class="ocf-exec-detail-summary" aria-controls="ocf-exec-detail-body">
                     <span class="ocf-exec-detail-heading">Z2 執行細節</span>
                     <span class="ocf-exec-summary-chips" aria-label="Transition Guard Pullback Wave 狀態摘要">
                         <span id="ocf-transition-summary-chip" class="ocf-exec-summary-chip tone-ok"><b>T</b><strong id="ocf-transition-summary">VALID</strong></span>
@@ -2048,7 +2038,7 @@
                         <span id="ocf-pullback-summary-chip" class="ocf-exec-summary-chip tone-neutral"><b>P</b><strong id="ocf-pullback-summary">IDLE</strong></span>
                         <span id="ocf-wave-summary-chip" class="ocf-exec-summary-chip tone-info"><b>W</b><strong id="ocf-wave-summary">FORMAL</strong></span>
                     </span>
-                </label>
+                </summary>
                 <div id="ocf-exec-detail-body" class="ocf-exec-detail-body">
                     <div id="ocf-transition-band" class="ocf-transition-band transition-valid">
                         <div class="ocf-transition-main">
@@ -2082,7 +2072,7 @@
                         <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利</div>
                     </div>
                 </div>
-            </div>
+            </details>
 
             <div id="ocf-session-band" class="ocf-session-band session-normal">
                 <div class="ocf-session-main">
