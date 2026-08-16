@@ -403,7 +403,7 @@
 
 
     /* === Z2 execution details: compact collapsible summary === */
-    #v2-live-page .ocf-exec-detail-toggle {
+    #dashboard .ocf-exec-detail-toggle {
       margin-top:4px;
       border:1px solid #3a3a3c;
       border-left:3px solid #64d2ff;
@@ -411,7 +411,7 @@
       background:#202022;
       overflow:hidden;
     }
-    #v2-live-page .ocf-exec-detail-summary {
+    #dashboard .ocf-exec-detail-summary {
       display:flex;
       align-items:center;
       gap:8px;
@@ -423,17 +423,17 @@
       color:#d1d1d6;
     }
     
-    #v2-live-page button.ocf-exec-detail-summary {
+    #dashboard button.ocf-exec-detail-summary {
       width:100%; border:0; background:transparent; text-align:left; font-family:inherit;
     }
-    #v2-live-page .ocf-exec-detail-heading {
+    #dashboard .ocf-exec-detail-heading {
       flex:0 0 auto;
       color:#8e8e93;
       font-size:8px;
       font-weight:900;
       white-space:nowrap;
     }
-    #v2-live-page .ocf-exec-summary-chips {
+    #dashboard .ocf-exec-summary-chips {
       display:flex;
       align-items:center;
       gap:4px;
@@ -441,7 +441,7 @@
       flex:1 1 auto;
       overflow:hidden;
     }
-    #v2-live-page .ocf-exec-summary-chip {
+    #dashboard .ocf-exec-summary-chip {
       display:inline-flex;
       align-items:center;
       gap:3px;
@@ -455,20 +455,20 @@
       line-height:1.25;
       white-space:nowrap;
     }
-    #v2-live-page .ocf-exec-summary-chip b { color:#777; font-size:7px; }
-    #v2-live-page .ocf-exec-summary-chip strong {
+    #dashboard .ocf-exec-summary-chip b { color:#777; font-size:7px; }
+    #dashboard .ocf-exec-summary-chip strong {
       max-width:90px;
       overflow:hidden;
       text-overflow:ellipsis;
       font-size:8px;
       font-weight:900;
     }
-    #v2-live-page .ocf-exec-summary-chip.tone-ok { color:#30d158; border-color:rgba(48,209,88,.45); background:rgba(48,209,88,.06); }
-    #v2-live-page .ocf-exec-summary-chip.tone-info { color:#64d2ff; border-color:rgba(100,210,255,.45); background:rgba(100,210,255,.06); }
-    #v2-live-page .ocf-exec-summary-chip.tone-warn { color:#ffd60a; border-color:rgba(255,214,10,.55); background:rgba(255,214,10,.08); }
-    #v2-live-page .ocf-exec-summary-chip.tone-danger { color:#ff453a; border-color:rgba(255,69,58,.55); background:rgba(255,69,58,.08); }
-    #v2-live-page .ocf-exec-summary-chip.tone-neutral { color:#aaa; }
-    #v2-live-page .ocf-exec-detail-summary::after {
+    #dashboard .ocf-exec-summary-chip.tone-ok { color:#30d158; border-color:rgba(48,209,88,.45); background:rgba(48,209,88,.06); }
+    #dashboard .ocf-exec-summary-chip.tone-info { color:#64d2ff; border-color:rgba(100,210,255,.45); background:rgba(100,210,255,.06); }
+    #dashboard .ocf-exec-summary-chip.tone-warn { color:#ffd60a; border-color:rgba(255,214,10,.55); background:rgba(255,214,10,.08); }
+    #dashboard .ocf-exec-summary-chip.tone-danger { color:#ff453a; border-color:rgba(255,69,58,.55); background:rgba(255,69,58,.08); }
+    #dashboard .ocf-exec-summary-chip.tone-neutral { color:#aaa; }
+    #dashboard .ocf-exec-detail-summary::after {
       content:'展開 ▾';
       flex:0 0 auto;
       color:#8e8e93;
@@ -476,19 +476,19 @@
       font-weight:800;
       white-space:nowrap;
     }
-    #v2-live-page .ocf-exec-detail-toggle.is-open .ocf-exec-detail-summary::after { content:'收合 ▴'; }
-    #v2-live-page .ocf-exec-detail-toggle.is-open .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
-    #v2-live-page .ocf-exec-detail-body { padding:0 4px 4px; }
-    #v2-live-page .ocf-exec-detail-body[hidden] { display:none !important; }
-    #v2-live-page .ocf-exec-detail-toggle:not(.is-open) .ocf-exec-detail-body { display:none !important; }
-    #v2-live-page .ocf-exec-detail-toggle.is-open .ocf-exec-detail-body { display:block !important; }
-    #v2-live-page .ocf-exec-detail-body > .ocf-transition-band,
-    #v2-live-page .ocf-exec-detail-body > .ocf-entry-guard-band,
-    #v2-live-page .ocf-exec-detail-body > .ocf-pullback-band,
-    #v2-live-page .ocf-exec-detail-body > .ocf-wave-band { margin-top:4px; }
+    #dashboard .ocf-exec-detail-toggle.is-open .ocf-exec-detail-summary::after { content:'收合 ▴'; }
+    #dashboard .ocf-exec-detail-toggle.is-open .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
+    #dashboard .ocf-exec-detail-body { padding:0 4px 4px; }
+    #dashboard .ocf-exec-detail-body[hidden] { display:none !important; }
+    #dashboard .ocf-exec-detail-toggle:not(.is-open) .ocf-exec-detail-body { display:none !important; }
+    #dashboard .ocf-exec-detail-toggle.is-open .ocf-exec-detail-body { display:block !important; }
+    #dashboard .ocf-exec-detail-body > .ocf-transition-band,
+    #dashboard .ocf-exec-detail-body > .ocf-entry-guard-band,
+    #dashboard .ocf-exec-detail-body > .ocf-pullback-band,
+    #dashboard .ocf-exec-detail-body > .ocf-wave-band { margin-top:4px; }
     @media (max-width:760px) {
-      #v2-live-page .ocf-exec-detail-heading { display:none; }
-      #v2-live-page .ocf-exec-summary-chip strong { max-width:62px; }
+      #dashboard .ocf-exec-detail-heading { display:none; }
+      #dashboard .ocf-exec-summary-chip strong { max-width:62px; }
     }
     .ocf-prior-band { border-top:1px dashed #3a3a3c; margin-top:4px; padding-top:4px; }
     .ocf-prior-head { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; }
@@ -2032,7 +2032,7 @@
             </div>
 
             <div id="ocf-exec-detail-toggle" class="ocf-exec-detail-toggle">
-                <button id="ocf-exec-detail-toggle-btn" type="button" class="ocf-exec-detail-summary" aria-expanded="false" aria-controls="ocf-exec-detail-body">
+                <button id="ocf-exec-detail-toggle-btn" type="button" class="ocf-exec-detail-summary" aria-expanded="false" aria-controls="ocf-exec-detail-body" onclick="var b=document.getElementById('ocf-exec-detail-body'),r=document.getElementById('ocf-exec-detail-toggle'),o=this.getAttribute('aria-expanded')!=='true';this.setAttribute('aria-expanded',o?'true':'false');if(r)r.classList.toggle('is-open',o);if(b){b.hidden=!o;b.style.setProperty('display',o?'block':'none','important');}">
                     <span class="ocf-exec-detail-heading">Z2 執行細節</span>
                     <span class="ocf-exec-summary-chips" aria-label="Transition Guard Pullback Wave 狀態摘要">
                         <span id="ocf-transition-summary-chip" class="ocf-exec-summary-chip tone-ok"><b>T</b><strong id="ocf-transition-summary">VALID</strong></span>
@@ -2041,7 +2041,7 @@
                         <span id="ocf-wave-summary-chip" class="ocf-exec-summary-chip tone-info"><b>W</b><strong id="ocf-wave-summary">FORMAL</strong></span>
                     </span>
                 </button>
-                <div id="ocf-exec-detail-body" class="ocf-exec-detail-body" hidden>
+                <div id="ocf-exec-detail-body" class="ocf-exec-detail-body" hidden style="display:none !important;">
                     <div id="ocf-transition-band" class="ocf-transition-band transition-valid">
                         <div class="ocf-transition-main">
                             <span class="ocf-transition-label">Structural Transition v1.1 Latched｜方向延遲監控</span>
@@ -6180,30 +6180,6 @@
 </script>
 
 
-<script id="ocf-exec-detail-toggle-script">
-(function () {
-  function initOcfExecDetailToggle() {
-    var root = document.getElementById('ocf-exec-detail-toggle');
-    var btn = document.getElementById('ocf-exec-detail-toggle-btn');
-    var body = document.getElementById('ocf-exec-detail-body');
-    if (!root || !btn || !body || btn.dataset.bound === '1') return;
-    btn.dataset.bound = '1';
-    function setOpen(open) {
-      root.classList.toggle('is-open', open);
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      body.hidden = !open;
-    }
-    setOpen(false);
-    btn.addEventListener('click', function () {
-      setOpen(!root.classList.contains('is-open'));
-    });
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initOcfExecDetailToggle, { once:true });
-  } else {
-    initOcfExecDetailToggle();
-  }
-})();
-</script>
+
 </body>
 </html>
