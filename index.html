@@ -422,7 +422,10 @@
       list-style:none;
       color:#d1d1d6;
     }
-    #v2-live-page .ocf-exec-detail-summary::-webkit-details-marker { display:none; }
+    
+    #v2-live-page button.ocf-exec-detail-summary {
+      width:100%; border:0; background:transparent; text-align:left; font-family:inherit;
+    }
     #v2-live-page .ocf-exec-detail-heading {
       flex:0 0 auto;
       color:#8e8e93;
@@ -473,9 +476,12 @@
       font-weight:800;
       white-space:nowrap;
     }
-    #v2-live-page .ocf-exec-detail-toggle[open] .ocf-exec-detail-summary::after { content:'收合 ▴'; }
-    #v2-live-page .ocf-exec-detail-toggle[open] .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
+    #v2-live-page .ocf-exec-detail-toggle.is-open .ocf-exec-detail-summary::after { content:'收合 ▴'; }
+    #v2-live-page .ocf-exec-detail-toggle.is-open .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
     #v2-live-page .ocf-exec-detail-body { padding:0 4px 4px; }
+    #v2-live-page .ocf-exec-detail-body[hidden] { display:none !important; }
+    #v2-live-page .ocf-exec-detail-toggle:not(.is-open) .ocf-exec-detail-body { display:none !important; }
+    #v2-live-page .ocf-exec-detail-toggle.is-open .ocf-exec-detail-body { display:block !important; }
     #v2-live-page .ocf-exec-detail-body > .ocf-transition-band,
     #v2-live-page .ocf-exec-detail-body > .ocf-entry-guard-band,
     #v2-live-page .ocf-exec-detail-body > .ocf-pullback-band,
@@ -2025,8 +2031,8 @@
                 </div>
             </div>
 
-            <details id="ocf-exec-detail-toggle" class="ocf-exec-detail-toggle">
-                <summary class="ocf-exec-detail-summary">
+            <div id="ocf-exec-detail-toggle" class="ocf-exec-detail-toggle">
+                <button id="ocf-exec-detail-toggle-btn" type="button" class="ocf-exec-detail-summary" aria-expanded="false" aria-controls="ocf-exec-detail-body">
                     <span class="ocf-exec-detail-heading">Z2 執行細節</span>
                     <span class="ocf-exec-summary-chips" aria-label="Transition Guard Pullback Wave 狀態摘要">
                         <span id="ocf-transition-summary-chip" class="ocf-exec-summary-chip tone-ok"><b>T</b><strong id="ocf-transition-summary">VALID</strong></span>
@@ -2034,8 +2040,8 @@
                         <span id="ocf-pullback-summary-chip" class="ocf-exec-summary-chip tone-neutral"><b>P</b><strong id="ocf-pullback-summary">IDLE</strong></span>
                         <span id="ocf-wave-summary-chip" class="ocf-exec-summary-chip tone-info"><b>W</b><strong id="ocf-wave-summary">FORMAL</strong></span>
                     </span>
-                </summary>
-                <div class="ocf-exec-detail-body">
+                </button>
+                <div id="ocf-exec-detail-body" class="ocf-exec-detail-body" hidden>
                     <div id="ocf-transition-band" class="ocf-transition-band transition-valid">
                         <div class="ocf-transition-main">
                             <span class="ocf-transition-label">Structural Transition v1.1 Latched｜方向延遲監控</span>
@@ -2068,7 +2074,7 @@
                         <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利</div>
                     </div>
                 </div>
-            </details>
+            </div>
 
             <div id="ocf-session-band" class="ocf-session-band session-normal">
                 <div class="ocf-session-main">
@@ -6173,5 +6179,31 @@
 })();
 </script>
 
+
+<script id="ocf-exec-detail-toggle-script">
+(function () {
+  function initOcfExecDetailToggle() {
+    var root = document.getElementById('ocf-exec-detail-toggle');
+    var btn = document.getElementById('ocf-exec-detail-toggle-btn');
+    var body = document.getElementById('ocf-exec-detail-body');
+    if (!root || !btn || !body || btn.dataset.bound === '1') return;
+    btn.dataset.bound = '1';
+    function setOpen(open) {
+      root.classList.toggle('is-open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      body.hidden = !open;
+    }
+    setOpen(false);
+    btn.addEventListener('click', function () {
+      setOpen(!root.classList.contains('is-open'));
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOcfExecDetailToggle, { once:true });
+  } else {
+    initOcfExecDetailToggle();
+  }
+})();
+</script>
 </body>
 </html>
