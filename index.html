@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10-HMF-FORMAL-v1.2-LAGSAFE-SLOW-FAST-PRET1-SHADOW-BOTTOM-APPEND-MME-v0.5-SESSION-INTENT">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10-HMF-FORMAL-v1.2-LAGSAFE-SLOW-FAST-PRET1-SHADOW-BOTTOM-APPEND-MME-v0.5.1-SESSION-SCORE-QUICKREAD">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -5338,6 +5338,28 @@
 #v2-live-page .mme-hero-kpi { min-width:76px; text-align:right; }
 #v2-live-page .mme-kpi-label { display:block; font-size:8px; color:#777; font-weight:700; }
 #v2-live-page .mme-kpi-value { display:block; margin-top:1px; font:800 14px/1.05 Consolas,monospace; color:#ffd60a; }
+#v2-live-page .mme-score-read { margin-top:5px; border:1px solid #3a3a3c; border-radius:6px; padding:5px 6px 6px; background:rgba(255,255,255,.025); }
+#v2-live-page .mme-score-read-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#v2-live-page .mme-score-grade { font-size:12px; font-weight:950; line-height:1.15; color:#d1d1d6; white-space:nowrap; }
+#v2-live-page .mme-score-action { font-size:10px; font-weight:900; line-height:1.2; color:#d1d1d6; text-align:right; overflow-wrap:anywhere; }
+#v2-live-page .mme-score-grade.score-strong-long, #v2-live-page .mme-score-action.score-strong-long { color:#ff6961; }
+#v2-live-page .mme-score-grade.score-long, #v2-live-page .mme-score-action.score-long { color:#ff9f8f; }
+#v2-live-page .mme-score-grade.score-neutral, #v2-live-page .mme-score-action.score-neutral { color:#ffd60a; }
+#v2-live-page .mme-score-grade.score-short, #v2-live-page .mme-score-action.score-short { color:#74df8d; }
+#v2-live-page .mme-score-grade.score-strong-short, #v2-live-page .mme-score-action.score-strong-short { color:#30d158; }
+#v2-live-page .mme-score-grade.score-warning, #v2-live-page .mme-score-action.score-warning { color:#ff9f0a; }
+#v2-live-page .mme-score-scale { position:relative; height:9px; margin-top:5px; border-radius:999px; overflow:visible; background:linear-gradient(90deg,#30d158 0 25%,#2b7a3d 25% 33.33%,#3a3a3c 33.33% 66.67%,#8a3a38 66.67% 75%,#ff453a 75% 100%); border:1px solid #4a4a4d; }
+#v2-live-page .mme-score-marker { position:absolute; top:-4px; width:3px; height:15px; border-radius:2px; background:#fff; box-shadow:0 0 6px rgba(255,255,255,.75); transform:translateX(-50%); transition:left .25s ease; }
+#v2-live-page .mme-score-threshold { position:absolute; top:-2px; width:1px; height:11px; background:rgba(255,255,255,.5); }
+#v2-live-page .mme-score-threshold.t-neg15 { left:25%; }
+#v2-live-page .mme-score-threshold.t-zero { left:50%; background:rgba(255,214,10,.8); }
+#v2-live-page .mme-score-threshold.t-pos15 { left:75%; }
+#v2-live-page .mme-score-labels { position:relative; height:12px; margin-top:2px; color:#777; font:700 7px/1 Consolas,monospace; }
+#v2-live-page .mme-score-labels span { position:absolute; transform:translateX(-50%); white-space:nowrap; }
+#v2-live-page .mme-score-labels .l-neg15 { left:25%; }
+#v2-live-page .mme-score-labels .l-zero { left:50%; }
+#v2-live-page .mme-score-labels .l-pos15 { left:75%; }
+#v2-live-page .mme-score-legend { margin-top:1px; font-size:8px; color:#777; line-height:1.25; text-align:center; }
 #v2-live-page .mme-dir-bull { color:#ff6961 !important; }
 #v2-live-page .mme-dir-bear { color:#30d158 !important; }
 #v2-live-page .mme-dir-neutral { color:#d1d1d6 !important; }
@@ -5481,6 +5503,31 @@
     else if(Number.isFinite(n) && n<0) el.classList.add('mme-dir-bear');
     else el.classList.add('mme-dir-neutral');
   }
+  function sessionScoreRead(score, warningState, stickyDir){
+    const n=Number(score);
+    const w=String(warningState||'NONE').toUpperCase();
+    const sd=Number(stickyDir)||0;
+    if(w==='REVERSAL_WATCH'){
+      return {grade:'反轉監看', action:'暫停原 Session Bias｜優先等反向 Z2 確認', cls:'score-warning'};
+    }
+    if(w==='WEAKENING'){
+      return {grade:'原心態弱化', action:'停止追原方向｜等待 Z2 / Session 再確認', cls:'score-warning'};
+    }
+    if(!Number.isFinite(n)) return {grade:'等待資料', action:'暫不設方向', cls:'score-neutral'};
+    if(n>=15) return {grade:'強偏多', action:'優先只等多方 Z2 機會', cls:'score-strong-long'};
+    if(n>=10) return {grade:'偏多', action:'多方優勢形成｜仍需 Z2 確認', cls:'score-long'};
+    if(n<=-15) return {grade:'強偏空', action:'優先只等空方 Z2 機會', cls:'score-strong-short'};
+    if(n<=-10) return {grade:'偏空', action:'空方優勢形成｜仍需 Z2 確認', cls:'score-short'};
+    if(sd>0 && n>0) return {grade:'多方但未強', action:'保留多方背景｜不要因分數直接進場', cls:'score-neutral'};
+    if(sd<0 && n<0) return {grade:'空方但未強', action:'保留空方背景｜不要因分數直接進場', cls:'score-neutral'};
+    return {grade:'方向未明', action:'暫不設 Session 方向｜雙向等待 Z2', cls:'score-neutral'};
+  }
+  function scoreMarkerPct(score){
+    const n=Number(score);
+    if(!Number.isFinite(n)) return 50;
+    const clipped=Math.max(-30,Math.min(30,n));
+    return ((clipped+30)/60)*100;
+  }
   const ZH={
     FORMAL_LONG:'正式多方', FORMAL_SHORT:'正式空方', BULLISH_BIAS:'結構偏多', SLIGHT_BULLISH:'結構微多',
     BEARISH_BIAS:'結構偏空', SLIGHT_BEARISH:'結構微空', NEUTRAL:'結構中性',
@@ -5511,6 +5558,20 @@
     const score=make('div','mme-hero-kpi'); score.innerHTML='<span class="mme-kpi-label">Session Score</span><strong class="mme-kpi-value" id="mme-session-score">--</strong>'; hero.appendChild(score);
     const conf=make('div','mme-hero-kpi'); conf.innerHTML='<span class="mme-kpi-label">Session Confidence</span><strong class="mme-kpi-value" id="mme-session-confidence">--</strong>'; hero.appendChild(conf);
     band.appendChild(hero);
+
+    const scoreRead=make('div','mme-score-read','mme-score-read');
+    const scoreReadHead=make('div','mme-score-read-head');
+    scoreReadHead.appendChild(make('div','mme-score-grade score-neutral','mme-score-grade','Session Score：等待資料'));
+    scoreReadHead.appendChild(make('div','mme-score-action score-neutral','mme-score-action','操作語意：暫不設方向'));
+    scoreRead.appendChild(scoreReadHead);
+    const scoreScale=make('div','mme-score-scale');
+    scoreScale.innerHTML='<span class="mme-score-threshold t-neg15"></span><span class="mme-score-threshold t-zero"></span><span class="mme-score-threshold t-pos15"></span><span class="mme-score-marker" id="mme-score-marker" style="left:50%"></span>';
+    scoreRead.appendChild(scoreScale);
+    const scoreLabels=make('div','mme-score-labels');
+    scoreLabels.innerHTML='<span class="l-neg15">-15 強空</span><span class="l-zero">0 未明</span><span class="l-pos15">+15 強多</span>';
+    scoreRead.appendChild(scoreLabels);
+    scoreRead.appendChild(make('div','mme-score-legend',null,'±15＝歷史研究的強 Session evidence 門檻；是證據強度，不是勝率'));
+    band.appendChild(scoreRead);
 
     const quick=make('div','mme-quick-wrap');
     const qtitle=make('div','mme-quick-title');
@@ -5607,11 +5668,25 @@
     primaryEl.textContent=stickyText+(warningText?'｜⚠ '+warningText:'');
     setMmeDirClass(primaryEl,warningActive?earlyDir:sessionDir,sessionWarn);
     const scoreEl=document.getElementById('mme-session-score');
-    scoreEl.textContent=signed(sessionScore,0)+(hasSession?'｜R '+signed(sessionRecent,0):'｜Fast');
+    scoreEl.textContent=signed(sessionScore,0)+(hasSession?'｜'+sessionScoreRead(sessionScore,warningState,sessionDir).grade:'｜Fast');
     setMmeDirClass(scoreEl,sessionScore,sessionWarn);
     const confEl=document.getElementById('mme-session-confidence');
     confEl.textContent=fmt(sessionConf,0)+(hasSession && data.session_intent_confidence_label?'｜'+data.session_intent_confidence_label:(data.evidence_quality_label?'｜'+data.evidence_quality_label:''));
     setMmeDirClass(confEl,sessionDir,sessionWarn);
+
+    const scoreRead=sessionScoreRead(sessionScore,warningState,sessionDir);
+    const scoreGrade=document.getElementById('mme-score-grade');
+    if(scoreGrade){
+      scoreGrade.className='mme-score-grade '+scoreRead.cls;
+      scoreGrade.textContent='Session Score '+signed(sessionScore,0)+'｜'+scoreRead.grade;
+    }
+    const scoreAction=document.getElementById('mme-score-action');
+    if(scoreAction){
+      scoreAction.className='mme-score-action '+scoreRead.cls;
+      scoreAction.textContent=scoreRead.action;
+    }
+    const scoreMarker=document.getElementById('mme-score-marker');
+    if(scoreMarker) scoreMarker.style.left=scoreMarkerPct(sessionScore).toFixed(1)+'%';
 
     function qset(id,text,kind){
       const el=document.getElementById(id);
@@ -5651,7 +5726,7 @@
     qset('mme-q-forecast',forecastText,forecastKind);
 
     const mindMeta=document.getElementById('mme-q-mind-meta');
-    if(mindMeta) mindMeta.textContent=hasSession ? ('Sticky '+(sessionDir>0?'多':(sessionDir<0?'空':'未定'))+'｜Score '+signed(sessionScore,0)+'｜Recent '+signed(sessionRecent,0)) : ('Fast Bias '+signed(biasN,0)+'｜v0.4 fallback');
+    if(mindMeta) mindMeta.textContent=hasSession ? (scoreRead.grade+'｜'+scoreRead.action) : ('Fast Bias '+signed(biasN,0)+'｜v0.4 fallback');
     const execMeta=document.getElementById('mme-q-exec-meta');
     if(execMeta) execMeta.textContent='Exec '+signed(execN,0)+'｜看是否發動';
     const phaseMeta=document.getElementById('mme-q-phase-meta');
