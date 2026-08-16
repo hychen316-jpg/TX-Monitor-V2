@@ -1465,8 +1465,8 @@
   gap: 2px !important;
 }
 #v2-live-page .v2-c1c4-card .chip-card {
-  min-height: 39px !important;
-  padding: 2px !important;
+  min-height: 36px !important;
+  padding: 1px 2px !important;
 }
 #v2-live-page .v2-c1c4-card .chip-card .box-header {
   font-size: 8px !important;
@@ -1481,7 +1481,7 @@
 #v2-live-page .v2-c1c4-card .chip-card .chip-tag {
   font-size: 8px !important;
   line-height: 1 !important;
-  padding: 1px 3px !important;
+  padding: 0px 3px !important;
 }
 
 /* P9 / R7: tighten padding and vertical spacing, keep main numbers prominent. */
@@ -1490,7 +1490,7 @@
   gap: 1px !important;
 }
 #v2-live-page .v2-force-card .p9-container {
-  min-height: 36px !important;
+  min-height: 31px !important;
   margin-top: 1px !important;
   padding: 1px 3px !important;
 }
@@ -1522,7 +1522,7 @@
 
 /* Sniper: keep direction/consistency/components, remove excess vertical air. */
 #v2-live-page .v2-sniper-card .box {
-  padding: 4px 6px !important;
+  padding: 3px 6px !important;
   gap: 1px !important;
 }
 #v2-live-page .v2-sniper-card .box-header {
@@ -1540,8 +1540,8 @@
   line-height: 1 !important;
 }
 #v2-live-page #target-force-balance {
-  margin-top: 3px !important;
-  padding-top: 3px !important;
+  margin-top: 2px !important;
+  padding-top: 2px !important;
 }
 #v2-live-page #target-force-direction {
   font-size: 10px !important;
@@ -1556,7 +1556,7 @@
 }
 #v2-live-page .v2-target-components {
   gap: 3px !important;
-  margin-top: 3px !important;
+  margin-top: 2px !important;
   font-size: 8px !important;
 }
 #v2-live-page .v2-target-components > span {
@@ -1564,6 +1564,18 @@
 }
 #v2-live-page .v2-target-components strong {
   font-size: 9px !important;
+}
+
+
+#v2-live-page .v2-force-card .r7-inline-meta {
+  min-height: 0 !important;
+  margin-top: 0 !important;
+  line-height: 1 !important;
+}
+#v2-live-page .v2-force-card .r7-inline-meta #r7-delta-display,
+#v2-live-page .v2-force-card .r7-inline-meta #r7-thresholds-display {
+  font-size: 8px !important;
+  line-height: 1 !important;
 }
 
 /* Compact the three derived summary lines as well. */
@@ -2217,9 +2229,9 @@
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
                 <div id="r7-val" class="p9-val" style="font-size:15px; margin-top:1px;">--</div>
                 <div id="force-amount-display" style="font-size:8px; color:#888; margin-top:1px;">資金淨力：<span id="force-amount-val">--</span> 萬</div>
-                <div id="r7-delta-display" style="font-size:8px; color:#888; margin-top:1px;">(乖離: --)</div>
-                <div id="r7-thresholds-display" style="font-size:7px; color:#888; margin-top:1px; text-align:center; line-height:1; letter-spacing:0.3px;">
-                    門檻: <span id="r7-th-val">--</span>
+                <div class="r7-inline-meta" style="display:flex; align-items:center; justify-content:center; gap:7px; margin-top:1px; white-space:nowrap;">
+                    <div id="r7-delta-display" style="font-size:8px; color:#888; margin:0;">(乖離: --)</div>
+                    <div id="r7-thresholds-display" style="font-size:8px; color:#888; margin:0; text-align:center; line-height:1; letter-spacing:0.2px;">門檻: <span id="r7-th-val">--</span></div>
                 </div>
             </div>
         </div>
