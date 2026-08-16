@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-SESSION-SCORE-COMPACT-CORE-ROW">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -5088,12 +5088,6 @@
   }
 
   function updateCoreSummaries() {
-    const status = document.getElementById('v2-status-summary');
-    if (status) {
-      status.textContent = 'TX ' + textOf('price') + ' ｜ Update: ' + textOf('update-time').replace('Update: ', '') +
-        ' ｜ OCF ' + textOf('ocf-model-status', '等待');
-    }
-
     const cSummary = document.getElementById('core-c1c4-summary');
     if (cSummary) {
       cSummary.textContent =
@@ -5245,16 +5239,7 @@
       }
     }
 
-    /* 2. 恢復「盤中指揮摘要」 */
-    const statusCard = card('盤中指揮摘要', '所有重要即時資訊集中於本頁', 'v2-status-card');
-    const statusValue = el('div', 'v2-summary-value', 'v2-status-summary');
-    statusValue.style.fontSize = '12px';
-    statusValue.style.color = '#64d2ff';
-    statusValue.textContent = '等待即時資料';
-    statusCard.appendChild(statusValue);
-    liveStack.appendChild(statusCard);
-
-    /* 4. 中段三核心模組 (C1~C4, P9/R7, 狙擊重鎮) */
+    /* 2. 中段三核心模組 (C1~C4, P9/R7, 狙擊重鎮) */
     const coreGrid = el('div', 'v2-core-grid');
     liveStack.appendChild(coreGrid);
 
