@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10-HMF-FORMAL-v1.2-LAGSAFE-SLOW-FAST-PRET1-SHADOW-BOTTOM-APPEND">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10-HMF-FORMAL-v1.2-LAGSAFE-SLOW-FAST-PRET1-SHADOW-BOTTOM-APPEND-MME-v0.5-SESSION-INTENT">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -5312,8 +5312,8 @@
 </script>
 
 
-<style id="mme-v04-style">
-/* === MME v0.4 Phase-Aware Forecast Shadow UI: presentation-only add-on for Cockpit V10 === */
+<style id="mme-v05-style">
+/* === MME v0.5 Session Intent Memory + Phase Forecast Shadow UI: presentation-only add-on for Cockpit V10 === */
 #v2-live-page .mme-live-band {
   margin: 5px 0 4px;
   padding: 7px 8px;
@@ -5359,6 +5359,7 @@
 #v2-live-page .mme-quick-card.q-warn strong { color:#ffb340; }
 #v2-live-page .mme-quick-card.q-neutral strong { color:#d1d1d6; }
 #v2-live-page .mme-quick-summary { margin-top:4px; padding:3px 5px; border-left:3px solid #64d2ff; background:rgba(100,210,255,.04); font-size:9px; color:#c7c7cc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#v2-live-page .mme-session-reason { margin-top:4px; padding:4px 5px; border-left:3px solid #bf5af2; background:rgba(191,90,242,.045); color:#9a9aa0; font-size:8px; line-height:1.3; overflow-wrap:anywhere; }
 #v2-live-page .mme-evidence-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin-top:6px; }
 #v2-live-page .mme-evidence { padding:4px 5px; border:1px solid #2c2c2e; border-radius:5px; background:rgba(255,255,255,.025); min-width:0; }
 #v2-live-page .mme-evidence span { display:block; font-size:8px; color:#777; font-weight:700; }
@@ -5423,7 +5424,7 @@
   #v2-live-page .mme-detail-body { padding-top:5px; }
 
 </style>
-<script id="mme-v04-script">
+<script id="mme-v05-script">
 (function installMMEFirebasePanel(){
   'use strict';
   const MME_REALTIME_NODE = 'monitor_realtime/mme';
@@ -5462,6 +5463,15 @@
     if(s.includes('SHORT') || s.includes('BEAR_SQUEEZE')) return 'mme-bear';
     return '';
   }
+  function sessionBandClass(data){
+    const s=String((data&&data.session_intent_state)||'').toUpperCase();
+    if(s.includes('REVERSAL_CANDIDATE')) return 'mme-risk';
+    if(s.includes('TWO_SIDED')) return 'mme-harvest';
+    const d=Number(data&&data.session_intent_direction);
+    if(Number.isFinite(d) && d>0) return 'mme-bull';
+    if(Number.isFinite(d) && d<0) return 'mme-bear';
+    return stateClass(data && (data.primary_state || data.regime_state));
+  }
   function setMmeDirClass(el, score, warn){
     if(!el) return;
     el.classList.remove('mme-dir-bull','mme-dir-bear','mme-dir-neutral','mme-dir-warn');
@@ -5478,7 +5488,10 @@
     STATIC:'結構牆靜態', MIXED:'牆位混合', RELOCATING_UP:'結構上移', RELOCATING_DOWN:'結構下移',
     SC_RELOCATING_UP:'SC上移', SP_RELOCATING_DOWN:'SP下移', OPENING_MIGRATION:'開盤遷移', WARMUP:'暖機',
     INSIDE:'Trigger內', ABOVE_BULL_TEST:'測試嘎空', ABOVE_BULL_ACCEPTED:'嘎空接受3m', ABOVE_BULL_STRONG:'嘎空接受10m+',
-    BELOW_BEAR_TEST:'測試殺多', BELOW_BEAR_ACCEPTED:'殺多接受3m', BELOW_BEAR_STRONG:'殺多接受10m+'
+    BELOW_BEAR_TEST:'測試殺多', BELOW_BEAR_ACCEPTED:'殺多接受3m', BELOW_BEAR_STRONG:'殺多接受10m+',
+    SESSION_UNCLEAR:'整盤心態未定', SESSION_LONG:'整盤主力偏多', SESSION_SHORT:'整盤主力偏空',
+    SESSION_TWO_SIDED:'整盤雙向/震盪', SESSION_REVERSAL_CANDIDATE:'整盤反轉候選',
+    SESSION_REVERSAL_CONFIRMED:'整盤反轉確認'
   };
   function zh(v){ return ZH[String(v||'')] || String(v||'--'); }
 
@@ -5488,23 +5501,23 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.4 Phase-Aware Forecast Shadow・Firebase｜多紅空綠'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5 Session Intent Memory + Phase Forecast Shadow・Firebase｜整盤紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
     const hero=make('div','mme-hero');
-    hero.appendChild(make('div','mme-primary','mme-primary','等待 MME 資料'));
-    const bias=make('div','mme-hero-kpi'); bias.innerHTML='<span class="mme-kpi-label">Mainforce Bias</span><strong class="mme-kpi-value" id="mme-bias">--</strong>'; hero.appendChild(bias);
-    const conf=make('div','mme-hero-kpi'); conf.innerHTML='<span class="mme-kpi-label">Evidence Quality</span><strong class="mme-kpi-value" id="mme-confidence">--</strong>'; hero.appendChild(conf);
+    hero.appendChild(make('div','mme-primary','mme-primary','等待 Session Intent'));
+    const score=make('div','mme-hero-kpi'); score.innerHTML='<span class="mme-kpi-label">Session Score</span><strong class="mme-kpi-value" id="mme-session-score">--</strong>'; hero.appendChild(score);
+    const conf=make('div','mme-hero-kpi'); conf.innerHTML='<span class="mme-kpi-label">Session Confidence</span><strong class="mme-kpi-value" id="mme-session-confidence">--</strong>'; hero.appendChild(conf);
     band.appendChild(hero);
 
     const quick=make('div','mme-quick-wrap');
     const qtitle=make('div','mme-quick-title');
-    qtitle.innerHTML='<strong>實戰四步｜一眼判讀</strong><span>心態 → 力道 → 階段 → 30M</span>';
+    qtitle.innerHTML='<strong>實戰四步｜一眼判讀</strong><span>整盤心態 → 即時力道 → 階段 → 30M</span>';
     quick.appendChild(qtitle);
     const qgrid=make('div','mme-quick-grid');
     [
-      ['① 心態','mme-q-mind','mme-q-mind-meta','看大結構'],
+      ['① 整盤心態','mme-q-mind','mme-q-mind-meta','看 Session Intent'],
       ['② 力道','mme-q-exec','mme-q-exec-meta','看是否發動'],
       ['③ 階段','mme-q-phase','mme-q-phase-meta','看能不能追'],
       ['④ 30M','mme-q-forecast','mme-q-forecast-meta','看未來風險']
@@ -5519,12 +5532,19 @@
 
     const detail=make('details','mme-detail-toggle','mme-detail-toggle');
     const detailSummary=make('summary','mme-detail-summary',null);
-    detailSummary.innerHTML='<span>MME 詳細資訊</span><small>STRUCTURE / EXECUTION / WALL / FORECAST / RISK</small>';
+    detailSummary.innerHTML='<span>MME 詳細資訊</span><small>SESSION / FAST / STRUCTURE / EXECUTION / FORECAST / RISK</small>';
     detail.appendChild(detailSummary);
     const detailBody=make('div','mme-detail-body');
 
+    const sgrid=make('div','mme-evidence-grid');
+    [['SESSION SCORE','mme-session-score-detail'],['RECENT SCORE','mme-session-recent'],['SESSION CONF','mme-session-conf-detail'],['AGE / FLIPS','mme-session-age-flips']].forEach(function(x){
+      const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; sgrid.appendChild(c);
+    });
+    detailBody.appendChild(sgrid);
+    detailBody.appendChild(make('div','mme-session-reason','mme-session-reason','Session Intent：等待資料'));
+
     const grid=make('div','mme-evidence-grid');
-    [['STRUCTURE','mme-structure'],['EXECUTION','mme-execution'],['WALL / RELOCATION','mme-wall'],['ACCEPTANCE','mme-acceptance']].forEach(function(x){
+    [['FAST PRIMARY','mme-fast-primary'],['FAST BIAS','mme-fast-bias'],['STRUCTURE','mme-structure'],['EXECUTION','mme-execution'],['WALL / RELOCATION','mme-wall'],['ACCEPTANCE','mme-acceptance']].forEach(function(x){
       const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; grid.appendChild(c);
     });
     detailBody.appendChild(grid);
@@ -5560,16 +5580,25 @@
     buildPanel();
     const band=document.getElementById('mme-live-band');
     if(!band) return;
-    band.className='mme-live-band '+stateClass(data.primary_state || data.regime_state);
+    const hasSession=(data.session_intent_state!==undefined && String(data.session_intent_state||'').trim()!=='');
+    const sessionState=hasSession ? String(data.session_intent_state||'SESSION_UNCLEAR') : String(data.primary_state||data.regime_state||'');
+    const fallbackDir=(String(data.primary_state||data.regime_state||'').toUpperCase().includes('LONG') ? 1 : (String(data.primary_state||data.regime_state||'').toUpperCase().includes('SHORT') ? -1 : Number(data.mindset_bias)||0));
+    const sessionDir=hasSession ? (Number(data.session_intent_direction)||0) : fallbackDir;
+    const sessionScore=hasSession ? Number(data.session_intent_score) : Number(data.mindset_bias);
+    const sessionRecent=hasSession ? Number(data.session_intent_recent_score) : Number(data.mindset_bias);
+    const sessionConf=hasSession ? Number(data.session_intent_confidence) : Number(data.evidence_quality!==undefined?data.evidence_quality:data.confidence);
+    const sessionWarn=String(sessionState).toUpperCase().includes('REVERSAL_CANDIDATE');
+
+    band.className='mme-live-band '+(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state));
     const primaryEl=document.getElementById('mme-primary');
-    primaryEl.textContent=data.primary_state_zh || data.primary_state || 'MME等待判讀';
-    const primaryDir=(String(data.primary_state||data.regime_state||'').toUpperCase().includes('LONG') ? 1 : (String(data.primary_state||data.regime_state||'').toUpperCase().includes('SHORT') ? -1 : Number(data.mindset_bias)||0));
-    setMmeDirClass(primaryEl,primaryDir,false);
-    const biasEl=document.getElementById('mme-bias');
-    biasEl.textContent=signed(data.mindset_bias,0)+'｜'+(data.mindset_bias_label||'');
-    setMmeDirClass(biasEl,Number(data.mindset_bias)||0,false);
-    const eq=(data.evidence_quality!==undefined?data.evidence_quality:data.confidence);
-    document.getElementById('mme-confidence').textContent=fmt(eq,0)+(data.evidence_quality_label?'｜'+data.evidence_quality_label:'');
+    primaryEl.textContent=hasSession ? (data.session_intent_state_zh || zh(sessionState)) : (data.primary_state_zh || data.primary_state || 'MME等待判讀');
+    setMmeDirClass(primaryEl,sessionDir,sessionWarn);
+    const scoreEl=document.getElementById('mme-session-score');
+    scoreEl.textContent=signed(sessionScore,0)+(hasSession?'｜R '+signed(sessionRecent,0):'｜Fast');
+    setMmeDirClass(scoreEl,sessionScore,sessionWarn);
+    const confEl=document.getElementById('mme-session-confidence');
+    confEl.textContent=fmt(sessionConf,0)+(hasSession && data.session_intent_confidence_label?'｜'+data.session_intent_confidence_label:(data.evidence_quality_label?'｜'+data.evidence_quality_label:''));
+    setMmeDirClass(confEl,sessionDir,sessionWarn);
 
     function qset(id,text,kind){
       const el=document.getElementById(id);
@@ -5578,10 +5607,12 @@
       const card=el.closest('.mme-quick-card');
       if(card) card.className='mme-quick-card '+(kind||'q-neutral');
     }
-    const primaryText=data.primary_state_zh || data.primary_state || '等待判讀';
+    const primaryText=hasSession ? (data.session_intent_state_zh || zh(sessionState)) : (data.primary_state_zh || data.primary_state || '等待判讀');
     const biasN=Number(data.mindset_bias)||0;
     let mindKind='q-neutral';
-    if(biasN>=10) mindKind='q-bull'; else if(biasN<=-10) mindKind='q-bear';
+    if(sessionWarn) mindKind='q-warn';
+    else if(String(sessionState).toUpperCase().includes('TWO_SIDED')) mindKind='q-warn';
+    else if(sessionDir>0) mindKind='q-bull'; else if(sessionDir<0) mindKind='q-bear';
     qset('mme-q-mind',primaryText,mindKind);
 
     const execText=zh(data.execution_state);
@@ -5600,11 +5631,13 @@
     const fdirN=Number(data.forecast_direction)||0;
     const fstateQuick=data.forecast_state_zh || data.forecast_state || '暫無可驗證方向優勢';
     const fdirQuick=String(data.forecast_direction_label||'').trim();
+    const fstateU=String(data.forecast_state||'').toUpperCase();
     const forecastText=(fdirQuick && fdirN!==0 ? fdirQuick+'｜' : '')+fstateQuick;
-    qset('mme-q-forecast',forecastText,fdirN>0?'q-bull':(fdirN<0?'q-bear':'q-neutral'));
+    const forecastKind=fdirN>0?'q-bull':(fdirN<0?'q-bear':((fstateU.includes('MATURE_PULLBACK')||fstateU.includes('CHASE_RISK')||fstateU.includes('MATURE_EXTENSION'))?'q-warn':'q-neutral'));
+    qset('mme-q-forecast',forecastText,forecastKind);
 
     const mindMeta=document.getElementById('mme-q-mind-meta');
-    if(mindMeta) mindMeta.textContent='Bias '+signed(biasN,0)+'｜看大結構';
+    if(mindMeta) mindMeta.textContent=hasSession ? ('Score '+signed(sessionScore,0)+'｜Recent '+signed(sessionRecent,0)+'｜Conf '+fmt(sessionConf,0)) : ('Fast Bias '+signed(biasN,0)+'｜v0.4 fallback');
     const execMeta=document.getElementById('mme-q-exec-meta');
     if(execMeta) execMeta.textContent='Exec '+signed(execN,0)+'｜看是否發動';
     const phaseMeta=document.getElementById('mme-q-phase-meta');
@@ -5616,7 +5649,23 @@
     if(forecastMeta) forecastMeta.textContent='Score '+fmt(data.forecast_confidence,0)+'｜看未來風險';
 
     const qsum=document.getElementById('mme-q-summary');
-    if(qsum) qsum.textContent='一句話：'+primaryText+'｜'+execText+'｜'+phaseText+'｜'+forecastText;
+    if(qsum) qsum.textContent='一句話：整盤 '+primaryText+'｜即時 '+execText+'｜'+phaseText+'｜'+forecastText;
+
+    const sScoreDetail=document.getElementById('mme-session-score-detail');
+    if(sScoreDetail){ sScoreDetail.textContent=signed(sessionScore,1); setMmeDirClass(sScoreDetail,sessionScore,sessionWarn); }
+    const sRecent=document.getElementById('mme-session-recent');
+    if(sRecent){ sRecent.textContent=signed(sessionRecent,1); setMmeDirClass(sRecent,sessionRecent,sessionWarn); }
+    const sConfDetail=document.getElementById('mme-session-conf-detail');
+    if(sConfDetail) sConfDetail.textContent=fmt(sessionConf,0)+(hasSession && data.session_intent_confidence_label?'｜'+data.session_intent_confidence_label:'');
+    const sAgeFlips=document.getElementById('mme-session-age-flips');
+    if(sAgeFlips) sAgeFlips.textContent=hasSession ? (dur(Number(data.session_intent_age_seconds)||0)+'｜Flip '+fmt(data.session_intent_flip_count,0)) : 'v0.4 fallback';
+    const sReason=document.getElementById('mme-session-reason');
+    if(sReason) sReason.textContent=hasSession ? ('Session Intent：'+(data.session_intent_reason||'--')+'｜EQ '+fmt(data.session_intent_evidence_quality,0)) : 'Session Intent：尚未收到 v0.5 欄位，顯示 v0.4 fallback';
+
+    const fastPrimary=document.getElementById('mme-fast-primary');
+    if(fastPrimary){ fastPrimary.textContent=data.primary_state_zh || data.primary_state || '--'; setMmeDirClass(fastPrimary,biasN,false); }
+    const fastBias=document.getElementById('mme-fast-bias');
+    if(fastBias){ fastBias.textContent=signed(biasN,0)+'｜'+(data.mindset_bias_label||''); setMmeDirClass(fastBias,biasN,false); }
 
     const structureEl=document.getElementById('mme-structure');
     structureEl.textContent=zh(data.structural_state)+' '+signed(data.structural_score,0);
@@ -5656,8 +5705,9 @@
     const fresh=document.getElementById('mme-freshness');
     if(fresh){
       const pa=Number(data.primary_state_age_seconds)||0, fa=Number(data.formal_direction_age_seconds)||0;
+      const sa=Number(data.session_intent_age_seconds)||0;
       const ext=Number(data.trigger_extension_points);
-      fresh.textContent='P '+dur(pa)+' / F '+dur(fa)+(Number.isFinite(ext)?'｜Ext '+signed(ext,0)+'pt':'');
+      fresh.textContent=(hasSession?'S '+dur(sa)+' / ':'')+'P '+dur(pa)+' / F '+dur(fa)+(Number.isFinite(ext)?'｜Ext '+signed(ext,0)+'pt':'');
     }
     const br=Math.max(0,Math.min(100,Number(data.bull_trap_risk)||0));
     const sr=Math.max(0,Math.min(100,Number(data.bear_trap_risk)||0));
