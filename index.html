@@ -1,3 +1,4 @@
+<!-- Z2_EXEC_COLLAPSE_FIX4_CSS_CHECKBOX_20260816 -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -468,6 +469,13 @@
     #dashboard .ocf-exec-summary-chip.tone-warn { color:#ffd60a; border-color:rgba(255,214,10,.55); background:rgba(255,214,10,.08); }
     #dashboard .ocf-exec-summary-chip.tone-danger { color:#ff453a; border-color:rgba(255,69,58,.55); background:rgba(255,69,58,.08); }
     #dashboard .ocf-exec-summary-chip.tone-neutral { color:#aaa; }
+    #dashboard .ocf-exec-detail-check {
+      position:absolute !important;
+      width:1px !important;
+      height:1px !important;
+      opacity:0 !important;
+      pointer-events:none !important;
+    }
     #dashboard .ocf-exec-detail-summary::after {
       content:'展開 ▾';
       flex:0 0 auto;
@@ -476,12 +484,11 @@
       font-weight:800;
       white-space:nowrap;
     }
-    #dashboard .ocf-exec-detail-toggle.is-open .ocf-exec-detail-summary::after { content:'收合 ▴'; }
-    #dashboard .ocf-exec-detail-toggle.is-open .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
+    #dashboard #ocf-exec-detail-check:checked + .ocf-exec-detail-summary::after { content:'收合 ▴'; }
+    #dashboard #ocf-exec-detail-check:checked + .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
     #dashboard .ocf-exec-detail-body { padding:0 4px 4px; }
-    #dashboard .ocf-exec-detail-body[hidden] { display:none !important; }
-    #dashboard .ocf-exec-detail-toggle:not(.is-open) .ocf-exec-detail-body { display:none !important; }
-    #dashboard .ocf-exec-detail-toggle.is-open .ocf-exec-detail-body { display:block !important; }
+    #dashboard #ocf-exec-detail-check:not(:checked) ~ .ocf-exec-detail-body { display:none !important; }
+    #dashboard #ocf-exec-detail-check:checked ~ .ocf-exec-detail-body { display:block !important; }
     #dashboard .ocf-exec-detail-body > .ocf-transition-band,
     #dashboard .ocf-exec-detail-body > .ocf-entry-guard-band,
     #dashboard .ocf-exec-detail-body > .ocf-pullback-band,
@@ -2032,7 +2039,8 @@
             </div>
 
             <div id="ocf-exec-detail-toggle" class="ocf-exec-detail-toggle">
-                <button id="ocf-exec-detail-toggle-btn" type="button" class="ocf-exec-detail-summary" aria-expanded="false" aria-controls="ocf-exec-detail-body" onclick="var b=document.getElementById('ocf-exec-detail-body'),r=document.getElementById('ocf-exec-detail-toggle'),o=this.getAttribute('aria-expanded')!=='true';this.setAttribute('aria-expanded',o?'true':'false');if(r)r.classList.toggle('is-open',o);if(b){b.hidden=!o;b.style.setProperty('display',o?'block':'none','important');}">
+                <input id="ocf-exec-detail-check" class="ocf-exec-detail-check" type="checkbox" aria-controls="ocf-exec-detail-body">
+                <label id="ocf-exec-detail-toggle-btn" for="ocf-exec-detail-check" class="ocf-exec-detail-summary">
                     <span class="ocf-exec-detail-heading">Z2 執行細節</span>
                     <span class="ocf-exec-summary-chips" aria-label="Transition Guard Pullback Wave 狀態摘要">
                         <span id="ocf-transition-summary-chip" class="ocf-exec-summary-chip tone-ok"><b>T</b><strong id="ocf-transition-summary">VALID</strong></span>
@@ -2040,8 +2048,8 @@
                         <span id="ocf-pullback-summary-chip" class="ocf-exec-summary-chip tone-neutral"><b>P</b><strong id="ocf-pullback-summary">IDLE</strong></span>
                         <span id="ocf-wave-summary-chip" class="ocf-exec-summary-chip tone-info"><b>W</b><strong id="ocf-wave-summary">FORMAL</strong></span>
                     </span>
-                </button>
-                <div id="ocf-exec-detail-body" class="ocf-exec-detail-body" hidden style="display:none !important;">
+                </label>
+                <div id="ocf-exec-detail-body" class="ocf-exec-detail-body">
                     <div id="ocf-transition-band" class="ocf-transition-band transition-valid">
                         <div class="ocf-transition-main">
                             <span class="ocf-transition-label">Structural Transition v1.1 Latched｜方向延遲監控</span>
