@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10-HMF-FORMAL-v1.2-LAGSAFE-SLOW-FAST-PRET1-SHADOW-BOTTOM-APPEND-MME-v0.5.1-SESSION-SCORE-QUICKREAD">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-SESSION-SCORE-COMPACT-CORE-ROW">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -1435,6 +1435,146 @@
 }
 
 
+
+
+/* =============================================================
+   Dashboard V10.1: compact second-row core cards
+   C1-C4 / P9-R7 / Sniper only. Presentation-only.
+   Goal: reclaim vertical space without removing any live fields.
+   ============================================================= */
+#v2-live-page .v2-core-grid {
+  gap: 4px !important;
+}
+
+#v2-live-page .v2-core-grid > .v2-section-card {
+  padding: 4px 6px !important;
+}
+
+#v2-live-page .v2-core-grid > .v2-section-card > .v2-card-title {
+  margin-bottom: 1px !important;
+  line-height: 1.15 !important;
+}
+
+#v2-live-page .v2-core-grid > .v2-section-card > .v2-card-title small {
+  font-size: 7px !important;
+  line-height: 1.1 !important;
+}
+
+/* C1-C4: reduce 2x2 cell height, preserve values and status chips. */
+#v2-live-page .v2-c1c4-card .chip-grid {
+  gap: 2px !important;
+}
+#v2-live-page .v2-c1c4-card .chip-card {
+  min-height: 39px !important;
+  padding: 2px !important;
+}
+#v2-live-page .v2-c1c4-card .chip-card .box-header {
+  font-size: 8px !important;
+  margin-bottom: 1px !important;
+  line-height: 1.05 !important;
+}
+#v2-live-page .v2-c1c4-card .chip-card .big-val {
+  font-size: 17px !important;
+  line-height: 1 !important;
+  margin: 0 auto !important;
+}
+#v2-live-page .v2-c1c4-card .chip-card .chip-tag {
+  font-size: 8px !important;
+  line-height: 1 !important;
+  padding: 1px 3px !important;
+}
+
+/* P9 / R7: tighten padding and vertical spacing, keep main numbers prominent. */
+#v2-live-page .v2-force-card .battle-box {
+  padding: 3px 6px !important;
+  gap: 1px !important;
+}
+#v2-live-page .v2-force-card .p9-container {
+  min-height: 36px !important;
+  margin-top: 1px !important;
+  padding: 1px 3px !important;
+}
+#v2-live-page .v2-force-card .p9-label,
+#v2-live-page .v2-force-card .box-header {
+  font-size: 9px !important;
+  line-height: 1.05 !important;
+}
+#v2-live-page .v2-force-card #p9-val,
+#v2-live-page .v2-force-card #r7-val {
+  font-size: 18px !important;
+  line-height: 1 !important;
+}
+#v2-live-page .v2-force-card #p9-slope-label,
+#v2-live-page .v2-force-card #p9-thresholds-display,
+#v2-live-page .v2-force-card #r7-thresholds-display,
+#v2-live-page .v2-force-card #r7-delta-display {
+  font-size: 8px !important;
+  line-height: 1.05 !important;
+}
+#v2-live-page .v2-force-card #force-amount-display {
+  font-size: 9px !important;
+  line-height: 1.05 !important;
+}
+#v2-live-page .v2-force-card #force-amount-val {
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+
+/* Sniper: keep direction/consistency/components, remove excess vertical air. */
+#v2-live-page .v2-sniper-card .box {
+  padding: 4px 6px !important;
+  gap: 1px !important;
+}
+#v2-live-page .v2-sniper-card .box-header {
+  font-size: 9px !important;
+  margin-bottom: 1px !important;
+  line-height: 1.05 !important;
+}
+#v2-live-page .v2-sniper-card .v2-target-cell {
+  padding: 1px 0 !important;
+}
+#v2-live-page .v2-sniper-card #bull-target-val,
+#v2-live-page .v2-sniper-card #bear-target-val,
+#v2-live-page .v2-sniper-card #target-net-force {
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+#v2-live-page #target-force-balance {
+  margin-top: 3px !important;
+  padding-top: 3px !important;
+}
+#v2-live-page #target-force-direction {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+}
+#v2-live-page #target-consistency-pct {
+  font-size: 9px !important;
+}
+#v2-live-page .v2-target-consistency-track {
+  height: 5px !important;
+  margin-top: 3px !important;
+}
+#v2-live-page .v2-target-components {
+  gap: 3px !important;
+  margin-top: 3px !important;
+  font-size: 8px !important;
+}
+#v2-live-page .v2-target-components > span {
+  padding: 2px 4px !important;
+}
+#v2-live-page .v2-target-components strong {
+  font-size: 9px !important;
+}
+
+/* Compact the three derived summary lines as well. */
+#v2-live-page #core-c1c4-summary,
+#v2-live-page #p9-r7-resonance,
+#v2-live-page #target-force-summary {
+  margin-top: 1px !important;
+  font-size: 9px !important;
+  line-height: 1.1 !important;
+  min-height: 0 !important;
+}
 
 /* =============================================================
    Dashboard V10: OCF cockpit + right-side auxiliary rail
