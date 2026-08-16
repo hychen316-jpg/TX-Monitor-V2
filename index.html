@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -480,6 +480,7 @@
     #dashboard .ocf-exec-detail-toggle[open] > .ocf-exec-detail-summary { border-bottom:1px dashed #3a3a3c; }
     #dashboard .ocf-exec-detail-body { padding:0 4px 4px; }
     #dashboard .ocf-exec-detail-toggle:not([open]) > .ocf-exec-detail-body { display:none !important; }
+    #dashboard .ocf-exec-detail-body > .ocf-state-matrix { margin-top:4px; }
     #dashboard .ocf-exec-detail-body > .ocf-transition-band,
     #dashboard .ocf-exec-detail-body > .ocf-entry-guard-band,
     #dashboard .ocf-exec-detail-body > .ocf-pullback-band,
@@ -5398,18 +5399,25 @@
     }
 
 
-    /* V10 cockpit composition: move existing nodes only; keep their IDs/update bindings. */
+    /* V10 cockpit composition: keep the four execution bands INSIDE the collapsible body.
+       appendChild() moves nodes, so placing stateMatrix directly in ocfPanel would empty the
+       details body and make the collapse control appear broken. Keep IDs/update bindings intact. */
     const v10TransitionBand = document.getElementById('ocf-transition-band');
     const v10GuardBand = document.getElementById('ocf-entry-guard-band');
     const v10PullbackBand = document.getElementById('ocf-pullback-band');
     const v10WaveBand = document.getElementById('ocf-wave-band');
+    const v10ExecBody = document.getElementById('ocf-exec-detail-body');
     const v10DefenseGrid = ocfPanel ? ocfPanel.querySelector('.ocf-defense-grid') : null;
     if (ocfPanel && v10DefenseGrid) {
-      const stateMatrix = el('div', 'ocf-state-matrix');
+      let stateMatrix = ocfPanel.querySelector('.ocf-state-matrix');
+      if (!stateMatrix) stateMatrix = el('div', 'ocf-state-matrix');
       [v10TransitionBand, v10GuardBand, v10PullbackBand, v10WaveBand].forEach(function(node) {
         if (node) stateMatrix.appendChild(node);
       });
-      if (stateMatrix.childNodes.length) ocfPanel.insertBefore(stateMatrix, v10DefenseGrid);
+      if (stateMatrix.childNodes.length) {
+        if (v10ExecBody) v10ExecBody.appendChild(stateMatrix);
+        else ocfPanel.insertBefore(stateMatrix, v10DefenseGrid);
+      }
     }
 
     /* Keep the formal decision concise; raw diagnostics remain available on demand. */
@@ -5912,8 +5920,10 @@
     detail.appendChild(detailBody);
     band.appendChild(detail);
 
+    const execDetail=ocf.querySelector('#ocf-exec-detail-toggle');
     const matrix=ocf.querySelector('.ocf-state-matrix');
-    if(matrix) ocf.insertBefore(band,matrix);
+    if(execDetail && execDetail.parentNode===ocf) ocf.insertBefore(band,execDetail);
+    else if(matrix && matrix.parentNode===ocf) ocf.insertBefore(band,matrix);
     else {
       const cmd=ocf.querySelector('.ocf-command-grid');
       if(cmd && cmd.nextSibling) ocf.insertBefore(band,cmd.nextSibling); else ocf.appendChild(band);
