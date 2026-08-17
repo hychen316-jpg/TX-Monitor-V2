@@ -5722,7 +5722,6 @@
 #v2-live-page .mme-positioning-context.active { display:grid; }
 #v2-live-page .mme-positioning-card { min-width:0; padding:4px 5px; border:1px solid #3a3a3c; border-radius:5px; background:#161618; }
 #v2-live-page .mme-positioning-card span { display:block; color:#777; font-size:7px; font-weight:800; line-height:1.2; }
-#v2-live-page .mme-positioning-card .mme-pos-key { display:inline; margin-left:4px; color:#d1d1d6; font-size:7px; font-weight:900; line-height:1.2; }
 #v2-live-page .mme-positioning-card strong { display:block; margin-top:2px; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; overflow-wrap:anywhere; }
 #v2-live-page .mme-positioning-card small { display:block; margin-top:2px; color:#777; font-size:7px; line-height:1.25; overflow-wrap:anywhere; }
 #v2-live-page .mme-positioning-card.pos-bull { border-color:rgba(255,69,58,.48); background:rgba(255,69,58,.045); }
@@ -5890,10 +5889,6 @@
     const card=e&&e.closest('.mme-positioning-card');
     if(card) card.className='mme-positioning-card '+positioningTone(direction,state);
   }
-  function setPositioningKey(id, text){
-    const k=document.getElementById(id.replace('-main','-key'));
-    if(k) k.textContent='｜'+(text||'--');
-  }
   function isPositioningActive(data){
     const b=String((data&&data.positioning_shadow_build)||'');
     const st=String((data&&data.positioning_lifecycle_state)||'').toUpperCase();
@@ -5992,7 +5987,7 @@
       ['REALIZATION','mme-pos-real-main','mme-pos-real-meta']
     ].forEach(function(x){
       const c=make('div','mme-positioning-card');
-      c.innerHTML='<span>'+x[0]+'<b class="mme-pos-key" id="'+x[1].replace('-main','-key')+'">｜--</b></span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">--</small>';
+      c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">--</small>';
       posCtx.appendChild(c);
     });
     band.appendChild(posCtx);
@@ -6172,24 +6167,19 @@
       const cpReason=String(data.day_positioning_checkpoint_reason||'');
       const dayInProgress=pst.indexOf('DAY_')===0 && cpReason.indexOf('DAY_SESSION_IN_PROGRESS_')===0;
       const cpText=dayInProgress?'日盤進行中｜13:45後建立跨盤 Prior':(cpReason||'--');
-      setPositioningCard('mme-pos-day-main', data.positioning_lifecycle_state_zh||zh(pst), (data.day_positioning_direction_label||'未定')+'｜SPA '+(spa?fmt(spa,0):'--')+'｜'+cpText, pdir, pst);
-      setPositioningKey('mme-pos-day-main','SPA '+(spa?fmt(spa,0):'--'));
+      setPositioningCard('mme-pos-day-main', (data.positioning_lifecycle_state_zh||zh(pst))+'｜SPA '+(spa?fmt(spa,0):'--'), (data.day_positioning_direction_label||'未定')+'｜'+cpText, pdir, pst);
       if(dayInProgress){
-        setPositioningCard('mme-pos-disloc-main', 'LIVE '+(data.day_positioning_close_dislocation_class||'UNAVAILABLE'), '目前 '+signed(nowD,0)+'pt｜Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--')+'｜非 Day Close', pdir, String(data.day_positioning_close_dislocation_class||''));
-        setPositioningKey('mme-pos-disloc-main','目前 '+signed(nowD,0)+'pt');
+        setPositioningCard('mme-pos-disloc-main', 'LIVE '+(data.day_positioning_close_dislocation_class||'UNAVAILABLE')+'｜目前 '+signed(nowD,0)+'pt', 'Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--')+'｜非 Day Close', pdir, String(data.day_positioning_close_dislocation_class||''));
       }else{
-        setPositioningCard('mme-pos-disloc-main', (data.day_positioning_close_dislocation_class||'UNAVAILABLE'), 'Day Close '+signed(closeD,0)+'pt｜Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--'), pdir, String(data.day_positioning_close_dislocation_class||''));
-        setPositioningKey('mme-pos-disloc-main','Day Close '+signed(closeD,0)+'pt');
+        setPositioningCard('mme-pos-disloc-main', (data.day_positioning_close_dislocation_class||'UNAVAILABLE')+'｜Day Close '+signed(closeD,0)+'pt', 'Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--'), pdir, String(data.day_positioning_close_dislocation_class||''));
       }
       const anchorText=Number(data.night_anchor_reclaimed)?('Anchor reclaimed '+String(data.night_anchor_reclaim_time||'').slice(-8)):'Anchor pending';
       if(dayInProgress){
-        setPositioningCard('mme-pos-repair-main','日盤尚未收盤','13:45後才允許 Night Prior｜目前不做 Repair 判定',pdir,pst);
-        setPositioningKey('mme-pos-repair-main','等待13:45');
+        setPositioningCard('mme-pos-repair-main','日盤尚未收盤｜等待13:45','13:45後才允許 Night Prior｜目前不做 Repair 判定',pdir,pst);
       }else{
-        setPositioningCard('mme-pos-repair-main', data.night_positioning_open_price?('Open '+signed(openD,0)+' → Now '+signed(nowD,0)+'pt'):'等待夜盤', anchorText+'｜'+(data.night_positioning_current_dislocation_class||'--'), pdir, pst);
-        setPositioningKey('mme-pos-repair-main',data.night_positioning_open_price?('Open '+signed(openD,0)+'→Now '+signed(nowD,0)+'pt'):'等待夜盤');
+        setPositioningCard('mme-pos-repair-main', data.night_positioning_open_price?((data.night_positioning_current_dislocation_class||'NIGHT')+'｜Open '+signed(openD,0)+' → Now '+signed(nowD,0)+'pt'):'等待夜盤｜Open --', anchorText, pdir, pst);
       }
-      let rMain=dayInProgress?'等待日盤收盤':'Pending';
+      let rMain=dayInProgress?('等待日盤收盤｜Fav '+(fav?fmt(fav,0):'--')):('Pending｜Fav '+(fav?fmt(fav,0):'--'));
       let rMeta=dayInProgress?'日盤仍在形成 favorable / adverse extremes｜非下單訊號':'目標＝Day post-lock favorable extreme｜非下單訊號';
       let rState=pst;
       if(Number(data.night_realization_event)){
@@ -6202,7 +6192,6 @@
         rState='NIGHT_HARVEST_THEN_REVERSAL';
       }
       setPositioningCard('mme-pos-real-main',rMain,rMeta,pdir,rState);
-      setPositioningKey('mme-pos-real-main',rMain);
     }
 
     let mindText=earlyText;
