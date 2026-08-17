@@ -4,7 +4,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-DAYPOS-v0.1.1-LIVEDAY-SEMANTICFIX-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-DAYPOS-v0.1.1-LIVEDAY-SEMANTICFIX-CADENCE120-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -5577,7 +5577,8 @@
 #v2-live-page .mme-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:5px; }
 #v2-live-page .mme-title { font-size:10px; color:#aaa; font-weight:800; letter-spacing:.25px; }
 #v2-live-page .mme-transport { font-size:9px; font-weight:800; color:#64d2ff; white-space:nowrap; }
-#v2-live-page .mme-transport.stale { color:#ff9f0a; }
+#v2-live-page .mme-transport.delayed { color:#ffd60a; }
+#v2-live-page .mme-transport.stale { color:#ff453a; }
 #v2-live-page .mme-transport.offline { color:#ff453a; }
 #v2-live-page .mme-hero { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:end; gap:12px; }
 #v2-live-page .mme-primary { font-size:18px; line-height:1.05; font-weight:950; color:#fff; overflow-wrap:anywhere; }
@@ -6371,10 +6372,21 @@
       const raw=String(mmeLastData.timestamp||'').replace(' ','T');
       const t=Date.parse(raw); if(Number.isFinite(t)) ageMs=Date.now()-t;
     }
-    if(!Number.isFinite(ageMs)) { n.className='mme-transport'; n.textContent='Firebase Retained'; return; }
+    const sourceCadenceSec=120;
+    const normalGraceSec=150;
+    const staleSec=300;
+    if(!Number.isFinite(ageMs)) { n.className='mme-transport'; n.textContent='Firebase Retained｜cadence≈120s'; return; }
     const sec=Math.max(0,ageMs/1000);
-    if(sec<=20) { n.className='mme-transport'; n.textContent='● LIVE '+Math.round(sec)+'s'; }
-    else { n.className='mme-transport stale'; n.textContent='● RETAINED / STALE '+dur(sec); }
+    if(sec<=normalGraceSec) {
+      n.className='mme-transport';
+      n.textContent='● LIVE / NORMAL '+Math.round(sec)+'s｜cadence≈'+sourceCadenceSec+'s';
+    } else if(sec<=staleSec) {
+      n.className='mme-transport delayed';
+      n.textContent='● DELAYED '+dur(sec)+'｜cadence≈'+sourceCadenceSec+'s';
+    } else {
+      n.className='mme-transport stale';
+      n.textContent='● RETAINED / STALE '+dur(sec)+'｜cadence≈'+sourceCadenceSec+'s';
+    }
   }
 
   function startMMESync(){
