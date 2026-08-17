@@ -5712,6 +5712,27 @@
 #v2-live-page .mme-night-reason.active { display:block; }
 @media (max-width:900px) { #v2-live-page .mme-night-context.active { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 
+/* === Day Positioning / Price Dislocation Shadow v0.1 === */
+#v2-live-page .mme-positioning-context {
+  display:none; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin-top:5px;
+  padding:5px; border:1px solid rgba(100,210,255,.30); border-radius:6px;
+  background:linear-gradient(135deg,rgba(100,210,255,.04),rgba(255,255,255,.018));
+}
+#v2-live-page .mme-positioning-context.active { display:grid; }
+#v2-live-page .mme-positioning-card { min-width:0; padding:4px 5px; border:1px solid #3a3a3c; border-radius:5px; background:#161618; }
+#v2-live-page .mme-positioning-card span { display:block; color:#777; font-size:7px; font-weight:800; line-height:1.2; }
+#v2-live-page .mme-positioning-card strong { display:block; margin-top:2px; color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; overflow-wrap:anywhere; }
+#v2-live-page .mme-positioning-card small { display:block; margin-top:2px; color:#777; font-size:7px; line-height:1.25; overflow-wrap:anywhere; }
+#v2-live-page .mme-positioning-card.pos-bull { border-color:rgba(255,69,58,.48); background:rgba(255,69,58,.045); }
+#v2-live-page .mme-positioning-card.pos-bull strong { color:#ff6961; }
+#v2-live-page .mme-positioning-card.pos-bear { border-color:rgba(48,209,88,.48); background:rgba(48,209,88,.045); }
+#v2-live-page .mme-positioning-card.pos-bear strong { color:#30d158; }
+#v2-live-page .mme-positioning-card.pos-warn { border-color:rgba(255,159,10,.62); background:rgba(255,159,10,.07); }
+#v2-live-page .mme-positioning-card.pos-warn strong { color:#ffb340; }
+#v2-live-page .mme-positioning-card.pos-info { border-color:rgba(100,210,255,.52); background:rgba(100,210,255,.055); }
+#v2-live-page .mme-positioning-card.pos-info strong { color:#64d2ff; }
+@media (max-width:900px) { #v2-live-page .mme-positioning-context.active { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
 </style>
 <script id="ocf-exec-collapsible-summary-script">
 (function installOcfExecCollapsibleSummary(){
@@ -5853,6 +5874,25 @@
     const card=e&&e.closest('.mme-night-card');
     if(card) card.className='mme-night-card '+nightCardTone(direction,warn);
   }
+  function positioningTone(direction, state){
+    const st=String(state||'').toUpperCase();
+    if(st.includes('DEEP_DISLOCATION') || st.includes('REVOKED') || st.includes('HARVEST_THEN_REVERSAL') || st.includes('EXPIRY_EXCLUDED')) return 'pos-warn';
+    if(st.includes('REALIZATION') || st.includes('ANCHOR_RECLAIMED') || st.includes('REPAIRING')) return 'pos-info';
+    const d=Number(direction)||0;
+    return d>0?'pos-bull':(d<0?'pos-bear':'');
+  }
+  function setPositioningCard(id, main, meta, direction, state){
+    const e=document.getElementById(id), m=document.getElementById(id.replace('-main','-meta'));
+    if(e) e.textContent=main||'--';
+    if(m) m.textContent=meta||'--';
+    const card=e&&e.closest('.mme-positioning-card');
+    if(card) card.className='mme-positioning-card '+positioningTone(direction,state);
+  }
+  function isPositioningActive(data){
+    const b=String((data&&data.positioning_shadow_build)||'');
+    const st=String((data&&data.positioning_lifecycle_state)||'').toUpperCase();
+    return !!b && !!st && st!=='INACTIVE';
+  }
   function nightOperationalRead(data){
     const st=String((data&&data.night_segment_state)||'').toUpperCase();
     const marketAge=Math.max(0,Number(data&&data.us_open_segment_age_seconds)||0);
@@ -5882,7 +5922,15 @@
     REVERSAL_WATCH:'整盤反轉監看', WEAKENING:'原整盤心態弱化', LOCKED:'穩定整盤判讀', UNRESOLVED:'整盤判讀未定',
     NIGHT_INACTIVE:'日盤｜夜盤分段未啟用', NIGHT_BUILDING:'夜盤心態建立中', NIGHT_PRE_US_INTENT:'美股開盤前心態',
     US_OPEN_DISCOVERY:'美股開盤重新定價中', US_OPEN_CONFIRMED_CONTEXT:'美股開盤後方向脈絡建立', US_OPEN_UNCLEAR:'美股開盤後方向未明', US_LATE_SESSION:'美股後段｜延續監控',
-    US_REGIME_CONTINUATION:'美股開盤後延續原方向', US_REGIME_SHIFT_WATCH:'美股開盤 Regime Shift 監看'
+    US_REGIME_CONTINUATION:'美股開盤後延續原方向', US_REGIME_SHIFT_WATCH:'美股開盤 Regime Shift 監看',
+    DAY_EXPIRY_EXCLUDED:'週選結算日排除', DAY_WAITING_FOR_POSITIONING:'等待日盤 Session Intent 定位',
+    DAY_POSITIONING_ACTIVE:'日盤結構性 Positioning 已建立', DAY_POSITIONING_DISLOCATED:'日盤 Positioning 與期指價格背離',
+    DAY_POSITIONING_DEEP_DISLOCATION_150:'日盤 Positioning 深度背離 ≥150點', DAY_POSITIONING_REVOKED:'日盤 Positioning 已撤銷/翻向',
+    NO_VALID_DAY_PRIOR:'無有效日盤 Positioning Prior', NIGHT_POSITIONING_ACTIVE:'夜盤承接日盤 Positioning Context',
+    NIGHT_POSITIONING_DISLOCATED:'夜盤仍處 Positioning 不利側', NIGHT_DEEP_DISLOCATION_150:'夜盤仍深度背離 ≥150點',
+    NIGHT_REPAIRING:'夜盤正在向 Positioning Anchor 修復', NIGHT_ANCHOR_RECLAIMED:'夜盤已重新站回 Positioning Anchor',
+    NIGHT_REALIZATION_EVENT:'夜盤已突破日盤有利極值', NIGHT_REALIZATION_HELD:'夜盤 Realization 目前仍維持',
+    NIGHT_HARVEST_THEN_REVERSAL:'夜盤先完成 Realization 後反向掃破日盤 adverse extreme'
   };
   function zh(v){ return ZH[String(v||'')] || String(v||'--'); }
 
@@ -5892,7 +5940,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 Day + NightSegment v0.1.1 RestartSafe Shadow・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.1 + DayPositioning v0.1 Shadow・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -5929,6 +5977,19 @@
       nightCtx.appendChild(c);
     });
     band.appendChild(nightCtx);
+
+    const posCtx=make('div','mme-positioning-context','mme-positioning-context');
+    [
+      ['DAY POSITIONING','mme-pos-day-main','mme-pos-day-meta'],
+      ['PRICE DISLOCATION','mme-pos-disloc-main','mme-pos-disloc-meta'],
+      ['NIGHT REPAIR','mme-pos-repair-main','mme-pos-repair-meta'],
+      ['REALIZATION','mme-pos-real-main','mme-pos-real-meta']
+    ].forEach(function(x){
+      const c=make('div','mme-positioning-card');
+      c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">--</small>';
+      posCtx.appendChild(c);
+    });
+    band.appendChild(posCtx);
 
     const quick=make('div','mme-quick-wrap');
     const qtitle=make('div','mme-quick-title');
@@ -6088,6 +6149,37 @@
       const shiftMain=data.us_open_regime_shift_state_zh||zh(shift);
       const late=String(data.late_shift_watch_state||'INACTIVE');
       setNightCard('mme-night-shift-main', shiftMain, shiftWarn?('方向 '+(data.us_open_regime_shift_direction_label||'未定')+'｜Shadow only'):(late==='UNCALIBRATED_MONITORING'?'Late Shift 尚未校準':'尚無 Shift 確認'), Number(data.us_open_regime_shift_direction)||0, shiftWarn);
+    }
+
+    const posActive=isPositioningActive(data);
+    const posCtxEl=document.getElementById('mme-positioning-context');
+    if(posCtxEl) posCtxEl.classList.toggle('active',posActive);
+    if(posActive){
+      const pst=String(data.positioning_lifecycle_state||'');
+      const pdir=Number(data.day_positioning_direction)||0;
+      const spa=Number(data.day_positioning_anchor_price)||0;
+      const fav=Number(data.day_positioning_favorable_extreme)||0;
+      const adv=Number(data.day_positioning_adverse_extreme)||0;
+      const closeD=Number(data.day_positioning_close_signed_dislocation)||0;
+      const openD=Number(data.night_positioning_open_signed_dislocation)||0;
+      const nowD=Number(data.night_positioning_current_signed_dislocation)||0;
+      setPositioningCard('mme-pos-day-main', data.positioning_lifecycle_state_zh||zh(pst), (data.day_positioning_direction_label||'未定')+'｜SPA '+(spa?fmt(spa,0):'--')+'｜'+(data.day_positioning_checkpoint_reason||'--'), pdir, pst);
+      setPositioningCard('mme-pos-disloc-main', (data.day_positioning_close_dislocation_class||'UNAVAILABLE'), 'Day Close '+signed(closeD,0)+'pt｜Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--'), pdir, String(data.day_positioning_close_dislocation_class||''));
+      const anchorText=Number(data.night_anchor_reclaimed)?('Anchor reclaimed '+String(data.night_anchor_reclaim_time||'').slice(-8)):'Anchor pending';
+      setPositioningCard('mme-pos-repair-main', data.night_positioning_open_price?('Open '+signed(openD,0)+' → Now '+signed(nowD,0)+'pt'):'等待夜盤', anchorText+'｜'+(data.night_positioning_current_dislocation_class||'--'), pdir, pst);
+      let rMain='Pending';
+      let rMeta='目標＝Day post-lock favorable extreme｜非下單訊號';
+      let rState=pst;
+      if(Number(data.night_realization_event)){
+        rMain='REALIZED｜'+String(data.night_realization_time||'').slice(-8);
+        rMeta=(data.night_realization_stage||'--')+'｜Beyond +'+fmt(data.night_realization_beyond_extreme_points,0)+'pt';
+      }
+      if(Number(data.night_harvest_then_reversal)){
+        rMain='⚠ HARVEST → REVERSAL';
+        rMeta='Both Day extremes swept｜'+String(data.night_harvest_then_reversal_time||'').slice(-8);
+        rState='NIGHT_HARVEST_THEN_REVERSAL';
+      }
+      setPositioningCard('mme-pos-real-main',rMain,rMeta,pdir,rState);
     }
 
     let mindText=earlyText;
