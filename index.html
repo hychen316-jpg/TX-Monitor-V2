@@ -4,7 +4,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-DAYPOS-v0.1.1-LIVEDAY-SEMANTICFIX-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -5940,7 +5940,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.1 + DayPositioning v0.1 Shadow・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.1 + DayPositioning v0.1.1 LiveDayFix Shadow・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -6163,12 +6163,23 @@
       const closeD=Number(data.day_positioning_close_signed_dislocation)||0;
       const openD=Number(data.night_positioning_open_signed_dislocation)||0;
       const nowD=Number(data.night_positioning_current_signed_dislocation)||0;
-      setPositioningCard('mme-pos-day-main', data.positioning_lifecycle_state_zh||zh(pst), (data.day_positioning_direction_label||'未定')+'｜SPA '+(spa?fmt(spa,0):'--')+'｜'+(data.day_positioning_checkpoint_reason||'--'), pdir, pst);
-      setPositioningCard('mme-pos-disloc-main', (data.day_positioning_close_dislocation_class||'UNAVAILABLE'), 'Day Close '+signed(closeD,0)+'pt｜Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--'), pdir, String(data.day_positioning_close_dislocation_class||''));
+      const cpReason=String(data.day_positioning_checkpoint_reason||'');
+      const dayInProgress=pst.indexOf('DAY_')===0 && cpReason.indexOf('DAY_SESSION_IN_PROGRESS_')===0;
+      const cpText=dayInProgress?'日盤進行中｜13:45後建立跨盤 Prior':(cpReason||'--');
+      setPositioningCard('mme-pos-day-main', data.positioning_lifecycle_state_zh||zh(pst), (data.day_positioning_direction_label||'未定')+'｜SPA '+(spa?fmt(spa,0):'--')+'｜'+cpText, pdir, pst);
+      if(dayInProgress){
+        setPositioningCard('mme-pos-disloc-main', 'LIVE '+(data.day_positioning_close_dislocation_class||'UNAVAILABLE'), '目前 '+signed(nowD,0)+'pt｜Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--')+'｜非 Day Close', pdir, String(data.day_positioning_close_dislocation_class||''));
+      }else{
+        setPositioningCard('mme-pos-disloc-main', (data.day_positioning_close_dislocation_class||'UNAVAILABLE'), 'Day Close '+signed(closeD,0)+'pt｜Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--'), pdir, String(data.day_positioning_close_dislocation_class||''));
+      }
       const anchorText=Number(data.night_anchor_reclaimed)?('Anchor reclaimed '+String(data.night_anchor_reclaim_time||'').slice(-8)):'Anchor pending';
-      setPositioningCard('mme-pos-repair-main', data.night_positioning_open_price?('Open '+signed(openD,0)+' → Now '+signed(nowD,0)+'pt'):'等待夜盤', anchorText+'｜'+(data.night_positioning_current_dislocation_class||'--'), pdir, pst);
-      let rMain='Pending';
-      let rMeta='目標＝Day post-lock favorable extreme｜非下單訊號';
+      if(dayInProgress){
+        setPositioningCard('mme-pos-repair-main','日盤尚未收盤','13:45後才允許 Night Prior｜目前不做 Repair 判定',pdir,pst);
+      }else{
+        setPositioningCard('mme-pos-repair-main', data.night_positioning_open_price?('Open '+signed(openD,0)+' → Now '+signed(nowD,0)+'pt'):'等待夜盤', anchorText+'｜'+(data.night_positioning_current_dislocation_class||'--'), pdir, pst);
+      }
+      let rMain=dayInProgress?'等待日盤收盤':'Pending';
+      let rMeta=dayInProgress?'日盤仍在形成 favorable / adverse extremes｜非下單訊號':'目標＝Day post-lock favorable extreme｜非下單訊號';
       let rState=pst;
       if(Number(data.night_realization_event)){
         rMain='REALIZED｜'+String(data.night_realization_time||'').slice(-8);
