@@ -4,7 +4,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-DAYPOS-v0.1.1-LIVEDAY-SEMANTICFIX-CADENCE120-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-DAYPOS-v0.1.2-REALIZATION-GIVEBACK-CADENCE120-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -5931,7 +5931,9 @@
     NIGHT_POSITIONING_DISLOCATED:'夜盤仍處 Positioning 不利側', NIGHT_DEEP_DISLOCATION_150:'夜盤仍深度背離 ≥150點',
     NIGHT_REPAIRING:'夜盤正在向 Positioning Anchor 修復', NIGHT_ANCHOR_RECLAIMED:'夜盤已重新站回 Positioning Anchor',
     NIGHT_REALIZATION_EVENT:'夜盤已突破日盤有利極值', NIGHT_REALIZATION_HELD:'夜盤 Realization 目前仍維持',
-    NIGHT_HARVEST_THEN_REVERSAL:'夜盤先完成 Realization 後反向掃破日盤 adverse extreme'
+    NIGHT_HARVEST_THEN_REVERSAL:'夜盤先完成 Realization 後反向掃破日盤 adverse extreme',
+    UNREALIZED:'尚未達 +150 價格兌現', REALIZED:'已完成 +150 價格兌現', GIVEBACK:'已實現後回吐，仍在有利側',
+    GIVEBACK_TO_ADVERSE:'已實現後回吐至不利側', GIVEBACK_TO_DEEP_DISLOCATION:'已實現後回吐至深度不利側'
   };
   function zh(v){ return ZH[String(v||'')] || String(v||'--'); }
 
@@ -5941,7 +5943,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.1 + DayPositioning v0.1.1 LiveDayFix Shadow・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.1 + DayPositioning v0.1.2 Giveback Shadow・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -6162,6 +6164,10 @@
       const fav=Number(data.day_positioning_favorable_extreme)||0;
       const adv=Number(data.day_positioning_adverse_extreme)||0;
       const closeD=Number(data.day_positioning_close_signed_dislocation)||0;
+      const peakFav=Number(data.day_positioning_peak_favorable_points)||0;
+      const giveback=Number(data.day_positioning_realization_giveback_points)||0;
+      const dayRealState=String(data.day_positioning_realization_state||'UNREALIZED');
+      const dayRealZh=String(data.day_positioning_realization_state_zh||zh(dayRealState));
       const openD=Number(data.night_positioning_open_signed_dislocation)||0;
       const nowD=Number(data.night_positioning_current_signed_dislocation)||0;
       const cpReason=String(data.day_positioning_checkpoint_reason||'');
@@ -6179,9 +6185,9 @@
       }else{
         setPositioningCard('mme-pos-repair-main', data.night_positioning_open_price?((data.night_positioning_current_dislocation_class||'NIGHT')+'｜Open '+signed(openD,0)+' → Now '+signed(nowD,0)+'pt'):'等待夜盤｜Open --', anchorText, pdir, pst);
       }
-      let rMain=dayInProgress?('等待日盤收盤｜Fav '+(fav?fmt(fav,0):'--')):('Pending｜Fav '+(fav?fmt(fav,0):'--'));
-      let rMeta=dayInProgress?'日盤仍在形成 favorable / adverse extremes｜非下單訊號':'目標＝Day post-lock favorable extreme｜非下單訊號';
-      let rState=pst;
+      let rMain=dayRealZh+'｜Giveback '+fmt(giveback,0)+'pt';
+      let rMeta='Peak +'+fmt(peakFav,0)+'pt｜'+(dayInProgress?'目前 ':'Day Close ')+signed(dayInProgress?nowD:closeD,0)+'pt'+(dayInProgress?'｜13:45前持續更新':'｜跨盤背景')+'｜非下單訊號';
+      let rState=dayRealState;
       if(Number(data.night_realization_event)){
         rMain='REALIZED｜'+String(data.night_realization_time||'').slice(-8);
         rMeta=(data.night_realization_stage||'--')+'｜Beyond +'+fmt(data.night_realization_beyond_extreme_points,0)+'pt';
