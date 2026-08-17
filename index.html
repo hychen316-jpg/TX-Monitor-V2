@@ -4,7 +4,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-DAYPOS-v0.1.1-LIVEDAY-SEMANTICFIX-CADENCE120-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-DAYPOS-v0.1.1-LIVEDAY-SEMANTICFIX-CADENCE120-MME-READABLE-BILINGUAL-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -5734,6 +5734,77 @@
 #v2-live-page .mme-positioning-card.pos-info strong { color:#64d2ff; }
 @media (max-width:900px) { #v2-live-page .mme-positioning-context.active { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 
+/* === MME Readable Bilingual v1:盤中核心資訊放大，標籤在前、數值緊跟 === */
+#v2-live-page .mme-title { font-size:11px; line-height:1.25; }
+#v2-live-page .mme-transport { font-size:10px; }
+#v2-live-page .mme-hero { align-items:center; gap:10px; }
+#v2-live-page .mme-primary { font-size:22px; line-height:1.08; }
+#v2-live-page .mme-hero-kpi {
+  min-width:150px; text-align:left; display:flex; align-items:baseline; justify-content:flex-end;
+  gap:4px; flex-wrap:wrap;
+}
+#v2-live-page .mme-kpi-label { display:inline; font-size:10px; color:#9a9aa0; font-weight:850; white-space:nowrap; }
+#v2-live-page .mme-kpi-value { display:inline; margin-top:0; font:900 17px/1.05 Consolas,monospace; white-space:nowrap; }
+#v2-live-page .mme-score-grade { font-size:14px; }
+#v2-live-page .mme-score-action { font-size:12px; }
+#v2-live-page .mme-score-labels { font-size:8px; height:13px; }
+#v2-live-page .mme-score-legend { font-size:9px; }
+
+#v2-live-page .mme-card-keyline,
+#v2-live-page .mme-quick-keyline,
+#v2-live-page .mme-evidence-line {
+  display:flex; align-items:baseline; gap:4px; min-width:0; flex-wrap:wrap;
+}
+#v2-live-page .mme-night-card span,
+#v2-live-page .mme-positioning-card span {
+  display:inline; color:#a1a1a6; font-size:9px; font-weight:850; line-height:1.2;
+}
+#v2-live-page .mme-night-card strong,
+#v2-live-page .mme-positioning-card strong {
+  display:inline; margin-top:0; font-size:13px; line-height:1.2; font-weight:950;
+}
+#v2-live-page .mme-night-card small,
+#v2-live-page .mme-positioning-card small {
+  margin-top:4px; color:#d1d1d6; font-size:11px; font-weight:800; line-height:1.35;
+}
+#v2-live-page .mme-night-card,
+#v2-live-page .mme-positioning-card { padding:6px 7px; }
+
+#v2-live-page .mme-quick-card { padding:6px 7px; }
+#v2-live-page .mme-quick-card .step { display:inline; font-size:9px; color:#a1a1a6; }
+#v2-live-page .mme-quick-card strong {
+  display:inline; margin-top:0; font-size:14px; line-height:1.2; overflow:visible; text-overflow:clip; white-space:normal;
+}
+#v2-live-page .mme-quick-card small { margin-top:4px; font-size:9px; color:#8e8e93; }
+#v2-live-page .mme-quick-summary { font-size:10px; line-height:1.35; white-space:normal; }
+
+#v2-live-page .mme-evidence { padding:6px 7px; }
+#v2-live-page .mme-evidence span { display:inline; font-size:9px; color:#999; font-weight:800; }
+#v2-live-page .mme-evidence strong {
+  display:inline; margin-top:0; font-size:12px; line-height:1.25; font-weight:900;
+  overflow:visible; text-overflow:clip; white-space:normal;
+}
+#v2-live-page .mme-session-reason,
+#v2-live-page .mme-night-reason { font-size:9px; line-height:1.4; }
+#v2-live-page .mme-risk-label { font-size:9px; color:#a1a1a6; }
+#v2-live-page .mme-risk-num { font-size:11px; }
+#v2-live-page .mme-breach { font-size:10px; }
+
+@media (max-width:1180px) {
+  #v2-live-page .mme-hero { grid-template-columns:1fr 1fr; }
+  #v2-live-page .mme-primary { grid-column:1 / -1; }
+  #v2-live-page .mme-hero-kpi { justify-content:flex-start; min-width:0; }
+}
+@media (max-width:760px) {
+  #v2-live-page .mme-primary { font-size:20px; }
+  #v2-live-page .mme-kpi-value { font-size:16px; }
+  #v2-live-page .mme-positioning-context.active,
+  #v2-live-page .mme-night-context.active { grid-template-columns:1fr; }
+  #v2-live-page .mme-quick-grid,
+  #v2-live-page .mme-evidence-grid { grid-template-columns:1fr; }
+  #v2-live-page .mme-hero-kpi:last-child { display:flex; }
+}
+
 </style>
 <script id="ocf-exec-collapsible-summary-script">
 (function installOcfExecCollapsibleSummary(){
@@ -5941,14 +6012,14 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.1 + DayPositioning v0.1.1 LiveDayFix Shadow・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.1 + DayPositioning v0.1.1 LiveDayFix｜Readable Bilingual Shadow・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
     const hero=make('div','mme-hero');
     hero.appendChild(make('div','mme-primary','mme-primary','等待 Session Intent'));
-    const score=make('div','mme-hero-kpi'); score.innerHTML='<span class="mme-kpi-label">Session Score</span><strong class="mme-kpi-value" id="mme-session-score">--</strong>'; hero.appendChild(score);
-    const conf=make('div','mme-hero-kpi'); conf.innerHTML='<span class="mme-kpi-label">Session Confidence</span><strong class="mme-kpi-value" id="mme-session-confidence">--</strong>'; hero.appendChild(conf);
+    const score=make('div','mme-hero-kpi'); score.innerHTML='<span class="mme-kpi-label">整盤分數 Session Score｜</span><strong class="mme-kpi-value" id="mme-session-score">--</strong>'; hero.appendChild(score);
+    const conf=make('div','mme-hero-kpi'); conf.innerHTML='<span class="mme-kpi-label">整盤信心 Session Confidence｜</span><strong class="mme-kpi-value" id="mme-session-confidence">--</strong>'; hero.appendChild(conf);
     band.appendChild(hero);
 
     const scoreRead=make('div','mme-score-read','mme-score-read');
@@ -5968,26 +6039,26 @@
     // Night Segment v0.1.1 is an additive operational overlay. Global Session Intent remains visible above.
     const nightCtx=make('div','mme-night-context','mme-night-context');
     [
-      ['NIGHT STAGE','mme-night-stage-main','mme-night-stage-meta'],
-      ['PRE-US READ','mme-night-pre-main','mme-night-pre-meta'],
-      ['U.S.-OPEN SEGMENT','mme-night-us-main','mme-night-us-meta'],
-      ['REGIME SHIFT','mme-night-shift-main','mme-night-shift-meta']
+      ['夜盤階段 Night Stage','mme-night-stage-main','mme-night-stage-meta'],
+      ['美股前判讀 Pre-US Read','mme-night-pre-main','mme-night-pre-meta'],
+      ['美股開盤段 U.S.-Open Segment','mme-night-us-main','mme-night-us-meta'],
+      ['體制轉換 Regime Shift','mme-night-shift-main','mme-night-shift-meta']
     ].forEach(function(x){
       const c=make('div','mme-night-card');
-      c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">--</small>';
+      c.innerHTML='<div class="mme-card-keyline"><span>'+x[0]+'｜</span><strong id="'+x[1]+'">--</strong></div><small id="'+x[2]+'">--</small>';
       nightCtx.appendChild(c);
     });
     band.appendChild(nightCtx);
 
     const posCtx=make('div','mme-positioning-context','mme-positioning-context');
     [
-      ['DAY POSITIONING','mme-pos-day-main','mme-pos-day-meta'],
-      ['PRICE DISLOCATION','mme-pos-disloc-main','mme-pos-disloc-meta'],
-      ['NIGHT REPAIR','mme-pos-repair-main','mme-pos-repair-meta'],
-      ['REALIZATION','mme-pos-real-main','mme-pos-real-meta']
+      ['日盤定位 Day Positioning','mme-pos-day-main','mme-pos-day-meta'],
+      ['價格偏離 Price Dislocation','mme-pos-disloc-main','mme-pos-disloc-meta'],
+      ['夜盤修復 Night Repair','mme-pos-repair-main','mme-pos-repair-meta'],
+      ['價格兌現 Realization','mme-pos-real-main','mme-pos-real-meta']
     ].forEach(function(x){
       const c=make('div','mme-positioning-card');
-      c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">--</small>';
+      c.innerHTML='<div class="mme-card-keyline"><span>'+x[0]+'｜</span><strong id="'+x[1]+'">--</strong></div><small id="'+x[2]+'">--</small>';
       posCtx.appendChild(c);
     });
     band.appendChild(posCtx);
@@ -5998,13 +6069,13 @@
     quick.appendChild(qtitle);
     const qgrid=make('div','mme-quick-grid');
     [
-      ['① 整盤判讀','mme-q-mind','mme-q-mind-meta','Sticky + Early Read'],
-      ['② 力道','mme-q-exec','mme-q-exec-meta','看是否發動'],
-      ['③ 階段','mme-q-phase','mme-q-phase-meta','看能不能追'],
-      ['④ 30M','mme-q-forecast','mme-q-forecast-meta','看未來風險']
+      ['① 整盤判讀 Session Intent','mme-q-mind','mme-q-mind-meta','Sticky + Early Read'],
+      ['② 即時力道 Execution','mme-q-exec','mme-q-exec-meta','看是否發動'],
+      ['③ 趨勢階段 Trend Phase','mme-q-phase','mme-q-phase-meta','看能不能追'],
+      ['④ 30分鐘展望 30M Forecast','mme-q-forecast','mme-q-forecast-meta','看未來風險']
     ].forEach(function(x){
       const c=make('div','mme-quick-card q-neutral');
-      c.innerHTML='<span class="step">'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">'+x[3]+'</small>';
+      c.innerHTML='<div class="mme-quick-keyline"><span class="step">'+x[0]+'｜</span><strong id="'+x[1]+'">--</strong></div><small id="'+x[2]+'">'+x[3]+'</small>';
       qgrid.appendChild(c);
     });
     quick.appendChild(qgrid);
@@ -6018,38 +6089,38 @@
     const detailBody=make('div','mme-detail-body');
 
     const sgrid=make('div','mme-evidence-grid');
-    [['SESSION SCORE','mme-session-score-detail'],['RECENT SCORE','mme-session-recent'],['SESSION CONF','mme-session-conf-detail'],['AGE / FLIPS','mme-session-age-flips']].forEach(function(x){
-      const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; sgrid.appendChild(c);
+    [['整盤分數 Session Score','mme-session-score-detail'],['近期分數 Recent Score','mme-session-recent'],['整盤信心 Session Confidence','mme-session-conf-detail'],['持續/翻轉 Age / Flips','mme-session-age-flips']].forEach(function(x){
+      const c=make('div','mme-evidence'); c.innerHTML='<div class="mme-evidence-line"><span>'+x[0]+'｜</span><strong id="'+x[1]+'">--</strong></div>'; sgrid.appendChild(c);
     });
     detailBody.appendChild(sgrid);
     const egrid=make('div','mme-evidence-grid');
-    [['LIVE READ','mme-session-live-read'],['INSTANT SCORE','mme-session-instant'],['EARLY WARNING','mme-session-warning'],['ADVERSE','mme-session-adverse']].forEach(function(x){
-      const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; egrid.appendChild(c);
+    [['即時判讀 Live Read','mme-session-live-read'],['即時分數 Instant Score','mme-session-instant'],['早期警示 Early Warning','mme-session-warning'],['逆向幅度 Adverse','mme-session-adverse']].forEach(function(x){
+      const c=make('div','mme-evidence'); c.innerHTML='<div class="mme-evidence-line"><span>'+x[0]+'｜</span><strong id="'+x[1]+'">--</strong></div>'; egrid.appendChild(c);
     });
     detailBody.appendChild(egrid);
     detailBody.appendChild(make('div','mme-session-reason','mme-session-reason','Session Intent：等待資料'));
 
     const ngrid=make('div','mme-evidence-grid');
-    [['NIGHT SEGMENT','mme-night-segment'],['PRE-US READ','mme-night-pre-us'],['U.S.-OPEN SEGMENT','mme-night-us-open'],['US REGIME SHIFT','mme-night-us-shift']].forEach(function(x){
-      const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; ngrid.appendChild(c);
+    [['夜盤分段 Night Segment','mme-night-segment'],['美股前判讀 Pre-US Read','mme-night-pre-us'],['美股開盤段 U.S.-Open Segment','mme-night-us-open'],['美股體制轉換 US Regime Shift','mme-night-us-shift']].forEach(function(x){
+      const c=make('div','mme-evidence'); c.innerHTML='<div class="mme-evidence-line"><span>'+x[0]+'｜</span><strong id="'+x[1]+'">--</strong></div>'; ngrid.appendChild(c);
     });
     detailBody.appendChild(ngrid);
     detailBody.appendChild(make('div','mme-night-reason','mme-night-reason','Night Segment：日盤 N/A'));
 
     const grid=make('div','mme-evidence-grid');
-    [['FAST PRIMARY','mme-fast-primary'],['FAST BIAS','mme-fast-bias'],['STRUCTURE','mme-structure'],['EXECUTION','mme-execution'],['WALL / RELOCATION','mme-wall'],['ACCEPTANCE','mme-acceptance']].forEach(function(x){
-      const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; grid.appendChild(c);
+    [['快速心態 Fast Primary','mme-fast-primary'],['快速偏向 Fast Bias','mme-fast-bias'],['結構 Structure','mme-structure'],['執行力道 Execution','mme-execution'],['牆/位移 Wall / Relocation','mme-wall'],['價格接受 Acceptance','mme-acceptance']].forEach(function(x){
+      const c=make('div','mme-evidence'); c.innerHTML='<div class="mme-evidence-line"><span>'+x[0]+'｜</span><strong id="'+x[1]+'">--</strong></div>'; grid.appendChild(c);
     });
     detailBody.appendChild(grid);
 
     const fgrid=make('div','mme-evidence-grid mme-forecast-grid');
-    [['TREND PHASE','mme-phase'],['30M FORECAST','mme-forecast'],['FORECAST SCORE','mme-forecast-conf'],['STATE FRESHNESS','mme-freshness']].forEach(function(x){
-      const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; fgrid.appendChild(c);
+    [['趨勢階段 Trend Phase','mme-phase'],['30分鐘展望 30M Forecast','mme-forecast'],['展望分數 Forecast Score','mme-forecast-conf'],['狀態新鮮度 State Freshness','mme-freshness']].forEach(function(x){
+      const c=make('div','mme-evidence'); c.innerHTML='<div class="mme-evidence-line"><span>'+x[0]+'｜</span><strong id="'+x[1]+'">--</strong></div>'; fgrid.appendChild(c);
     });
     detailBody.appendChild(fgrid);
 
     const rr=make('div','mme-risk-row');
-    rr.innerHTML='<div class="mme-risk-item"><span class="mme-risk-label">誘多風險</span><div class="mme-risk-track"><div id="mme-bull-risk-fill" class="mme-risk-fill"></div></div><strong id="mme-bull-risk" class="mme-risk-num">--</strong></div>'+      '<div class="mme-risk-item"><span class="mme-risk-label">誘空風險</span><div class="mme-risk-track"><div id="mme-bear-risk-fill" class="mme-risk-fill"></div></div><strong id="mme-bear-risk" class="mme-risk-num">--</strong></div>'+      '<div id="mme-breach" class="mme-breach">Trigger外 --</div>';
+    rr.innerHTML='<div class="mme-risk-item"><span class="mme-risk-label">誘多風險 Bull Trap｜</span><div class="mme-risk-track"><div id="mme-bull-risk-fill" class="mme-risk-fill"></div></div><strong id="mme-bull-risk" class="mme-risk-num">--</strong></div>'+      '<div class="mme-risk-item"><span class="mme-risk-label">誘空風險 Bear Trap｜</span><div class="mme-risk-track"><div id="mme-bear-risk-fill" class="mme-risk-fill"></div></div><strong id="mme-bear-risk" class="mme-risk-num">--</strong></div>'+      '<div id="mme-breach" class="mme-breach">Trigger外 --</div>';
     detailBody.appendChild(rr);
 
     const foot=make('div','mme-foot');
@@ -6140,8 +6211,8 @@
       const secondsTo=Math.max(0,Number(data.us_open_seconds_to_anchor)||0);
       const restartBuilding=(st==='US_OPEN_DISCOVERY' && marketAge>=3600 && observedAge<3600);
       setNightCard('mme-night-stage-main', data.night_segment_state_zh||zh(st), data.us_open_anchor_tpe?('U.S. Open '+String(data.us_open_anchor_tpe).slice(11,16)+' TPE'):'Timezone-aware U.S. Open', Number(data.us_open_segment_direction)||Number(data.night_pre_us_direction)||0, restartBuilding);
-      setNightCard('mme-night-pre-main', data.night_pre_us_read_state_zh||'Pre-US', signed(data.night_pre_us_score,1)+' / R '+signed(data.night_pre_us_recent_score,1)+'｜'+(data.night_pre_us_direction_label||'未定'), Number(data.night_pre_us_direction)||0, false);
-      let usMeta='Score '+signed(data.us_open_segment_score,1)+' / R '+signed(data.us_open_segment_recent_score,1);
+      setNightCard('mme-night-pre-main', data.night_pre_us_read_state_zh||'Pre-US', '分數 Score '+signed(data.night_pre_us_score,1)+'｜近期 Recent '+signed(data.night_pre_us_recent_score,1)+'｜方向 Direction '+(data.night_pre_us_direction_label||'未定'), Number(data.night_pre_us_direction)||0, false);
+      let usMeta='分數 Score '+signed(data.us_open_segment_score,1)+'｜近期 Recent '+signed(data.us_open_segment_recent_score,1);
       if(secondsTo>0) usMeta+='｜開盤倒數 '+dur(secondsTo);
       else usMeta+='｜市場 '+dur(marketAge)+'｜觀察 '+dur(observedAge)+(observedAge<3600?' / 60m':'');
       setNightCard('mme-night-us-main', restartBuilding?'重啟後重新累積':(st.indexOf('US_')===0?(data.us_open_segment_direction_label||'重新定價中'):'等待美股開盤'), usMeta, Number(data.us_open_segment_direction)||0, restartBuilding);
@@ -6169,22 +6240,22 @@
       const cpText=dayInProgress?'日盤進行中｜13:45後建立跨盤 Prior':(cpReason||'--');
       setPositioningCard('mme-pos-day-main', data.positioning_lifecycle_state_zh||zh(pst), (data.day_positioning_direction_label||'未定')+'｜SPA '+(spa?fmt(spa,0):'--')+'｜'+cpText, pdir, pst);
       if(dayInProgress){
-        setPositioningCard('mme-pos-disloc-main', 'LIVE '+(data.day_positioning_close_dislocation_class||'UNAVAILABLE'), '目前 '+signed(nowD,0)+'pt｜Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--')+'｜非 Day Close', pdir, String(data.day_positioning_close_dislocation_class||''));
+        setPositioningCard('mme-pos-disloc-main', 'LIVE '+(data.day_positioning_close_dislocation_class||'UNAVAILABLE'), '目前 Current '+signed(nowD,0)+'pt｜有利極值 Fav '+(fav?fmt(fav,0):'--')+'｜不利極值 Adv '+(adv?fmt(adv,0):'--')+'｜非日盤收盤 Non-Close', pdir, String(data.day_positioning_close_dislocation_class||''));
       }else{
-        setPositioningCard('mme-pos-disloc-main', (data.day_positioning_close_dislocation_class||'UNAVAILABLE'), 'Day Close '+signed(closeD,0)+'pt｜Fav '+(fav?fmt(fav,0):'--')+' / Adv '+(adv?fmt(adv,0):'--'), pdir, String(data.day_positioning_close_dislocation_class||''));
+        setPositioningCard('mme-pos-disloc-main', (data.day_positioning_close_dislocation_class||'UNAVAILABLE'), '日盤收盤 Day Close '+signed(closeD,0)+'pt｜有利極值 Fav '+(fav?fmt(fav,0):'--')+'｜不利極值 Adv '+(adv?fmt(adv,0):'--'), pdir, String(data.day_positioning_close_dislocation_class||''));
       }
-      const anchorText=Number(data.night_anchor_reclaimed)?('Anchor reclaimed '+String(data.night_anchor_reclaim_time||'').slice(-8)):'Anchor pending';
+      const anchorText=Number(data.night_anchor_reclaimed)?('錨點收復 Anchor Reclaimed '+String(data.night_anchor_reclaim_time||'').slice(-8)):'錨點待收復 Anchor Pending';
       if(dayInProgress){
         setPositioningCard('mme-pos-repair-main','日盤尚未收盤','13:45後才允許 Night Prior｜目前不做 Repair 判定',pdir,pst);
       }else{
-        setPositioningCard('mme-pos-repair-main', data.night_positioning_open_price?('Open '+signed(openD,0)+' → Now '+signed(nowD,0)+'pt'):'等待夜盤', anchorText+'｜'+(data.night_positioning_current_dislocation_class||'--'), pdir, pst);
+        setPositioningCard('mme-pos-repair-main', data.night_positioning_open_price?('夜盤開盤 Open '+signed(openD,0)+' → 目前 Now '+signed(nowD,0)+'pt'):'等待夜盤 Waiting Night', anchorText+'｜'+(data.night_positioning_current_dislocation_class||'--'), pdir, pst);
       }
       let rMain=dayInProgress?'等待日盤收盤':'Pending';
-      let rMeta=dayInProgress?'日盤仍在形成 favorable / adverse extremes｜非下單訊號':'目標＝Day post-lock favorable extreme｜非下單訊號';
+      let rMeta=dayInProgress?'日盤仍在形成有利/不利極值 Favorable / Adverse Extremes｜非下單訊號':'目標 Target＝Day post-lock Favorable Extreme｜非下單訊號';
       let rState=pst;
       if(Number(data.night_realization_event)){
         rMain='REALIZED｜'+String(data.night_realization_time||'').slice(-8);
-        rMeta=(data.night_realization_stage||'--')+'｜Beyond +'+fmt(data.night_realization_beyond_extreme_points,0)+'pt';
+        rMeta='階段 Stage '+(data.night_realization_stage||'--')+'｜超越極值 Beyond +'+fmt(data.night_realization_beyond_extreme_points,0)+'pt';
       }
       if(Number(data.night_harvest_then_reversal)){
         rMain='⚠ HARVEST → REVERSAL';
@@ -6276,7 +6347,7 @@
       const secondsTo=Math.max(0,Number(data.us_open_seconds_to_anchor)||0);
       const restartBuilding=String(data.night_segment_state||'')==='US_OPEN_DISCOVERY' && marketAge>=3600 && observedAge<3600;
       if(nSeg){ nSeg.textContent=data.night_segment_state_zh||zh(data.night_segment_state); setMmeDirClass(nSeg,Number(data.us_open_segment_direction)||Number(data.night_pre_us_direction)||0,restartBuilding); }
-      if(nPre){ nPre.textContent=(data.night_pre_us_read_state_zh||'Pre-US')+'｜'+signed(data.night_pre_us_score,1)+' / R '+signed(data.night_pre_us_recent_score,1)+'｜'+(data.night_pre_us_direction_label||'未定'); setMmeDirClass(nPre,Number(data.night_pre_us_direction)||0,false); }
+      if(nPre){ nPre.textContent=(data.night_pre_us_read_state_zh||'Pre-US')+'｜'+'分數 Score '+signed(data.night_pre_us_score,1)+'｜近期 Recent '+signed(data.night_pre_us_recent_score,1)+'｜方向 Direction '+(data.night_pre_us_direction_label||'未定'); setMmeDirClass(nPre,Number(data.night_pre_us_direction)||0,false); }
       if(nUs){
         let txt=(data.us_open_anchor_tpe?String(data.us_open_anchor_tpe).slice(11,16)+' TPE｜':'')+signed(data.us_open_segment_score,1)+' / R '+signed(data.us_open_segment_recent_score,1)+'｜'+(data.us_open_segment_direction_label||'未定');
         txt+=secondsTo>0?('｜開盤倒數 '+dur(secondsTo)):('｜市場 '+dur(marketAge)+' / 觀察 '+dur(observedAge)+(observedAge<3600?' / 60m':''));
