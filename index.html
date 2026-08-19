@@ -1,10 +1,10 @@
 <!-- Z2_EXEC_COLLAPSE_FIX4_CSS_CHECKBOX_20260816 -->
-<!-- MME_NIGHTSEG_v0_1_1_RESTARTSAFE_UI_20260816 | presentation-only | FIX6 DOM preserved -->
+<!-- Z2_AUTHORITY_EXECDETAIL_UI_20260819 | presentation-only | BASE=index(5).html | original listeners preserved -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-DAYPOS-v0.1.2-REALIZATION-GIVEBACK-CADENCE120-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.1-Z2AUTH-IN-EXECDETAIL-MME-v0.5.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.3-EXEC-EPISODE-v1.0.1-GEOMETRY-v1.0-WLA-v1.0">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -486,6 +486,29 @@
     #dashboard .ocf-exec-detail-body > .ocf-entry-guard-band,
     #dashboard .ocf-exec-detail-body > .ocf-pullback-band,
     #dashboard .ocf-exec-detail-body > .ocf-wave-band { margin-top:4px; }
+
+    /* Z2 Formal Authority observability lives ONLY inside existing execution details.
+       Collapsed dashboard height is unchanged. */
+    #dashboard .ocf-authority-grid {
+      display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; margin-top:5px;
+    }
+    #dashboard .ocf-authority-card {
+      min-width:0; border:1px solid #3a3a3c; border-left:3px solid #64d2ff;
+      border-radius:5px; background:#202022; padding:5px 6px;
+    }
+    #dashboard .ocf-authority-card.is-ok { border-left-color:#30d158; background:rgba(48,209,88,.045); }
+    #dashboard .ocf-authority-card.is-warn { border-left-color:#ffd60a; background:rgba(255,214,10,.055); }
+    #dashboard .ocf-authority-card.is-danger { border-left-color:#ff453a; background:rgba(255,69,58,.06); }
+    #dashboard .ocf-authority-card.is-info { border-left-color:#64d2ff; background:rgba(100,210,255,.045); }
+    #dashboard .ocf-authority-head { display:flex; align-items:center; justify-content:space-between; gap:4px; }
+    #dashboard .ocf-authority-name { color:#8e8e93; font-size:7px; font-weight:900; line-height:1.2; }
+    #dashboard .ocf-authority-badge { flex:0 0 auto; color:#d1d1d6; border:1px solid #48484a; background:#29292b; padding:1px 4px; font-size:7px; font-weight:900; white-space:nowrap; }
+    #dashboard .ocf-authority-status { display:block; color:#f2f2f7; font-size:11px; font-weight:900; line-height:1.25; margin-top:3px; overflow-wrap:anywhere; }
+    #dashboard .ocf-authority-detail { color:#9a9aa0; font-size:8px; line-height:1.3; margin-top:2px; overflow-wrap:anywhere; }
+    #dashboard .ocf-authority-event { color:#777; font-size:7px; line-height:1.25; border-top:1px dashed #36363a; margin-top:3px; padding-top:3px; overflow-wrap:anywhere; }
+    #dashboard .ocf-authority-grid[hidden] { display:none !important; }
+    #dashboard .ocf-authority-card[hidden] { display:none !important; }
+    @media (max-width:980px) { #dashboard .ocf-authority-grid { grid-template-columns:1fr; } }
     @media (max-width:760px) {
       #dashboard .ocf-exec-detail-heading { display:none; }
       #dashboard .ocf-exec-summary-chip strong { max-width:62px; }
@@ -2068,10 +2091,42 @@
 
                     <div id="ocf-wave-band" class="ocf-wave-band wave-formal">
                         <div class="ocf-wave-main">
-                            <span class="ocf-wave-label">Wave Profit Protection v1.4 Formal｜Trigger-origin Only</span>
+                            <span class="ocf-wave-label">Wave Profit Protection v1.5.2 Formal｜Trigger-origin Only</span>
                             <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜W1 MFE Gate 0.60R</strong>
                         </div>
                         <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利</div>
+                    </div>
+
+                    <div id="ocf-z2-authority-grid" class="ocf-authority-grid" hidden>
+                        <div id="ocf-geometry-authority-card" class="ocf-authority-card is-info" hidden>
+                            <div class="ocf-authority-head">
+                                <span class="ocf-authority-name">Geometry Authority v1.0</span>
+                                <span id="ocf-geometry-authority-badge" class="ocf-authority-badge">FORMAL --</span>
+                            </div>
+                            <strong id="ocf-geometry-authority-status" class="ocf-authority-status">等待 Geometry 資料</strong>
+                            <div id="ocf-geometry-authority-detail" class="ocf-authority-detail"></div>
+                            <div id="ocf-geometry-authority-event" class="ocf-authority-event"></div>
+                        </div>
+
+                        <div id="ocf-exec-episode-card" class="ocf-authority-card is-info" hidden>
+                            <div class="ocf-authority-head">
+                                <span class="ocf-authority-name">Execution Episode Authority v1.0.1</span>
+                                <span id="ocf-exec-episode-badge" class="ocf-authority-badge">FORMAL --</span>
+                            </div>
+                            <strong id="ocf-exec-episode-status" class="ocf-authority-status">等待 Episode 資料</strong>
+                            <div id="ocf-exec-episode-detail" class="ocf-authority-detail"></div>
+                            <div id="ocf-exec-episode-event" class="ocf-authority-event"></div>
+                        </div>
+
+                        <div id="ocf-wave-lifecycle-card" class="ocf-authority-card is-info" hidden>
+                            <div class="ocf-authority-head">
+                                <span class="ocf-authority-name">Wave Lifecycle Authority v1.0</span>
+                                <span id="ocf-wave-lifecycle-badge" class="ocf-authority-badge">FORMAL --</span>
+                            </div>
+                            <strong id="ocf-wave-lifecycle-status" class="ocf-authority-status">等待 Lifecycle 資料</strong>
+                            <div id="ocf-wave-lifecycle-detail" class="ocf-authority-detail"></div>
+                            <div id="ocf-wave-lifecycle-event" class="ocf-authority-event"></div>
+                        </div>
                     </div>
                 </div>
             </details>
@@ -2719,6 +2774,114 @@
         const number = toFiniteNumberOrNull(value);
         if (number === null || number <= 0) return "--";
         return Number.isInteger(number) ? String(number) : number.toFixed(1);
+    }
+
+
+    function renderZ2AuthorityDetails(data) {
+        try {
+            if (!data || typeof data !== "object") return;
+            const grid = document.getElementById("ocf-z2-authority-grid");
+            if (!grid) return;
+
+            const hasRealBuild = (value) => {
+                const text = String(value ?? "").trim();
+                return text !== "" && text !== "UNAVAILABLE" && text !== "--";
+            };
+            const fmtSigned = (value, digits = 0) => {
+                const n = toFiniteNumberOrNull(value);
+                if (n === null) return "--";
+                return `${n > 0 ? "+" : ""}${n.toFixed(digits)}`;
+            };
+            const fmtDir = (value) => {
+                const n = Math.sign(toFiniteNumberOrNull(value) ?? 0);
+                return n > 0 ? "LONG" : (n < 0 ? "SHORT" : "NEUTRAL");
+            };
+            const setClass = (card, tone) => {
+                if (!card) return;
+                card.classList.remove("is-ok", "is-warn", "is-danger", "is-info");
+                card.classList.add(tone || "is-info");
+            };
+            const showCard = (card, show) => {
+                if (!card) return;
+                card.hidden = !show;
+            };
+
+            const geoBuild = data.geometry_build;
+            const epBuild = data.exec_episode_build;
+            const wlaBuild = data.wave_lifecycle_build;
+            const geoAvailable = hasRealBuild(geoBuild);
+            const epAvailable = hasRealBuild(epBuild);
+            const wlaAvailable = hasRealBuild(wlaBuild);
+            grid.hidden = !(geoAvailable || epAvailable || wlaAvailable);
+
+            const geoCard = document.getElementById("ocf-geometry-authority-card");
+            showCard(geoCard, geoAvailable);
+            if (geoAvailable) {
+                const formal = toRadarBoolean(data.geometry_formal_authority);
+                const healthy = toRadarBoolean(data.geometry_coordinate_healthy);
+                const mode = String(data.geometry_coordinate_mode || "UNKNOWN").trim() || "UNKNOWN";
+                const epoch = toFiniteNumberOrNull(data.geometry_epoch);
+                const sc = formatOCFLevel(data.geometry_committed_sc);
+                const sp = formatOCFLevel(data.geometry_committed_sp);
+                const basis = fmtSigned(data.geometry_mapping_basis, 1);
+                const err = toFiniteNumberOrNull(data.geometry_formal_reference_error);
+                const lastErr = String(data.geometry_last_error || "").trim();
+                setOCFText("ocf-geometry-authority-badge", `FORMAL ${formal ? 1 : 0}`);
+                setOCFText("ocf-geometry-authority-status", `${mode}｜${healthy ? "HEALTHY" : "HOLD"}${epoch !== null ? `｜Epoch ${Math.round(epoch)}` : ""}`);
+                setOCFText("ocf-geometry-authority-detail", `SC ${sc}｜SP ${sp}｜Basis ${basis}｜RefErr ${err === null ? "--" : err.toFixed(1)}`);
+                setOCFText("ocf-geometry-authority-event", lastErr ? `ERROR ${lastErr}` : (String(data.geometry_last_event || data.geometry_epoch_reason || "").trim() || "No geometry error"));
+                setClass(geoCard, lastErr || !healthy ? "is-danger" : (formal ? "is-ok" : "is-warn"));
+            }
+
+            const epCard = document.getElementById("ocf-exec-episode-card");
+            showCard(epCard, epAvailable);
+            if (epAvailable) {
+                const formal = toRadarBoolean(data.exec_episode_formal_authority);
+                const state = String(data.exec_episode_state || "IDLE").trim() || "IDLE";
+                const dir = fmtDir(data.exec_episode_direction);
+                const terminal = toRadarBoolean(data.exec_episode_terminal);
+                const committed = toRadarBoolean(data.exec_episode_committed);
+                const handoff = toRadarBoolean(data.exec_episode_handoff_ready);
+                const strict = toRadarBoolean(data.exec_episode_strict_reentry_ready);
+                const trigger = formatOCFLevel(data.exec_episode_original_trigger);
+                const cross = formatOCFLevel(data.exec_episode_cross_price);
+                const chase = fmtSigned(data.exec_episode_current_chase, 0);
+                const maxExt = fmtSigned(data.exec_episode_max_favorable_extension, 0);
+                const age = formatRadarAge(data.exec_episode_age_seconds);
+                const crossEpoch = toFiniteNumberOrNull(data.exec_episode_cross_geometry_epoch);
+                const currentEpoch = toFiniteNumberOrNull(data.exec_episode_current_geometry_epoch);
+                const lastErr = String(data.exec_episode_last_error || "").trim();
+                setOCFText("ocf-exec-episode-badge", `FORMAL ${formal ? 1 : 0}`);
+                setOCFText("ocf-exec-episode-status", `${state}｜${dir}${handoff ? "｜HANDOFF" : ""}${strict ? "｜STRICT READY" : ""}`);
+                setOCFText("ocf-exec-episode-detail", `Trigger ${trigger}｜Cross ${cross}｜Chase ${chase}｜MaxExt ${maxExt}｜Age ${age}｜Epoch ${crossEpoch === null ? "--" : Math.round(crossEpoch)}→${currentEpoch === null ? "--" : Math.round(currentEpoch)}`);
+                setOCFText("ocf-exec-episode-event", lastErr ? `ERROR ${lastErr}` : (String(data.exec_episode_last_event || "").trim() || "No episode error"));
+                setClass(epCard, lastErr ? "is-danger" : (terminal ? "is-warn" : (committed || handoff || strict ? "is-ok" : "is-info")));
+            }
+
+            const wlaCard = document.getElementById("ocf-wave-lifecycle-card");
+            showCard(wlaCard, wlaAvailable);
+            if (wlaAvailable) {
+                const formal = toRadarBoolean(data.wave_lifecycle_formal_authority);
+                const stage = String(data.wave_lifecycle_stage || "OPEN").trim() || "OPEN";
+                const dir = fmtDir(data.wave_lifecycle_direction);
+                const cid = toFiniteNumberOrNull(data.wave_lifecycle_campaign_id);
+                const t1 = formatOCFLevel(data.wave_lifecycle_tracked_t1);
+                const t2 = formatOCFLevel(data.wave_lifecycle_tracked_t2);
+                const flatT1 = toRadarBoolean(data.wave_lifecycle_t1_reached_while_flat);
+                const opp = toRadarBoolean(data.wave_lifecycle_opposite_rfd_seen);
+                const ready = toRadarBoolean(data.wave_lifecycle_secondleg_reproof_ready);
+                const reject = String(data.wave_lifecycle_last_reject_reason || "").trim();
+                const lastErr = String(data.wave_lifecycle_last_error || "").trim();
+                setOCFText("ocf-wave-lifecycle-badge", `FORMAL ${formal ? 1 : 0}`);
+                setOCFText("ocf-wave-lifecycle-status", `${stage}｜${dir}${ready ? "｜2ND-LEG READY" : ""}`);
+                setOCFText("ocf-wave-lifecycle-detail", `Campaign ${cid === null ? "--" : Math.round(cid)}｜T1 ${t1}｜T2 ${t2}｜FlatT1 ${flatT1 ? 1 : 0}｜OppRFD ${opp ? 1 : 0}`);
+                setOCFText("ocf-wave-lifecycle-event", lastErr ? `ERROR ${lastErr}` : (reject ? `Last Reject ${reject}` : (String(data.wave_lifecycle_last_event || "").trim() || "No lifecycle error")));
+                setClass(wlaCard, lastErr ? "is-danger" : (ready ? "is-ok" : (flatT1 && !ready ? "is-warn" : "is-info")));
+            }
+        } catch (err) {
+            // Observability must NEVER interrupt the legacy dashboard render path.
+            console.warn("Z2 Authority detail render skipped", err);
+        }
     }
 
     function formatOCFZone(data, side) {
@@ -4562,6 +4725,7 @@
       document.getElementById('vwap-cross').innerText = lastCrossVwap;
 
       renderOCFBattlePanel(data);
+      renderZ2AuthorityDetails(data);
 
       let bu2 = "--";
       if (data.futures_force_score !== undefined && data.futures_force_phase !== undefined) {
@@ -5407,6 +5571,7 @@
     const v10GuardBand = document.getElementById('ocf-entry-guard-band');
     const v10PullbackBand = document.getElementById('ocf-pullback-band');
     const v10WaveBand = document.getElementById('ocf-wave-band');
+    const v10AuthorityGrid = document.getElementById('ocf-z2-authority-grid');
     const v10ExecBody = document.getElementById('ocf-exec-detail-body');
     const v10DefenseGrid = ocfPanel ? ocfPanel.querySelector('.ocf-defense-grid') : null;
     if (ocfPanel && v10DefenseGrid) {
@@ -5419,6 +5584,7 @@
         if (v10ExecBody) v10ExecBody.appendChild(stateMatrix);
         else ocfPanel.insertBefore(stateMatrix, v10DefenseGrid);
       }
+      if (v10ExecBody && v10AuthorityGrid) v10ExecBody.appendChild(v10AuthorityGrid);
     }
 
     /* Keep the formal decision concise; raw diagnostics remain available on demand. */
@@ -5943,7 +6109,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.1 + DayPositioning v0.1.2 Giveback Shadow・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.2 + DayPositioning v0.1.3・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
