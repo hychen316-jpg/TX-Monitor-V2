@@ -1,11 +1,10 @@
 <!-- Z2_EXEC_COLLAPSE_FIX4_CSS_CHECKBOX_20260816 -->
-<!-- MME_NIGHTSEG_v0_1_2_DAYPOS_v0_1_3_UI_SYNC_20260819 | presentation-only -->
-<!-- Z2_GEOMETRY_WLA_EXEC_EPISODE_AUTHORITY_OBSERVABILITY_20260819 -->
+<!-- MME_NIGHTSEG_v0_1_1_RESTARTSAFE_UI_20260816 | presentation-only | FIX6 DOM preserved -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.2-GEOMETRY-v1.0-WLA-v1.0-EXEC-EPISODE-v1.0.1-MME-v0.5.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.3-UI-SYNC">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1-MME-v0.5.1-NIGHTSEG-v0.1.1-DAYPOS-v0.1.2-REALIZATION-GIVEBACK-CADENCE120-RESTARTSAFE-NO-COMMAND-SUMMARY-COMPACT-CORE-R7INLINE-EXEC-COLLAPSE-DOMFIX">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -404,20 +403,6 @@
     .ocf-session-band.session-reject .ocf-session-status { color:#ff9f0a; }
     .ocf-session-band.session-recovery .ocf-session-status { color:#bf5af2; }
 
-
-    /* === Z2 Formal Authority observability: Geometry / Episode / Wave Lifecycle === */
-    .ocf-authority-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; margin-top:4px; }
-    .ocf-authority-card { min-width:0; border:1px solid #3a3a3c; border-left:3px solid #636366; background:#202022; border-radius:5px; padding:4px 5px; }
-    .ocf-authority-card.auth-ok { border-left-color:#30d158; background:rgba(48,209,88,.045); }
-    .ocf-authority-card.auth-watch { border-left-color:#ffd60a; background:rgba(255,214,10,.06); }
-    .ocf-authority-card.auth-active { border-left-color:#64d2ff; background:rgba(100,210,255,.06); }
-    .ocf-authority-card.auth-danger { border-left-color:#ff453a; background:rgba(255,69,58,.07); }
-    .ocf-authority-head { display:flex; align-items:center; justify-content:space-between; gap:4px; }
-    .ocf-authority-name { color:#8e8e93; font-size:7px; font-weight:900; }
-    .ocf-authority-badge { color:#aaa; font-size:7px; font-weight:900; white-space:nowrap; }
-    .ocf-authority-main { color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.25; margin-top:2px; overflow-wrap:anywhere; }
-    .ocf-authority-detail { color:#9a9aa0; font-size:7px; line-height:1.3; margin-top:2px; overflow-wrap:anywhere; }
-    @media (max-width:760px) { .ocf-authority-grid { grid-template-columns:1fr; } }
 
     /* === Z2 execution details: compact collapsible summary === */
     #dashboard .ocf-exec-detail-toggle {
@@ -2022,7 +2007,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜RFD RC1A + Geometry v1.0 + Exec Episode v1.0.1 + Wave Lifecycle v1.0 + Wave v1.5.2 + HMF v1.2｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Transition v1.1 Latched + Entry Guard v1.2 + Pullback v1.0 + Wave v1.4 + HMF v1.2 + N2D Carry v1.0｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -2043,24 +2028,6 @@
                     <span class="ocf-command-label">固定分界／主目標</span>
                     <strong id="ocf-target-strike" class="ocf-command-value">--</strong>
                     <span id="ocf-event-strength" class="ocf-command-sub">中樞：--</span>
-                </div>
-            </div>
-
-            <div id="ocf-authority-grid" class="ocf-authority-grid" aria-label="Z2 Formal Authority 狀態">
-                <div id="ocf-geometry-authority" class="ocf-authority-card auth-watch">
-                    <div class="ocf-authority-head"><span class="ocf-authority-name">GEOMETRY AUTHORITY</span><span id="ocf-geometry-auth-badge" class="ocf-authority-badge">--</span></div>
-                    <div id="ocf-geometry-auth-main" class="ocf-authority-main">等待 Geometry Firebase</div>
-                    <div id="ocf-geometry-auth-detail" class="ocf-authority-detail">Coordinate / Epoch / committed SC-SP</div>
-                </div>
-                <div id="ocf-episode-authority" class="ocf-authority-card auth-watch">
-                    <div class="ocf-authority-head"><span class="ocf-authority-name">EXECUTION EPISODE</span><span id="ocf-episode-auth-badge" class="ocf-authority-badge">--</span></div>
-                    <div id="ocf-episode-auth-main" class="ocf-authority-main">等待 Episode Firebase</div>
-                    <div id="ocf-episode-auth-detail" class="ocf-authority-detail">Immutable Cross / Chase / Handoff</div>
-                </div>
-                <div id="ocf-wave-lifecycle-authority" class="ocf-authority-card auth-watch">
-                    <div class="ocf-authority-head"><span class="ocf-authority-name">WAVE LIFECYCLE</span><span id="ocf-wave-lifecycle-auth-badge" class="ocf-authority-badge">--</span></div>
-                    <div id="ocf-wave-lifecycle-auth-main" class="ocf-authority-main">等待 Lifecycle Firebase</div>
-                    <div id="ocf-wave-lifecycle-auth-detail" class="ocf-authority-detail">Flat-T1 / Campaign Mature / Second Leg</div>
                 </div>
             </div>
 
@@ -2101,7 +2068,7 @@
 
                     <div id="ocf-wave-band" class="ocf-wave-band wave-formal">
                         <div class="ocf-wave-main">
-                            <span class="ocf-wave-label">Wave Profit Protection v1.5.2 Formal｜Origin-aware W1</span>
+                            <span class="ocf-wave-label">Wave Profit Protection v1.4 Formal｜Trigger-origin Only</span>
                             <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜W1 MFE Gate 0.60R</strong>
                         </div>
                         <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利</div>
@@ -2949,14 +2916,8 @@
     function applyOCFVersionLabel(data) {
         const versionLabel = getOCFVersionLabel(data);
         const isZRange = /^OCF-Z/i.test(versionLabel);
-        const geometryBuild = String((data && data.geometry_build) || "").trim();
-        const episodeBuild = String((data && data.exec_episode_build) || "").trim();
-        const lifecycleBuild = String((data && data.wave_lifecycle_build) || "").trim();
-        const stackLabel = (geometryBuild || episodeBuild || lifecycleBuild)
-            ? `RFD RC1A + Geometry v1.0 + Exec Episode v1.0.1 + Wave Lifecycle v1.0 + Wave v1.5.2 + HMF v1.2`
-            : `固定 ATM 分界 + K±2權利金`;
         setOCFText("ocf-battle-version-title", isZRange
-            ? `${versionLabel} LIVE｜${stackLabel}`
+            ? `${versionLabel} LIVE｜固定 ATM 分界 + K±2權利金`
             : `${versionLabel}｜固定先驗 + 盤中防守確認`);
         setOCFText("v2-ocf-card-title", isZRange
             ? `${versionLabel} 暴 Z2 LIVE`
@@ -3167,90 +3128,6 @@
             statusElement.className = `ocf-model-badge ${dataBlindLevel > 0 ? "is-warn" : (isLive ? (usingPrevious ? "is-warn" : "is-live") : "is-stale")}`;
         }
 
-        // Geometry / Execution Episode / Wave Lifecycle formal authority observability.
-        // Firebase transport only; none of these UI reads can create or modify Formal decisions.
-        const geoBuild = String(data.geometry_build || "").trim();
-        const geoAuthority = Number(data.geometry_formal_authority || 0);
-        const geoHealthy = Number(data.geometry_coordinate_healthy || 0) === 1;
-        const geoMode = String(data.geometry_coordinate_mode || "--").trim();
-        const geoEpoch = Math.round(toFiniteNumberOrNull(data.geometry_epoch) ?? 0);
-        const geoBasis = toFiniteNumberOrNull(data.geometry_mapping_basis);
-        const geoSC = toFiniteNumberOrNull(data.geometry_committed_sc);
-        const geoSP = toFiniteNumberOrNull(data.geometry_committed_sp);
-        const geoEvent = String(data.geometry_last_event || "").trim();
-        const geoError = String(data.geometry_last_error || "").trim();
-        const geoCard = document.getElementById("ocf-geometry-authority");
-        const geoBadge = document.getElementById("ocf-geometry-auth-badge");
-        const geoMain = document.getElementById("ocf-geometry-auth-main");
-        const geoDetail = document.getElementById("ocf-geometry-auth-detail");
-        if (geoCard) geoCard.className = `ocf-authority-card ${geoError || (geoBuild && !geoHealthy) ? "auth-danger" : (geoBuild ? "auth-ok" : "auth-watch")}`;
-        if (geoBadge) geoBadge.textContent = geoBuild ? `FORMAL ${geoAuthority}｜E${geoEpoch}` : "NO FIREBASE";
-        if (geoMain) geoMain.textContent = geoBuild ? `${geoMode || "UNKNOWN"}｜${geoHealthy ? "HEALTHY" : "NOT HEALTHY"}` : "等待 Geometry Firebase";
-        if (geoDetail) geoDetail.textContent = geoBuild
-            ? `Basis ${geoBasis === null ? "--" : formatRadarNumber(geoBasis,1)}｜SC ${geoSC === null ? "--" : Math.round(geoSC)} / SP ${geoSP === null ? "--" : Math.round(geoSP)}${geoEvent ? `｜${geoEvent}` : ""}${geoError ? `｜ERR ${geoError}` : ""}`
-            : "需要 DataUploader Authority observability patch";
-
-        const epBuild = String(data.exec_episode_build || "").trim();
-        const epAuthority = Number(data.exec_episode_formal_authority || 0);
-        const epState = String(data.exec_episode_state || "--").trim();
-        const epId = Math.round(toFiniteNumberOrNull(data.exec_episode_id) ?? 0);
-        const epDir = Math.sign(toFiniteNumberOrNull(data.exec_episode_direction) ?? 0);
-        const epSource = String(data.exec_episode_source || "--").trim();
-        const epTrueCross = Number(data.exec_episode_true_cross_proven || 0) === 1;
-        const epTrigger = toFiniteNumberOrNull(data.exec_episode_original_trigger);
-        const epCross = toFiniteNumberOrNull(data.exec_episode_cross_price);
-        const epAge = Math.max(0, Math.round(toFiniteNumberOrNull(data.exec_episode_age_seconds) ?? 0));
-        const epChase = toFiniteNumberOrNull(data.exec_episode_current_chase);
-        const epMaxExt = toFiniteNumberOrNull(data.exec_episode_max_favorable_extension);
-        const epCrossEpoch = Math.round(toFiniteNumberOrNull(data.exec_episode_cross_geometry_epoch) ?? 0);
-        const epCurEpoch = Math.round(toFiniteNumberOrNull(data.exec_episode_current_geometry_epoch) ?? 0);
-        const epHandoff = Number(data.exec_episode_handoff_ready || 0) === 1;
-        const epCommitted = Number(data.exec_episode_committed || 0) === 1;
-        const epTerminal = Number(data.exec_episode_terminal || 0) === 1;
-        const epStrictReady = Number(data.exec_episode_strict_reentry_ready || 0) === 1;
-        const epEvent = String(data.exec_episode_last_event || "").trim();
-        const epError = String(data.exec_episode_last_error || "").trim();
-        const epCard = document.getElementById("ocf-episode-authority");
-        const epBadge = document.getElementById("ocf-episode-auth-badge");
-        const epMain = document.getElementById("ocf-episode-auth-main");
-        const epDetail = document.getElementById("ocf-episode-auth-detail");
-        const epDirText = epDir > 0 ? "LONG" : (epDir < 0 ? "SHORT" : "--");
-        let epTone = "auth-watch";
-        if (epError) epTone = "auth-danger";
-        else if (epCommitted || epHandoff || epStrictReady) epTone = "auth-active";
-        else if (epTerminal) epTone = "auth-watch";
-        else if (epBuild) epTone = "auth-ok";
-        if (epCard) epCard.className = `ocf-authority-card ${epTone}`;
-        if (epBadge) epBadge.textContent = epBuild ? `FORMAL ${epAuthority}｜#${epId}` : "NO FIREBASE";
-        if (epMain) epMain.textContent = epBuild ? `${epState}｜${epDirText}${epTrueCross ? "｜TRUE CROSS" : ""}` : "等待 Episode Firebase";
-        if (epDetail) epDetail.textContent = epBuild
-            ? `${epSource}｜Trig ${epTrigger === null ? "--" : Math.round(epTrigger)} / Cross ${epCross === null ? "--" : Math.round(epCross)}｜Chase ${epChase === null ? "--" : signed(epChase,0)} / MaxExt ${epMaxExt === null ? "--" : signed(epMaxExt,0)}｜Age ${epAge}s｜Epoch ${epCrossEpoch}→${epCurEpoch}${epHandoff ? "｜HANDOFF" : ""}${epStrictReady ? "｜STRICT READY" : ""}${epEvent ? `｜${epEvent}` : ""}${epError ? `｜ERR ${epError}` : ""}`
-            : "需要 DataUploader Authority observability patch";
-
-        const wlBuild = String(data.wave_lifecycle_build || "").trim();
-        const wlAuthority = Number(data.wave_lifecycle_formal_authority || 0);
-        const wlStage = String(data.wave_lifecycle_stage || "--").trim();
-        const wlCampaign = Math.round(toFiniteNumberOrNull(data.wave_lifecycle_campaign_id) ?? 0);
-        const wlDir = Math.sign(toFiniteNumberOrNull(data.wave_lifecycle_direction) ?? 0);
-        const wlT1Flat = Number(data.wave_lifecycle_t1_reached_while_flat || 0) === 1;
-        const wlOppRfd = Number(data.wave_lifecycle_opposite_rfd_seen || 0) === 1;
-        const wlReproof = Number(data.wave_lifecycle_secondleg_reproof_ready || 0) === 1;
-        const wlCount = Math.round(toFiniteNumberOrNull(data.wave_lifecycle_post_t1_reentry_count) ?? 0);
-        const wlReject = String(data.wave_lifecycle_last_reject_reason || "").trim();
-        const wlEvent = String(data.wave_lifecycle_last_event || "").trim();
-        const wlError = String(data.wave_lifecycle_last_error || "").trim();
-        const wlCard = document.getElementById("ocf-wave-lifecycle-authority");
-        const wlBadge = document.getElementById("ocf-wave-lifecycle-auth-badge");
-        const wlMain = document.getElementById("ocf-wave-lifecycle-auth-main");
-        const wlDetail = document.getElementById("ocf-wave-lifecycle-auth-detail");
-        const wlDirText = wlDir > 0 ? "LONG" : (wlDir < 0 ? "SHORT" : "--");
-        if (wlCard) wlCard.className = `ocf-authority-card ${wlError ? "auth-danger" : (wlT1Flat && !wlReproof ? "auth-watch" : (wlReproof ? "auth-active" : (wlBuild ? "auth-ok" : "auth-watch")))}`;
-        if (wlBadge) wlBadge.textContent = wlBuild ? `FORMAL ${wlAuthority}｜C${wlCampaign}` : "NO FIREBASE";
-        if (wlMain) wlMain.textContent = wlBuild ? `${wlStage}｜${wlDirText}` : "等待 Lifecycle Firebase";
-        if (wlDetail) wlDetail.textContent = wlBuild
-            ? `Flat-T1 ${wlT1Flat ? "YES" : "NO"}｜OppRFD ${wlOppRfd ? "YES" : "NO"}｜2ndLeg ${wlReproof ? "READY" : "WAIT"}｜Count ${wlCount}${wlReject ? `｜BLOCK ${wlReject}` : ""}${wlEvent ? `｜${wlEvent}` : ""}${wlError ? `｜ERR ${wlError}` : ""}`
-            : "需要 DataUploader Authority observability patch";
-
         const directionDisplay = String(data.z_direction_display || "").trim().replace(/\|/g, "｜");
         const scoreText = score === null
             ? "--"
@@ -3406,7 +3283,7 @@
         const activePullbackTrade = entryTypeToken === "PULLBACK_SUPPORT_LONG" || entryTypeToken === "PULLBACK_RESISTANCE_SHORT";
         const activeTriggerTrade = entryTypeToken === "BREAKOUT_LONG" || entryTypeToken === "BREAKOUT_SHORT";
         let waveClass = "wave-formal";
-        let waveStatusText = "FORMAL｜Wave v1.5.2｜Origin-aware W1";
+        let waveStatusText = "FORMAL｜W1 MFE Gate 0.60R";
         let waveDetailText = "W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利";
         if (activePullbackTrade && (waveHoldingLong || waveHoldingShort)) {
             waveClass = "wave-excluded";
@@ -3414,7 +3291,7 @@
             waveDetailText = "Formal規格：Wave Profit Protection只套用Trigger-origin交易；Pullback沿用自身Defense/Exit管理";
         } else if (activeTriggerTrade && (waveHoldingLong || waveHoldingShort)) {
             waveClass = "wave-eligible";
-            waveStatusText = "TRIGGER-ORIGIN｜Wave v1.5.2 + HMF v1.2 LagSafe Formal";
+            waveStatusText = "TRIGGER-ORIGIN｜Wave v1.4 + HMF v1.2 LagSafe Formal";
             waveDetailText = "是否進入Wave Mode仍由VBA以TargetR>4判定；目前Firebase未上傳即時TargetR/stage/MFE，畫面不推測W1/W2/W3狀態";
         } else if (waveHoldingLong || waveHoldingShort) {
             waveClass = "wave-warning";
@@ -6000,8 +5877,7 @@
   }
   function positioningTone(direction, state){
     const st=String(state||'').toUpperCase();
-    if(st.includes('DEEP_DISLOCATION') || st.includes('REVOKED') || st.includes('HARVEST_THEN_REVERSAL') || st.includes('EXPIRY_EXCLUDED') || st.includes('GIVEBACK_TO_ADVERSE')) return 'pos-warn';
-    if(st.includes('REALIZATION_GIVEBACK')) return 'pos-warn';
+    if(st.includes('DEEP_DISLOCATION') || st.includes('REVOKED') || st.includes('HARVEST_THEN_REVERSAL') || st.includes('EXPIRY_EXCLUDED')) return 'pos-warn';
     if(st.includes('REALIZATION') || st.includes('ANCHOR_RECLAIMED') || st.includes('REPAIRING')) return 'pos-info';
     const d=Number(direction)||0;
     return d>0?'pos-bull':(d<0?'pos-bear':'');
@@ -6029,7 +5905,6 @@
     if(st==='NIGHT_PRE_US_INTENT') return {text:(data.night_pre_us_read_state_zh||'美股開盤前心態'),dir:preDir,warn:false,meta:'Pre-US '+signed(data.night_pre_us_score,1)+'｜'+(data.night_pre_us_direction_label||'未定')};
     if(st==='US_OPEN_DISCOVERY') return {text:restartBuilding?'重啟後重新累積':'美股開盤重新定價中',dir:usDir,warn:restartBuilding,meta:'US '+signed(data.us_open_segment_score,1)+'｜觀察 '+dur(observedAge)+' / 60m'};
     if(st==='US_OPEN_CONFIRMED_CONTEXT') return {text:'美股開盤後 '+(data.us_open_segment_direction_label||'方向未定'),dir:usDir,warn:false,meta:'US '+signed(data.us_open_segment_score,1)+'｜觀察 '+dur(observedAge)};
-    if(st==='US_REGIME_SHIFT_WEAKENING') return {text:'Regime Shift 弱化｜近期證據已反向',dir:Number(data.us_open_regime_shift_direction)||0,warn:true,meta:'US '+signed(data.us_open_segment_score,1)+'｜Shift '+(data.us_open_regime_shift_direction_label||'未定')};
     if(st==='US_LATE_SESSION') return {text:'美股後段 '+(data.us_open_segment_direction_label||'延續監控'),dir:usDir,warn:false,meta:'US '+signed(data.us_open_segment_score,1)+'｜Late Shift 尚未校準'};
     if(st==='US_OPEN_UNCLEAR') return {text:'美股開盤後方向未明',dir:0,warn:true,meta:'US '+signed(data.us_open_segment_score,1)+'｜觀察 '+dur(observedAge)};
     return {text:'Night Segment 等待資料',dir:0,warn:false,meta:'--'};
@@ -6048,7 +5923,7 @@
     REVERSAL_WATCH:'整盤反轉監看', WEAKENING:'原整盤心態弱化', LOCKED:'穩定整盤判讀', UNRESOLVED:'整盤判讀未定',
     NIGHT_INACTIVE:'日盤｜夜盤分段未啟用', NIGHT_BUILDING:'夜盤心態建立中', NIGHT_PRE_US_INTENT:'美股開盤前心態',
     US_OPEN_DISCOVERY:'美股開盤重新定價中', US_OPEN_CONFIRMED_CONTEXT:'美股開盤後方向脈絡建立', US_OPEN_UNCLEAR:'美股開盤後方向未明', US_LATE_SESSION:'美股後段｜延續監控',
-    US_REGIME_CONTINUATION:'美股開盤後延續原方向', US_REGIME_SHIFT_WATCH:'美股開盤 Regime Shift 監看', US_REGIME_SHIFT_WEAKENING:'美股開盤 Regime Shift 仍在｜近期證據已反向',
+    US_REGIME_CONTINUATION:'美股開盤後延續原方向', US_REGIME_SHIFT_WATCH:'美股開盤 Regime Shift 監看',
     DAY_EXPIRY_EXCLUDED:'週選結算日排除', DAY_WAITING_FOR_POSITIONING:'等待日盤 Session Intent 定位',
     DAY_POSITIONING_ACTIVE:'日盤結構性 Positioning 已建立', DAY_POSITIONING_DISLOCATED:'日盤 Positioning 與期指價格背離',
     DAY_POSITIONING_DEEP_DISLOCATION_150:'日盤 Positioning 深度背離 ≥150點', DAY_POSITIONING_REVOKED:'日盤 Positioning 已撤銷/翻向',
@@ -6056,7 +5931,6 @@
     NIGHT_POSITIONING_DISLOCATED:'夜盤仍處 Positioning 不利側', NIGHT_DEEP_DISLOCATION_150:'夜盤仍深度背離 ≥150點',
     NIGHT_REPAIRING:'夜盤正在向 Positioning Anchor 修復', NIGHT_ANCHOR_RECLAIMED:'夜盤已重新站回 Positioning Anchor',
     NIGHT_REALIZATION_EVENT:'夜盤已突破日盤有利極值', NIGHT_REALIZATION_HELD:'夜盤 Realization 目前仍維持',
-    NIGHT_REALIZATION_GIVEBACK:'夜盤 Realization 已回到有利極值內側｜仍在 SPA 有利側', NIGHT_REALIZATION_GIVEBACK_TO_ADVERSE:'夜盤 Realization 已回吐至 SPA 不利側｜尚未破日盤不利極值',
     NIGHT_HARVEST_THEN_REVERSAL:'夜盤先完成 Realization 後反向掃破日盤 adverse extreme',
     UNREALIZED:'尚未達 +150 價格兌現', REALIZED:'已完成 +150 價格兌現', GIVEBACK:'已實現後回吐，仍在有利側',
     GIVEBACK_TO_ADVERSE:'已實現後回吐至不利側', GIVEBACK_TO_DEEP_DISLOCATION:'已實現後回吐至深度不利側'
@@ -6069,7 +5943,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.2 + DayPositioning v0.1.3・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.1 + DayPositioning v0.1.2 Giveback Shadow・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -6093,7 +5967,7 @@
     scoreRead.appendChild(make('div','mme-score-legend','mme-score-legend','±15＝日盤歷史研究的強 Session evidence 門檻；是證據強度，不是勝率'));
     band.appendChild(scoreRead);
 
-    // Night Segment v0.1.2 adds Regime-Shift Weakening. Global Session Intent remains visible above.
+    // Night Segment v0.1.1 is an additive operational overlay. Global Session Intent remains visible above.
     const nightCtx=make('div','mme-night-context','mme-night-context');
     [
       ['NIGHT STAGE','mme-night-stage-main','mme-night-stage-meta'],
@@ -6479,7 +6353,7 @@
     let breach='Trigger內';
     if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
     document.getElementById('mme-breach').textContent=breach;
-    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+'｜'+(data.timestamp||'--');
+    document.getElementById('mme-build').textContent=(data.build||'MME')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+'｜'+(data.timestamp||'--');
     if(data.last_event) renderEvent(data.last_event);
     updateFreshness();
   }
