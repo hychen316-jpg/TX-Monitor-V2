@@ -1,11 +1,12 @@
 <!-- Z2_EXEC_COLLAPSE_FIX4_CSS_CHECKBOX_20260816 -->
 <!-- Z2_AUTHORITY_EXECDETAIL_UI_20260819 | presentation-only | BASE=index(5).html | original listeners preserved -->
-<!-- MME_POSITIONING_LIFECYCLE_UI_v0.1_20260820 | presentation-only | backend authority unchanged -->
+<!-- MME_POSITIONING_LIFECYCLE_UI_v0.1_20260820 | presentation-only | detail-only | backend authority unchanged -->
+<!-- MME_WHOLE_DAY_REVERSAL_WATCH_UI_v0.1_20260820 | presentation-only | Shadow only | Formal/Entry authority unchanged -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.1-POSTRFDRELEASE-MME-v0.5.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.3-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -5996,6 +5997,10 @@
     const m=Math.floor(s/60), r=Math.round(s%60);
     return m+'m'+String(r).padStart(2,'0')+'s';
   }
+  function mmeDirLabel(direction){
+    const d=Number(direction)||0;
+    return d>0?'LONG':(d<0?'SHORT':'NEUTRAL');
+  }
   function stateClass(s){
     s=String(s||'').toUpperCase();
     if(s.includes('TRAP_CONFIRMED')) return 'mme-danger';
@@ -6168,13 +6173,7 @@
     NIGHT_REALIZATION_EVENT:'夜盤已突破日盤有利極值', NIGHT_REALIZATION_HELD:'夜盤 Realization 目前仍維持',
     NIGHT_HARVEST_THEN_REVERSAL:'夜盤先完成 Realization 後反向掃破日盤 adverse extreme',
     UNREALIZED:'尚未達 +150 價格兌現', REALIZED:'已完成 +150 價格兌現', GIVEBACK:'已實現後回吐，仍在有利側',
-    GIVEBACK_TO_ADVERSE:'已實現後回吐至不利側', GIVEBACK_TO_DEEP_DISLOCATION:'已實現後回吐至深度不利側',
-    DAY_WAITING:'日盤 Lifecycle 等待定位', DAY_UNREALIZED:'日盤尚未兌現 +150', DAY_UNREALIZED_ADVERSE:'日盤未兌現且位於不利側',
-    DAY_REALIZED:'日盤已完成 +150 兌現', DAY_GIVEBACK:'日盤已兌現後回吐', DAY_REVERSAL_CORRECTED:'日盤正式反轉修正',
-    LONG_TRAPPED:'日盤多方套', SHORT_TRAPPED:'日盤空方套', NIGHT_TRAPPED_CARRY:'夜盤承接日盤被套 Positioning',
-    NIGHT_REPAIR:'夜盤解套修復中', NIGHT_PROFIT_AFTER_REPAIR:'夜盤已解套並進入獲利', NIGHT_HARVEST_PENDING:'夜盤等待收割確認',
-    NIGHT_HARVEST_HELD:'夜盤收割維持', NIGHT_HARVEST_GIVEBACK:'夜盤收割後回吐', NIGHT_HARVEST_GIVEBACK_TO_ADVERSE:'夜盤收割後回吐至不利側',
-    NIGHT_HARVEST_REVERSAL:'夜盤收割後反轉'
+    GIVEBACK_TO_ADVERSE:'已實現後回吐至不利側', GIVEBACK_TO_DEEP_DISLOCATION:'已實現後回吐至深度不利側'
   };
   function zh(v){ return ZH[String(v||'')] || String(v||'--'); }
 
@@ -6184,7 +6183,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.2 + DayPositioning v0.1.4 + Lifecycle v0.1 Shadow・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.2 + DayPositioning v0.1.4・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -6256,7 +6255,7 @@
 
     const detail=make('details','mme-detail-toggle','mme-detail-toggle');
     const detailSummary=make('summary','mme-detail-summary',null);
-    detailSummary.innerHTML='<span>MME 詳細資訊</span><small>SESSION / DAY EARLY READ / NIGHT SEGMENT / FAST / STRUCTURE / EXECUTION / FORECAST / RISK</small>';
+    detailSummary.innerHTML='<span>MME 詳細資訊</span><small>SESSION / WHOLE-DAY REVERSAL WATCH / DAY EARLY READ / NIGHT SEGMENT / FAST / STRUCTURE / EXECUTION / FORECAST / RISK</small>';
     detail.appendChild(detailSummary);
     const detailBody=make('div','mme-detail-body');
 
@@ -6266,7 +6265,7 @@
     });
     detailBody.appendChild(sgrid);
     const egrid=make('div','mme-evidence-grid');
-    [['LIVE READ','mme-session-live-read'],['INSTANT SCORE','mme-session-instant'],['EARLY WARNING','mme-session-warning'],['ADVERSE','mme-session-adverse']].forEach(function(x){
+    [['LIVE READ','mme-session-live-read'],['INSTANT SCORE','mme-session-instant'],['SESSION WARNING','mme-session-warning'],['ADVERSE','mme-session-adverse']].forEach(function(x){
       const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; egrid.appendChild(c);
     });
     detailBody.appendChild(egrid);
@@ -6335,16 +6334,20 @@
     const earlyDir=hasEarly ? (Number(data.session_intent_read_direction)||0) : sessionDir;
     const warningState=hasEarly ? String(data.session_intent_warning_state||'NONE').toUpperCase() : 'NONE';
     const warningActive=warningState!=='NONE';
-    const sessionWarn=String(sessionState).toUpperCase().includes('REVERSAL_CANDIDATE') || warningActive;
+    const wholeDayState=String(data.whole_day_reversal_watch_state||'IDLE').toUpperCase();
+    const wholeDayActive=(Number(data.whole_day_reversal_watch_active)||0)===1 || wholeDayState==='REVERSAL_WATCH';
+    const wholeDayDir=Number(data.whole_day_reversal_watch_direction)||0;
+    const anySessionWarning=warningActive||wholeDayActive;
+    const sessionWarn=String(sessionState).toUpperCase().includes('REVERSAL_CANDIDATE') || anySessionWarning;
     const nightActive=isNightSegmentActive(data);
     const nightOp=nightActive ? nightOperationalRead(data) : null;
 
-    band.className='mme-live-band '+(warningActive?'mme-risk':(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state)));
+    band.className='mme-live-band '+(anySessionWarning?'mme-risk':(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state)));
     const primaryEl=document.getElementById('mme-primary');
     const stickyText=hasSession ? (data.session_intent_state_zh || zh(sessionState)) : (data.primary_state_zh || data.primary_state || 'MME等待判讀');
-    const warningText=warningActive ? (data.session_intent_warning_state_zh || zh(warningState)) : '';
+    const warningText=wholeDayActive ? ('Whole-Day 反轉監看 → '+(data.whole_day_reversal_watch_direction_label||mmeDirLabel(wholeDayDir))) : (warningActive ? (data.session_intent_warning_state_zh || zh(warningState)) : '');
     primaryEl.textContent=stickyText+(warningText?'｜⚠ '+warningText:'');
-    setMmeDirClass(primaryEl,warningActive?earlyDir:sessionDir,sessionWarn);
+    setMmeDirClass(primaryEl,wholeDayActive?wholeDayDir:(warningActive?earlyDir:sessionDir),sessionWarn);
     const scoreEl=document.getElementById('mme-session-score');
     scoreEl.textContent=signed(sessionScore,0)+(hasSession?'｜'+sessionScoreRead(sessionScore,warningState,sessionDir).grade:'｜Fast');
     setMmeDirClass(scoreEl,sessionScore,sessionWarn);
@@ -6508,15 +6511,21 @@
     const sAgeFlips=document.getElementById('mme-session-age-flips');
     if(sAgeFlips) sAgeFlips.textContent=hasSession ? (dur(Number(data.session_intent_age_seconds)||0)+'｜Flip '+fmt(data.session_intent_flip_count,0)) : 'v0.4 fallback';
     const liveRead=document.getElementById('mme-session-live-read');
-    if(liveRead){ liveRead.textContent=hasEarly ? (data.session_intent_read_state_zh || zh(earlyState)) : 'v0.5 fallback'; setMmeDirClass(liveRead,earlyDir,warningActive); }
+    if(liveRead){ liveRead.textContent=hasEarly ? (data.session_intent_read_state_zh || zh(earlyState)) : 'v0.5 fallback'; setMmeDirClass(liveRead,earlyDir,anySessionWarning); }
     const instantEl=document.getElementById('mme-session-instant');
     if(instantEl){ instantEl.textContent=hasEarly ? signed(data.session_intent_instant_score,1) : '--'; setMmeDirClass(instantEl,data.session_intent_instant_score,false); }
     const warningEl=document.getElementById('mme-session-warning');
-    if(warningEl){ warningEl.textContent=hasEarly ? (data.session_intent_warning_state_zh || zh(warningState)) : '--'; setMmeDirClass(warningEl,Number(data.session_intent_warning_direction)||0,warningActive); }
+    if(warningEl){
+      if(wholeDayActive){ warningEl.textContent='全天反轉監看 → '+(data.whole_day_reversal_watch_direction_label||mmeDirLabel(wholeDayDir)); setMmeDirClass(warningEl,wholeDayDir,true); }
+      else { warningEl.textContent=hasEarly ? (data.session_intent_warning_state_zh || zh(warningState)) : '--'; setMmeDirClass(warningEl,Number(data.session_intent_warning_direction)||0,warningActive); }
+    }
     const adverseEl=document.getElementById('mme-session-adverse');
-    if(adverseEl) adverseEl.textContent=hasEarly ? fmt(data.session_intent_adverse_points,0)+'pt' : '--';
+    if(adverseEl) adverseEl.textContent=(wholeDayActive||hasEarly) ? fmt(wholeDayActive?data.whole_day_reversal_watch_adverse_points:data.session_intent_adverse_points,0)+'pt' : '--';
     const sReason=document.getElementById('mme-session-reason');
-    if(sReason) sReason.textContent=hasSession ? ('Session Intent：'+(data.session_intent_reason||'--')+'｜EQ '+fmt(data.session_intent_evidence_quality,0)+(hasEarly&&data.session_intent_warning_reason?'｜'+data.session_intent_warning_reason:'')) : 'Session Intent：尚未收到 v0.5 欄位，顯示 v0.4 fallback';
+    if(sReason){
+      const wdReason=(data.whole_day_reversal_watch_reason&&wholeDayActive)?('｜Whole-Day：'+data.whole_day_reversal_watch_reason):'';
+      sReason.textContent=hasSession ? ('Session Intent：'+(data.session_intent_reason||'--')+'｜EQ '+fmt(data.session_intent_evidence_quality,0)+(hasEarly&&data.session_intent_warning_reason?'｜'+data.session_intent_warning_reason:'')+wdReason) : 'Session Intent：尚未收到 v0.5 欄位，顯示 v0.4 fallback';
+    }
 
     const nSeg=document.getElementById('mme-night-segment');
     const nPre=document.getElementById('mme-night-pre-us');
@@ -6600,7 +6609,7 @@
     let breach='Trigger內';
     if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
     document.getElementById('mme-breach').textContent=breach;
-    document.getElementById('mme-build').textContent=(data.build||'MME')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜'+(data.timestamp||'--');
+    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.whole_day_reversal_watch_build?'｜'+data.whole_day_reversal_watch_build:'')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜'+(data.timestamp||'--');
     if(data.last_event) renderEvent(data.last_event);
     updateFreshness();
   }
