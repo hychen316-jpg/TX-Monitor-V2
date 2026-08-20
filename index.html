@@ -3,11 +3,12 @@
 <!-- MME_POSITIONING_LIFECYCLE_UI_v0.1_20260820 | presentation-only | detail-only | backend authority unchanged -->
 <!-- MME_WHOLE_DAY_REVERSAL_WATCH_UI_v0.1_20260820 | presentation-only | Shadow only | Formal/Entry authority unchanged -->
 <!-- Z2_CAMPAIGN_DEFENSE_UI_v1.0_20260820 | presentation-only | merged onto Whole-Day Watch v0.1 | Wave v1.5.3 observability | no new card/listener -->
+<!-- MME_NIGHTSEGMENT_PREUS_PRIOR_UI_v0.1.3_20260820 | formal MME night interpretation | Z2/Entry/Order authority unchanged -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.4-CAMPAIGNDEF-v1.0-WAVE-v1.5.3-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.5-CAMPAIGNDEF-v1.0-WAVE-v1.5.3-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -6170,6 +6171,18 @@
     const usDir=Number(data&&data.us_open_segment_direction)||0;
     const preDir=Number(data&&data.night_pre_us_direction)||0;
     const restartBuilding=(st==='US_OPEN_DISCOVERY' && marketAge>=3600 && observedAge<3600);
+    // v0.1.3 formal MME night interpretation. These fields are observational only: Z2/Entry/Order authority = 0.
+    if(data && Object.prototype.hasOwnProperty.call(data,'night_operational_mindset_state')){
+      const op=String(data.night_operational_mindset_state||'').toUpperCase();
+      const opText=data.night_operational_mindset_state_zh||zh(op)||'夜盤心態未定';
+      const opDir=Number(data.night_operational_mindset_direction)||0;
+      const q=String(data.night_operational_mindset_quality||'LOW');
+      const prior=data.night_pre_us_prior_state_zh||data.night_pre_us_prior_state||'Prior --';
+      const trans=data.us_open_prior_transition_state_zh||data.us_open_prior_transition_state||'Transition --';
+      const warn=/CHALLENGED|UNRESOLVED|PARTIAL|UNAVAILABLE/.test(String(data.us_open_prior_transition_state||''));
+      return {text:opText,dir:opDir,warn:warn,meta:'Prior '+prior+'｜'+trans+'｜Q '+q};
+    }
+    // Backward-compatible v0.1.2 fallback.
     if(st==='NIGHT_BUILDING') return {text:'夜盤心態建立中',dir:0,warn:false,meta:'15:00～約19:00｜不宣告整夜方向'};
     if(st==='NIGHT_PRE_US_INTENT') return {text:(data.night_pre_us_read_state_zh||'美股開盤前心態'),dir:preDir,warn:false,meta:'Pre-US '+signed(data.night_pre_us_score,1)+'｜'+(data.night_pre_us_direction_label||'未定')};
     if(st==='US_OPEN_DISCOVERY') return {text:restartBuilding?'重啟後重新累積':'美股開盤重新定價中',dir:usDir,warn:restartBuilding,meta:'US '+signed(data.us_open_segment_score,1)+'｜觀察 '+dur(observedAge)+' / 60m'};
@@ -6193,6 +6206,14 @@
     NIGHT_INACTIVE:'日盤｜夜盤分段未啟用', NIGHT_BUILDING:'夜盤心態建立中', NIGHT_PRE_US_INTENT:'美股開盤前心態',
     US_OPEN_DISCOVERY:'美股開盤重新定價中', US_OPEN_CONFIRMED_CONTEXT:'美股開盤後方向脈絡建立', US_OPEN_UNCLEAR:'美股開盤後方向未明', US_LATE_SESSION:'美股後段｜延續監控',
     US_REGIME_CONTINUATION:'美股開盤後延續原方向', US_REGIME_SHIFT_WATCH:'美股開盤 Regime Shift 監看',
+    PRE_US_PRIOR_BUILDING:'PRE-US Prior 建立中', PRE_US_PRIOR_ESTABLISHED:'PRE-US Prior 已建立', PRE_US_PRIOR_UNESTABLISHED:'PRE-US Prior 未建立',
+    US_OPEN_PARTIAL_DATA:'U.S.-Open 資料不足', US_OPEN_NO_STRONG_PRIOR_DISCOVERY:'無強 PRE-US Prior｜等待 U.S.-Open', US_OPEN_STANDALONE_CONTEXT:'U.S.-Open 獨立方向脈絡',
+    US_OPEN_STANDALONE_UNCONFIRMED:'U.S.-Open 獨立證據未確認', US_OPEN_PRIOR_CONTINUATION_DISCOVERY:'PRE-US Prior 延續觀察中', US_OPEN_CHALLENGED:'PRE-US Prior 受到反向挑戰',
+    US_OPEN_CONTINUATION:'U.S.-Open 確認 PRE-US Prior 延續', US_OPEN_CONTINUATION_WEAKENING:'PRE-US Prior 延續｜近期證據轉弱',
+    US_OPEN_REGIME_SHIFT:'U.S.-Open 已推翻 PRE-US Prior', US_OPEN_REGIME_SHIFT_WEAKENING:'Regime Shift｜近期證據轉弱', US_OPEN_UNRESOLVED:'PRE-US Prior / U.S.-Open 尚未解決',
+    US_OPEN_CONTINUATION_LONG:'U.S.-Open 延續 PRE-US 多方心態', US_OPEN_CONTINUATION_SHORT:'U.S.-Open 延續 PRE-US 空方心態',
+    US_OPEN_SHIFT_LONG:'U.S.-Open Regime Shift｜主力心態轉多', US_OPEN_SHIFT_SHORT:'U.S.-Open Regime Shift｜主力心態轉空',
+    US_OPEN_STANDALONE_LONG:'無強 Prior｜U.S.-Open 獨立偏多', US_OPEN_STANDALONE_SHORT:'無強 Prior｜U.S.-Open 獨立偏空',
     DAY_EXPIRY_EXCLUDED:'週選結算日排除', DAY_WAITING_FOR_POSITIONING:'等待日盤 Session Intent 定位',
     DAY_POSITIONING_ACTIVE:'日盤結構性 Positioning 已建立', DAY_POSITIONING_DISLOCATED:'日盤 Positioning 與期指價格背離',
     DAY_POSITIONING_DEEP_DISLOCATION_150:'日盤 Positioning 深度背離 ≥150點', DAY_POSITIONING_REVOKED:'日盤 Positioning 已撤銷/翻向',
@@ -6212,7 +6233,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.2 + DayPositioning v0.1.4・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.3 PRE-US Prior + DayPositioning v0.1.4・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -6236,13 +6257,13 @@
     scoreRead.appendChild(make('div','mme-score-legend','mme-score-legend','±15＝日盤歷史研究的強 Session evidence 門檻；是證據強度，不是勝率'));
     band.appendChild(scoreRead);
 
-    // Night Segment v0.1.1 is an additive operational overlay. Global Session Intent remains visible above.
+    // Night Segment v0.1.3: PRE-US Prior -> U.S.-Open transition is the formal MME night interpretation; trading authority remains zero.
     const nightCtx=make('div','mme-night-context','mme-night-context');
     [
       ['NIGHT STAGE','mme-night-stage-main','mme-night-stage-meta'],
-      ['PRE-US READ','mme-night-pre-main','mme-night-pre-meta'],
+      ['PRE-US PRIOR','mme-night-pre-main','mme-night-pre-meta'],
       ['U.S.-OPEN SEGMENT','mme-night-us-main','mme-night-us-meta'],
-      ['REGIME SHIFT','mme-night-shift-main','mme-night-shift-meta']
+      ['PRIOR TRANSITION','mme-night-shift-main','mme-night-shift-meta']
     ].forEach(function(x){
       const c=make('div','mme-night-card');
       c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">--</small>';
@@ -6301,7 +6322,7 @@
     detailBody.appendChild(make('div','mme-session-reason','mme-session-reason','Session Intent：等待資料'));
 
     const ngrid=make('div','mme-evidence-grid');
-    [['NIGHT SEGMENT','mme-night-segment'],['PRE-US READ','mme-night-pre-us'],['U.S.-OPEN SEGMENT','mme-night-us-open'],['US REGIME SHIFT','mme-night-us-shift']].forEach(function(x){
+    [['NIGHT SEGMENT','mme-night-segment'],['PRE-US PRIOR','mme-night-pre-us'],['U.S.-OPEN SEGMENT','mme-night-us-open'],['PRIOR TRANSITION','mme-night-us-shift']].forEach(function(x){
       const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; ngrid.appendChild(c);
     });
     detailBody.appendChild(ngrid);
@@ -6393,10 +6414,10 @@
     const scoreAction=document.getElementById('mme-score-action');
     if(scoreAction){
       scoreAction.className='mme-score-action '+(nightActive?'score-neutral':scoreRead.cls);
-      scoreAction.textContent=nightActive ? 'Global memory 保留｜夜盤以分段 Operational Read 為主' : scoreRead.action;
+      scoreAction.textContent=nightActive ? 'Global memory 保留｜夜盤以 PRE-US Prior → U.S.-Open Transition 為 Operational Read' : scoreRead.action;
     }
     const scoreLegend=document.getElementById('mme-score-legend');
-    if(scoreLegend) scoreLegend.textContent=nightActive ? 'Global Night Score＝整夜背景 memory；Pre-US / U.S.-Open Segment 的 ±10 僅是歷史 Shadow candidate，需 forward OOS' : '±15＝日盤歷史研究的強 Session evidence 門檻；是證據強度，不是勝率';
+    if(scoreLegend) scoreLegend.textContent=nightActive ? 'Global Night Score＝整夜背景 memory；v0.1.3 以 PRE-US Prior 驗證 U.S.-Open；±10 / +60m / +90m 為凍結研究門檻，非勝率' : '±15＝日盤歷史研究的強 Session evidence 門檻；是證據強度，不是勝率';
     const scoreMarker=document.getElementById('mme-score-marker');
     if(scoreMarker) scoreMarker.style.left=scoreMarkerPct(sessionScore).toFixed(1)+'%';
 
@@ -6420,16 +6441,30 @@
       const secondsTo=Math.max(0,Number(data.us_open_seconds_to_anchor)||0);
       const restartBuilding=(st==='US_OPEN_DISCOVERY' && marketAge>=3600 && observedAge<3600);
       setNightCard('mme-night-stage-main', data.night_segment_state_zh||zh(st), data.us_open_anchor_tpe?('U.S. Open '+String(data.us_open_anchor_tpe).slice(11,16)+' TPE'):'Timezone-aware U.S. Open', Number(data.us_open_segment_direction)||Number(data.night_pre_us_direction)||0, restartBuilding);
-      setNightCard('mme-night-pre-main', data.night_pre_us_read_state_zh||'Pre-US', signed(data.night_pre_us_score,1)+' / R '+signed(data.night_pre_us_recent_score,1)+'｜'+(data.night_pre_us_direction_label||'未定'), Number(data.night_pre_us_direction)||0, false);
+      const priorState=data.night_pre_us_prior_state_zh||data.night_pre_us_read_state_zh||'Pre-US Prior';
+      const priorDir=Number(data.night_pre_us_prior_direction)||Number(data.night_pre_us_direction)||0;
+      const priorQ=String(data.night_pre_us_prior_quality||'--');
+      const priorAge=Math.max(0,Number(data.night_pre_us_prior_age_seconds)||0);
+      setNightCard('mme-night-pre-main', priorState, signed(data.night_pre_us_score,1)+' / R '+signed(data.night_pre_us_recent_score,1)+'｜Q '+priorQ+(priorAge>0?'｜Age '+dur(priorAge):''), priorDir, false);
       let usMeta='Score '+signed(data.us_open_segment_score,1)+' / R '+signed(data.us_open_segment_recent_score,1);
       if(secondsTo>0) usMeta+='｜開盤倒數 '+dur(secondsTo);
       else usMeta+='｜市場 '+dur(marketAge)+'｜觀察 '+dur(observedAge)+(observedAge<3600?' / 60m':'');
       setNightCard('mme-night-us-main', restartBuilding?'重啟後重新累積':(st.indexOf('US_')===0?(data.us_open_segment_direction_label||'重新定價中'):'等待美股開盤'), usMeta, Number(data.us_open_segment_direction)||0, restartBuilding);
-      const shift=String(data.us_open_regime_shift_state||'NONE');
-      const shiftWarn=shift==='US_REGIME_SHIFT_WATCH';
-      const shiftMain=data.us_open_regime_shift_state_zh||zh(shift);
-      const late=String(data.late_shift_watch_state||'INACTIVE');
-      setNightCard('mme-night-shift-main', shiftMain, shiftWarn?('方向 '+(data.us_open_regime_shift_direction_label||'未定')+'｜Shadow only'):(late==='UNCALIBRATED_MONITORING'?'Late Shift 尚未校準':'尚無 Shift 確認'), Number(data.us_open_regime_shift_direction)||0, shiftWarn);
+      const transition=String(data.us_open_prior_transition_state||'');
+      if(transition){
+        const opDir=Number(data.night_operational_mindset_direction)||0;
+        const opQ=String(data.night_operational_mindset_quality||'LOW');
+        const transWarn=/CHALLENGED|UNRESOLVED|PARTIAL|UNAVAILABLE/.test(transition);
+        const transMain=data.us_open_prior_transition_state_zh||zh(transition);
+        const transMeta=(data.night_operational_mindset_state_zh||'心態未定')+'｜Q '+opQ;
+        setNightCard('mme-night-shift-main', transMain, transMeta, opDir, transWarn);
+      } else {
+        const shift=String(data.us_open_regime_shift_state||'NONE');
+        const shiftWarn=shift==='US_REGIME_SHIFT_WATCH';
+        const shiftMain=data.us_open_regime_shift_state_zh||zh(shift);
+        const late=String(data.late_shift_watch_state||'INACTIVE');
+        setNightCard('mme-night-shift-main', shiftMain, shiftWarn?('方向 '+(data.us_open_regime_shift_direction_label||'未定')+'｜Context only'):(late==='UNCALIBRATED_MONITORING'?'Late Shift 尚未校準':'尚無 Shift 確認'), Number(data.us_open_regime_shift_direction)||0, shiftWarn);
+      }
     }
 
     const posActive=isPositioningActive(data);
@@ -6567,15 +6602,15 @@
       const secondsTo=Math.max(0,Number(data.us_open_seconds_to_anchor)||0);
       const restartBuilding=String(data.night_segment_state||'')==='US_OPEN_DISCOVERY' && marketAge>=3600 && observedAge<3600;
       if(nSeg){ nSeg.textContent=data.night_segment_state_zh||zh(data.night_segment_state); setMmeDirClass(nSeg,Number(data.us_open_segment_direction)||Number(data.night_pre_us_direction)||0,restartBuilding); }
-      if(nPre){ nPre.textContent=(data.night_pre_us_read_state_zh||'Pre-US')+'｜'+signed(data.night_pre_us_score,1)+' / R '+signed(data.night_pre_us_recent_score,1)+'｜'+(data.night_pre_us_direction_label||'未定'); setMmeDirClass(nPre,Number(data.night_pre_us_direction)||0,false); }
+      if(nPre){ const pd=Number(data.night_pre_us_prior_direction)||Number(data.night_pre_us_direction)||0; const pa=Math.max(0,Number(data.night_pre_us_prior_age_seconds)||0); nPre.textContent=(data.night_pre_us_prior_state_zh||data.night_pre_us_read_state_zh||'Pre-US Prior')+'｜'+signed(data.night_pre_us_score,1)+' / R '+signed(data.night_pre_us_recent_score,1)+'｜Q '+String(data.night_pre_us_prior_quality||'--')+(pa>0?'｜Age '+dur(pa):''); setMmeDirClass(nPre,pd,false); }
       if(nUs){
         let txt=(data.us_open_anchor_tpe?String(data.us_open_anchor_tpe).slice(11,16)+' TPE｜':'')+signed(data.us_open_segment_score,1)+' / R '+signed(data.us_open_segment_recent_score,1)+'｜'+(data.us_open_segment_direction_label||'未定');
         txt+=secondsTo>0?('｜開盤倒數 '+dur(secondsTo)):('｜市場 '+dur(marketAge)+' / 觀察 '+dur(observedAge)+(observedAge<3600?' / 60m':''));
         if(restartBuilding) txt+='｜RESTART SAFE';
         nUs.textContent=txt; setMmeDirClass(nUs,Number(data.us_open_segment_direction)||0,restartBuilding);
       }
-      if(nShift){ const sh=String(data.us_open_regime_shift_state||'NONE'); nShift.textContent=(data.us_open_regime_shift_state_zh||zh(sh))+(Number(data.us_open_regime_shift_direction)?'｜'+(data.us_open_regime_shift_direction_label||''):'')+(String(data.late_shift_watch_state||'')==='UNCALIBRATED_MONITORING'?'｜Late 未校準':''); setMmeDirClass(nShift,Number(data.us_open_regime_shift_direction)||0,sh==='US_REGIME_SHIFT_WATCH'); }
-      if(nReason){ nReason.classList.add('active'); nReason.textContent='Night Segment：'+(data.night_segment_reason||'--')+'｜Anchor '+(data.us_open_anchor_source||'--')+'｜Market '+dur(marketAge)+'｜Observed '+dur(observedAge)+'｜'+(data.night_segment_build||'NightSegment'); }
+      if(nShift){ const tr=String(data.us_open_prior_transition_state||''); if(tr){ const od=Number(data.night_operational_mindset_direction)||0; nShift.textContent=(data.us_open_prior_transition_state_zh||zh(tr))+'｜'+(data.night_operational_mindset_state_zh||'心態未定')+'｜Q '+String(data.night_operational_mindset_quality||'LOW'); setMmeDirClass(nShift,od,/CHALLENGED|UNRESOLVED|PARTIAL|UNAVAILABLE/.test(tr)); } else { const sh=String(data.us_open_regime_shift_state||'NONE'); nShift.textContent=(data.us_open_regime_shift_state_zh||zh(sh))+(Number(data.us_open_regime_shift_direction)?'｜'+(data.us_open_regime_shift_direction_label||''):'')+(String(data.late_shift_watch_state||'')==='UNCALIBRATED_MONITORING'?'｜Late 未校準':''); setMmeDirClass(nShift,Number(data.us_open_regime_shift_direction)||0,sh==='US_REGIME_SHIFT_WATCH'); } }
+      if(nReason){ nReason.classList.add('active'); const ar='AUTH '+String(Number(data.night_transition_z2_authority)||0)+'/'+String(Number(data.night_transition_entry_authority)||0)+'/'+String(Number(data.night_transition_order_authority)||0); nReason.textContent='Night Segment：'+(data.night_segment_reason||'--')+(data.us_open_prior_transition_reason?'｜Transition '+data.us_open_prior_transition_reason:'')+'｜Anchor '+(data.us_open_anchor_source||'--')+'｜Market '+dur(marketAge)+'｜Observed '+dur(observedAge)+'｜'+ar+'｜'+(data.night_segment_build||'NightSegment'); }
     } else {
       if(nSeg) nSeg.textContent='日盤 N/A'; if(nPre) nPre.textContent='--'; if(nUs) nUs.textContent='--'; if(nShift) nShift.textContent='--';
       if(nReason){ nReason.classList.remove('active'); nReason.textContent='Night Segment：日盤 N/A'; }
