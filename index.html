@@ -2,11 +2,12 @@
 <!-- Z2_AUTHORITY_EXECDETAIL_UI_20260819 | presentation-only | BASE=index(5).html | original listeners preserved -->
 <!-- MME_POSITIONING_LIFECYCLE_UI_v0.1_20260820 | presentation-only | detail-only | backend authority unchanged -->
 <!-- MME_WHOLE_DAY_REVERSAL_WATCH_UI_v0.1_20260820 | presentation-only | Shadow only | Formal/Entry authority unchanged -->
+<!-- Z2_CAMPAIGN_DEFENSE_UI_v1.0_20260820 | presentation-only | merged onto Whole-Day Watch v0.1 | Wave v1.5.3 observability | no new card/listener -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.3-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.4-CAMPAIGNDEF-v1.0-WAVE-v1.5.3-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -2093,10 +2094,10 @@
 
                     <div id="ocf-wave-band" class="ocf-wave-band wave-formal">
                         <div class="ocf-wave-main">
-                            <span class="ocf-wave-label">Wave Profit Protection v1.5.2 Formal｜Trigger-origin Only</span>
-                            <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜W1 MFE Gate 0.60R</strong>
+                            <span class="ocf-wave-label">Wave Profit Protection v1.5.3 Formal｜Campaign Retention｜Trigger-origin Only</span>
+                            <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜Campaign Proof + Retention</strong>
                         </div>
-                        <div id="ocf-wave-detail" class="ocf-wave-detail">W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利</div>
+                        <div id="ocf-wave-detail" class="ocf-wave-detail">Proof：&lt;0.5R未證明｜0.5–&lt;2R已證明｜≥2R高證明；W1反向FMF後 Retention&gt;45%續抱、≤45%才BE｜W2/W3/HMF維持較高Authority</div>
                     </div>
 
                     <div id="ocf-z2-authority-grid" class="ocf-authority-grid" hidden>
@@ -3446,7 +3447,9 @@
         if (pullbackStatus) pullbackStatus.textContent = pullbackStatusText;
         if (pullbackDetail) pullbackDetail.textContent = pullbackDetailText;
 
-        // Hotfix 2026-08-09: keep Wave display self-contained so optional UI cannot reference later TDZ declarations.
+        // Wave v1.5.3 Campaign Retention: presentation-only observability using fields already exported by HMF.
+        // The UI derives proof bucket / retention from live MFE and current-profit R, but does NOT claim
+        // the private VBA mCampaignDefenseState is uploaded to Firebase.
         const waveBand = document.getElementById("ocf-wave-band");
         const waveStatus = document.getElementById("ocf-wave-status");
         const waveDetail = document.getElementById("ocf-wave-detail");
@@ -3463,25 +3466,51 @@
             "EXECUTION_EPISODE_LONG","EXECUTION_EPISODE_SHORT"
         ]);
         const activeTriggerTrade = triggerOriginEntryTypes.has(entryTypeToken);
+        const waveMfeRUi = Number(data.hmf_formal_mfe_r || 0);
+        const waveCurrentRUi = Number(data.hmf_formal_current_profit_r || 0);
+        const waveT1ProgressUi = Number(data.hmf_formal_t1_progress || 0);
+        const waveRetentionUi = Number.isFinite(waveMfeRUi) && waveMfeRUi > 0 && Number.isFinite(waveCurrentRUi)
+            ? Math.max(0, Math.min(1, waveCurrentRUi / waveMfeRUi))
+            : null;
+        const waveProofUi = !Number.isFinite(waveMfeRUi) || waveMfeRUi <= 0
+            ? "WAIT"
+            : (waveMfeRUi < 0.5 ? "UNPROVEN" : (waveMfeRUi < 2.0 ? "PROFIT_PROVEN" : "HIGH_PROVEN"));
+        const waveFmtR = (v) => Number.isFinite(Number(v)) ? Number(v).toFixed(2) : "--";
+        const waveRetentionText = waveRetentionUi === null ? "Retention --" : `Retention ${(waveRetentionUi * 100).toFixed(0)}%`;
+        const waveProofText = waveProofUi === "UNPROVEN"
+            ? "UNPROVEN <0.5R"
+            : (waveProofUi === "PROFIT_PROVEN" ? "PROFIT_PROVEN 0.5–<2R" : (waveProofUi === "HIGH_PROVEN" ? "HIGH_PROVEN ≥2R" : "等待MFE"));
+        const waveRetentionPolicy = waveRetentionUi === null
+            ? ""
+            : (waveRetentionUi > 0.45 ? "｜>45%：W1不因淺回檔立即BE" : "｜≤45%：W1 Giveback可取得BE Authority");
+        const waveT1Policy = Number.isFinite(waveT1ProgressUi) && waveT1ProgressUi >= 1
+            ? "｜Post-T1：OppositeFlow維持原60s"
+            : (waveProofUi === "HIGH_PROVEN" && waveRetentionUi !== null && waveRetentionUi > 0.45
+                ? "｜Pre-T1 High-Proven：180s OppositeFlow交由HMF/Wave"
+                : "");
         let waveClass = "wave-formal";
-        let waveStatusText = "FORMAL｜W1 MFE Gate 0.60R";
-        let waveDetailText = "W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利";
+        let waveStatusText = "FORMAL｜Campaign Proof + Retention";
+        let waveDetailText = "Proof：<0.5R未證明｜0.5–<2R已證明｜≥2R高證明；W1反向FMF後 Retention>45%續抱、≤45%才BE｜W2/W3/HMF維持較高Authority";
         if (activePullbackTrade && (waveHoldingLong || waveHoldingShort)) {
             waveClass = "wave-excluded";
             waveStatusText = "EXCLUDED｜Pullback Entry不套Wave";
             waveDetailText = "Formal規格：Wave Profit Protection只套用Trigger-origin交易；Pullback沿用自身Defense/Exit管理";
         } else if (activeTriggerTrade && (waveHoldingLong || waveHoldingShort)) {
             waveClass = "wave-eligible";
-            waveStatusText = "TRIGGER-ORIGIN｜Wave v1.5.2 + HMF v1.2 LagSafe Formal";
-            waveDetailText = "是否進入Wave Mode仍由VBA以TargetR>4判定；目前Firebase未上傳即時TargetR/stage/MFE，畫面不推測W1/W2/W3狀態";
+            waveStatusText = `TRIGGER-ORIGIN｜Wave v1.5.3｜${waveProofText}｜${waveRetentionText}`;
+            waveDetailText = `MFE ${waveFmtR(waveMfeRUi)}R｜目前 ${waveFmtR(waveCurrentRUi)}R｜${waveRetentionText}${waveRetentionPolicy}${waveT1Policy}｜UI只做既有Firebase欄位推導，Formal Authority仍在VBA`;
         } else if (waveHoldingLong || waveHoldingShort) {
             waveClass = "wave-warning";
-            waveStatusText = "FORMAL ACTIVE｜即時stage未上傳";
-            waveDetailText = "持倉存在，但現有Firebase介面不足以可靠重建Wave stage/MFE；避免用畫面推論取代Formal VBA狀態";
+            waveStatusText = `FORMAL ACTIVE｜Wave v1.5.3｜${waveProofText}｜${waveRetentionText}`;
+            waveDetailText = `持倉存在但Entry Type不是可確認的Trigger-origin；MFE ${waveFmtR(waveMfeRUi)}R｜目前 ${waveFmtR(waveCurrentRUi)}R｜${waveRetentionText}｜畫面不替代Formal VBA`;
+        } else if (lastExitReason === "THESIS_REVERSED") {
+            waveClass = "wave-event";
+            waveStatusText = "LAST EXIT｜THESIS_REVERSED";
+            waveDetailText = "Campaign Defense v1.0：未證明(<0.5R)＋相反Formal RFD＋既有Strong Opposite Options連續60s；VBA正式Thesis Death退出";
         } else if (lastExitReason === "WAVE_PROFIT_DEFENSE") {
             waveClass = "wave-event";
             waveStatusText = "LAST EXIT｜WAVE_PROFIT_DEFENSE";
-            waveDetailText = "上一筆正式Exit由Wave動態Defense觸發；目前Firebase未上傳Wave stage/MFE，畫面不臆測stage";
+            waveDetailText = "上一筆正式Exit由Wave動態Defense觸發；v1.5.3以Campaign Proof＋MFE Retention分辨Micro Counterforce與Giveback";
         }
         if (waveBand) waveBand.className = `ocf-wave-band ${waveClass}`;
         if (waveStatus) waveStatus.textContent = waveStatusText;
