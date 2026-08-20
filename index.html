@@ -4,7 +4,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.1-Z2AUTH-IN-EXECDETAIL-MME-v0.5.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.3-EXEC-EPISODE-v1.0.1-GEOMETRY-v1.0-WLA-v1.0">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.2-POSTRFDRELEASE-MME-v0.5.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.4-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -2110,7 +2110,7 @@
 
                         <div id="ocf-exec-episode-card" class="ocf-authority-card is-info" hidden>
                             <div class="ocf-authority-head">
-                                <span class="ocf-authority-name">Execution Episode Authority v1.0.1</span>
+                                <span id="ocf-exec-episode-name" class="ocf-authority-name">Execution Episode Authority v1.0.2</span>
                                 <span id="ocf-exec-episode-badge" class="ocf-authority-badge">FORMAL --</span>
                             </div>
                             <strong id="ocf-exec-episode-status" class="ocf-authority-status">等待 Episode 資料</strong>
@@ -2851,11 +2851,19 @@
                 const crossEpoch = toFiniteNumberOrNull(data.exec_episode_cross_geometry_epoch);
                 const currentEpoch = toFiniteNumberOrNull(data.exec_episode_current_geometry_epoch);
                 const lastErr = String(data.exec_episode_last_error || "").trim();
+                const epVersionMatch = String(epBuild || "").match(/v(\d+\.\d+\.\d+)/i);
+                if (epVersionMatch) setOCFText("ocf-exec-episode-name", `Execution Episode Authority v${epVersionMatch[1]}`);
+                const zStatusForLaunch = String(data.z_status_display || "").trim();
+                const launchBuildMatch = zStatusForLaunch.match(/(?:^|\|)LAUNCH_REACQ=([^|]+)/);
+                const launchStateMatch = zStatusForLaunch.match(/(?:^|\|)LAUNCH_STATE=([^|]+)/);
+                const launchBuild = launchBuildMatch ? launchBuildMatch[1].trim() : "";
+                const launchState = launchStateMatch ? launchStateMatch[1].trim() : "";
                 setOCFText("ocf-exec-episode-badge", `FORMAL ${formal ? 1 : 0}`);
-                setOCFText("ocf-exec-episode-status", `${state}｜${dir}${handoff ? "｜HANDOFF" : ""}${strict ? "｜STRICT READY" : ""}`);
-                setOCFText("ocf-exec-episode-detail", `Trigger ${trigger}｜Cross ${cross}｜Chase ${chase}｜MaxExt ${maxExt}｜Age ${age}｜Epoch ${crossEpoch === null ? "--" : Math.round(crossEpoch)}→${currentEpoch === null ? "--" : Math.round(currentEpoch)}`);
-                setOCFText("ocf-exec-episode-event", lastErr ? `ERROR ${lastErr}` : (String(data.exec_episode_last_event || "").trim() || "No episode error"));
-                setClass(epCard, lastErr ? "is-danger" : (terminal ? "is-warn" : (committed || handoff || strict ? "is-ok" : "is-info")));
+                setOCFText("ocf-exec-episode-status", `${state}｜${dir}${handoff ? "｜HANDOFF" : ""}${strict ? "｜STRICT READY" : ""}${launchState ? "｜LAUNCH" : ""}`);
+                setOCFText("ocf-exec-episode-detail", `Trigger ${trigger}｜Cross ${cross}｜Chase ${chase}｜MaxExt ${maxExt}｜Age ${age}｜Epoch ${crossEpoch === null ? "--" : Math.round(crossEpoch)}→${currentEpoch === null ? "--" : Math.round(currentEpoch)}${launchBuild ? `｜Launch ${launchBuild}` : ""}`);
+                const episodeEvent = String(data.exec_episode_last_event || "").trim() || "No episode error";
+                setOCFText("ocf-exec-episode-event", lastErr ? `ERROR ${lastErr}` : `${episodeEvent}${launchState ? `｜${launchState}` : ""}`);
+                setClass(epCard, lastErr ? "is-danger" : (terminal ? "is-warn" : (committed || handoff || strict || /POST_RELEASE_(?:ARMED|CONFIRMING|CONFIRMED)/.test(launchState) ? "is-ok" : "is-info")));
             }
 
             const wlaCard = document.getElementById("ocf-wave-lifecycle-card");
@@ -3444,7 +3452,15 @@
         const waveHoldingLong = /持有多單/.test(waveAdviceDisplay);
         const waveHoldingShort = /持有空單/.test(waveAdviceDisplay);
         const activePullbackTrade = entryTypeToken === "PULLBACK_SUPPORT_LONG" || entryTypeToken === "PULLBACK_RESISTANCE_SHORT";
-        const activeTriggerTrade = entryTypeToken === "BREAKOUT_LONG" || entryTypeToken === "BREAKOUT_SHORT";
+        const triggerOriginEntryTypes = new Set([
+            "BREAKOUT_LONG","BREAKOUT_SHORT",
+            "LAUNCH_REACQUISITION_LONG","LAUNCH_REACQUISITION_SHORT",
+            "FAR_GEOMETRY_LONG","FAR_GEOMETRY_SHORT",
+            "BREAKOUT_MEMORY_LONG","BREAKOUT_MEMORY_SHORT",
+            "EARLY_WAVE_LONG","EARLY_WAVE_SHORT",
+            "EXECUTION_EPISODE_LONG","EXECUTION_EPISODE_SHORT"
+        ]);
+        const activeTriggerTrade = triggerOriginEntryTypes.has(entryTypeToken);
         let waveClass = "wave-formal";
         let waveStatusText = "FORMAL｜W1 MFE Gate 0.60R";
         let waveDetailText = "W1：0.60R＋反向FMF→BE｜W2：反向Transition→+0.25R｜W3：Formal Flip→+0.50R｜HMF：高MFE回吐分層鎖利";
@@ -3454,7 +3470,7 @@
             waveDetailText = "Formal規格：Wave Profit Protection只套用Trigger-origin交易；Pullback沿用自身Defense/Exit管理";
         } else if (activeTriggerTrade && (waveHoldingLong || waveHoldingShort)) {
             waveClass = "wave-eligible";
-            waveStatusText = "TRIGGER-ORIGIN｜Wave v1.4 + HMF v1.2 LagSafe Formal";
+            waveStatusText = "TRIGGER-ORIGIN｜Wave v1.5.2 + HMF v1.2 LagSafe Formal";
             waveDetailText = "是否進入Wave Mode仍由VBA以TargetR>4判定；目前Firebase未上傳即時TargetR/stage/MFE，畫面不推測W1/W2/W3狀態";
         } else if (waveHoldingLong || waveHoldingShort) {
             waveClass = "wave-warning";
@@ -6109,7 +6125,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.2 + DayPositioning v0.1.3・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.2 + DayPositioning v0.1.4・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -6519,7 +6535,7 @@
     let breach='Trigger內';
     if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
     document.getElementById('mme-breach').textContent=breach;
-    document.getElementById('mme-build').textContent=(data.build||'MME')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+'｜'+(data.timestamp||'--');
+    document.getElementById('mme-build').textContent=(data.build||'MME')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+'｜'+(data.timestamp||'--');
     if(data.last_event) renderEvent(data.last_event);
     updateFreshness();
   }
