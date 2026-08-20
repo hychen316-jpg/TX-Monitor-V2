@@ -1,10 +1,11 @@
 <!-- Z2_EXEC_COLLAPSE_FIX4_CSS_CHECKBOX_20260816 -->
 <!-- Z2_AUTHORITY_EXECDETAIL_UI_20260819 | presentation-only | BASE=index(5).html | original listeners preserved -->
+<!-- MME_POSITIONING_LIFECYCLE_UI_v0.1_20260820 | presentation-only | backend authority unchanged -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.2-POSTRFDRELEASE-MME-v0.5.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.4-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.1-POSTRFDRELEASE-MME-v0.5.1-NIGHTSEG-v0.1.2-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -5914,6 +5915,12 @@
 #v2-live-page .mme-positioning-card.pos-warn strong { color:#ffb340; }
 #v2-live-page .mme-positioning-card.pos-info { border-color:rgba(100,210,255,.52); background:rgba(100,210,255,.055); }
 #v2-live-page .mme-positioning-card.pos-info strong { color:#64d2ff; }
+#v2-live-page .mme-positioning-card.lifecycle-wide { grid-column:1/-1; border-left:3px solid #64d2ff; }
+#v2-live-page .mme-positioning-card.lifecycle-wide.pos-warn { border-left-color:#ff9f0a; }
+#v2-live-page .mme-positioning-card.lifecycle-wide.pos-info { border-left-color:#64d2ff; }
+#v2-live-page .mme-positioning-card.lifecycle-wide.pos-bull { border-left-color:#ff453a; }
+#v2-live-page .mme-positioning-card.lifecycle-wide.pos-bear { border-left-color:#30d158; }
+#v2-live-page .mme-detail-body > .mme-lifecycle-detail-card { margin-top:4px; width:100%; }
 @media (max-width:900px) { #v2-live-page .mme-positioning-context.active { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 
 </style>
@@ -6076,6 +6083,52 @@
     const st=String((data&&data.positioning_lifecycle_state)||'').toUpperCase();
     return !!b && !!st && st!=='INACTIVE';
   }
+  function isLifecycleShadowActive(data){
+    const b=String((data&&data.positioning_lifecycle_build)||'');
+    const st=String((data&&data.positioning_lifecycle_shadow_state)||'').toUpperCase();
+    return !!b && !!st && st!=='INACTIVE';
+  }
+  function lifecycleTone(data,state){
+    const st=String(state||'').toUpperCase();
+    if(st.includes('TRAPPED') || st.includes('GIVEBACK') || st.includes('ADVERSE')) return 'pos-warn';
+    if(st.includes('REPAIR') || st.includes('REVERSAL_CORRECTED') || st.includes('HARVEST')) return 'pos-info';
+    const d=Number((data&&data.day_positioning_direction)||0);
+    return d>0?'pos-bull':(d<0?'pos-bear':'');
+  }
+  function setLifecycleCard(data){
+    const e=document.getElementById('mme-pos-lifecycle-main');
+    const m=document.getElementById('mme-pos-lifecycle-meta');
+    if(!e || !m) return;
+    const active=isLifecycleShadowActive(data);
+    const st=String((data&&data.positioning_lifecycle_shadow_state)||'');
+    const card=e.closest('.mme-positioning-card');
+    if(!active){
+      e.textContent='Lifecycle v0.1 未提供';
+      m.textContent='需要 MME Positioning Lifecycle v0.1 Shadow｜Formal 0 / Entry 0';
+      if(card) card.className='mme-positioning-card lifecycle-wide mme-lifecycle-detail-card';
+      return;
+    }
+    e.textContent=(data.positioning_lifecycle_shadow_state_zh||zh(st));
+    const bits=[];
+    const trap=String(data.positioning_lifecycle_trap_side||'');
+    const now=Number(data.positioning_lifecycle_current_signed_points);
+    const best=Number(data.positioning_lifecycle_best_after_repair_points);
+    if(Number(data.positioning_lifecycle_trapped) && trap) bits.push(trap+' TRAPPED');
+    if(data.positioning_lifecycle_reversal_time){
+      bits.push('Reversal '+String(data.positioning_lifecycle_reversal_time).slice(-8));
+      bits.push('MFE +'+fmt(data.positioning_lifecycle_reversal_mfe_points,0));
+      if(Number(data.positioning_lifecycle_reversal_realized_150)) bits.push('+150 '+String(data.positioning_lifecycle_reversal_realized_150_time||'').slice(-8));
+    }
+    if(data.positioning_lifecycle_repair_start_time) bits.push('Repair '+String(data.positioning_lifecycle_repair_start_time).slice(-8));
+    if(Number(data.positioning_lifecycle_profit_after_repair)) bits.push('解套獲利 '+String(data.positioning_lifecycle_profit_after_repair_time||'').slice(-8));
+    if(Number(data.positioning_lifecycle_plus150_beyond_spa)) bits.push('SPA+150 '+String(data.positioning_lifecycle_plus150_beyond_spa_time||'').slice(-8));
+    if(Number.isFinite(best) && (best!==0 || Number(data.positioning_lifecycle_profit_after_repair))) bits.push('Best '+signed(best,0)+'pt');
+    if(Number.isFinite(now) && (String(data.positioning_lifecycle_phase||'')==='NIGHT' || Number(data.positioning_lifecycle_trapped))) bits.push('Now '+signed(now,0)+'pt');
+    bits.push('Formal '+String(Number(data.positioning_lifecycle_formal_authority)||0));
+    bits.push('Entry '+String(Number(data.positioning_lifecycle_entry_authority)||0));
+    m.textContent=bits.join('｜') || (data.positioning_lifecycle_reason||'Shadow observability only');
+    if(card) card.className='mme-positioning-card lifecycle-wide mme-lifecycle-detail-card '+lifecycleTone(data,st);
+  }
   function nightOperationalRead(data){
     const st=String((data&&data.night_segment_state)||'').toUpperCase();
     const marketAge=Math.max(0,Number(data&&data.us_open_segment_age_seconds)||0);
@@ -6115,7 +6168,13 @@
     NIGHT_REALIZATION_EVENT:'夜盤已突破日盤有利極值', NIGHT_REALIZATION_HELD:'夜盤 Realization 目前仍維持',
     NIGHT_HARVEST_THEN_REVERSAL:'夜盤先完成 Realization 後反向掃破日盤 adverse extreme',
     UNREALIZED:'尚未達 +150 價格兌現', REALIZED:'已完成 +150 價格兌現', GIVEBACK:'已實現後回吐，仍在有利側',
-    GIVEBACK_TO_ADVERSE:'已實現後回吐至不利側', GIVEBACK_TO_DEEP_DISLOCATION:'已實現後回吐至深度不利側'
+    GIVEBACK_TO_ADVERSE:'已實現後回吐至不利側', GIVEBACK_TO_DEEP_DISLOCATION:'已實現後回吐至深度不利側',
+    DAY_WAITING:'日盤 Lifecycle 等待定位', DAY_UNREALIZED:'日盤尚未兌現 +150', DAY_UNREALIZED_ADVERSE:'日盤未兌現且位於不利側',
+    DAY_REALIZED:'日盤已完成 +150 兌現', DAY_GIVEBACK:'日盤已兌現後回吐', DAY_REVERSAL_CORRECTED:'日盤正式反轉修正',
+    LONG_TRAPPED:'日盤多方套', SHORT_TRAPPED:'日盤空方套', NIGHT_TRAPPED_CARRY:'夜盤承接日盤被套 Positioning',
+    NIGHT_REPAIR:'夜盤解套修復中', NIGHT_PROFIT_AFTER_REPAIR:'夜盤已解套並進入獲利', NIGHT_HARVEST_PENDING:'夜盤等待收割確認',
+    NIGHT_HARVEST_HELD:'夜盤收割維持', NIGHT_HARVEST_GIVEBACK:'夜盤收割後回吐', NIGHT_HARVEST_GIVEBACK_TO_ADVERSE:'夜盤收割後回吐至不利側',
+    NIGHT_HARVEST_REVERSAL:'夜盤收割後反轉'
   };
   function zh(v){ return ZH[String(v||'')] || String(v||'--'); }
 
@@ -6125,7 +6184,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.2 + DayPositioning v0.1.4・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title',null,'MME 主力多空心態｜v0.5.1 + NightSegment v0.1.2 + DayPositioning v0.1.4 + Lifecycle v0.1 Shadow・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -6219,6 +6278,11 @@
     });
     detailBody.appendChild(ngrid);
     detailBody.appendChild(make('div','mme-night-reason','mme-night-reason','Night Segment：日盤 N/A'));
+
+    // Positioning Lifecycle v0.1 is detail-only so collapsed dashboard height is unchanged.
+    const lifecycleCard=make('div','mme-positioning-card lifecycle-wide mme-lifecycle-detail-card','mme-pos-lifecycle-card');
+    lifecycleCard.innerHTML='<span>POSITIONING LIFECYCLE v0.1｜SHADOW</span><strong id="mme-pos-lifecycle-main">等待 Lifecycle v0.1</strong><small id="mme-pos-lifecycle-meta">Formal 0 / Entry 0｜不參與下單</small>';
+    detailBody.appendChild(lifecycleCard);
 
     const grid=make('div','mme-evidence-grid');
     [['FAST PRIMARY','mme-fast-primary'],['FAST BIAS','mme-fast-bias'],['STRUCTURE','mme-structure'],['EXECUTION','mme-execution'],['WALL / RELOCATION','mme-wall'],['ACCEPTANCE','mme-acceptance']].forEach(function(x){
@@ -6381,6 +6445,7 @@
       }
       setPositioningCard('mme-pos-real-main',rMain,rMeta,pdir,rState);
     }
+    setLifecycleCard(data);
 
     let mindText=earlyText;
     let mindKind='q-neutral';
@@ -6535,7 +6600,7 @@
     let breach='Trigger內';
     if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
     document.getElementById('mme-breach').textContent=breach;
-    document.getElementById('mme-build').textContent=(data.build||'MME')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+'｜'+(data.timestamp||'--');
+    document.getElementById('mme-build').textContent=(data.build||'MME')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜'+(data.timestamp||'--');
     if(data.last_event) renderEvent(data.last_event);
     updateFreshness();
   }
