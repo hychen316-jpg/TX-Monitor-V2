@@ -8,7 +8,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.5-CAMPAIGNDEF-v1.0-WAVE-v1.5.3-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.6-CAMPAIGNDEF-v1.0-WAVE-v1.5.4-HMF-v1.3-NEART1-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.2-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.0">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -2034,7 +2034,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Transition v1.1 Latched + Entry Guard v1.2 + Pullback v1.0 + Wave v1.4 + HMF v1.2 + N2D Carry v1.0｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Transition v1.1 Latched + Entry Guard v1.2 + Pullback v1.0 + Wave v1.5.4 + HMF v1.3 + N2D Carry v1.0｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -2095,10 +2095,10 @@
 
                     <div id="ocf-wave-band" class="ocf-wave-band wave-formal">
                         <div class="ocf-wave-main">
-                            <span class="ocf-wave-label">Wave Profit Protection v1.5.3 Formal｜Campaign Retention｜Trigger-origin Only</span>
-                            <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜Campaign Proof + Retention</strong>
+                            <span class="ocf-wave-label">Wave Profit Protection v1.5.4 Formal｜Campaign Retention + Near-T1 Profit Lock｜Trigger-origin Only</span>
+                            <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜Campaign Proof + Retention + Near-T1 Lock</strong>
                         </div>
-                        <div id="ocf-wave-detail" class="ocf-wave-detail">Proof：&lt;0.5R未證明｜0.5–&lt;2R已證明｜≥2R高證明；W1反向FMF後 Retention&gt;45%續抱、≤45%才BE｜W2/W3/HMF維持較高Authority</div>
+                        <div id="ocf-wave-detail" class="ocf-wave-detail">Proof：&lt;0.5R未證明｜0.5–&lt;2R已證明｜≥2R高證明；Near-T1：T1≥75%且MFE≥3R即主動鎖利，最大Peak回吐=max(剩餘T1距離,1.5R)｜W1/W2/W3/HMF維持既有Authority</div>
                     </div>
 
                     <div id="ocf-z2-authority-grid" class="ocf-authority-grid" hidden>
@@ -3448,7 +3448,7 @@
         if (pullbackStatus) pullbackStatus.textContent = pullbackStatusText;
         if (pullbackDetail) pullbackDetail.textContent = pullbackDetailText;
 
-        // Wave v1.5.3 Campaign Retention: presentation-only observability using fields already exported by HMF.
+        // Wave v1.5.4 Near-T1 Profit Lock: presentation-only observability using existing Wave/HMF fields.
         // The UI derives proof bucket / retention from live MFE and current-profit R, but does NOT claim
         // the private VBA mCampaignDefenseState is uploaded to Firebase.
         const waveBand = document.getElementById("ocf-wave-band");
@@ -3490,8 +3490,8 @@
                 ? "｜Pre-T1 High-Proven：180s OppositeFlow交由HMF/Wave"
                 : "");
         let waveClass = "wave-formal";
-        let waveStatusText = "FORMAL｜Campaign Proof + Retention";
-        let waveDetailText = "Proof：<0.5R未證明｜0.5–<2R已證明｜≥2R高證明；W1反向FMF後 Retention>45%續抱、≤45%才BE｜W2/W3/HMF維持較高Authority";
+        let waveStatusText = "FORMAL｜Campaign Proof + Retention + Near-T1 Lock";
+        let waveDetailText = "Proof：<0.5R未證明｜0.5–<2R已證明｜≥2R高證明；Near-T1：T1≥75%且MFE≥3R主動鎖利，最大Peak回吐=max(剩餘T1距離,1.5R)｜W1/W2/W3/HMF維持既有Authority";
         if (activePullbackTrade && (waveHoldingLong || waveHoldingShort)) {
             waveClass = "wave-excluded";
             waveStatusText = "EXCLUDED｜Pullback Entry不套Wave";
