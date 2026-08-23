@@ -5,11 +5,12 @@
 <!-- Z2_CAMPAIGN_DEFENSE_UI_v1.0_20260820 | presentation-only | merged onto Whole-Day Watch v0.1 | Wave v1.5.3 observability | no new card/listener -->
 <!-- MME_NIGHTSEGMENT_PREUS_PRIOR_UI_v0.1.3_20260820 | formal MME night interpretation | Z2/Entry/Order authority unchanged -->
 <!-- Z2_ICUA_UI_v0.1_RC1_20260822 | presentation-only | zero-height | reuses existing execution-detail/Wave slot | no Firebase/listener/authority change -->
+<!-- MINI_TSMC_INLINE_UI_v0.1_20260823 | existing monitor_realtime listener | P56->C1 near-month night | P53->C2 near-month day | decimal x100 percent | no new card -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -1601,6 +1602,25 @@
   line-height: 1 !important;
   padding: 0px 3px !important;
 }
+#v2-live-page .v2-c1c4-card .chip-value-inline {
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:4px;
+  width:100%;
+  min-width:0;
+}
+#v2-live-page .v2-c1c4-card .chip-value-inline .big-val {
+  margin:0 !important;
+}
+#v2-live-page .v2-c1c4-card .mini-tsmc-inline {
+  flex:0 0 auto;
+  font-size:8px;
+  line-height:1;
+  font-weight:800;
+  color:#8e8e93;
+  white-space:nowrap;
+}
 
 /* P9 / R7: tighten padding and vertical spacing, keep main numbers prominent. */
 #v2-live-page .v2-force-card .battle-box {
@@ -2405,9 +2425,9 @@
     </div>
 
     <div class="chip-grid">
-      <div class="chip-card" id="c1-card"><span class="box-header" style="margin-bottom:1px; font-size:8px; text-align:center; width:100%; letter-spacing:0;">近月夜</span><span id="c1-val" class="big-val" style="font-size:14px; margin:auto;">--</span><span id="c1-tag" class="chip-tag" style="margin:1px auto 0; font-size:8px; padding:1px 3px;">--</span></div>
+      <div class="chip-card" id="c1-card"><span class="box-header" style="margin-bottom:1px; font-size:8px; text-align:center; width:100%; letter-spacing:0;">近月夜</span><div class="chip-value-inline"><span id="c1-val" class="big-val" style="font-size:14px; margin:auto 0;">--</span><span id="c1-mini-tsmc" class="mini-tsmc-inline">小台積 --</span></div><span id="c1-tag" class="chip-tag" style="margin:1px auto 0; font-size:8px; padding:1px 3px;">--</span></div>
       <div class="chip-card" id="c3-card"><span class="box-header" style="margin-bottom:1px; font-size:8px; text-align:center; width:100%; letter-spacing:0;">次月夜</span><span id="c3-val" class="big-val" style="font-size:14px; margin:auto;">--</span><span id="c3-tag" class="chip-tag" style="margin:1px auto 0; font-size:8px; padding:1px 3px;">--</span></div>
-      <div class="chip-card" id="c2-card"><span class="box-header" style="margin-bottom:1px; font-size:8px; text-align:center; width:100%; letter-spacing:0;">近月日</span><span id="c2-val" class="big-val" style="font-size:14px; margin:auto;">--</span><span id="c2-tag" class="chip-tag" style="margin:1px auto 0; font-size:8px; padding:1px 3px;">--</span></div>
+      <div class="chip-card" id="c2-card"><span class="box-header" style="margin-bottom:1px; font-size:8px; text-align:center; width:100%; letter-spacing:0;">近月日</span><div class="chip-value-inline"><span id="c2-val" class="big-val" style="font-size:14px; margin:auto 0;">--</span><span id="c2-mini-tsmc" class="mini-tsmc-inline">小台積 --</span></div><span id="c2-tag" class="chip-tag" style="margin:1px auto 0; font-size:8px; padding:1px 3px;">--</span></div>
       <div class="chip-card" id="c4-card"><span class="box-header" style="margin-bottom:1px; font-size:8px; text-align:center; width:100%; letter-spacing:0;">次月日</span><span id="c4-val" class="big-val" style="font-size:14px; margin:auto;">--</span><span id="c4-tag" class="chip-tag" style="margin:1px auto 0; font-size:8px; padding:1px 3px;">--</span></div>
     </div>
     
@@ -5141,6 +5161,30 @@
         let el = document.getElementById(id+'-val'); el.innerText = parts[0]; el.className = "big-val " + (v>0?"c-red":(v<0?"c-green":"")); 
         let tag = document.getElementById(id+'-tag'); tag.innerText = parts[1]; tag.className = "chip-tag " + (parts[1].includes("多")?"bg-red":(parts[1].includes("空")?"bg-green":""));
       });
+
+      // Mini TSMC futures: raw Excel decimals are uploaded by the existing realtime payload.
+      // P56 -> C1 near-month night; P53 -> C2 near-month day. No extra Firebase listener/card.
+      const setMiniTsmcPercent = (id, rawValue) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (rawValue === null || rawValue === undefined || rawValue === '') {
+          el.textContent = '小台積 --';
+          el.style.color = '#8e8e93';
+          return;
+        }
+        const raw = Number(rawValue);
+        if (!Number.isFinite(raw)) {
+          el.textContent = '小台積 --';
+          el.style.color = '#8e8e93';
+          return;
+        }
+        const pct = raw * 100;
+        const signed = pct > 0 ? '+' : '';
+        el.textContent = `小台積 ${signed}${pct.toFixed(2)}%`;
+        el.style.color = pct > 0 ? 'var(--red)' : (pct < 0 ? 'var(--green)' : '#8e8e93');
+      };
+      setMiniTsmcPercent('c1-mini-tsmc', data.mini_tsmc_night);
+      setMiniTsmcPercent('c2-mini-tsmc', data.mini_tsmc_day);
     }
 
     function getChipValueForArray(d) {
