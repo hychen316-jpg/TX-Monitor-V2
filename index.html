@@ -3808,8 +3808,23 @@
         const holdingShort = /持有空單/.test(adviceDisplay);
         let semanticAdviceDisplay = adviceDisplay;
         let semanticAdviceClass = classifyOCFAdvice(advice);
-        if (!holdingLong && !holdingShort) {
-            if (transitionBlocked) {
+        if (activeInventoryTrade && (holdingLong || holdingShort)) {
+            const icuaSide = holdingLong ? "LONG" : "SHORT";
+            semanticAdviceDisplay = activeIcuaReacqTrade
+                ? `ICUA REACQ｜${icuaSide}｜二次發動・正式持倉中`
+                : `ICUA EARLY｜${icuaSide}｜已發動・正式持倉中`;
+            semanticAdviceClass = holdingLong ? "bull" : "bear";
+        } else if (!holdingLong && !holdingShort) {
+            if (icuaReacqArmed) {
+                semanticAdviceDisplay = "主力二次發動準備｜ICUA REACQ｜等待30pt重新發動＋3m Flow持續＋Guard-clear";
+                semanticAdviceClass = "wait";
+            } else if (icuaArmedLong || icuaArmedShort) {
+                const icuaSide = icuaArmedLong ? "LONG" : "SHORT";
+                semanticAdviceDisplay = entryGuardToken === "VALID"
+                    ? `主力佈局完成｜ICUA ${icuaSide}｜Guard已解除・等待其餘進場閘門`
+                    : `主力佈局完成｜ICUA ${icuaSide}｜等待期指發動／Guard-clear`;
+                semanticAdviceClass = "wait";
+            } else if (transitionBlocked) {
                 semanticAdviceDisplay = `${direction > 0 ? "多方" : (direction < 0 ? "空方" : "原")}正式結構保留｜Structural Transition=${transitionToken}｜舊方向新進場／再進場已封鎖`;
                 semanticAdviceClass = "wait";
             } else if (entryGuardToken === "ENTRY_FMF_HARD_CONFLICT") {
@@ -3993,8 +4008,18 @@
                                         : (direction < 0
                                             ? `Z2 偏空：價格實際向下穿越殺多 Trigger ${formatOCFLevel(trigger)}，且無強烈多方點火後完成 2 次確認進場；若 Trigger 自行重新定位，須先回測再 Physical 重突破。K-2P 目標 ${formatOCFLevel(target)}。`
                                             : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))))))))));
-        setOCFText("ocf-action-context", [referenceContext, integrityContext, context]
-            .filter(Boolean).join(" "));
+        let actionContextText = [referenceContext, integrityContext, context]
+            .filter(Boolean).join(" ");
+        if (activeInventoryTrade && (holdingLong || holdingShort)) {
+            actionContextText = activeIcuaReacqTrade
+                ? "ICUA二次上車已成立；最多一次Reacquisition，沿用現有Wave／HMF／Defense管理。"
+                : "ICUA Inventory-origin已進場；Primary Trigger僅作後續Formal確認參考，不是本單必要前置條件。";
+        } else if (!holdingLong && !holdingShort && icuaReacqArmed) {
+            actionContextText = "第一次ICUA保護退出後等待二次發動：Cooldown＋30pt relaunch＋3m Flow持續＋EntryGuard再次允許。";
+        } else if (!holdingLong && !holdingShort && (icuaArmedLong || icuaArmedShort)) {
+            actionContextText = "Inventory Completion已成立；不等遠端Primary Trigger，等待Guard-clear與其餘新曝險閘門。";
+        }
+        setOCFText("ocf-action-context", actionContextText);
         renderOCFFixedBlueprint(data);
     }
 
@@ -5682,8 +5707,19 @@
 
       const updateCompactAdvice = function() {
         const raw = String(v10RawAdvice.textContent || '').trim();
-        const first = raw.split('|')[0].trim();
-        compactAdvice.textContent = first || '等待完整訊號';
+        let compact = '';
+        let m = raw.match(/^主力佈局完成｜ICUA (LONG|SHORT)/);
+        if (m) compact = `ICUA ${m[1]}｜佈局完成・等待發動`;
+        if (!compact && /^主力二次發動準備｜ICUA REACQ/.test(raw)) compact = 'ICUA REACQ｜等待二次發動';
+        m = !compact ? raw.match(/^ICUA EARLY｜(LONG|SHORT)/) : null;
+        if (m) compact = `ICUA ${m[1]}｜EARLY 已發動`;
+        m = !compact ? raw.match(/^ICUA REACQ｜(LONG|SHORT)/) : null;
+        if (m) compact = `ICUA ${m[1]}｜REACQ 二次發動`;
+        if (!compact) {
+          const first = raw.split('|')[0].trim();
+          compact = first || '等待完整訊號';
+        }
+        compactAdvice.textContent = compact;
       };
       updateCompactAdvice();
       new MutationObserver(updateCompactAdvice).observe(v10RawAdvice, {childList:true, subtree:true, characterData:true});
