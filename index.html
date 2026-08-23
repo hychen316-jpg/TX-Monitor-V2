@@ -6744,7 +6744,10 @@
       phase.textContent=data.trend_phase_zh || data.trend_phase || '--';
       const pu=String(data.trend_phase||'').toUpperCase();
       const pWarn=pu.includes('MATURE') || pu.includes('DIVERGENCE') || pu.includes('DISTRIBUTION') || pu.includes('REVERSAL') || pu.includes('TRAP');
-      setMmeDirClass(phase,Number(data.formal_direction)||0,pWarn);
+      const phaseDirection = Number(data.formal_direction_trusted) === 1
+        ? (Number(data.z_direction) || 0)
+        : 0;
+      setMmeDirClass(phase, phaseDirection, pWarn);
     }
     const fc=document.getElementById('mme-forecast');
     if(fc){
