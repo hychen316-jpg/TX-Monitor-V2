@@ -6,11 +6,12 @@
 <!-- MME_NIGHTSEGMENT_PREUS_PRIOR_UI_v0.1.3_20260820 | formal MME night interpretation | Z2/Entry/Order authority unchanged -->
 <!-- Z2_ICUA_UI_v0.1_RC1_20260822 | presentation-only | zero-height | reuses existing execution-detail/Wave slot | no Firebase/listener/authority change -->
 <!-- MINI_TSMC_INLINE_UI_v0.1.1_20260823 | existing monitor_realtime listener | P56->C1 near-month night | P53->C2 near-month day | decimal x100 percent | C1-C4 matched value font size | no new card -->
+<!-- Z2_ACTIVE_DEFENSE_INLINE_UI_v0.1_20260824 | existing Z2 LIVE execution decision | mdi_locked_execution_defense -> mdi_locked_defense fallback | no new card/listener/authority change -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -3826,6 +3827,12 @@
         const adviceDisplay = advice.replace(/\|/g, "｜");
         const holdingLong = /持有多單/.test(adviceDisplay);
         const holdingShort = /持有空單/.test(adviceDisplay);
+        const lockedExecutionDefense = toFiniteNumberOrNull(data.mdi_locked_execution_defense);
+        const lockedDefenseFallback = toFiniteNumberOrNull(data.mdi_locked_defense);
+        const activeDefense = lockedExecutionDefense !== null && lockedExecutionDefense > 0
+            ? lockedExecutionDefense
+            : (lockedDefenseFallback !== null && lockedDefenseFallback > 0 ? lockedDefenseFallback : null);
+        const activeDefenseText = activeDefense === null ? "--" : formatOCFLevel(activeDefense);
         let semanticAdviceDisplay = adviceDisplay;
         let semanticAdviceClass = classifyOCFAdvice(advice);
         if (activeInventoryTrade && (holdingLong || holdingShort)) {
@@ -3900,6 +3907,9 @@
                 semanticAdviceDisplay = "原空方預測保留｜即時轉強｜等待空方重新同向";
                 semanticAdviceClass = "wait";
             }
+        }
+        if ((holdingLong || holdingShort) && activeDefense !== null && !/防守\s*[0-9]/.test(semanticAdviceDisplay)) {
+            semanticAdviceDisplay += `｜防守 ${activeDefenseText}`;
         }
         const actionBand = document.getElementById("ocf-action-band");
         const actionText = document.getElementById("ocf-bk-advice");
@@ -4031,9 +4041,10 @@
         let actionContextText = [referenceContext, integrityContext, context]
             .filter(Boolean).join(" ");
         if (activeInventoryTrade && (holdingLong || holdingShort)) {
+            const defenseSuffix = activeDefense === null ? "" : `｜現行防守 ${activeDefenseText}`;
             actionContextText = activeIcuaReacqTrade
-                ? "ICUA二次上車已成立；最多一次Reacquisition，沿用現有Wave／HMF／Defense管理。"
-                : "ICUA Inventory-origin已進場；Primary Trigger僅作後續Formal確認參考，不是本單必要前置條件。";
+                ? `ICUA二次上車已成立；最多一次Reacquisition，沿用現有Wave／HMF／Defense管理。${defenseSuffix}`
+                : `ICUA Inventory-origin已進場；Primary Trigger僅作後續Formal確認參考，不是本單必要前置條件。${defenseSuffix}`;
         } else if (!holdingLong && !holdingShort && icuaReacqArmed) {
             actionContextText = "第一次ICUA保護退出後等待二次發動：Cooldown＋30pt relaunch＋3m Flow持續＋EntryGuard再次允許。";
         } else if (!holdingLong && !holdingShort && (icuaArmedLong || icuaArmedShort)) {
