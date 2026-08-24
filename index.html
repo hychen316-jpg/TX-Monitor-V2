@@ -7,11 +7,12 @@
 <!-- Z2_ICUA_UI_v0.1_RC1_20260822 | presentation-only | zero-height | reuses existing execution-detail/Wave slot | no Firebase/listener/authority change -->
 <!-- MINI_TSMC_INLINE_UI_v0.1.1_20260823 | existing monitor_realtime listener | P56->C1 near-month night | P53->C2 near-month day | decimal x100 percent | C1-C4 matched value font size | no new card -->
 <!-- Z2_ACTIVE_DEFENSE_INLINE_UI_v0.1_20260824 | existing Z2 LIVE execution decision | mdi_locked_execution_defense -> mdi_locked_defense fallback | no new card/listener/authority change -->
+<!-- Z2_POSITION_SUMMARY_INLINE_UI_v0.1_20260824 | existing Z2 LIVE card | cost + active defense + tracked T1/T2 | no new card/listener/authority change -->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -313,6 +314,8 @@
     .ocf-action-label { color:#85858a; font-size:7px; font-weight:800; }
     .ocf-action-text { color:var(--yellow); font-size:11px; font-weight:900; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
     .ocf-action-context { color:#9a9aa0; font-size:8px; line-height:1.25; margin-top:1px; overflow-wrap:anywhere; }
+    .ocf-position-summary { display:none; margin-top:3px; padding-top:3px; border-top:1px dashed #3a3a3c; color:#f2f2f7; font-size:11px; font-weight:900; line-height:1.3; overflow-wrap:anywhere; }
+    .ocf-position-summary.is-active { display:block; }
     .ocf-cross-shadow-diagnostic { color:#8e8e93; font-size:8px; line-height:1.25; margin-top:2px; overflow-wrap:anywhere; }
     .ocf-cross-shadow-diagnostic.is-ready { color:#78a9e6; }
     .ocf-cross-shadow-diagnostic.is-motion { color:#d2b45f; }
@@ -2232,6 +2235,7 @@
             <div id="ocf-action-band" class="ocf-action-band">
                 <div class="ocf-action-label">Z2 LIVE 執行決策</div>
                 <div id="ocf-bk-advice" class="ocf-action-text" aria-live="polite">等待完整訊號</div>
+                <div id="ocf-position-summary" class="ocf-position-summary" aria-live="polite"></div>
                 <div id="ocf-action-context" class="ocf-action-context">尚無有效防守確認，先觀察。</div>
                 <div id="ocf-cross-shadow-diagnostic" class="ocf-cross-shadow-diagnostic is-wait">交叉診斷：Shadow資料累積中</div>
                 <div id="ocf-recovery-diagnostic" class="ocf-recovery-diagnostic">CTX30：尚無恢復事件</div>
@@ -3918,6 +3922,35 @@
             actionText.textContent = semanticAdviceDisplay;
             actionText.className = `ocf-action-text ocf-tone-${semanticAdviceClass}`;
         }
+
+        // Formal active-position summary: always visible inside the existing Z2 LIVE card.
+        // Do not rely only on the compact ICUA/advice wording, because the compact formatter intentionally shortens it.
+        const positionSummary = document.getElementById("ocf-position-summary");
+        if (positionSummary) {
+            const lifecycleStage = String(data.wave_lifecycle_stage || "").trim().toUpperCase();
+            const lifecycleDirection = Math.sign(toFiniteNumberOrNull(data.wave_lifecycle_direction) ?? 0);
+            const lifecycleHolding = lifecycleDirection !== 0 && lifecycleStage.startsWith("ACTIVE");
+            const formalHolding = holdingLong || holdingShort || lifecycleHolding;
+            const entryPrice = toFiniteNumberOrNull(data.omi3_entry_price);
+            const trackedT1 = toFiniteNumberOrNull(data.wave_lifecycle_tracked_t1);
+            const trackedT2 = toFiniteNumberOrNull(data.wave_lifecycle_tracked_t2);
+            const fallbackT1 = toFiniteNumberOrNull(data.omi3_target_one);
+            const fallbackT2 = toFiniteNumberOrNull(data.omi3_target_two);
+            const activeT1 = trackedT1 !== null && trackedT1 > 0 ? trackedT1 : (fallbackT1 !== null && fallbackT1 > 0 ? fallbackT1 : null);
+            const activeT2 = trackedT2 !== null && trackedT2 > 0 ? trackedT2 : (fallbackT2 !== null && fallbackT2 > 0 ? fallbackT2 : null);
+            if (formalHolding && entryPrice !== null && entryPrice > 0) {
+                const parts = [`成本 ${formatOCFLevel(entryPrice)}`];
+                if (activeDefense !== null) parts.push(`防守 ${activeDefenseText}`);
+                if (activeT1 !== null) parts.push(`T1 ${formatOCFLevel(activeT1)}`);
+                if (activeT2 !== null) parts.push(`T2 ${formatOCFLevel(activeT2)}`);
+                positionSummary.textContent = `持倉｜${parts.join("｜")}`;
+                positionSummary.className = "ocf-position-summary is-active";
+            } else {
+                positionSummary.textContent = "";
+                positionSummary.className = "ocf-position-summary";
+            }
+        }
+
         const crossDiagnostic = document.getElementById("ocf-cross-shadow-diagnostic");
         if (crossDiagnostic) {
             let crossDiagnosticText = "交叉診斷：Shadow資料累積中";
