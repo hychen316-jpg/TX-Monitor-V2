@@ -1,4 +1,5 @@
 <!-- Z2_CORE_ROW_NO_AL2AM2_COMPACT_v0.1_20260824 | remove AL2/AM2 display | compact second-row three cards | presentation-only | no Firebase/authority change -->
+<!-- Z2_P0_MME_YIELD_UI_v0.1_20260825 | presentation-only | parses existing z_status_display MME_AUTH/MODE/AUTH/DIR/AGE/DECISION | no new Firebase listener/schema/logger | MME model direction preserved -->
 <!-- Z2_EXEC_COLLAPSE_FIX4_CSS_CHECKBOX_20260816 -->
 <!-- Z2_AUTHORITY_EXECDETAIL_UI_20260819 | presentation-only | BASE=index(5).html | original listeners preserved -->
 <!-- MME_POSITIONING_LIFECYCLE_UI_v0.1_20260820 | presentation-only | detail-only | backend authority unchanged -->
@@ -13,7 +14,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.1-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -2180,6 +2181,7 @@
                         <span id="ocf-entry-guard-summary-chip" class="ocf-exec-summary-chip tone-neutral"><b>G</b><strong id="ocf-entry-guard-summary">--</strong></span>
                         <span id="ocf-pullback-summary-chip" class="ocf-exec-summary-chip tone-neutral"><b>P</b><strong id="ocf-pullback-summary">IDLE</strong></span>
                         <span id="ocf-wave-summary-chip" class="ocf-exec-summary-chip tone-info"><b>W</b><strong id="ocf-wave-summary">FORMAL</strong></span>
+                        <span id="ocf-mme-summary-chip" class="ocf-exec-summary-chip tone-neutral" title="MME Direction Authority"><b>M</b><strong id="ocf-mme-summary">--</strong></span>
                     </span>
                 </summary>
                 <div id="ocf-exec-detail-body" class="ocf-exec-detail-body">
@@ -2912,6 +2914,30 @@
                 if (!card) return;
                 card.hidden = !show;
             };
+            const parseMmeAuthority = (statusText) => {
+                const raw = String(statusText || "").trim();
+                const m = raw.match(/(?:^|\|)MME_AUTH=([^|]+)\|MODE=([^|]*)\|AUTH=([^|]*)\|DIR=([^|]*)\|WD=([^|]*)\|AGE=([^|]*)\|DECISION=([^|]*)/);
+                if (!m) return null;
+                return {
+                    build: m[1].trim(),
+                    mode: m[2].trim(),
+                    auth: m[3].trim(),
+                    direction: Math.sign(Number(m[4]) || 0),
+                    watchdog: Number(m[5]),
+                    age: Number(m[6]),
+                    decision: m[7].trim()
+                };
+            };
+            const mmeDirText = (directionValue) => directionValue > 0 ? "LONG" : (directionValue < 0 ? "SHORT" : "NEUTRAL");
+            const setMmeSummary = (label, tone, title) => {
+                const chip = document.getElementById("ocf-mme-summary-chip");
+                const value = document.getElementById("ocf-mme-summary");
+                if (value) value.textContent = label || "--";
+                if (chip) {
+                    chip.className = `ocf-exec-summary-chip ${tone || "tone-neutral"}`;
+                    chip.title = title || "MME Direction Authority";
+                }
+            };
 
             const geoBuild = data.geometry_build;
             const epBuild = data.exec_episode_build;
@@ -2919,6 +2945,16 @@
             const geoAvailable = hasRealBuild(geoBuild);
             const epAvailable = hasRealBuild(epBuild);
             const wlaAvailable = hasRealBuild(wlaBuild);
+            const mmeTokenForSummary = parseMmeAuthority(String(data.z_status_display || "").trim());
+            if (!epAvailable && mmeTokenForSummary) {
+                const d = String(mmeTokenForSummary.decision || "").toUpperCase();
+                const md = mmeDirText(mmeTokenForSummary.direction);
+                if (d === "MME_YIELD_TO_Z2_EXEC_EPISODE") setMmeSummary("YIELD→Z2", "tone-ok", `${mmeTokenForSummary.build}｜${d}`);
+                else if (d === "MME_FORMAL_BLOCK") setMmeSummary("BLOCK", "tone-danger", `${mmeTokenForSummary.build}｜MME ${md}｜${d}`);
+                else if (d === "MME_ALLOW") setMmeSummary(`ALLOW ${md}`, "tone-ok", `${mmeTokenForSummary.build}｜${d}`);
+                else if (/Z2_AUTHORITY/.test(d)) setMmeSummary("Z2 AUTH", d.includes("FAIL_OPEN") ? "tone-warn" : "tone-info", `${mmeTokenForSummary.build}｜${d}`);
+                else setMmeSummary(d ? d.replace(/^MME_/, "").slice(0,14) : md, "tone-neutral", `${mmeTokenForSummary.build}｜${d || md}`);
+            }
             grid.hidden = !(geoAvailable || epAvailable || wlaAvailable);
 
             const geoCard = document.getElementById("ocf-geometry-authority-card");
@@ -2965,12 +3001,71 @@
                 const launchStateMatch = zStatusForLaunch.match(/(?:^|\|)LAUNCH_STATE=([^|]+)/);
                 const launchBuild = launchBuildMatch ? launchBuildMatch[1].trim() : "";
                 const launchState = launchStateMatch ? launchStateMatch[1].trim() : "";
+                const mme = parseMmeAuthority(zStatusForLaunch);
+                const z2ExecDirectionValue = Math.sign(toFiniteNumberOrNull(data.exec_episode_direction) ?? toFiniteNumberOrNull(data.z_direction) ?? 0);
+                const z2ExecDirectionText = mmeDirText(z2ExecDirectionValue);
+                let mmeStatusSuffix = "";
+                let mmeDetailSuffix = "";
+                let mmeEventSuffix = "";
+                let mmeTone = "tone-neutral";
+                let mmeSummary = "--";
+
+                if (mme) {
+                    const mmeDirectionText = mmeDirText(mme.direction);
+                    const decision = String(mme.decision || "").toUpperCase();
+                    const ageText = Number.isFinite(mme.age) && mme.age >= 0 ? `${Math.round(mme.age)}s` : "--";
+                    const buildVersion = (String(mme.build || "").match(/v(\d+\.\d+\.\d+)/i) || [])[1] || "";
+                    if (decision === "MME_YIELD_TO_Z2_EXEC_EPISODE") {
+                        mmeSummary = `YIELD→${z2ExecDirectionText}`;
+                        mmeTone = "tone-ok";
+                        mmeStatusSuffix = `｜MME ${mmeDirectionText}→YIELD Z2 ${z2ExecDirectionText}`;
+                        mmeDetailSuffix = `｜P0 Exec9 re-proof PASS｜MME age ${ageText}${buildVersion ? `｜Auth v${buildVersion}` : ""}`;
+                        mmeEventSuffix = "｜MME_YIELD_TO_Z2_EXEC_EPISODE";
+                    } else if (decision === "MME_FORMAL_BLOCK") {
+                        mmeSummary = z2ExecDirectionValue !== 0 ? `BLOCK ${z2ExecDirectionText}` : "BLOCK";
+                        mmeTone = "tone-danger";
+                        mmeStatusSuffix = `｜MME ${mmeDirectionText} BLOCK${z2ExecDirectionValue !== 0 ? ` Z2 ${z2ExecDirectionText}` : ""}`;
+                        mmeDetailSuffix = `｜P0 Yield未成立・保留MME veto｜MME age ${ageText}${buildVersion ? `｜Auth v${buildVersion}` : ""}`;
+                        mmeEventSuffix = "｜MME_FORMAL_BLOCK";
+                    } else if (decision === "MME_ALLOW") {
+                        mmeSummary = `ALLOW ${mmeDirectionText}`;
+                        mmeTone = "tone-ok";
+                        mmeStatusSuffix = `｜MME ${mmeDirectionText} ALLOW`;
+                        mmeDetailSuffix = `｜MME age ${ageText}${buildVersion ? `｜Auth v${buildVersion}` : ""}`;
+                        mmeEventSuffix = "｜MME_ALLOW";
+                    } else if (decision === "MME_SHADOW_BLOCK") {
+                        mmeSummary = "SHADOW";
+                        mmeTone = "tone-warn";
+                        mmeStatusSuffix = `｜MME ${mmeDirectionText} SHADOW`;
+                        mmeDetailSuffix = `｜MME Shadow only｜age ${ageText}`;
+                        mmeEventSuffix = "｜MME_SHADOW_BLOCK";
+                    } else if (/Z2_AUTHORITY/.test(decision)) {
+                        mmeSummary = "Z2 AUTH";
+                        mmeTone = decision.includes("FAIL_OPEN") ? "tone-warn" : "tone-info";
+                        mmeStatusSuffix = "｜MME→Z2 AUTHORITY";
+                        mmeDetailSuffix = `｜${decision || "Z2_AUTHORITY"}｜MME age ${ageText}`;
+                        mmeEventSuffix = `｜${decision || "Z2_AUTHORITY"}`;
+                    } else {
+                        mmeSummary = decision ? decision.replace(/^MME_/, "").slice(0, 14) : mmeDirectionText;
+                        mmeTone = "tone-neutral";
+                        mmeStatusSuffix = `｜MME ${mmeDirectionText}`;
+                        mmeDetailSuffix = `｜${decision || mme.auth || mme.mode || "MME"}｜age ${ageText}`;
+                        mmeEventSuffix = decision ? `｜${decision}` : "";
+                    }
+                    setMmeSummary(mmeSummary, mmeTone, `${mme.build}｜${mme.mode}｜${mme.auth}｜DIR=${mme.direction}｜AGE=${ageText}｜${mme.decision}`);
+                } else {
+                    setMmeSummary("--", "tone-neutral", "MME Authority token unavailable");
+                }
+
                 setOCFText("ocf-exec-episode-badge", `FORMAL ${formal ? 1 : 0}`);
-                setOCFText("ocf-exec-episode-status", `${state}｜${dir}${handoff ? "｜HANDOFF" : ""}${strict ? "｜STRICT READY" : ""}${launchState ? "｜LAUNCH" : ""}`);
-                setOCFText("ocf-exec-episode-detail", `Trigger ${trigger}｜Cross ${cross}｜Chase ${chase}｜MaxExt ${maxExt}｜Age ${age}｜Epoch ${crossEpoch === null ? "--" : Math.round(crossEpoch)}→${currentEpoch === null ? "--" : Math.round(currentEpoch)}${launchBuild ? `｜Launch ${launchBuild}` : ""}`);
+                setOCFText("ocf-exec-episode-status", `${state}｜${dir}${handoff ? "｜HANDOFF" : ""}${strict ? "｜STRICT READY" : ""}${launchState ? "｜LAUNCH" : ""}${mmeStatusSuffix}`);
+                setOCFText("ocf-exec-episode-detail", `Trigger ${trigger}｜Cross ${cross}｜Chase ${chase}｜MaxExt ${maxExt}｜Age ${age}｜Epoch ${crossEpoch === null ? "--" : Math.round(crossEpoch)}→${currentEpoch === null ? "--" : Math.round(currentEpoch)}${launchBuild ? `｜Launch ${launchBuild}` : ""}${mmeDetailSuffix}`);
                 const episodeEvent = String(data.exec_episode_last_event || "").trim() || "No episode error";
-                setOCFText("ocf-exec-episode-event", lastErr ? `ERROR ${lastErr}` : `${episodeEvent}${launchState ? `｜${launchState}` : ""}`);
-                setClass(epCard, lastErr ? "is-danger" : (terminal ? "is-warn" : (committed || handoff || strict || /POST_RELEASE_(?:ARMED|CONFIRMING|CONFIRMED)/.test(launchState) ? "is-ok" : "is-info")));
+                setOCFText("ocf-exec-episode-event", lastErr ? `ERROR ${lastErr}` : `${episodeEvent}${launchState ? `｜${launchState}` : ""}${mmeEventSuffix}`);
+                const mmeCardTone = mme && String(mme.decision || "").toUpperCase() === "MME_FORMAL_BLOCK"
+                    ? "is-warn"
+                    : (mme && String(mme.decision || "").toUpperCase() === "MME_YIELD_TO_Z2_EXEC_EPISODE" ? "is-ok" : "");
+                setClass(epCard, lastErr ? "is-danger" : (mmeCardTone || (terminal ? "is-warn" : (committed || handoff || strict || /POST_RELEASE_(?:ARMED|CONFIRMING|CONFIRMED)/.test(launchState) ? "is-ok" : "is-info"))));
             }
 
             const wlaCard = document.getElementById("ocf-wave-lifecycle-card");
