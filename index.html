@@ -4523,6 +4523,8 @@
             </div>`;
     }
 
+    let lccDetailsOpen = false;
+
     function updateRadarUI(data) {
         const ticker = document.getElementById('radar-ticker');
         if (!ticker || !data || typeof data !== 'object') return;
@@ -4566,6 +4568,9 @@
                 ? `<span style="background:var(--red);color:#fff;padding:2px 4px;border-radius:4px;font-size:10px;">${escapeRadarHtml(data.status || '觸發')}</span>`
                 : '';
 
+            const previousDetailToggle = ticker.querySelector('.radar-detail-toggle');
+            if (previousDetailToggle) lccDetailsOpen = previousDetailToggle.open;
+
             ticker.innerHTML = `
                 <div class="radar-compact-shell">
                     <div class="radar-compact-head">
@@ -4582,7 +4587,7 @@
                         ${renderLccCompactCost("整盤空方", surfaces.sessionShort, "short")}
                     </div>
                     <div class="radar-compact-status"><strong>${escapeRadarHtml(positionText)}</strong><br>資料 ${escapeRadarHtml(modeText)}｜恢復 ${escapeRadarHtml(recovery)}${statusBadge ? '｜事件觸發' : ''}</div>
-                    <details class="radar-detail-toggle">
+                    <details class="radar-detail-toggle"${lccDetailsOpen ? ' open' : ''}>
                         <summary>展開 LCC 完整診斷</summary>
                         <div class="radar-detail-body">
                             <div class="radar-command-shell">
@@ -4634,6 +4639,13 @@
                         </div>
                     </details>
                 </div>`;
+
+            const detailToggle = ticker.querySelector('.radar-detail-toggle');
+            if (detailToggle) {
+                detailToggle.addEventListener('toggle', () => {
+                    lccDetailsOpen = detailToggle.open;
+                });
+            }
 
             if (isTrigger) {
                 const container = ticker.closest('.req-level-4-flex');
