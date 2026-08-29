@@ -1158,25 +1158,29 @@
   min-width: 0;
   border: 1px solid #3a3a3c;
   background: rgba(255,255,255,.028);
-  padding: 5px 6px;
+  padding: 6px 7px;
   border-radius: 5px;
 }
 #v2-live-page .radar-compact-cost.long { border-left: 3px solid var(--red); }
 #v2-live-page .radar-compact-cost.short { border-left: 3px solid var(--green); }
+#v2-live-page .radar-compact-cost.long.valid { background: rgba(255,69,58,.075); }
+#v2-live-page .radar-compact-cost.short.valid { background: rgba(48,209,88,.075); }
+#v2-live-page .radar-compact-cost.blocked { background: rgba(255,159,10,.07); }
 #v2-live-page .radar-compact-cost-label {
   display: block;
-  color: #8e8e93;
-  font-size: 8px;
+  color: #d1d1d6;
+  font-size: 9px;
   font-weight: 800;
   line-height: 1.2;
 }
 #v2-live-page .radar-compact-cost strong {
   display: block;
   color: #f2f2f7;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 900;
   line-height: 1.15;
-  margin-top: 2px;
+  margin-top: 3px;
+  white-space: nowrap;
 }
 #v2-live-page .radar-compact-cost small {
   display: block;
@@ -4435,7 +4439,7 @@
             centerRange60s: toFiniteNumberOrNull(data[`${prefix}_center_range_60s`]),
             centerSamples60s: Math.round(toFiniteNumberOrNull(data[`${prefix}_center_samples_60s`]) ?? 0),
             invalidReason: String(data[`${prefix}_invalid_reason`] || (legacyValid ? "READY" : "")),
-            calibration: String(data[`${prefix}_calibration`] || (hasOperationalContract ? "CENTER_PM30_ROLE_STABLE60" : "LEGACY")),
+            calibration: String(data[`${prefix}_calibration`] || (hasOperationalContract ? "CENTER_PM25_ROLE_STABLE60" : "LEGACY")),
             weight: toFiniteNumberOrNull(data[`${prefix}_weight`]) ?? 0,
             ess: toFiniteNumberOrNull(data[`${prefix}_effective_evidence`]) ?? 0,
             count: Math.round(toFiniteNumberOrNull(data[`${prefix}_evidence_count`]) ?? 0),
@@ -4475,19 +4479,41 @@
             .join("、") || "資料尚未成熟";
     }
 
-    function lccSurfaceStatus(surface) {
-        if (surface.valid) return { text: "✅ 可操作", className: "valid" };
+    function lccDisplayZone(surface) {
+        if (surface.actionableLow !== null && surface.actionableHigh !== null
+            && surface.actionableLow > 0 && surface.actionableHigh > 0) {
+            return { low: surface.actionableLow, high: surface.actionableHigh };
+        }
+        if (surface.modelValid && surface.center !== null && surface.center > 0) {
+            return { low: surface.center - 25, high: surface.center + 25 };
+        }
+        return { low: null, high: null };
+    }
+
+    function lccSurfaceStatus(surface, side) {
+        const isLong = side === "long";
+        if (surface.valid) return {
+            text: isLong ? "✅ 支撐候選" : "✅ 壓力候選",
+            className: "valid",
+        };
         if (surface.center === null || surface.center <= 0) return { text: "⚪ 無資料", className: "empty" };
-        if (surface.invalidReason.includes("WRONG_SIDE")) return { text: "⛔ 角色錯邊", className: "blocked" };
+        if (surface.invalidReason.includes("WRONG_SIDE")) return {
+            text: isLong ? "⛔ 支撐失效／多方套牢" : "⛔ 壓力失效／空方套牢",
+            className: "blocked",
+        };
         if (surface.invalidReason.includes("CENTER_UNSTABLE")) return { text: "⛔ 中心漂移", className: "blocked" };
-        return { text: "🟡 尚未可操作", className: "provisional" };
+        return {
+            text: isLong ? "🟡 支撐待成熟" : "🟡 壓力待成熟",
+            className: "provisional",
+        };
     }
 
     function renderLccSurface(surface, side) {
         const isLong = side === "long";
-        const title = isLong ? "🔴 多方控制成本" : "🟢 空方控制成本";
+        const title = isLong ? "🔴 多方主力支撐成本" : "🟢 空方主力壓力成本";
         const sideClass = isLong ? "long" : "short";
-        const status = lccSurfaceStatus(surface);
+        const status = lccSurfaceStatus(surface, side);
+        const displayZone = lccDisplayZone(surface);
         const centerText = surface.center !== null && surface.center > 0
             ? surface.center.toFixed(0) : "--";
         const secondaryText = surface.secondaryCenter !== null && surface.secondaryCenter > 0
@@ -4503,7 +4529,7 @@
                     <span class="radar-band-status ${status.className}">${status.text}</span>
                 </div>
                 <div class="radar-band-main">中心 ${centerText}</div>
-                <div class="radar-band-range">正式成本區 ${lccRange(surface.actionableLow, surface.actionableHigh)}（center±30）</div>
+                <div class="radar-band-range">${isLong ? "多方主力支撐區" : "空方主力壓力區"} ${lccRange(displayZone.low, displayZone.high)}（center±25）</div>
                 <div class="radar-band-range" style="color:#8e8e93;">模型輪廓 核心 ${lccRange(surface.modelCoreLow, surface.modelCoreHigh)}｜密度 ${lccRange(surface.modelZoneLow, surface.modelZoneHigh)}</div>
                 <div class="radar-band-meta">
                     <span>信心：<strong style="color:${confidenceColor};">${surface.confidence.toFixed(0)}</strong></span>
@@ -4525,18 +4551,19 @@
         const px = toFiniteNumberOrNull(price);
         if (px === null) return "價格位置：--";
         const labels = [
-            [surfaces.shortLong, "短期多方"],
-            [surfaces.shortShort, "短期空方"],
-            [surfaces.sessionLong, "整盤多方"],
-            [surfaces.sessionShort, "整盤空方"],
+            [surfaces.shortLong, "短期多方支撐"],
+            [surfaces.shortShort, "短期空方壓力"],
+            [surfaces.sessionLong, "整盤多方支撐"],
+            [surfaces.sessionShort, "整盤空方壓力"],
         ];
         for (const [surface, label] of labels) {
-            if (surface.valid && surface.actionableLow !== null && surface.actionableHigh !== null
-                && px >= surface.actionableLow && px <= surface.actionableHigh) {
-                return `價格位置：位於${label}可操作成本區`;
+            const displayZone = lccDisplayZone(surface);
+            if (surface.valid && displayZone.low !== null && displayZone.high !== null
+                && px >= displayZone.low && px <= displayZone.high) {
+                return `⚠️ 正在測試${label} ${lccRange(displayZone.low, displayZone.high)}`;
             }
         }
-        return "價格位置：目前不在有效的主力成本區內";
+        return "價格位置：目前未進入有效的主力成本支撐／壓力區";
     }
 
     function renderLccTrack(title, caption, longSurface, shortSurface, trackClass) {
@@ -4558,13 +4585,14 @@
 
     function renderLccCompactCost(label, surface, side) {
         const centerText = surface.center !== null && surface.center > 0 ? surface.center.toFixed(0) : "--";
-        const costText = lccRange(surface.actionableLow, surface.actionableHigh);
-        const statusText = lccSurfaceStatus(surface).text.replace(/^[^\s]+\s*/, "");
+        const displayZone = lccDisplayZone(surface);
+        const costText = lccRange(displayZone.low, displayZone.high);
+        const status = lccSurfaceStatus(surface, side);
         return `
-            <div class="radar-compact-cost ${side}">
-                <span class="radar-compact-cost-label">${escapeRadarHtml(label)}｜${statusText}</span>
-                <strong>${centerText}</strong>
-                <small>成本區 ${costText}</small>
+            <div class="radar-compact-cost ${side} ${status.className}">
+                <span class="radar-compact-cost-label">${escapeRadarHtml(label)}</span>
+                <strong>${costText}</strong>
+                <small>中心 ${centerText}｜${status.text}</small>
             </div>`;
     }
 
@@ -4595,7 +4623,7 @@
             const pendingEpisodes = Math.round(toFiniteNumberOrNull(data.lcc_pending_episodes) ?? 0);
             const queueSize = Math.round(toFiniteNumberOrNull(data.lcc_queue_size) ?? 0);
             const droppedEvents = Math.round(toFiniteNumberOrNull(data.lcc_dropped_events) ?? 0);
-            const version = String(data.lcc_version || "LCC-0.2-HISTCAL30");
+            const version = String(data.lcc_version || "LCC-0.3-COSTZONE25");
             const contract = String(data.lcc_contract || "--");
             const recovery = translateRecoveryStatus(data.lcc_recovery_status || "FRESH_START");
             const limitations = String(data.lcc_limitations || "公開成交與委託簿推估控制成本，非帳戶真實持倉成本。")
@@ -4621,15 +4649,15 @@
                     <div class="radar-compact-head">
                         <div>
                             <div class="radar-compact-title">TX Radar LCC｜主力成本摘要</div>
-                            <div class="radar-compact-sub">${escapeRadarHtml(modeText)}｜${escapeRadarHtml(contract)}｜正式區間 center±30＋角色／穩定檢驗</div>
+                            <div class="radar-compact-sub">${escapeRadarHtml(modeText)}｜${escapeRadarHtml(contract)}｜主力成本防守／壓力區 center±25＋角色／穩定檢驗</div>
                         </div>
                         <span class="radar-compact-time">${escapeRadarHtml(updateText)}</span>
                     </div>
                     <div class="radar-compact-grid">
-                        ${renderLccCompactCost("短期多方", surfaces.shortLong, "long")}
-                        ${renderLccCompactCost("短期空方", surfaces.shortShort, "short")}
-                        ${renderLccCompactCost("整盤多方", surfaces.sessionLong, "long")}
-                        ${renderLccCompactCost("整盤空方", surfaces.sessionShort, "short")}
+                        ${renderLccCompactCost("短期多方支撐", surfaces.shortLong, "long")}
+                        ${renderLccCompactCost("短期空方壓力", surfaces.shortShort, "short")}
+                        ${renderLccCompactCost("整盤多方支撐", surfaces.sessionLong, "long")}
+                        ${renderLccCompactCost("整盤空方壓力", surfaces.sessionShort, "short")}
                     </div>
                     <div class="radar-compact-status"><strong>${escapeRadarHtml(positionText)}</strong><br>資料 ${escapeRadarHtml(modeText)}｜恢復 ${escapeRadarHtml(recovery)}${statusBadge ? '｜事件觸發' : ''}</div>
                     <details class="radar-detail-toggle"${lccDetailsOpen ? ' open' : ''}>
@@ -4638,8 +4666,8 @@
                             <div class="radar-command-shell">
                     <div class="radar-command-head">
                         <div class="radar-command-heading">
-                            <div class="radar-command-title">TX Radar V19.5｜LCC HistCal30 即時主力成本</div>
-                            <div class="radar-command-subtitle">同一實體合約 Tick＋五檔 BidAsk｜center±30＋價格角色＋60秒中心穩定度</div>
+                            <div class="radar-command-title">TX Radar V19.5｜LCC CostZone25 即時主力成本</div>
+                            <div class="radar-command-subtitle">同一實體合約 Tick＋五檔 BidAsk｜center±25主力成本防守／壓力區＋價格角色＋60秒中心穩定度</div>
                         </div>
                         <div class="radar-command-meta">
                             <span class="radar-version-badge">${escapeRadarHtml(version)}</span>
