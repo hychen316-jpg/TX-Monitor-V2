@@ -171,6 +171,7 @@
     .radar-band-status { font-size:8px; border-radius:3px; padding:1px 4px; white-space:nowrap; }
     .radar-band-status.valid { color:#fff; background:rgba(10,132,255,.24); border:1px solid rgba(10,132,255,.65); }
     .radar-band-status.provisional { color:var(--yellow); background:rgba(255,214,10,.12); border:1px solid rgba(255,214,10,.45); }
+    .radar-band-status.blocked { color:#ff9f0a; background:rgba(255,69,58,.12); border:1px solid rgba(255,69,58,.48); }
     .radar-band-status.empty { color:#777; background:rgba(255,255,255,.03); border:1px solid #3a3a3c; }
     .radar-band-main { font-size:12px; font-weight:900; line-height:1.2; white-space:nowrap; }
     .radar-band-range { font-size:10px; color:#ddd; margin-top:1px; white-space:nowrap; }
@@ -4402,13 +4403,39 @@
 
     function lccSurface(data, key) {
         const prefix = `lcc_${key}`;
+        const legacyValid = toRadarBoolean(data[`${prefix}_valid`]);
+        const hasOperationalContract = data[`${prefix}_operational_valid`] !== undefined
+            && data[`${prefix}_operational_valid`] !== null;
+        const coreLow = toFiniteNumberOrNull(data[`${prefix}_core_low`]);
+        const coreHigh = toFiniteNumberOrNull(data[`${prefix}_core_high`]);
+        const zoneLow = toFiniteNumberOrNull(data[`${prefix}_zone_low`]);
+        const zoneHigh = toFiniteNumberOrNull(data[`${prefix}_zone_high`]);
         return {
-            valid: toRadarBoolean(data[`${prefix}_valid`]),
+            valid: hasOperationalContract
+                ? toRadarBoolean(data[`${prefix}_operational_valid`])
+                : legacyValid,
+            modelValid: hasOperationalContract
+                ? toRadarBoolean(data[`${prefix}_model_valid`])
+                : legacyValid,
             center: toFiniteNumberOrNull(data[`${prefix}_center`]),
-            coreLow: toFiniteNumberOrNull(data[`${prefix}_core_low`]),
-            coreHigh: toFiniteNumberOrNull(data[`${prefix}_core_high`]),
-            zoneLow: toFiniteNumberOrNull(data[`${prefix}_zone_low`]),
-            zoneHigh: toFiniteNumberOrNull(data[`${prefix}_zone_high`]),
+            coreLow,
+            coreHigh,
+            zoneLow,
+            zoneHigh,
+            actionableLow: toFiniteNumberOrNull(data[`${prefix}_actionable_low`]) ?? coreLow,
+            actionableHigh: toFiniteNumberOrNull(data[`${prefix}_actionable_high`]) ?? coreHigh,
+            modelCoreLow: toFiniteNumberOrNull(data[`${prefix}_model_core_low`]) ?? coreLow,
+            modelCoreHigh: toFiniteNumberOrNull(data[`${prefix}_model_core_high`]) ?? coreHigh,
+            modelZoneLow: toFiniteNumberOrNull(data[`${prefix}_model_zone_low`]) ?? zoneLow,
+            modelZoneHigh: toFiniteNumberOrNull(data[`${prefix}_model_zone_high`]) ?? zoneHigh,
+            roleOk: data[`${prefix}_role_ok`] === undefined || data[`${prefix}_role_ok`] === null
+                ? null : toRadarBoolean(data[`${prefix}_role_ok`]),
+            centerStable: data[`${prefix}_center_stable`] === undefined || data[`${prefix}_center_stable`] === null
+                ? null : toRadarBoolean(data[`${prefix}_center_stable`]),
+            centerRange60s: toFiniteNumberOrNull(data[`${prefix}_center_range_60s`]),
+            centerSamples60s: Math.round(toFiniteNumberOrNull(data[`${prefix}_center_samples_60s`]) ?? 0),
+            invalidReason: String(data[`${prefix}_invalid_reason`] || (legacyValid ? "READY" : "")),
+            calibration: String(data[`${prefix}_calibration`] || (hasOperationalContract ? "CENTER_PM30_ROLE_STABLE60" : "LEGACY")),
             weight: toFiniteNumberOrNull(data[`${prefix}_weight`]) ?? 0,
             ess: toFiniteNumberOrNull(data[`${prefix}_effective_evidence`]) ?? 0,
             count: Math.round(toFiniteNumberOrNull(data[`${prefix}_evidence_count`]) ?? 0),
@@ -4418,6 +4445,7 @@
             dataQuality: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_data_quality`]) ?? 0)),
             defenseProbability: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_defense_probability`]) ?? 0.5)),
             defenseTouches: Math.round(toFiniteNumberOrNull(data[`${prefix}_defense_touches`]) ?? 0),
+            defenseProbabilityScope: String(data[`${prefix}_defense_probability_scope`] || "LEGACY_INTERNAL"),
             source: String(data[`${prefix}_dominant_source`] || "--"),
             secondaryCenter: toFiniteNumberOrNull(data[`${prefix}_secondary_center`]),
             secondaryStrength: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_secondary_strength`]) ?? 0)),
@@ -4429,19 +4457,37 @@
         return `${low.toFixed(digits)}～${high.toFixed(digits)}`;
     }
 
+    function lccInvalidReasonText(reason) {
+        const labels = {
+            NO_CENTER: "無成本中心",
+            MODEL_NOT_READY: "證據模型未成熟",
+            LOW_CONFIDENCE: "信心未達60",
+            LOW_EVIDENCE: "ESS未達3",
+            STABILITY_WARMUP: "中心穩定度暖機",
+            CENTER_UNSTABLE: "中心60秒漂移超過10點",
+            WRONG_SIDE: "價格位於成本錯邊",
+            READY: "可操作",
+        };
+        return String(reason || "")
+            .split("|")
+            .filter(Boolean)
+            .map(item => labels[item] || item)
+            .join("、") || "資料尚未成熟";
+    }
+
+    function lccSurfaceStatus(surface) {
+        if (surface.valid) return { text: "✅ 可操作", className: "valid" };
+        if (surface.center === null || surface.center <= 0) return { text: "⚪ 無資料", className: "empty" };
+        if (surface.invalidReason.includes("WRONG_SIDE")) return { text: "⛔ 角色錯邊", className: "blocked" };
+        if (surface.invalidReason.includes("CENTER_UNSTABLE")) return { text: "⛔ 中心漂移", className: "blocked" };
+        return { text: "🟡 尚未可操作", className: "provisional" };
+    }
+
     function renderLccSurface(surface, side) {
         const isLong = side === "long";
         const title = isLong ? "🔴 多方控制成本" : "🟢 空方控制成本";
         const sideClass = isLong ? "long" : "short";
-        let statusText = "⚪ 無資料";
-        let statusClass = "empty";
-        if (surface.valid) {
-            statusText = "✅ 有效";
-            statusClass = "valid";
-        } else if (surface.center !== null && surface.center > 0) {
-            statusText = "🟡 累積中";
-            statusClass = "provisional";
-        }
+        const status = lccSurfaceStatus(surface);
         const centerText = surface.center !== null && surface.center > 0
             ? surface.center.toFixed(0) : "--";
         const secondaryText = surface.secondaryCenter !== null && surface.secondaryCenter > 0
@@ -4454,10 +4500,11 @@
             <div class="radar-band-card ${sideClass}">
                 <div class="radar-band-title">
                     <span>${title}</span>
-                    <span class="radar-band-status ${statusClass}">${statusText}</span>
+                    <span class="radar-band-status ${status.className}">${status.text}</span>
                 </div>
                 <div class="radar-band-main">中心 ${centerText}</div>
-                <div class="radar-band-range">核心 ${lccRange(surface.coreLow, surface.coreHigh)}｜完整 ${lccRange(surface.zoneLow, surface.zoneHigh)}</div>
+                <div class="radar-band-range">正式成本區 ${lccRange(surface.actionableLow, surface.actionableHigh)}（center±30）</div>
+                <div class="radar-band-range" style="color:#8e8e93;">模型輪廓 核心 ${lccRange(surface.modelCoreLow, surface.modelCoreHigh)}｜密度 ${lccRange(surface.modelZoneLow, surface.modelZoneHigh)}</div>
                 <div class="radar-band-meta">
                     <span>信心：<strong style="color:${confidenceColor};">${surface.confidence.toFixed(0)}</strong></span>
                     <span>ESS：${surface.ess.toFixed(2)}</span>
@@ -4466,9 +4513,11 @@
                     <span>集中：${(surface.concentration * 100).toFixed(0)}%</span>
                     <span>成熟：${(surface.finalRatio * 100).toFixed(0)}%</span>
                     <span>資料質量：${(surface.dataQuality * 100).toFixed(0)}%</span>
-                    <span>回測防守：${(surface.defenseProbability * 100).toFixed(0)}%／${surface.defenseTouches}次</span>
+                    <span>角色：${surface.roleOk === null ? "舊版未提供" : (surface.roleOk ? "正確" : "錯邊")}</span>
+                    <span>中心60秒：${surface.centerRange60s === null ? "--" : `${surface.centerRange60s.toFixed(0)}點／${surface.centerSamples60s}筆`}</span>
+                    <span>內建90秒診斷：${(surface.defenseProbability * 100).toFixed(0)}%／${surface.defenseTouches}次</span>
                 </div>
-                <div class="radar-event-row">來源 ${escapeRadarHtml(surface.source)}｜次要成本 ${secondaryText}</div>
+                <div class="radar-event-row">狀態 ${escapeRadarHtml(lccInvalidReasonText(surface.invalidReason))}｜來源 ${escapeRadarHtml(surface.source)}｜次要成本 ${secondaryText}</div>
             </div>`;
     }
 
@@ -4482,16 +4531,12 @@
             [surfaces.sessionShort, "整盤空方"],
         ];
         for (const [surface, label] of labels) {
-            if (surface.coreLow !== null && surface.coreHigh !== null && px >= surface.coreLow && px <= surface.coreHigh) {
-                return `價格位置：位於${label}核心成本區`;
+            if (surface.valid && surface.actionableLow !== null && surface.actionableHigh !== null
+                && px >= surface.actionableLow && px <= surface.actionableHigh) {
+                return `價格位置：位於${label}可操作成本區`;
             }
         }
-        for (const [surface, label] of labels) {
-            if (surface.zoneLow !== null && surface.zoneHigh !== null && px >= surface.zoneLow && px <= surface.zoneHigh) {
-                return `價格位置：位於${label}完整成本區`;
-            }
-        }
-        return "價格位置：目前不在四條主要成本區內";
+        return "價格位置：目前不在有效的主力成本區內";
     }
 
     function renderLccTrack(title, caption, longSurface, shortSurface, trackClass) {
@@ -4513,13 +4558,13 @@
 
     function renderLccCompactCost(label, surface, side) {
         const centerText = surface.center !== null && surface.center > 0 ? surface.center.toFixed(0) : "--";
-        const coreText = lccRange(surface.coreLow, surface.coreHigh);
-        const statusText = surface.valid ? "有效" : ((surface.center !== null && surface.center > 0) ? "累積中" : "無資料");
+        const costText = lccRange(surface.actionableLow, surface.actionableHigh);
+        const statusText = lccSurfaceStatus(surface).text.replace(/^[^\s]+\s*/, "");
         return `
             <div class="radar-compact-cost ${side}">
                 <span class="radar-compact-cost-label">${escapeRadarHtml(label)}｜${statusText}</span>
                 <strong>${centerText}</strong>
-                <small>核心 ${coreText}</small>
+                <small>成本區 ${costText}</small>
             </div>`;
     }
 
@@ -4550,7 +4595,7 @@
             const pendingEpisodes = Math.round(toFiniteNumberOrNull(data.lcc_pending_episodes) ?? 0);
             const queueSize = Math.round(toFiniteNumberOrNull(data.lcc_queue_size) ?? 0);
             const droppedEvents = Math.round(toFiniteNumberOrNull(data.lcc_dropped_events) ?? 0);
-            const version = String(data.lcc_version || "LCC-0.1-CLEANROOM");
+            const version = String(data.lcc_version || "LCC-0.2-HISTCAL30");
             const contract = String(data.lcc_contract || "--");
             const recovery = translateRecoveryStatus(data.lcc_recovery_status || "FRESH_START");
             const limitations = String(data.lcc_limitations || "公開成交與委託簿推估控制成本，非帳戶真實持倉成本。")
@@ -4576,7 +4621,7 @@
                     <div class="radar-compact-head">
                         <div>
                             <div class="radar-compact-title">TX Radar LCC｜主力成本摘要</div>
-                            <div class="radar-compact-sub">${escapeRadarHtml(modeText)}｜${escapeRadarHtml(contract)}｜完整資料保留在下方展開區</div>
+                            <div class="radar-compact-sub">${escapeRadarHtml(modeText)}｜${escapeRadarHtml(contract)}｜正式區間 center±30＋角色／穩定檢驗</div>
                         </div>
                         <span class="radar-compact-time">${escapeRadarHtml(updateText)}</span>
                     </div>
@@ -4593,8 +4638,8 @@
                             <div class="radar-command-shell">
                     <div class="radar-command-head">
                         <div class="radar-command-heading">
-                            <div class="radar-command-title">TX Radar V19.5｜Clean-room LCC 即時主力成本</div>
-                            <div class="radar-command-subtitle">同一實體合約 Tick＋五檔 BidAsk｜短期與整盤、多方與空方完全分軌</div>
+                            <div class="radar-command-title">TX Radar V19.5｜LCC HistCal30 即時主力成本</div>
+                            <div class="radar-command-subtitle">同一實體合約 Tick＋五檔 BidAsk｜center±30＋價格角色＋60秒中心穩定度</div>
                         </div>
                         <div class="radar-command-meta">
                             <span class="radar-version-badge">${escapeRadarHtml(version)}</span>
