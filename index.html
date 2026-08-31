@@ -1,4 +1,4 @@
-<!-- MME_DAY_ROLE_MATURITY_EARLY30_UI_v0.1_20260830 | presentation-only | reuses existing monitor_realtime/mme listener | Early30 Research Shadow Authority 0/0 | Role-Maturity qualifier observability | no Firebase/schema/Z2 authority change -->
+<!-- MME_DAY_WHOLEDAY_MINDSET_MATURITY_UI_v0.2_20260831 | presentation-only | reuses existing monitor_realtime/mme listener | Early30 Research Shadow Authority 0/0 | Role-Maturity qualifier observability | no Firebase/schema/Z2 authority change -->
 <!-- Z2_CORE_ROW_NO_AL2AM2_COMPACT_v0.1_20260824 | remove AL2/AM2 display | compact second-row three cards | presentation-only | no Firebase/authority change -->
 <!-- Z2_P0_MME_YIELD_UI_v0.2_MME_v0.5.2_MATUREREAD_20260827 | presentation-only | separates Sticky Positioning Side from +60m Main-Force Operational Read | supports MATURE_CONFIRMED/CHALLENGED/CHALLENGED_OPPOSITE/FORMAL_REVERSAL_CONFIRMED | no new Firebase listener/schema/logger | MME model direction preserved -->
 <!-- Z2_EXEC_COLLAPSE_FIX4_CSS_CHECKBOX_20260816 -->
@@ -15,7 +15,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-UIALIGN-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-WHOLEDAYMINDSET-UI-v0.2-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -6619,7 +6619,7 @@
     SESSION_UNCLEAR:'整盤心態未定', SESSION_LONG:'整盤主力偏多', SESSION_SHORT:'整盤主力偏空',
     SESSION_TWO_SIDED:'整盤雙向/震盪', SESSION_REVERSAL_CANDIDATE:'整盤反轉候選',
     SESSION_REVERSAL_CONFIRMED:'整盤反轉確認',
-    REVERSAL_WATCH:'整盤反轉監看', WEAKENING:'原整盤心態弱化', MATURE_CONFIRMED:'60分成熟判讀', CHALLENGED:'60分心態受挑戰｜暫不宣告方向', CHALLENGED_OPPOSITE:'60分舊心態受挑戰｜反向證據成立', FORMAL_REVERSAL_CONFIRMED:'正式反轉後整盤判讀', LOCKED:'穩定整盤判讀', UNRESOLVED:'整盤判讀未定',
+    REVERSAL_WATCH:'整盤反轉監看', WEAKENING:'原整盤心態弱化', MATURE_CONFIRMED:'60分成熟判讀', CHALLENGED:'60M成熟度受挑戰｜保留原整盤主力底色', CHALLENGED_OPPOSITE:'60M原主力底色受挑戰｜反向證據成立', FORMAL_REVERSAL_CONFIRMED:'正式反轉後整盤判讀', LOCKED:'穩定整盤判讀', UNRESOLVED:'整盤判讀未定',
     EARLY_CONFIRMED:'30M早期高信心確認', ABSTAIN:'30M早期判讀放棄｜等60M', WAITING:'等待30M早期成熟條件',
     UNOBSERVABLE_FAIL_OPEN:'Role資料不足｜Research fail-open', SETTLED_STABLE:'Role已沉澱穩定', ANCHOR_ROLE_RELOCATION:'主錨Role搬移確認',
     PAIRED_DIRECTIONAL_RELOCATION:'SC/SP同向成對搬移', SECONDARY_ONLY_UNSETTLED:'僅次要Role搬移｜布局未成熟', ACTIVE_ROLE_UNRESOLVED:'Role搬移未完成｜布局未成熟',
@@ -6666,13 +6666,13 @@
     // Day semantics: Sticky Positioning is the SPA/Lifecycle anchor; Early30 is Research Shadow only; +60m remains the mature whole-Day read.
     const dualRead=make('div','mme-day-read-dual','mme-day-read-dual');
     const posCell=make('div','mme-day-read-cell','mme-positioning-side-cell');
-    posCell.innerHTML='<span class="mme-day-read-label">POSITIONING SIDE｜原始主力定位</span><strong class="mme-day-read-value" id="mme-positioning-side">--</strong><small class="mme-day-read-meta" id="mme-positioning-side-meta">Sticky / SPA / Night Rescue anchor</small>';
+    posCell.innerHTML='<span class="mme-day-read-label">整盤主力底色｜POSITIONING PRIOR</span><strong class="mme-day-read-value" id="mme-positioning-side">--</strong><small class="mme-day-read-meta" id="mme-positioning-side-meta">Sticky 主力布局底色｜不等於60M成熟確認</small>';
     dualRead.appendChild(posCell);
     const earlyCell=make('div','mme-day-read-cell','mme-early-read-cell');
     earlyCell.innerHTML='<span class="mme-day-read-label">30M EARLY READ｜RESEARCH SHADOW</span><strong class="mme-day-read-value" id="mme-early-read">--</strong><small class="mme-day-read-meta" id="mme-early-read-meta">Authority 0 / Entry 0｜等待 Early maturity</small>';
     dualRead.appendChild(earlyCell);
     const readCell=make('div','mme-day-read-cell','mme-mainforce-read-cell');
-    readCell.innerHTML='<span class="mme-day-read-label">60M MAIN-FORCE READ｜09:45整盤判讀</span><strong class="mme-day-read-value" id="mme-mainforce-read">--</strong><small class="mme-day-read-meta" id="mme-mainforce-read-meta">等待 +60m Mature Read｜Role Maturity</small>';
+    readCell.innerHTML='<span class="mme-day-read-label">60M成熟狀態｜MAIN-FORCE MATURITY</span><strong class="mme-day-read-value" id="mme-mainforce-read">--</strong><small class="mme-day-read-meta" id="mme-mainforce-read-meta">等待09:45成熟確認｜保留整盤主力底色</small>';
     dualRead.appendChild(readCell);
     band.appendChild(dualRead);
 
@@ -6719,11 +6719,11 @@
 
     const quick=make('div','mme-quick-wrap');
     const qtitle=make('div','mme-quick-title');
-    qtitle.innerHTML='<strong>實戰四步｜一眼判讀</strong><span>Early30 / 60M整盤 → 即時力道 → 階段 → 30M風險</span>';
+    qtitle.innerHTML='<strong>實戰四步｜一眼判讀</strong><span>整盤主力底色 + 60M成熟度 → 即時力道 → 階段 → 30M風險</span>';
     quick.appendChild(qtitle);
     const qgrid=make('div','mme-quick-grid');
     [
-      ['① MAIN-FORCE','mme-q-mind','mme-q-mind-meta','Early30 Shadow / 60M + Role Maturity'],
+      ['① 整盤主力','mme-q-mind','mme-q-mind-meta','主力底色 / 60M成熟狀態'],
       ['② 力道','mme-q-exec','mme-q-exec-meta','看是否發動'],
       ['③ 階段','mme-q-phase','mme-q-phase-meta','看能不能追'],
       ['④ 30M','mme-q-forecast','mme-q-forecast-meta','看未來風險']
@@ -6844,7 +6844,7 @@
 
     const titleEl=document.getElementById('mme-title');
     if(titleEl){
-      titleEl.textContent='MME 主力多空心態｜'+(backendV052?'v0.5.2 Mature60M + RoleMaturity/Early30 RC1':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.3 PRE-US Prior + DayPositioning v0.1.4・Firebase｜紅多綠空';
+      titleEl.textContent='MME 主力多空心態｜'+(backendV052?'v0.5.2 Whole-Day Mindset + Mature60M + RoleMaturity/Early30 RC1':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.3 PRE-US Prior + DayPositioning v0.1.4・Firebase｜紅多綠空';
     }
 
     band.className='mme-live-band '+(anySessionWarning?'mme-risk':(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state)));
@@ -6891,6 +6891,26 @@
     const frozenReadState=/^(MATURE_CONFIRMED|CHALLENGED|CHALLENGED_OPPOSITE|FORMAL_REVERSAL_CONFIRMED)$/.test(earlyState);
     const dayMatureReached=!backendV052 || frozenReadState || dayClockMin>=585; // Taiwan Day session +60m = 09:45.
     const dayReadText=(backendV052 && !dayMatureReached) ? ('等待09:45成熟判讀｜目前 '+earlyText) : earlyText;
+    const stickySideText=sessionDir>0?'多方':(sessionDir<0?'空方':'未定');
+    const matureSideText=earlyDir>0?'多方':(earlyDir<0?'空方':'未定');
+    let matureStatusText=dayReadText;
+    let matureStatusDir=dayMatureReached?earlyDir:0;
+    if(backendV052 && dayMatureReached){
+      if(earlyState==='CHALLENGED'){
+        matureStatusText=(stickySideText==='未定'?'60M受挑戰':stickySideText+'受挑戰')+'｜尚未成熟確認';
+        matureStatusDir=sessionDir;
+      } else if(earlyState==='CHALLENGED_OPPOSITE'){
+        matureStatusText='原'+stickySideText+'受挑戰｜反向'+matureSideText+'證據成立';
+        matureStatusDir=earlyDir;
+      } else if(earlyState==='MATURE_CONFIRMED'){
+        matureStatusText=matureSideText+'成熟確認';
+        matureStatusDir=earlyDir;
+      } else if(earlyState==='FORMAL_REVERSAL_CONFIRMED'){
+        matureStatusText='正式反轉確認｜'+matureSideText;
+        matureStatusDir=earlyDir;
+      }
+    }
+    const wholeDayMindsetText=hasSession ? ('整盤主力'+(sessionDir>0?'偏多':(sessionDir<0?'偏空':'未定'))) : primaryText;
     const biasN=Number(data.mindset_bias)||0;
 
     const dualEl=document.getElementById('mme-day-read-dual');
@@ -6898,8 +6918,8 @@
     if(!nightActive){
       const posSide=document.getElementById('mme-positioning-side');
       const posMeta=document.getElementById('mme-positioning-side-meta');
-      if(posSide){ posSide.textContent=primaryText; setMmeDirClass(posSide,sessionDir,false); }
-      if(posMeta){ posMeta.textContent='Sticky｜SPA / Day→Night Lifecycle anchor'+(data.day_positioning_anchor_price?('｜SPA '+fmt(data.day_positioning_anchor_price,0)):''); }
+      if(posSide){ posSide.textContent=wholeDayMindsetText; setMmeDirClass(posSide,sessionDir,false); }
+      if(posMeta){ posMeta.textContent='Sticky Positioning Prior｜整盤布局底色'+(data.day_positioning_anchor_price?('｜SPA '+fmt(data.day_positioning_anchor_price,0)):'')+'｜60M只評成熟度'; }
 
       const earlyReadEl=document.getElementById('mme-early-read');
       const earlyMeta=document.getElementById('mme-early-read-meta');
@@ -6923,13 +6943,13 @@
       const mfRead=document.getElementById('mme-mainforce-read');
       const mfMeta=document.getElementById('mme-mainforce-read-meta');
       const mfCell=document.getElementById('mme-mainforce-read-cell');
-      if(mfRead){ mfRead.textContent=dayReadText; setMmeDirClass(mfRead,dayMatureReached?earlyDir:0,earlyState==='CHALLENGED'||warningActive||!dayMatureReached||roleWarn); }
+      if(mfRead){ mfRead.textContent=matureStatusText; setMmeDirClass(mfRead,matureStatusDir,earlyState==='CHALLENGED'||warningActive||!dayMatureReached||roleWarn); }
       if(mfMeta){
         const matureTag=backendV052 ? (dayMatureReached?'Frozen +60m Mature Read':'Pre-09:45｜尚未凍結') : 'Legacy v0.5.1 Operational Read';
         let roleMeta=roleText||'Role Maturity --';
         if(roleApplied) roleMeta='⚠ Role downgrade｜'+roleMeta;
         else if(roleObservable && dayMatureReached) roleMeta='Role｜'+roleMeta;
-        mfMeta.textContent=matureTag+'｜Dir '+mmeDirLabel(dayMatureReached?earlyDir:0)+'｜'+roleMeta+(warningText?'｜⚠ '+warningText:'');
+        mfMeta.textContent=matureTag+'｜整盤底色 '+stickySideText+'｜成熟方向 '+mmeDirLabel(dayMatureReached?earlyDir:0)+'｜'+roleMeta+(warningText?'｜⚠ '+warningText:'');
       }
       if(mfCell){
         mfCell.className='mme-day-read-cell';
@@ -7028,17 +7048,14 @@
       mindText=nightOp.text;
       if(nightOp.warn) mindKind='q-warn'; else if(nightOp.dir>0) mindKind='q-bull'; else if(nightOp.dir<0) mindKind='q-bear';
     } else if(backendV052 && !dayMatureReached) {
-      if(dayEarlyState==='EARLY_CONFIRMED'){
-        mindText='Early30｜'+dayEarlyText;
-        mindKind=roleWarn?'q-warn':(dayEarlyDir>0?'q-bull':(dayEarlyDir<0?'q-bear':'q-neutral'));
-      } else {
-        mindText=dayEarlyState==='ABSTAIN'?'Early放棄｜等待60M':'等待60M成熟判讀';
-        mindKind=(roleWarn||sessionWarn)?'q-warn':'q-neutral';
-      }
+      mindText=wholeDayMindsetText+'｜'+(dayEarlyState==='EARLY_CONFIRMED'?('Early30 '+dayEarlyText):(dayEarlyState==='ABSTAIN'?'Early放棄・等60M':'等待60M成熟確認'));
+      if(dayEarlyState==='EARLY_CONFIRMED') mindKind=roleWarn?'q-warn':(dayEarlyDir>0?'q-bull':(dayEarlyDir<0?'q-bear':'q-neutral'));
+      else mindKind=(roleWarn||sessionWarn)?'q-warn':(sessionDir>0?'q-bull':(sessionDir<0?'q-bear':'q-neutral'));
     } else {
+      mindText=wholeDayMindsetText+'｜60M '+matureStatusText;
       if(sessionWarn || roleWarn || earlyState==='CHALLENGED') mindKind='q-warn';
       else if(String(sessionState).toUpperCase().includes('TWO_SIDED')) mindKind='q-warn';
-      else if(earlyDir>0) mindKind='q-bull'; else if(earlyDir<0) mindKind='q-bear';
+      else if(matureStatusDir>0) mindKind='q-bull'; else if(matureStatusDir<0) mindKind='q-bear';
     }
     qset('mme-q-mind',mindText,mindKind);
 
@@ -7067,7 +7084,7 @@
     if(mindMeta) mindMeta.textContent=nightActive && nightOp
       ? ('Global '+primaryText+'｜'+nightOp.meta)
       : (hasSession
-          ? ('Positioning '+primaryText+'｜'+(dayMatureReached?'60M '+dayReadText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M'))+'｜Role '+(roleText||'--'))
+          ? (wholeDayMindsetText+'｜'+(dayMatureReached?'60M '+matureStatusText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M成熟確認'))+'｜Role '+(roleText||'--'))
           : ('Fast Bias '+signed(biasN,0)+'｜v0.4 fallback'));
     const execMeta=document.getElementById('mme-q-exec-meta');
     if(execMeta) execMeta.textContent='Exec '+signed(execN,0)+'｜看是否發動';
@@ -7083,7 +7100,7 @@
     if(qsum){
       qsum.textContent=nightActive && nightOp
         ? ('一句話：Global '+primaryText+'｜Night '+(data.night_segment_state_zh||data.night_segment_state)+'｜Operational '+nightOp.text+'（'+nightOp.meta+'）｜即時 '+execText+'｜'+phaseText+'｜'+forecastText)
-        : ('一句話：Positioning '+primaryText+'｜'+(dayMatureReached?'60M '+dayReadText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M'))+'｜Role '+(roleText||'--')+(roleApplied?'【降級】':'')+(warningText?'｜⚠ '+warningText:'')+'｜即時 '+execText+'｜'+phaseText+'｜'+forecastText);
+        : ('一句話：'+wholeDayMindsetText+'｜'+(dayMatureReached?'60M '+matureStatusText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M成熟確認'))+'｜Role '+(roleText||'--')+(roleApplied?'【降級】':'')+(warningText?'｜⚠ '+warningText:'')+'｜即時 '+execText+'｜'+phaseText+'｜'+forecastText);
     }
 
     const sScoreDetail=document.getElementById('mme-session-score-detail');
