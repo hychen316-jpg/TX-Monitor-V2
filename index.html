@@ -1,3 +1,4 @@
+<!-- MME_DAY_CHALLENGE_LIFECYCLE_UI_v0.3_20260831 | presentation-only | reuses existing monitor_realtime/mme listener | Day Challenge Lifecycle Research Shadow Authority 0/0 | 60M Frozen Read unchanged | no Firebase/Z2 authority change -->
 <!-- MME_DAY_WHOLEDAY_MINDSET_MATURITY_UI_v0.2_20260831 | presentation-only | reuses existing monitor_realtime/mme listener | Early30 Research Shadow Authority 0/0 | Role-Maturity qualifier observability | no Firebase/schema/Z2 authority change -->
 <!-- Z2_CORE_ROW_NO_AL2AM2_COMPACT_v0.1_20260824 | remove AL2/AM2 display | compact second-row three cards | presentation-only | no Firebase/authority change -->
 <!-- Z2_P0_MME_YIELD_UI_v0.2_MME_v0.5.2_MATUREREAD_20260827 | presentation-only | separates Sticky Positioning Side from +60m Main-Force Operational Read | supports MATURE_CONFIRMED/CHALLENGED/CHALLENGED_OPPOSITE/FORMAL_REVERSAL_CONFIRMED | no new Firebase listener/schema/logger | MME model direction preserved -->
@@ -15,7 +16,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-WHOLEDAYMINDSET-UI-v0.2-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.7-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.3-LAUNCH-v1.1-GEOMETRY-v1.0-WLA-v1.1-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1">
   <title>極速戰情室 (Pro Max - 4級權限與強制登出版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -6211,6 +6212,15 @@
 #v2-live-page .mme-day-read-cell.is-maturity-warn { border-color:rgba(255,159,10,.72); background:rgba(255,159,10,.075); box-shadow:inset 0 -2px 0 rgba(255,159,10,.45); }
 #v2-live-page .mme-role-inline { color:#64d2ff; font-weight:850; }
 #v2-live-page .mme-role-inline.is-warn { color:#ffb340; }
+#v2-live-page .mme-challenge-live { margin-top:5px; min-width:0; padding:5px 7px; border:1px solid #3a3a3c; border-radius:5px; background:rgba(255,255,255,.022); display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:8px; align-items:center; }
+#v2-live-page .mme-challenge-live.is-hidden { display:none; }
+#v2-live-page .mme-challenge-live .mme-day-read-label { grid-column:1; margin:0; white-space:nowrap; }
+#v2-live-page .mme-challenge-live .mme-day-read-value { grid-column:2; margin:0; }
+#v2-live-page .mme-challenge-live .mme-day-read-meta { grid-column:1 / -1; margin-top:2px; }
+#v2-live-page .mme-challenge-live.is-pressure { border-color:rgba(255,159,10,.70); background:rgba(255,159,10,.065); }
+#v2-live-page .mme-challenge-live.is-takeover { border-color:rgba(191,90,242,.75); background:rgba(191,90,242,.07); }
+#v2-live-page .mme-challenge-live.is-rebuilding { border-color:rgba(100,210,255,.70); background:rgba(100,210,255,.055); }
+#v2-live-page .mme-challenge-live.is-recovered { border-color:rgba(48,209,88,.72); background:rgba(48,209,88,.055); box-shadow:inset 0 -2px 0 rgba(48,209,88,.45); }
 @media (max-width: 760px) {
   #v2-live-page .mme-day-read-dual { grid-template-columns:1fr; }
 }
@@ -6623,6 +6633,11 @@
     EARLY_CONFIRMED:'30M早期高信心確認', ABSTAIN:'30M早期判讀放棄｜等60M', WAITING:'等待30M早期成熟條件',
     UNOBSERVABLE_FAIL_OPEN:'Role資料不足｜Research fail-open', SETTLED_STABLE:'Role已沉澱穩定', ANCHOR_ROLE_RELOCATION:'主錨Role搬移確認',
     PAIRED_DIRECTIONAL_RELOCATION:'SC/SP同向成對搬移', SECONDARY_ONLY_UNSETTLED:'僅次要Role搬移｜布局未成熟', ACTIVE_ROLE_UNRESOLVED:'Role搬移未完成｜布局未成熟',
+    CHALLENGE_ACTIVE:'受挑戰｜反向壓力持續', SUPPORT_WITHDRAWAL:'支撐退讓｜尚未確認空方接管', PRESSURE_WITHDRAWAL:'壓力退讓｜尚未確認多方接管',
+    BEARISH_TAKEOVER_WATCH:'SC壓力下移｜空方接管警戒', BULLISH_TAKEOVER_WATCH:'SP支撐上移｜多方接管警戒',
+    PAIRED_BEARISH_RELOCATION:'SC/SP同向下移｜空方接管高度警戒', PAIRED_BULLISH_RELOCATION:'SC/SP同向上移｜多方接管高度警戒',
+    SUPPORT_REBUILDING:'支撐重建中｜挑戰正在解除', PRESSURE_REBUILDING:'壓力重建中｜挑戰正在解除',
+    CHALLENGE_RECOVERING:'原主力結構恢復中', STRUCTURE_RECOVERED:'原主力結構已恢復',
     NIGHT_INACTIVE:'日盤｜夜盤分段未啟用', NIGHT_BUILDING:'夜盤心態建立中', NIGHT_PRE_US_INTENT:'美股開盤前心態',
     US_OPEN_DISCOVERY:'美股開盤重新定價中', US_OPEN_CONFIRMED_CONTEXT:'美股開盤後方向脈絡建立', US_OPEN_UNCLEAR:'美股開盤後方向未明', US_LATE_SESSION:'美股後段｜延續監控',
     US_REGIME_CONTINUATION:'美股開盤後延續原方向', US_REGIME_SHIFT_WATCH:'美股開盤 Regime Shift 監看',
@@ -6675,6 +6690,9 @@
     readCell.innerHTML='<span class="mme-day-read-label">60M成熟狀態｜MAIN-FORCE MATURITY</span><strong class="mme-day-read-value" id="mme-mainforce-read">--</strong><small class="mme-day-read-meta" id="mme-mainforce-read-meta">等待09:45成熟確認｜保留整盤主力底色</small>';
     dualRead.appendChild(readCell);
     band.appendChild(dualRead);
+    const challengeLive=make('div','mme-challenge-live','mme-challenge-live');
+    challengeLive.innerHTML='<span class="mme-day-read-label">LIVE CHALLENGE STATUS｜RESEARCH SHADOW</span><strong class="mme-day-read-value" id="mme-challenge-live-value">等待60M受挑戰語境</strong><small class="mme-day-read-meta" id="mme-challenge-live-meta">Authority 0 / Entry 0｜不改60M Frozen Read</small>';
+    band.appendChild(challengeLive);
 
     const scoreRead=make('div','mme-score-read','mme-score-read');
     const scoreReadHead=make('div','mme-score-read-head');
@@ -6719,7 +6737,7 @@
 
     const quick=make('div','mme-quick-wrap');
     const qtitle=make('div','mme-quick-title');
-    qtitle.innerHTML='<strong>實戰四步｜一眼判讀</strong><span>整盤主力底色 + 60M成熟度 → 即時力道 → 階段 → 30M風險</span>';
+    qtitle.innerHTML='<strong>實戰四步｜一眼判讀</strong><span>整盤主力底色 + 60M成熟度 + LIVE Challenge → 即時力道 → 階段 → 30M風險</span>';
     quick.appendChild(qtitle);
     const qgrid=make('div','mme-quick-grid');
     [
@@ -6738,7 +6756,7 @@
 
     const detail=make('details','mme-detail-toggle','mme-detail-toggle');
     const detailSummary=make('summary','mme-detail-summary',null);
-    detailSummary.innerHTML='<span>MME 詳細資訊</span><small>SESSION / EARLY30 / ROLE MATURITY / WHOLE-DAY WATCH / DAY 60M / NIGHT SEGMENT / FAST / STRUCTURE / EXECUTION / FORECAST / RISK</small>';
+    detailSummary.innerHTML='<span>MME 詳細資訊</span><small>SESSION / EARLY30 / ROLE MATURITY / LIVE CHALLENGE / WHOLE-DAY WATCH / DAY 60M / NIGHT SEGMENT / FAST / STRUCTURE / EXECUTION / FORECAST / RISK</small>';
     detail.appendChild(detailSummary);
     const detailBody=make('div','mme-detail-body');
 
@@ -6748,7 +6766,7 @@
     });
     detailBody.appendChild(sgrid);
     const egrid=make('div','mme-evidence-grid');
-    [['60M / OP READ','mme-session-live-read'],['EARLY30 SHADOW','mme-day-early-detail'],['ROLE MATURITY','mme-day-role-detail'],['INSTANT SCORE','mme-session-instant'],['SESSION WARNING','mme-session-warning'],['ADVERSE','mme-session-adverse']].forEach(function(x){
+    [['60M / OP READ','mme-session-live-read'],['EARLY30 SHADOW','mme-day-early-detail'],['ROLE MATURITY','mme-day-role-detail'],['LIVE CHALLENGE','mme-day-challenge-detail'],['INSTANT SCORE','mme-session-instant'],['SESSION WARNING','mme-session-warning'],['ADVERSE','mme-session-adverse']].forEach(function(x){
       const c=make('div','mme-evidence'); c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong>'; egrid.appendChild(c);
     });
     detailBody.appendChild(egrid);
@@ -6841,10 +6859,24 @@
     const roleAnchorRoll=Number(data.day_role_maturity_anchor_roll);
     const roleSecondaryRoll=Number(data.day_role_maturity_secondary_roll);
     const roleThreshold=Number(data.day_role_maturity_material_threshold);
+    const challengeActive=(Number(data.day_challenge_lifecycle_active)||0)===1;
+    const challengeState=String(data.day_challenge_lifecycle_state||'INACTIVE').toUpperCase();
+    const challengeText=data.day_challenge_lifecycle_state_zh || zh(challengeState);
+    const challengePriorDir=Number(data.day_challenge_lifecycle_prior_direction)||sessionDir;
+    const challengeDir=Number(data.day_challenge_lifecycle_direction)||0;
+    const challengeScDelta=Number(data.day_challenge_lifecycle_sc_session_delta);
+    const challengeSpDelta=Number(data.day_challenge_lifecycle_sp_session_delta);
+    const challengeScRoll=Number(data.day_challenge_lifecycle_sc_roll);
+    const challengeSpRoll=Number(data.day_challenge_lifecycle_sp_roll);
+    const challengeThreshold=Number(data.day_challenge_lifecycle_material_threshold);
+    const challengeRecovered=/^(STRUCTURE_RECOVERED)$/.test(challengeState);
+    const challengeRebuilding=/^(SUPPORT_REBUILDING|PRESSURE_REBUILDING|CHALLENGE_RECOVERING)$/.test(challengeState);
+    const challengeTakeover=/^(BEARISH_TAKEOVER_WATCH|BULLISH_TAKEOVER_WATCH|PAIRED_BEARISH_RELOCATION|PAIRED_BULLISH_RELOCATION)$/.test(challengeState);
+    const challengePressure=/^(CHALLENGE_ACTIVE|SUPPORT_WITHDRAWAL|PRESSURE_WITHDRAWAL)$/.test(challengeState);
 
     const titleEl=document.getElementById('mme-title');
     if(titleEl){
-      titleEl.textContent='MME 主力多空心態｜'+(backendV052?'v0.5.2 Whole-Day Mindset + Mature60M + RoleMaturity/Early30 RC1':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.3 PRE-US Prior + DayPositioning v0.1.4・Firebase｜紅多綠空';
+      titleEl.textContent='MME 主力多空心態｜'+(backendV052?'v0.5.2 Whole-Day Mindset + Mature60M + RoleMaturity/Early30 + ChallengeLifecycle RC1':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.3 PRE-US Prior + DayPositioning v0.1.4・Firebase｜紅多綠空';
     }
 
     band.className='mme-live-band '+(anySessionWarning?'mme-risk':(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state)));
@@ -6960,6 +6992,30 @@
       }
     }
 
+    const challengeBox=document.getElementById('mme-challenge-live');
+    const challengeValue=document.getElementById('mme-challenge-live-value');
+    const challengeMeta=document.getElementById('mme-challenge-live-meta');
+    if(challengeBox) challengeBox.classList.toggle('is-hidden',nightActive);
+    if(!nightActive && challengeBox){
+      challengeBox.className='mme-challenge-live';
+      if(challengeTakeover) challengeBox.classList.add('is-takeover');
+      else if(challengeRecovered) challengeBox.classList.add('is-recovered');
+      else if(challengeRebuilding) challengeBox.classList.add('is-rebuilding');
+      else if(challengePressure && challengeActive) challengeBox.classList.add('is-pressure');
+      if(challengeValue){
+        challengeValue.textContent=challengeActive ? challengeText : '等待60M受挑戰語境';
+        setMmeDirClass(challengeValue,challengeActive?challengeDir:0,challengeTakeover||challengePressure);
+      }
+      if(challengeMeta){
+        if(challengeActive){
+          let cm='Prior '+mmeDirLabel(challengePriorDir)+'｜SCΔ '+(Number.isFinite(challengeScDelta)?signed(challengeScDelta,0)+'pt':'--')+' / SPΔ '+(Number.isFinite(challengeSpDelta)?signed(challengeSpDelta,0)+'pt':'--');
+          cm+='｜SCroll '+(Number.isFinite(challengeScRoll)?signed(challengeScRoll,0):'--')+' / SProll '+(Number.isFinite(challengeSpRoll)?signed(challengeSpRoll,0):'--');
+          if(Number.isFinite(challengeThreshold)) cm+='｜T '+fmt(challengeThreshold,0);
+          challengeMeta.textContent='Research Shadow｜Authority 0 / Entry 0｜'+cm;
+        } else challengeMeta.textContent='Authority 0 / Entry 0｜不改60M Frozen Read';
+      }
+    }
+
     const nightCtxEl=document.getElementById('mme-night-context');
     if(nightCtxEl) nightCtxEl.classList.toggle('active',nightActive);
     if(nightActive){
@@ -7052,8 +7108,9 @@
       if(dayEarlyState==='EARLY_CONFIRMED') mindKind=roleWarn?'q-warn':(dayEarlyDir>0?'q-bull':(dayEarlyDir<0?'q-bear':'q-neutral'));
       else mindKind=(roleWarn||sessionWarn)?'q-warn':(sessionDir>0?'q-bull':(sessionDir<0?'q-bear':'q-neutral'));
     } else {
-      mindText=wholeDayMindsetText+'｜60M '+matureStatusText;
-      if(sessionWarn || roleWarn || earlyState==='CHALLENGED') mindKind='q-warn';
+      mindText=wholeDayMindsetText+'｜60M '+matureStatusText+(challengeActive?'｜LIVE '+challengeText:'');
+      if(sessionWarn || roleWarn || earlyState==='CHALLENGED' || challengeTakeover || (challengePressure&&challengeActive)) mindKind='q-warn';
+      if(challengeRecovered) mindKind=sessionDir>0?'q-bull':(sessionDir<0?'q-bear':'q-neutral');
       else if(String(sessionState).toUpperCase().includes('TWO_SIDED')) mindKind='q-warn';
       else if(matureStatusDir>0) mindKind='q-bull'; else if(matureStatusDir<0) mindKind='q-bear';
     }
@@ -7084,7 +7141,7 @@
     if(mindMeta) mindMeta.textContent=nightActive && nightOp
       ? ('Global '+primaryText+'｜'+nightOp.meta)
       : (hasSession
-          ? (wholeDayMindsetText+'｜'+(dayMatureReached?'60M '+matureStatusText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M成熟確認'))+'｜Role '+(roleText||'--'))
+          ? (wholeDayMindsetText+'｜'+(dayMatureReached?'60M '+matureStatusText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M成熟確認'))+'｜Role '+(roleText||'--')+(challengeActive?'｜LIVE '+challengeText:''))
           : ('Fast Bias '+signed(biasN,0)+'｜v0.4 fallback'));
     const execMeta=document.getElementById('mme-q-exec-meta');
     if(execMeta) execMeta.textContent='Exec '+signed(execN,0)+'｜看是否發動';
@@ -7100,7 +7157,7 @@
     if(qsum){
       qsum.textContent=nightActive && nightOp
         ? ('一句話：Global '+primaryText+'｜Night '+(data.night_segment_state_zh||data.night_segment_state)+'｜Operational '+nightOp.text+'（'+nightOp.meta+'）｜即時 '+execText+'｜'+phaseText+'｜'+forecastText)
-        : ('一句話：'+wholeDayMindsetText+'｜'+(dayMatureReached?'60M '+matureStatusText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M成熟確認'))+'｜Role '+(roleText||'--')+(roleApplied?'【降級】':'')+(warningText?'｜⚠ '+warningText:'')+'｜即時 '+execText+'｜'+phaseText+'｜'+forecastText);
+        : ('一句話：'+wholeDayMindsetText+'｜'+(dayMatureReached?'60M '+matureStatusText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M成熟確認'))+'｜Role '+(roleText||'--')+(roleApplied?'【降級】':'')+(challengeActive?'｜LIVE '+challengeText:'')+(warningText?'｜⚠ '+warningText:'')+'｜即時 '+execText+'｜'+phaseText+'｜'+forecastText);
     }
 
     const sScoreDetail=document.getElementById('mme-session-score-detail');
@@ -7128,6 +7185,13 @@
       roleDetail.textContent=rtxt;
       setMmeDirClass(roleDetail,roleDir,roleWarn);
     }
+    const challengeDetail=document.getElementById('mme-day-challenge-detail');
+    if(challengeDetail){
+      if(challengeActive){
+        challengeDetail.textContent=challengeText+'｜SCΔ '+(Number.isFinite(challengeScDelta)?signed(challengeScDelta,0):'--')+' / SPΔ '+(Number.isFinite(challengeSpDelta)?signed(challengeSpDelta,0):'--')+'｜Age '+dur(Number(data.day_challenge_lifecycle_age_seconds)||0);
+        setMmeDirClass(challengeDetail,challengeDir,challengeTakeover||challengePressure);
+      } else challengeDetail.textContent='等待60M受挑戰語境｜Authority 0';
+    }
     const instantEl=document.getElementById('mme-session-instant');
     if(instantEl){ instantEl.textContent=hasEarly ? signed(data.session_intent_instant_score,1) : '--'; setMmeDirClass(instantEl,data.session_intent_instant_score,false); }
     const warningEl=document.getElementById('mme-session-warning');
@@ -7140,7 +7204,7 @@
     const sReason=document.getElementById('mme-session-reason');
     if(sReason){
       const wdReason=(data.whole_day_reversal_watch_reason&&wholeDayActive)?('｜Whole-Day：'+data.whole_day_reversal_watch_reason):'';
-      const researchReason=(hasDayEarly?('｜Early30 '+dayEarlyState+(data.day_early_mainforce_reason?'：'+data.day_early_mainforce_reason:'')):'')+(data.day_role_maturity_state?('｜Role '+roleState+(data.day_role_maturity_reason?'：'+data.day_role_maturity_reason:'')):'');
+      const researchReason=(hasDayEarly?('｜Early30 '+dayEarlyState+(data.day_early_mainforce_reason?'：'+data.day_early_mainforce_reason:'')):'')+(data.day_role_maturity_state?('｜Role '+roleState+(data.day_role_maturity_reason?'：'+data.day_role_maturity_reason:'')):'')+(challengeActive?('｜Challenge '+challengeState+(data.day_challenge_lifecycle_reason?'：'+data.day_challenge_lifecycle_reason:'')):'');
       sReason.textContent=hasSession ? ('Session Intent：'+(data.session_intent_reason||'--')+'｜EQ '+fmt(data.session_intent_evidence_quality,0)+(hasEarly&&data.session_intent_warning_reason?'｜'+data.session_intent_warning_reason:'')+researchReason+wdReason) : 'Session Intent：尚未收到 v0.5.x 欄位，顯示 v0.4 fallback';
     }
 
@@ -7229,7 +7293,7 @@
     let breach='Trigger內';
     if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
     document.getElementById('mme-breach').textContent=breach;
-    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.day_early_mainforce_build?'｜'+data.day_early_mainforce_build:'')+(data.day_role_maturity_build?'｜'+data.day_role_maturity_build:'')+(data.whole_day_reversal_watch_build?'｜'+data.whole_day_reversal_watch_build:'')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜'+(data.timestamp||'--');
+    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.day_early_mainforce_build?'｜'+data.day_early_mainforce_build:'')+(data.day_role_maturity_build?'｜'+data.day_role_maturity_build:'')+(data.day_challenge_lifecycle_build?'｜'+data.day_challenge_lifecycle_build:'')+(data.whole_day_reversal_watch_build?'｜'+data.whole_day_reversal_watch_build:'')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜'+(data.timestamp||'--');
     if(data.last_event) renderEvent(data.last_event);
     updateFreshness();
   }
