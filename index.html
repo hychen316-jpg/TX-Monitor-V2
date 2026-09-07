@@ -1,4 +1,5 @@
-<!-- Z22_V096_RC2_AUTHORITY_ROUTER_UI_v0.2_20260907 | presentation-only | dual-label OCF-Z2.1 LIVE Core + Z2.2 v0.96 RC2 | parses existing Z22_RC/Z22_EXIT_AUTH/Z22_LOCK/Z22_CONT/ENTRY_TYPE plus existing TP200 inputs | no Firebase/listener/logger/schema/order-authority change -->
+<!-- Z22_V097_RC2_RUNNER200_UI_v0.1_20260907 | presentation-only | dual-label OCF-Z2.1 LIVE Core + Z2.2 v0.97 RC2 Runner200 | parses existing Z22_RC/Z22_EXIT_AUTH/Z22_LOCK/Z22_CONT/Z22_RUNNER/ENTRY_TYPE | no Firebase/listener/logger/schema/order-authority change -->
+<!-- Z22_SCSP_SELLER_FORCE_PREMIUM_NOTIONAL_v0.1_20260907 | SC=mdi_call_sell_premium_notional | SP=mdi_put_sell_premium_notional | presentation-only | no listener/schema/authority change -->
 <!-- Z22_V093_RC1_OBSERVABILITY_UI_v0.1_20260906 | presentation-only | parses existing z_status_display tokens Z22_RC/COMPACT_FLOW/SELLER_EPOCH_AUTH/ROOT_ACCOUNT | no Firebase/listener/schema/authority change | collapsed dashboard height unchanged -->
 <!-- MME_DAY_CHALLENGE_LIFECYCLE_UI_v0.3_20260831 | presentation-only | reuses existing monitor_realtime/mme listener | Day Challenge Lifecycle Research Shadow Authority 0/0 | 60M Frozen Read unchanged | no Firebase/Z2 authority change -->
 <!-- MME_DAY_WHOLEDAY_MINDSET_MATURITY_UI_v0.2_20260831 | presentation-only | reuses existing monitor_realtime/mme listener | Early30 Research Shadow Authority 0/0 | Role-Maturity qualifier observability | no Firebase/schema/Z2 authority change -->
@@ -2240,10 +2241,10 @@
 
                         <div id="ocf-z22-b1-tp200-card" class="ocf-authority-card is-info" hidden>
                             <div class="ocf-authority-head">
-                                <span id="ocf-z22-b1-tp200-name" class="ocf-authority-name">Z2.2 v0.96 RC2｜B1 Authority Router + TP200</span>
+                                <span id="ocf-z22-b1-tp200-name" class="ocf-authority-name">Z2.2 v0.97 RC2｜All-Entry Runner200</span>
                                 <span id="ocf-z22-b1-tp200-badge" class="ocf-authority-badge">TP --</span>
                             </div>
-                            <strong id="ocf-z22-b1-tp200-status" class="ocf-authority-status">等待 v0.96 RC2 Authority Router 狀態</strong>
+                            <strong id="ocf-z22-b1-tp200-status" class="ocf-authority-status">等待 v0.97 RC2 Runner200 狀態</strong>
                             <div id="ocf-z22-b1-tp200-detail" class="ocf-authority-detail"></div>
                             <div id="ocf-z22-b1-tp200-event" class="ocf-authority-event"></div>
                         </div>
@@ -2990,9 +2991,10 @@
                 const exitAuthMatch = raw.match(/(?:^|\|)Z22_EXIT_AUTH=([^|]+)/);
                 const lockMatch = raw.match(/(?:^|\|)Z22_LOCK=([^|]+)/);
                 const contMatch = raw.match(/(?:^|\|)Z22_CONT=([^|]+)/);
+                const runnerMatch = raw.match(/(?:^|\|)Z22_RUNNER=([^|]+)/);
                 const icuaMatch = raw.match(/(?:^|\|)ICUA_STATE=([^|]+)/);
                 const entryTypeMatch = raw.match(/(?:^|\|)ENTRY_TYPE=([^|]+)/);
-                if (!buildMatch && !compactMatch && !sellerMatch && !rootMatch && !exitAuthMatch && !lockMatch && !contMatch) return null;
+                if (!buildMatch && !compactMatch && !sellerMatch && !rootMatch && !exitAuthMatch && !lockMatch && !contMatch && !runnerMatch) return null;
 
                 const compactRaw = compactMatch ? compactMatch[1].trim() : "";
                 const compactToken = (key) => {
@@ -3025,7 +3027,8 @@
                     rootEvent: rootParts ? rootParts[5].trim() : "",
                     exitAuth: exitAuthMatch ? exitAuthMatch[1].trim() : "",
                     lock: lockMatch ? lockMatch[1].trim() : "",
-                    cont: contMatch ? contMatch[1].trim() : ""
+                    cont: contMatch ? contMatch[1].trim() : "",
+                    runner: runnerMatch ? runnerMatch[1].trim() : ""
                 };
             };
             const setMmeSummary = (label, tone, title) => {
@@ -3070,8 +3073,9 @@
             const z22TpCard = document.getElementById("ocf-z22-b1-tp200-card");
             const z22FlowCard = document.getElementById("ocf-z22-compact-flow-card");
             const z22SellerCard = document.getElementById("ocf-z22-seller-epoch-card");
-            const z22AuthorityRouterBuild = !!(z22 && /B1[-_]?AUTHORITY[-_]?ROUTER/i.test(String(z22.build || "")));
-            const z22TpBuild = !!(z22 && (/B1[-_]?TP200/i.test(String(z22.build || "")) || z22AuthorityRouterBuild));
+            const z22AuthorityRouterBuild = !!(z22 && /AUTHORITY[-_]?ROUTER/i.test(String(z22.build || "")));
+            const z22RunnerBuild = !!(z22 && /RUNNER200/i.test(String(z22.build || "")));
+            const z22TpBuild = !!(z22 && (z22RunnerBuild || /B1[-_]?TP200/i.test(String(z22.build || "")) || z22AuthorityRouterBuild));
             showCard(z22RootCard, z22Available);
             showCard(z22TpCard, z22Available && z22TpBuild);
             showCard(z22FlowCard, z22Available);
@@ -3102,50 +3106,36 @@
                     const activeReacqLong = entryType === "ICUA_REACQ_LONG";
                     const activeReacqShort = entryType === "ICUA_REACQ_SHORT";
                     const activeReacq = activeReacqLong || activeReacqShort;
-                    const activeRouterTrade = activeB1 || activeReacq;
                     const entryPrice = toFiniteNumberOrNull(data.omi3_entry_price);
-                    const tpPrice = activeB1 && entryPrice !== null && entryPrice > 0
-                        ? entryPrice + (activeB1Long ? 200 : -200)
-                        : null;
-                    const routerDefense = toFiniteNumberOrNull(
-                        data.mdi_locked_execution_defense ?? data.mdi_locked_defense
-                    );
+                    const entryLong = /LONG$/i.test(entryType);
+                    const entryShort = /SHORT$/i.test(entryType);
+                    const activeDynamic = !!entryType && entryPrice !== null && entryPrice > 0 && (entryLong || entryShort);
+                    const runnerBoundary = activeDynamic ? entryPrice + (entryLong ? 200 : -200) : null;
+                    const routerDefense = toFiniteNumberOrNull(data.mdi_locked_execution_defense ?? data.mdi_locked_defense);
                     const exitAuth = String(z22.exitAuth || "UNKNOWN").toUpperCase();
                     const lockSource = String(z22.lock || "OFF").toUpperCase();
                     const continuation = String(z22.cont || "LEGACY").toUpperCase();
+                    const runnerState = String(z22.runner || "WAIT200").toUpperCase();
+                    const runnerQualified = runnerState === "QUALIFIED";
                     const lastExit = String(data.z_last_exit_reason || "").trim();
-                    const lastWasTp200 = lastExit === "FIXED_PROFIT_TAKE_200";
                     const lastWasProfitLock = lastExit === "PROFIT_LOCK_025R";
-                    setOCFText("ocf-z22-b1-tp200-name",
-                        `Z2.2 v${buildVersion} ${rcTag}｜${z22AuthorityRouterBuild ? "B1 Authority Router + TP200" : "B1 ICUA Mature + Fixed TP200"}`);
-                    setOCFText("ocf-z22-b1-tp200-badge",
-                        activeRouterTrade ? exitAuth : (lastWasTp200 ? "TP200 EXIT" : (lastWasProfitLock ? "LOCK EXIT" : "READY")));
-                    setOCFText("ocf-z22-b1-tp200-status",
-                        activeB1 && tpPrice !== null
-                            ? `B1 ${activeB1Long ? "LONG" : "SHORT"}｜${exitAuth}｜TP200 ${formatOCFLevel(tpPrice)}`
-                            : (activeReacq
-                                ? `ICUA REACQ ${activeReacqLong ? "LONG" : "SHORT"}｜${exitAuth}｜TP OFF`
-                                : (lastWasTp200
-                                    ? `FLAT｜FIXED_PROFIT_TAKE_200｜CONT ${continuation}`
-                                    : (lastWasProfitLock
-                                        ? `FLAT｜PROFIT_LOCK_025R｜CONT ${continuation}`
-                                        : `READY｜RC2 Router｜TP200僅 origin10`))));
-                    setOCFText("ocf-z22-b1-tp200-detail",
-                        activeRouterTrade
-                            ? `${activeB1 ? `成本 ${formatOCFLevel(entryPrice)}｜TP ${formatOCFLevel(tpPrice)}` : "origin11 Reacquisition｜TP200不啟用"}｜Defense ${routerDefense === null ? "--" : formatOCFLevel(routerDefense)}｜Lock ${lockSource}｜CONT ${continuation}`
-                            : "Hard Risk never-widen｜TP200僅 B1 origin10｜P1-B 1.25R→+0.25R 可治理 origin10/11｜Cross-route G2 handoff / R2 order authority OFF");
-                    setOCFText("ocf-z22-b1-tp200-event",
-                        activeRouterTrade
-                            ? (activeB1
-                                ? "RC2 B1 pre-T1：Wave/HMF持續觀察，但soft proposal不直接取得 executable authority；Python Tick負責TP200 first-touch"
-                                : "origin11：沿用既有管理，P1-B Profit Lock可取得治理後的正獲利鎖定；TP200不適用")
-                            : ((lastWasTp200 || lastWasProfitLock)
-                                ? `Terminal monetization已回報｜${lastExit}｜CONT ${continuation}`
-                                : `Build ${z22.build}`));
-                    setClass(z22TpCard,
-                        activeRouterTrade
-                            ? (exitAuth === "PROFIT_LOCK" ? "is-ok" : "is-info")
-                            : ((lastWasTp200 || lastWasProfitLock) ? "is-ok" : "is-warn"));
+                    const lastWasLegacyTp = lastExit === "FIXED_PROFIT_TAKE_200";
+                    setOCFText("ocf-z22-b1-tp200-name", `Z2.2 v${buildVersion} ${rcTag}｜${z22RunnerBuild ? "All-Entry Runner200" : "Authority Router"}`);
+                    setOCFText("ocf-z22-b1-tp200-badge", runnerQualified ? "RUNNER" : (activeDynamic ? "WAIT +200" : (lastWasProfitLock ? "LOCK EXIT" : "READY")));
+                    setOCFText("ocf-z22-b1-tp200-status", activeDynamic
+                        ? `${entryType}｜${runnerQualified ? "RUNNER QUALIFIED" : "WAIT +200"}｜${exitAuth}｜資格價 ${formatOCFLevel(runnerBoundary)}`
+                        : (lastWasProfitLock ? `FLAT｜PROFIT_LOCK_025R｜CONT ${continuation}`
+                            : (lastWasLegacyTp ? `FLAT｜舊版 FIXED_PROFIT_TAKE_200｜CONT ${continuation}`
+                                : `READY｜+200 = Runner資格，不是立即出場`)));
+                    setOCFText("ocf-z22-b1-tp200-detail", activeDynamic
+                        ? `成本 ${formatOCFLevel(entryPrice)}｜+200資格 ${formatOCFLevel(runnerBoundary)}｜Defense ${routerDefense === null ? "--" : formatOCFLevel(routerDefense)}｜Lock ${lockSource}｜CONT ${continuation}`
+                        : "先到+200才取得Runner資格｜資格後最低+0.25R保底｜既有更緊Defense優先｜Wave/HMF繼續tighten-only追蹤");
+                    setOCFText("ocf-z22-b1-tp200-event", activeDynamic
+                        ? (runnerQualified
+                            ? "Runner已取得資格：Python terminal TP關閉；防守已進入正獲利側，Wave/HMF可繼續收緊讓剩餘波段奔跑"
+                            : "尚未+200：維持Hard Risk/結構安全；B1 pre-T1 Wave/HMF soft proposal仍為觀察")
+                        : `Build ${z22.build}`);
+                    setClass(z22TpCard, runnerQualified ? "is-ok" : (activeDynamic ? "is-info" : (lastWasProfitLock ? "is-ok" : "is-warn")));
                 }
 
                 const compactKnown = z22.compactRaw !== "";
@@ -3517,12 +3507,14 @@
         const build = buildMatch[1].trim();
         const version = ((build.match(/v(\d+\.\d+)/i) || [])[1] || "").trim();
         const rc = (((build.match(/(?:^|[-_])(RC\d+)(?:[-_]|$)/i) || [])[1]) || "").toUpperCase();
-        const b1AuthorityRouter = /B1[-_]?AUTHORITY[-_]?ROUTER/i.test(build);
+        const b1AuthorityRouter = /AUTHORITY[-_]?ROUTER/i.test(build);
+        const runner200 = /RUNNER200/i.test(build);
         const b1Tp200 = /B1[-_]?TP200/i.test(build) || b1AuthorityRouter;
         const labelParts = [`Z2.2${version ? ` v${version}` : ""}${rc ? ` ${rc}` : ""}`];
         if (b1AuthorityRouter) labelParts.push("Authority Router");
-        if (b1Tp200) labelParts.push("B1 TP200");
-        return { build, version, rc, b1AuthorityRouter, b1Tp200, label: labelParts.join("｜") };
+        if (runner200) labelParts.push("Runner200");
+        else if (b1Tp200) labelParts.push("B1 TP200");
+        return { build, version, rc, b1AuthorityRouter, b1Tp200, runner200, label: labelParts.join("｜") };
     }
 
     function getOCFVersionLabel(data) {
@@ -4248,10 +4240,10 @@
         setOCFText("ocf-resistance-absorption", formatOCFLevel(data.z_upper_target));
         setOCFText("ocf-resistance-strength", scRoll === null ? "--" : `${scRoll >= 0 ? "+" : ""}${formatRadarNumber(scRoll, 0)}`);
 
-        // Z2.2 v0.94 UI: true Seller Balance uses existing recent SP Sell / SC Sell mass.
-        // Roll remains position displacement and is deliberately NOT reused as force.
-        const spSellMassRaw = toFiniteNumberOrNull(data.mdi_put_sell_directional_evidence);
-        const scSellMassRaw = toFiniteNumberOrNull(data.mdi_call_sell_directional_evidence);
+        // Z2.2 Seller Force UI: SC/SP seller force uses premium-notional mass.
+        // SP = put_sell_premium_notional; SC = call_sell_premium_notional. Roll remains position displacement and is deliberately NOT reused as force.
+        const spSellMassRaw = toFiniteNumberOrNull(data.mdi_put_sell_premium_notional);
+        const scSellMassRaw = toFiniteNumberOrNull(data.mdi_call_sell_premium_notional);
         const spSellMass = spSellMassRaw !== null && spSellMassRaw >= 0 ? spSellMassRaw : null;
         const scSellMass = scSellMassRaw !== null && scSellMassRaw >= 0 ? scSellMassRaw : null;
         const sellerMassTotal = spSellMass !== null && scSellMass !== null ? spSellMass + scSellMass : null;
