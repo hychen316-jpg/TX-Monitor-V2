@@ -17,7 +17,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.1_20260907 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
+  <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
   <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.8-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.13-LAUNCH-v1.2-GEOMETRY-v1.0-WLA-v1.3-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.96-RC2-AUTHROUTER-UI-v0.2">
@@ -3533,7 +3533,16 @@
         if(!m) return null;
         return {h:Number(m[1]),m:Number(m[2]),s:Number(m[3]||0),raw};
     }
-    function ocfD2NDateKey(clock) {
+    function ocfD2NDateKey(clock,data) {
+        const direct=String((data&&(data.session_date||data.trading_date||data.mdi_session_date))||'').trim();
+        if(/^\d{4}-\d{2}-\d{2}$/.test(direct)) return direct;
+        const raw=String((data&&(data.captured_at||data.updated_at||data.timestamp||data.t||data.time))||'').trim();
+        const dm=raw.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if(dm){
+            const d=new Date(Number(dm[1]),Number(dm[2])-1,Number(dm[3]));
+            if(clock&&clock.h<6)d.setDate(d.getDate()-1);
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
         const d=new Date(); if(clock&&clock.h<6)d.setDate(d.getDate()-1);
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
@@ -3556,7 +3565,7 @@
     function ocfD2NUpdate(data,sellerBalance,isLive){
         const st=window.__ocfD2NState; st.lastData={data,sellerBalance,isLive};
         const c=ocfD2NClock(data); if(!c){ocfD2NRenderStatus('D→N：等待時段資料',0,'is-wait');return;}
-        const day=(c.h>=8&&c.h<14),night=(c.h>=15||c.h<5),dateKey=ocfD2NDateKey(c);
+        const day=(c.h>=8&&c.h<14),night=(c.h>=15||c.h<5),dateKey=ocfD2NDateKey(c,data);
         // Day rolling windows use the source market clock, not browser-arrival latency.
         const sourceClockDate=new Date(); sourceClockDate.setHours(c.h,c.m,c.s,0);
         const now=day ? sourceClockDate.getTime() : Date.now();
