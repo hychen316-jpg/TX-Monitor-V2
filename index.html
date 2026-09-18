@@ -1,4 +1,5 @@
-<!-- Z22_V097_RC3_PROFITLOCK200_RUNNER_UI_v0.1_20260908 | presentation-only | dual-label OCF-Z2.1 LIVE Core + Z2.2 v0.97 RC3 Profit-Lock200 Runner | parses existing Z22_RC/Z22_EXIT_AUTH/Z22_LOCK/Z22_CONT/Z22_RUNNER/ENTRY_TYPE | no Firebase/listener/logger/schema/order-authority change -->
+<!-- Z22_V098_RC2A_UNIFIED_RISK_ATM_UI_v0.1_20260918 | presentation-only | RC2A build recognition + ATM/ATM_SRC/ANCHOR observability | preserves z_bull_trigger/z_bear_trigger mapping | no Firebase/listener/logger/schema/order-authority change -->
+<!-- Z22_V097_RC3_PROFITLOCK200_RUNNER_UI_v0.1_20260908 | presentation-only | legacy-compatible Profit-Lock200 Runner parsing retained -->
 <!-- Z22_V093_RC1_OBSERVABILITY_UI_v0.1_20260906 | presentation-only | parses existing z_status_display tokens Z22_RC/COMPACT_FLOW/SELLER_EPOCH_AUTH/ROOT_ACCOUNT | no Firebase/listener/schema/authority change | collapsed dashboard height unchanged -->
 <!-- MME_DAY_CHALLENGE_LIFECYCLE_UI_v0.3_20260831 | presentation-only | reuses existing monitor_realtime/mme listener | Day Challenge Lifecycle Research Shadow Authority 0/0 | 60M Frozen Read unchanged | no Firebase/Z2 authority change -->
 <!-- MME_DAY_WHOLEDAY_MINDSET_MATURITY_UI_v0.2_20260831 | presentation-only | reuses existing monitor_realtime/mme listener | Early30 Research Shadow Authority 0/0 | Role-Maturity qualifier observability | no Firebase/schema/Z2 authority change -->
@@ -20,8 +21,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.8-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.13-LAUNCH-v1.2-GEOMETRY-v1.0-WLA-v1.3-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.96-RC2-AUTHROUTER-UI-v0.2">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.96 RC2</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.8-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.13-LAUNCH-v1.2-GEOMETRY-v1.0-WLA-v1.3-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2A-UNIFIEDRISK-ATMRECOVERY-UI-v0.1">
+  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2A</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -2166,7 +2167,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z2.2 v0.96 RC2 + Transition v1.1 + Entry Guard v1.2 + Pullback v1.1.1 + Wave v1.5.5 + HMF v1.4 + ExecEpisode v1.0.13 + WLA v1.3｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z2.2 v0.98 RC2A + Unified Risk Ownership + ATM Recovery｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -2228,10 +2229,10 @@
 
                     <div id="ocf-wave-band" class="ocf-wave-band wave-formal">
                         <div class="ocf-wave-main">
-                            <span class="ocf-wave-label">Wave Profit Protection v1.5.5｜Formal normally / B1 RC2 pre-T1 observation</span>
+                            <span class="ocf-wave-label">Wave Profit Protection v1.5.5｜Formal normally / B1 pre-T1 observation</span>
                             <strong id="ocf-wave-status" class="ocf-wave-status" aria-live="polite">FORMAL｜Campaign Proof + Retention + Near-T1 Lock</strong>
                         </div>
-                        <div id="ocf-wave-detail" class="ocf-wave-detail">Proof：&lt;0.5R未證明｜0.5–&lt;2R已證明｜≥2R高證明；非B1路徑沿用既有Wave/HMF authority；B1 origin10 pre-T1由RC2 Authority Router決定 executable defense</div>
+                        <div id="ocf-wave-detail" class="ocf-wave-detail">Proof：&lt;0.5R未證明｜0.5–&lt;2R已證明｜≥2R高證明；非B1路徑沿用既有Wave/HMF authority；B1 origin10 pre-T1由Z2.2 Authority Router決定 executable defense</div>
                     </div>
 
                     <div id="ocf-z2-authority-grid" class="ocf-authority-grid" hidden>
@@ -2247,10 +2248,10 @@
 
                         <div id="ocf-z22-b1-tp200-card" class="ocf-authority-card is-info" hidden>
                             <div class="ocf-authority-head">
-                                <span id="ocf-z22-b1-tp200-name" class="ocf-authority-name">Z2.2 v0.97 RC3｜Profit-Lock200 Runner</span>
+                                <span id="ocf-z22-b1-tp200-name" class="ocf-authority-name">Z2.2｜Profit-Lock200 Runner</span>
                                 <span id="ocf-z22-b1-tp200-badge" class="ocf-authority-badge">TP --</span>
                             </div>
-                            <strong id="ocf-z22-b1-tp200-status" class="ocf-authority-status">等待 v0.97 RC3 Profit-Lock200 Runner 狀態</strong>
+                            <strong id="ocf-z22-b1-tp200-status" class="ocf-authority-status">等待 Profit-Lock200 Runner 狀態</strong>
                             <div id="ocf-z22-b1-tp200-detail" class="ocf-authority-detail"></div>
                             <div id="ocf-z22-b1-tp200-event" class="ocf-authority-event"></div>
                         </div>
@@ -3081,9 +3082,12 @@
             const z22TpCard = document.getElementById("ocf-z22-b1-tp200-card");
             const z22FlowCard = document.getElementById("ocf-z22-compact-flow-card");
             const z22SellerCard = document.getElementById("ocf-z22-seller-epoch-card");
-            const z22AuthorityRouterBuild = !!(z22 && /AUTHORITY[-_]?ROUTER/i.test(String(z22.build || "")));
-            const z22RunnerBuild = !!(z22 && /RUNNER200|PROFITLOCK200.*RUNNER/i.test(String(z22.build || "")));
-            const z22TpBuild = !!(z22 && (z22RunnerBuild || /B1[-_]?TP200/i.test(String(z22.build || "")) || z22AuthorityRouterBuild));
+            const z22BuildToken = String((z22 && z22.build) || "");
+            const z22UnifiedRiskBuild = /UNIFIED[-_]?RISK/i.test(z22BuildToken);
+            const z22AtmRecoveryBuild = /ATM[-_]?RECOVERY/i.test(z22BuildToken);
+            const z22AuthorityRouterBuild = !!(z22 && (/AUTHORITY[-_]?ROUTER/i.test(z22BuildToken) || z22UnifiedRiskBuild));
+            const z22RunnerBuild = !!(z22 && (/RUNNER200|PROFITLOCK200.*RUNNER/i.test(z22BuildToken) || z22UnifiedRiskBuild));
+            const z22TpBuild = !!(z22 && (z22RunnerBuild || /B1[-_]?TP200/i.test(z22BuildToken) || z22AuthorityRouterBuild));
             showCard(z22RootCard, z22Available);
             showCard(z22TpCard, z22Available && z22TpBuild);
             showCard(z22FlowCard, z22Available);
@@ -3091,7 +3095,7 @@
 
             if (z22Available) {
                 const buildVersion = ((String(z22.build || "").match(/v(\d+\.\d+)/i) || [])[1] || "0.93");
-                const rcTag = (((String(z22.build || "").match(/(?:^|[-_])(RC\d+)(?:[-_]|$)/i) || [])[1]) || "RC").toUpperCase();
+                const rcTag = (((String(z22.build || "").match(/(?:^|[-_])(RC\d+[A-Z]?)(?:[-_]|$)/i) || [])[1]) || "RC").toUpperCase();
                 const rootParsed = Number.isFinite(z22.longStage) && Number.isFinite(z22.shortStage);
                 const longReady = z22.longStage === 3 && z22.longNewRoot === 1;
                 const shortReady = z22.shortStage === 3 && z22.shortNewRoot === 1;
@@ -3130,7 +3134,7 @@
                     const lastWasP1BProfitLock = lastExit === "PROFIT_LOCK_025R";
                     const lastWasProfitLock = lastWasRunner200Lock || lastWasP1BProfitLock;
                     const lastWasLegacyTp = lastExit === "FIXED_PROFIT_TAKE_200";
-                    setOCFText("ocf-z22-b1-tp200-name", `Z2.2 v${buildVersion} ${rcTag}｜${z22RunnerBuild ? "Profit-Lock200 Runner" : "Authority Router"}`);
+                    setOCFText("ocf-z22-b1-tp200-name", `Z2.2 v${buildVersion} ${rcTag}｜${z22UnifiedRiskBuild ? "Unified Risk + Profit-Lock200 Runner" : (z22RunnerBuild ? "Profit-Lock200 Runner" : "Authority Router")}`);
                     setOCFText("ocf-z22-b1-tp200-badge", runnerQualified ? "RUNNER" : (activeDynamic ? "WAIT +200" : (lastWasProfitLock ? "LOCK EXIT" : "READY")));
                     setOCFText("ocf-z22-b1-tp200-status", activeDynamic
                         ? `${entryType}｜${runnerQualified ? "RUNNER QUALIFIED" : "WAIT +200"}｜${exitAuth}｜資格價 ${formatOCFLevel(runnerBoundary)}`
@@ -3617,15 +3621,22 @@
         if (!buildMatch) return null;
         const build = buildMatch[1].trim();
         const version = ((build.match(/v(\d+\.\d+)/i) || [])[1] || "").trim();
-        const rc = (((build.match(/(?:^|[-_])(RC\d+)(?:[-_]|$)/i) || [])[1]) || "").toUpperCase();
-        const b1AuthorityRouter = /AUTHORITY[-_]?ROUTER/i.test(build);
-        const runner200 = /RUNNER200|PROFITLOCK200.*RUNNER/i.test(build);
-        const b1Tp200 = /B1[-_]?TP200/i.test(build) || b1AuthorityRouter;
+        const rc = (((build.match(/(?:^|[-_])(RC\d+[A-Z]?)(?:[-_]|$)/i) || [])[1]) || "").toUpperCase();
+        const unifiedRisk = /UNIFIED[-_]?RISK/i.test(build);
+        const atmRecovery = /ATM[-_]?RECOVERY/i.test(build);
+        const defaultOffBuild = /DEFAULT[-_]?OFF/i.test(build);
+        // RC2A keeps the existing B1 Authority-Router / Runner200 mechanics even though
+        // the superseding build marker no longer contains those legacy words.
+        const b1AuthorityRouter = /AUTHORITY[-_]?ROUTER/i.test(build) || unifiedRisk;
+        const runner200 = /RUNNER200|PROFITLOCK200.*RUNNER/i.test(build) || unifiedRisk;
+        const b1Tp200 = /B1[-_]?TP200/i.test(build) || b1AuthorityRouter || runner200;
         const labelParts = [`Z2.2${version ? ` v${version}` : ""}${rc ? ` ${rc}` : ""}`];
-        if (b1AuthorityRouter) labelParts.push("Authority Router");
-        if (runner200) labelParts.push(/PROFITLOCK200/i.test(build) ? "Profit-Lock200 Runner" : "Runner200");
-        else if (b1Tp200) labelParts.push("B1 TP200");
-        return { build, version, rc, b1AuthorityRouter, b1Tp200, runner200, label: labelParts.join("｜") };
+        if (unifiedRisk) labelParts.push("Unified Risk");
+        else if (b1AuthorityRouter) labelParts.push("Authority Router");
+        if (atmRecovery) labelParts.push("ATM Recovery");
+        if (runner200 && !unifiedRisk) labelParts.push(/PROFITLOCK200/i.test(build) ? "Profit-Lock200 Runner" : "Runner200");
+        else if (b1Tp200 && !unifiedRisk) labelParts.push("B1 TP200");
+        return { build, version, rc, unifiedRisk, atmRecovery, defaultOffBuild, b1AuthorityRouter, b1Tp200, runner200, label: labelParts.join("｜") };
     }
 
     function getOCFVersionLabel(data) {
@@ -3799,6 +3810,14 @@
         const candidateOrigin = String(data.z_candidate_origin || "").trim();
         const rawExecutionAdvice = String(data.mdi_execution_advice || data.execution_advice || "");
         const zStatusDisplayRaw = String(data.z_status_display || "").trim();
+        const atmStatusMatch = zStatusDisplayRaw.match(/(?:^|\|)ATM=([-+]?\d+(?:\.\d+)?)/);
+        const atmSourceMatch = zStatusDisplayRaw.match(/(?:^|\|)ATM_SRC=([^|]+)/);
+        const anchorStatusMatch = zStatusDisplayRaw.match(/(?:^|\|)ANCHOR=([-+]?\d+(?:\.\d+)?)/);
+        const zErrorMatch = zStatusDisplayRaw.match(/(?:^|\|)Z_ERR=([^|]*)/);
+        const zAtmStrike = atmStatusMatch ? toFiniteNumberOrNull(atmStatusMatch[1]) : null;
+        const zAtmSource = atmSourceMatch ? atmSourceMatch[1].trim().toUpperCase() : "";
+        const zAnchorFromStatus = anchorStatusMatch ? toFiniteNumberOrNull(anchorStatusMatch[1]) : null;
+        const zInvalidReasonFromStatus = zErrorMatch ? zErrorMatch[1].trim() : "";
         const entryGuardMatch = zStatusDisplayRaw.match(/(?:^|\|)ENTRY_GUARD=([^|]+)/);
         const entryGuardToken = entryGuardMatch ? entryGuardMatch[1].trim() : "UNKNOWN";
         const pullbackMatch = zStatusDisplayRaw.match(/(?:^|\|)PULLBACK_ENTRY=([^|]+)/);
@@ -4077,7 +4096,7 @@
             waveDetailText = "Formal規格：Pullback沿用自身Defense/Exit；Wave管理Formal Breakout與ICUA Inventory-origin交易";
         } else if (activeB1Tp200Trade && z22AuthorityRouterBuild && (waveHoldingLong || waveHoldingShort) && (!Number.isFinite(waveT1ProgressUi) || waveT1ProgressUi < 1)) {
             waveClass = z22ExitAuthToken === "PROFIT_LOCK" ? "wave-event" : "wave-eligible";
-            waveStatusText = `B1 RC2 PRE-T1｜Wave/HMF OBSERVE｜EXIT ${z22ExitAuthToken}`;
+            waveStatusText = `B1 PRE-T1｜Wave/HMF OBSERVE｜EXIT ${z22ExitAuthToken}`;
             waveDetailText = `origin10｜MFE ${waveFmtR(waveMfeRUi)}R｜目前 ${waveFmtR(waveCurrentRUi)}R｜${waveRetentionText}｜Wave/HMF state machine持續觀察，但soft proposal不直接修改 executable defense；Router=Hard Risk + TP200 + governed P1-B (${z22LockToken})`;
         } else if (activeInventoryTrade && (waveHoldingLong || waveHoldingShort)) {
             waveClass = "wave-eligible";
@@ -4172,10 +4191,10 @@
             (waveHoldingLong || waveHoldingShort) &&
             (!Number.isFinite(hmfT1Progress) || hmfT1Progress < 1);
         if (b1Rc2PreT1Observe && hmfBuild && hmfBuild !== "UNAVAILABLE") {
-            setOCFText("ocf-hmf-name", `High-MFE Giveback Protection ${hmfVersionMatch ? `v${hmfVersionMatch[1]}` : ""}｜B1 RC2 Observation`);
+            setOCFText("ocf-hmf-name", `High-MFE Giveback Protection ${hmfVersionMatch ? `v${hmfVersionMatch[1]}` : ""}｜B1 Z2.2 Observation`);
             hmfClass = hmfStageCode >= 5 || hmfFastCondition === 1 || hmfDeterioration === 1 ? "hmf-watch" : "hmf-proven";
-            hmfStatusText = `B1 RC2 OBSERVE｜${hmfStage || "TRACKING"}｜EXIT ${z22ExitAuthToken}`;
-            hmfDetailText += `｜RC2 B1 pre-T1：HMF proposal observation-only，不可單獨取得 executable stop authority｜Router Lock ${z22LockToken}`;
+            hmfStatusText = `B1 OBSERVE｜${hmfStage || "TRACKING"}｜EXIT ${z22ExitAuthToken}`;
+            hmfDetailText += `｜Z2.2 B1 pre-T1：HMF proposal observation-only，不可單獨取得 executable stop authority｜Router Lock ${z22LockToken}`;
         }
         if (hmfBand) hmfBand.className = `ocf-hmf-band ${hmfClass} v10-adverse-footer`;
         if (hmfStatus) hmfStatus.textContent = hmfStatusText;
@@ -4317,8 +4336,16 @@
         const primaryTargetText = direction === 0 || primaryTarget === null || primaryTarget <= 0
             ? "等待方向確認"
             : formatOCFLevel(primaryTarget);
-        setOCFText("ocf-target-strike", `固定分界：${formatOCFLevel(data.z_center)}`);
-        setOCFText("ocf-event-strength", `主目標：${primaryTargetText}｜發動 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}`);
+        const atmDisplay = zAtmStrike !== null && zAtmStrike > 0 ? formatOCFLevel(zAtmStrike) : "--";
+        const anchorDisplayValue = zAnchorFromStatus !== null && zAnchorFromStatus > 0
+            ? zAnchorFromStatus
+            : toFiniteNumberOrNull(data.z_anchor_strike);
+        const anchorDisplay = anchorDisplayValue !== null && anchorDisplayValue > 0 ? formatOCFLevel(anchorDisplayValue) : "--";
+        const atmSourceDisplay = zAtmSource || "--";
+        setOCFText("ocf-target-strike", `固定分界：${formatOCFLevel(data.z_center)}｜ATM ${atmDisplay}`);
+        setOCFText("ocf-event-strength", `Anchor ${anchorDisplay} (${atmSourceDisplay})｜主目標：${primaryTargetText}｜發動 ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}`);
+        const targetStrikeEl = document.getElementById("ocf-target-strike");
+        if (targetStrikeEl) targetStrikeEl.title = zInvalidReasonFromStatus ? `Z2: ${zInvalidReasonFromStatus}` : `ATM source: ${atmSourceDisplay}`;
 
         const spState = String(data.ocf_support_defense_state_display || "尚未形成").trim();
         const scState = String(data.ocf_resistance_defense_state_display || "尚未形成").trim();
@@ -4431,7 +4458,7 @@
             semanticAdviceDisplay = activeIcuaReacqTrade
                 ? `ICUA REACQ｜${icuaSide}｜二次發動・正式持倉中`
                 : (activeB1Tp200Trade && b1Tp200Price !== null
-                    ? `ICUA EARLY｜${icuaSide}｜B1 origin10・RC2 Router・TP200 ${formatOCFLevel(b1Tp200Price)}｜正式持倉中`
+                    ? `ICUA EARLY｜${icuaSide}｜B1 origin10・Z2.2 Router・TP200 ${formatOCFLevel(b1Tp200Price)}｜正式持倉中`
                     : `ICUA EARLY｜${icuaSide}｜已發動・正式持倉中`);
             semanticAdviceClass = holdingLong ? "bull" : "bear";
         } else if (!holdingLong && !holdingShort) {
@@ -4441,8 +4468,8 @@
             } else if (icuaArmedLong || icuaArmedShort) {
                 const icuaSide = icuaArmedLong ? "LONG" : "SHORT";
                 semanticAdviceDisplay = entryGuardToken === "VALID"
-                    ? `主力佈局完成｜ICUA ${icuaSide}${b1Tp200Build ? "｜B1 origin10・RC2" : ""}｜Guard已解除・等待其餘進場閘門`
-                    : `主力佈局完成｜ICUA ${icuaSide}${b1Tp200Build ? "｜B1 origin10・RC2" : ""}｜等待期指發動／Guard-clear`;
+                    ? `主力佈局完成｜ICUA ${icuaSide}${b1Tp200Build ? "｜B1 origin10・Z2.2" : ""}｜Guard已解除・等待其餘進場閘門`
+                    : `主力佈局完成｜ICUA ${icuaSide}${b1Tp200Build ? "｜B1 origin10・Z2.2" : ""}｜等待期指發動／Guard-clear`;
                 semanticAdviceClass = "wait";
             } else if (transitionBlocked) {
                 semanticAdviceDisplay = `${direction > 0 ? "多方" : (direction < 0 ? "空方" : "原")}正式結構保留｜Structural Transition=${transitionToken}｜舊方向新進場／再進場已封鎖`;
@@ -4668,13 +4695,13 @@
             actionContextText = activeIcuaReacqTrade
                 ? `ICUA二次上車已成立；最多一次Reacquisition，沿用現有Wave／HMF／Defense管理。${defenseSuffix}`
                 : (activeB1Tp200Trade && b1Tp200Price !== null
-                    ? `Z2.2 B1 origin10 已進場；固定 TP200 ${formatOCFLevel(b1Tp200Price)} 是獲利退出 overlay，既有 Defense／Wave／HMF 照常有效；Primary Trigger僅作後續 outer confirmation，不是本單前置條件。${defenseSuffix}`
+                    ? `Z2.2 B1 origin10 已進場；Profit-Lock200 Runner資格價 ${formatOCFLevel(b1Tp200Price)} 是獲利退出 overlay，既有 Defense／Wave／HMF 照常有效；Primary Trigger僅作後續 outer confirmation，不是本單前置條件。${defenseSuffix}`
                     : `ICUA Inventory-origin已進場；Primary Trigger僅作後續Formal確認參考，不是本單必要前置條件。${defenseSuffix}`);
         } else if (!holdingLong && !holdingShort && icuaReacqArmed) {
             actionContextText = "第一次ICUA保護退出後等待二次發動：Cooldown＋30pt relaunch＋3m Flow持續＋EntryGuard再次允許。";
         } else if (!holdingLong && !holdingShort && (icuaArmedLong || icuaArmedShort)) {
             actionContextText = b1Tp200Build
-                ? "Z2.2 B1 origin10：Inventory Completion已成立；不等遠端 Primary Trigger，等待 Guard-clear 與既有新曝險閘門；成交後才啟用固定 TP200。"
+                ? "Z2.2 B1 origin10：Inventory Completion已成立；不等遠端 Primary Trigger，等待 Guard-clear 與既有新曝險閘門；成交後才啟用 Profit-Lock200 Runner。"
                 : "Inventory Completion已成立；不等遠端Primary Trigger，等待Guard-clear與其餘新曝險閘門。";
         }
         setOCFText("ocf-action-context", actionContextText);
