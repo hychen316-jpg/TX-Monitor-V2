@@ -1,3 +1,4 @@
+<!-- MME_CASHOPEN0900_SPA_GATE_UI_v0.1_RC1_20260919 | presentation-only | 08:45-09:00 evidence accumulation only | formal Day SPA/Session Intent lock >=09:00 | Early30/Mature60 clocks unchanged | pre-open gate mismatch observability | no Firebase/listener/logger/schema/order-authority change -->
 <!-- Z22_V098_RC2A_UNIFIED_RISK_ATM_UI_v0.1_20260918 | presentation-only | RC2A build recognition + ATM/ATM_SRC/ANCHOR observability | preserves z_bull_trigger/z_bear_trigger mapping | no Firebase/listener/logger/schema/order-authority change -->
 <!-- Z22_V097_RC3_PROFITLOCK200_RUNNER_UI_v0.1_20260908 | presentation-only | legacy-compatible Profit-Lock200 Runner parsing retained -->
 <!-- Z22_V093_RC1_OBSERVABILITY_UI_v0.1_20260906 | presentation-only | parses existing z_status_display tokens Z22_RC/COMPACT_FLOW/SELLER_EPOCH_AUTH/ROOT_ACCOUNT | no Firebase/listener/schema/authority change | collapsed dashboard height unchanged -->
@@ -21,8 +22,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.8-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.13-LAUNCH-v1.2-GEOMETRY-v1.0-WLA-v1.3-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2A-UNIFIEDRISK-ATMRECOVERY-UI-v0.1">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2A</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.8-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.3-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.13-LAUNCH-v1.2-GEOMETRY-v1.0-WLA-v1.3-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2A-UNIFIEDRISK-ATMRECOVERY-UI-v0.1-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1">
+  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2A + MME CashOpen0900 RC1</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -7112,7 +7113,7 @@
     if(!ocf) return;
     const band=make('section','mme-live-band','mme-live-band');
     const head=make('div','mme-head');
-    head.appendChild(make('div','mme-title','mme-title','MME 主力多空心態｜v0.5.2 RoleMaturity/Early30 RC1 UI + NightSegment v0.1.3 PRE-US Prior + DayPositioning v0.1.4・Firebase｜紅多綠空'));
+    head.appendChild(make('div','mme-title','mme-title','MME 主力多空心態｜v0.5.2 + CashOpen0900 SPA Gate RC1 UI + RoleMaturity/Early30 + NightSegment v0.1.3 PRE-US Prior + DayPositioning v0.1.4・Firebase｜紅多綠空'));
     head.appendChild(make('div','mme-transport offline','mme-transport','等待 MME Firebase'));
     band.appendChild(head);
 
@@ -7125,7 +7126,7 @@
     // Day semantics: Sticky Positioning is the SPA/Lifecycle anchor; Early30 is Research Shadow only; +60m remains the mature whole-Day read.
     const dualRead=make('div','mme-day-read-dual','mme-day-read-dual');
     const posCell=make('div','mme-day-read-cell','mme-positioning-side-cell');
-    posCell.innerHTML='<span class="mme-day-read-label">整盤主力底色｜POSITIONING PRIOR</span><strong class="mme-day-read-value" id="mme-positioning-side">--</strong><small class="mme-day-read-meta" id="mme-positioning-side-meta">Sticky 主力布局底色｜不等於60M成熟確認</small>';
+    posCell.innerHTML='<span class="mme-day-read-label">整盤主力底色｜POSITIONING PRIOR｜SPA 09:00+</span><strong class="mme-day-read-value" id="mme-positioning-side">--</strong><small class="mme-day-read-meta" id="mme-positioning-side-meta">08:45–09:00 Evidence Accumulation｜09:00後才允許正式SPA｜30M/60M時鐘不變</small>';
     dualRead.appendChild(posCell);
     const earlyCell=make('div','mme-day-read-cell','mme-early-read-cell');
     earlyCell.innerHTML='<span class="mme-day-read-label">30M EARLY READ｜RESEARCH SHADOW</span><strong class="mme-day-read-value" id="mme-early-read">--</strong><small class="mme-day-read-meta" id="mme-early-read-meta">Authority 0 / Entry 0｜等待 Early maturity</small>';
@@ -7323,7 +7324,7 @@
 
     const titleEl=document.getElementById('mme-title');
     if(titleEl){
-      titleEl.textContent='MME 主力多空心態｜'+(backendV052?'v0.5.2 Whole-Day Mindset + Mature60M + RoleMaturity/Early30 + ChallengeLifecycle RC1':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.3 PRE-US Prior + DayPositioning v0.1.4・Firebase｜紅多綠空';
+      titleEl.textContent='MME 主力多空心態｜'+(backendV052?'v0.5.2 + CashOpen0900 SPA Gate RC1 UI + Whole-Day Mindset + Mature60M + RoleMaturity/Early30 + ChallengeLifecycle':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.3 PRE-US Prior + DayPositioning v0.1.4・Firebase｜紅多綠空';
     }
 
     band.className='mme-live-band '+(anySessionWarning?'mme-risk':(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state)));
@@ -7367,6 +7368,8 @@
     const tsText=String(data.timestamp||'');
     const tm=tsText.match(/(?:T|\s)(\d{2}):(\d{2})(?::(\d{2}))?/);
     const dayClockMin=tm ? (Number(tm[1])*60+Number(tm[2])) : -1;
+    const cashOpenPreWindow=(dayClockMin>=525 && dayClockMin<540); // 08:45-08:59 Taiwan Day: evidence only.
+    const cashOpenGateMismatch=backendV052 && cashOpenPreWindow && hasSession; // New RC1 must not formally lock SPA before 09:00.
     const frozenReadState=/^(MATURE_CONFIRMED|CHALLENGED|CHALLENGED_OPPOSITE|FORMAL_REVERSAL_CONFIRMED)$/.test(earlyState);
     const dayMatureReached=!backendV052 || frozenReadState || dayClockMin>=585; // Taiwan Day session +60m = 09:45.
     const dayReadText=(backendV052 && !dayMatureReached) ? ('等待09:45成熟判讀｜目前 '+earlyText) : earlyText;
@@ -7397,8 +7400,24 @@
     if(!nightActive){
       const posSide=document.getElementById('mme-positioning-side');
       const posMeta=document.getElementById('mme-positioning-side-meta');
-      if(posSide){ posSide.textContent=wholeDayMindsetText; setMmeDirClass(posSide,sessionDir,false); }
-      if(posMeta){ posMeta.textContent='Sticky Positioning Prior｜整盤布局底色'+(data.day_positioning_anchor_price?('｜SPA '+fmt(data.day_positioning_anchor_price,0)):'')+'｜60M只評成熟度'; }
+      if(posSide){
+        if(cashOpenPreWindow){
+          posSide.textContent=cashOpenGateMismatch?'⚠ PREOPEN SPA已鎖｜Gate不一致':'PREOPEN｜證據累積中';
+          setMmeDirClass(posSide,0,cashOpenGateMismatch);
+        } else {
+          posSide.textContent=wholeDayMindsetText;
+          setMmeDirClass(posSide,sessionDir,false);
+        }
+      }
+      if(posMeta){
+        if(cashOpenPreWindow){
+          posMeta.textContent=cashOpenGateMismatch
+            ? '⚠ 08:45–09:00 不應有正式 Session Intent / SPA｜請確認正在執行 CashOpen0900 RC1 engine'
+            : '08:45–09:00 Evidence Accumulation｜正式 SPA 09:00 後才可建立｜30M/60M時鐘不變｜Gate OK';
+        } else {
+          posMeta.textContent='CashOpen0900 RC1｜Sticky Positioning Prior｜整盤布局底色'+(data.day_positioning_anchor_price?('｜SPA '+fmt(data.day_positioning_anchor_price,0)):'')+'｜60M只評成熟度';
+        }
+      }
 
       const earlyReadEl=document.getElementById('mme-early-read');
       const earlyMeta=document.getElementById('mme-early-read-meta');
@@ -7740,7 +7759,7 @@
     let breach='Trigger內';
     if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
     document.getElementById('mme-breach').textContent=breach;
-    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.day_early_mainforce_build?'｜'+data.day_early_mainforce_build:'')+(data.day_role_maturity_build?'｜'+data.day_role_maturity_build:'')+(data.day_challenge_lifecycle_build?'｜'+data.day_challenge_lifecycle_build:'')+(data.whole_day_reversal_watch_build?'｜'+data.whole_day_reversal_watch_build:'')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜'+(data.timestamp||'--');
+    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.day_early_mainforce_build?'｜'+data.day_early_mainforce_build:'')+(data.day_role_maturity_build?'｜'+data.day_role_maturity_build:'')+(data.day_challenge_lifecycle_build?'｜'+data.day_challenge_lifecycle_build:'')+(data.whole_day_reversal_watch_build?'｜'+data.whole_day_reversal_watch_build:'')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜UI CashOpen0900 SPA Gate RC1｜'+(data.timestamp||'--');
     if(data.last_event) renderEvent(data.last_event);
     updateFreshness();
   }
