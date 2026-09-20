@@ -1,4 +1,4 @@
-<!-- MME_PREUS_POSTUS_FORECAST_UI_v0.2_RC2_20260920 | Runtime RC2 companion | Firebase observability-only nested preus_postus_forecast | PREOPEN/U30/U45/U60/U75 Reference | NightSegment v0.1.4 SF1 retained | Z2/Entry/Order authority 0/0/0 -->
+<!-- MME_PREUS_POSTUS_FORECAST_UI_v0.2_RC2_ZH1_20260920 | Runtime RC2 companion | Chinese operator-facing PREOPEN/U30/U45/U60/U75 Reference | Firebase observability-only nested preus_postus_forecast | NightSegment v0.1.4 SF1 retained | Z2/Entry/Order authority 0/0/0 -->
 <!-- MME_NIGHT_U75_PRICE_ACCEPTANCE_SF1_UI_v0.2_20260919 | NightSegment v0.1.4 SF1 U75 Price Acceptance reference retained -->
 <!-- MME_CASHOPEN0900_SPA_GATE_UI_v0.1_RC1_20260919 | presentation-only | 08:45-09:00 evidence accumulation only | formal Day SPA/Session Intent lock >=09:00 | Early30/Mature60 clocks unchanged | pre-open gate mismatch observability | no Firebase/listener/logger/schema/order-authority change -->
 <!-- Z22_V098_RC2A_UNIFIED_RISK_ATM_UI_v0.1_20260918 | presentation-only | RC2A build recognition + ATM/ATM_SRC/ANCHOR observability | preserves z_bull_trigger/z_bear_trigger mapping | no Firebase/listener/logger/schema/order-authority change -->
@@ -6799,7 +6799,8 @@
 #v2-live-page .mme-night-card.night-bear strong { color:#30d158; }
 #v2-live-page .mme-night-reason { display:none; margin-top:4px; padding:4px 5px; border-left:3px solid #64d2ff; background:rgba(100,210,255,.035); color:#85858a; font-size:8px; line-height:1.3; overflow-wrap:anywhere; }
 #v2-live-page .mme-night-reason.active { display:block; }
-@media (max-width:900px) { #v2-live-page .mme-night-context.active { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:900px) { #v2-live-page .mme-night-context.active { grid-template-columns:repeat(5,minmax(0,1fr)); gap:3px; padding:4px; } #v2-live-page .mme-night-card { padding:3px 4px; } #v2-live-page .mme-night-card strong { font-size:9px; } }
+@media (max-width:600px) { #v2-live-page .mme-night-context.active { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 
 /* === Day Positioning / Price Dislocation Shadow v0.1 === */
 #v2-live-page .mme-positioning-context {
@@ -7160,11 +7161,11 @@
     // Night Segment v0.1.4 SF1: PRE-US Prior -> Price Acceptance -> fixed U75 maturity; trading authority remains zero.
     const nightCtx=make('div','mme-night-context','mme-night-context');
     [
-      ['PREOPEN FORECAST','mme-night-fc-pre-main','mme-night-fc-pre-meta'],
-      ['U30｜22:00','mme-night-fc-u30-main','mme-night-fc-u30-meta'],
-      ['U45｜22:15','mme-night-fc-u45-main','mme-night-fc-u45-meta'],
-      ['U60｜22:30','mme-night-fc-u60-main','mme-night-fc-u60-meta'],
-      ['U75 REF｜22:45','mme-night-fc-u75-main','mme-night-fc-u75-meta']
+      ['21:30前｜方向預測','mme-night-fc-pre-main','mme-night-fc-pre-meta'],
+      ['22:00｜第一確認','mme-night-fc-u30-main','mme-night-fc-u30-meta'],
+      ['22:15｜第二確認','mme-night-fc-u45-main','mme-night-fc-u45-meta'],
+      ['22:30｜主力確認','mme-night-fc-u60-main','mme-night-fc-u60-meta'],
+      ['22:45｜保守參考','mme-night-fc-u75-main','mme-night-fc-u75-meta']
     ].forEach(function(x){
       const c=make('div','mme-night-card');
       c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">--</small>';
@@ -7354,10 +7355,10 @@
     const scoreAction=document.getElementById('mme-score-action');
     if(scoreAction){
       scoreAction.className='mme-score-action '+(nightActive?'score-neutral':scoreRead.cls);
-      scoreAction.textContent=nightActive ? 'Global memory 保留｜夜盤以 PREOPEN Forecast → U30/U45 Acceptance → U60 Early Confirm；U75僅Reference' : scoreRead.action;
+      scoreAction.textContent=nightActive ? '夜盤背景保留｜21:30前先預測 → 22:00/22:15看價格是否確認 → 22:30判斷主力；22:45僅保守參考' : scoreRead.action;
     }
     const scoreLegend=document.getElementById('mme-score-legend');
-    if(scoreLegend) scoreLegend.textContent=nightActive ? 'Global Night Score＝整夜背景 memory；v0.1.4 SF1 以 Evidence × Price Acceptance 驗證；U60 provisional、U75固定成熟，100pt為既有 clear-move 尺度，非勝率' : (backendV052?'±15＝+60m累積成熟門檻；Current Reproof / Memory Conflict + Role Maturity使用既有證據尺度；不是勝率':'±15＝日盤歷史研究的強 Session evidence 門檻；是證據強度，不是勝率');
+    if(scoreLegend) scoreLegend.textContent=nightActive ? '夜盤背景分數＝整夜背景記憶；新版以「開盤前預測 × 價格接受」驗證，22:30可提早確認主力，22:45只作保守參考；100點是既有價格確認尺度，不是勝率' : (backendV052?'±15＝+60m累積成熟門檻；Current Reproof / Memory Conflict + Role Maturity使用既有證據尺度；不是勝率':'±15＝日盤歷史研究的強 Session evidence 門檻；是證據強度，不是勝率');
     const scoreMarker=document.getElementById('mme-score-marker');
     if(scoreMarker) scoreMarker.style.left=scoreMarkerPct(sessionScore).toFixed(1)+'%';
 
@@ -7496,42 +7497,71 @@
       const fbranch=String(pf.preopen_forecast_branch||'NO_FORECAST');
       const ffrozen=Number(pf.preopen_forecast_frozen)||0;
       const fplus=Number(pf.late_fmf_plus_share); const fminus=Number(pf.late_fmf_minus_share);
-      function fcDirText(d){ return d>0?'多':(d<0?'空':'未定'); }
+      function fcDirText(d){ return d>0?'偏多':(d<0?'偏空':'未定'); }
+      function fcBranchText(code){
+        code=String(code||'NO_FORECAST');
+        const map={
+          TRAPPED_TAKEOVER:'日盤受困→預估反向接管',
+          CLEAN_CONTINUATION:'日盤乾淨→預估延續原方向',
+          NOFLIP_TRAPPED_LATE_FMF:'日盤受困→開盤前主力重新表態',
+          CLEAN_UNHARVESTED_SPA_RECLAIM:'日盤未完成→開盤前主力重新接手',
+          NO_FORECAST:'暫無明確預測'
+        };
+        return map[code]||'預測條件觀察中';
+      }
+      function fcDayText(code){
+        code=String(code||'');
+        const map={
+          NOFLIP_TRAPPED:'日盤受困',
+          FLIP_TRAPPED:'日盤翻轉受困',
+          NOFLIP_NOT_TRAPPED:'日盤結構乾淨'
+        };
+        return map[code]||'日盤狀態未定';
+      }
       function fcAcceptText(state,acc){
         state=String(state||'PENDING');
-        if(state==='FORECAST_ACCEPTED_100') return '接受 '+signed(acc,0)+'pt';
-        if(state==='FORECAST_WEAK_POS') return '未成熟 '+signed(acc,0)+'pt';
-        if(state==='FORECAST_REJECTED') return '拒絕 '+signed(acc,0)+'pt';
-        if(state==='NO_FORECAST') return '無Forecast';
-        return '等待';
+        if(state==='FORECAST_ACCEPTED_100') return '價格已確認 '+signed(acc,0)+'點';
+        if(state==='FORECAST_WEAK_POS') return '同向但未達確認 '+signed(acc,0)+'點';
+        if(state==='FORECAST_REJECTED') return '價格反向，不確認 '+signed(acc,0)+'點';
+        if(state==='NO_FORECAST') return '尚無開盤前預測';
+        return '等待時間到';
+      }
+      function fcU75Text(state,dir){
+        state=String(state||'PENDING');
+        if(/MAINFORCE_CONFIRMED/.test(state)) return '保守參考：'+fcDirText(dir);
+        if(/PRICE_REJECTING/.test(state)) return '價格拒絕原證據';
+        if(/PRICE_NOT_MATURE/.test(state)) return '主力仍未成熟';
+        if(/PRICE_ACCEPTING_PROVISIONAL/.test(state)) return '同向但仍在觀察';
+        if(/PENDING/.test(state)) return '等待 22:45';
+        return zh(state);
       }
       if(!hasPf){
-        setNightCard('mme-night-fc-pre-main','Forecast V0.2 未上傳','請搭配 Runtime RC2 MME',0,true);
-        setNightCard('mme-night-fc-u30-main','等待 Runtime RC2','Firebase observability 未就緒',0,true);
-        setNightCard('mme-night-fc-u45-main','等待 Runtime RC2','Firebase observability 未就緒',0,true);
-        setNightCard('mme-night-fc-u60-main','等待 Runtime RC2','Firebase observability 未就緒',0,true);
+        setNightCard('mme-night-fc-pre-main','尚未收到新版預測','請確認新版 MME RC2 已啟動',0,true);
+        setNightCard('mme-night-fc-u30-main','等待即時資料','尚未收到夜盤預測資料',0,true);
+        setNightCard('mme-night-fc-u45-main','等待即時資料','尚未收到夜盤預測資料',0,true);
+        setNightCard('mme-night-fc-u60-main','等待即時資料','尚未收到夜盤預測資料',0,true);
       } else {
-        let preMain=ffrozen?(fdir?('預測'+fcDirText(fdir)):'NO FORECAST'):'建構中';
-        let preMeta=ffrozen?(fbranch+'｜Day '+String(pf.day_cohort||'--')):('21:00–21:30 FMF｜L '+(Number.isFinite(fplus)?fmt(fplus*100,0):'--')+'% / S '+(Number.isFinite(fminus)?fmt(fminus*100,0):'--')+'%');
+        let preMain=ffrozen?(fdir?('預測：'+fcDirText(fdir)):'暫無明確方向'):'預測建構中';
+        let preMeta=ffrozen?(fcBranchText(fbranch)+'｜'+fcDayText(pf.day_cohort)):('21:00–21:30 主力表態｜多 '+(Number.isFinite(fplus)?fmt(fplus*100,0):'--')+'%／空 '+(Number.isFinite(fminus)?fmt(fminus*100,0):'--')+'%');
         setNightCard('mme-night-fc-pre-main',preMain,preMeta,fdir,ffrozen&&fdir===0);
         const u30s=String(pf.u30_state||'PENDING'), u30a=Number(pf.u30_acceptance)||0;
-        setNightCard('mme-night-fc-u30-main',fcAcceptText(u30s,u30a),'Forecast '+fcDirText(fdir)+'｜>=100 才接受',u30s==='FORECAST_ACCEPTED_100'?fdir:0,u30s==='FORECAST_REJECTED');
+        setNightCard('mme-night-fc-u30-main',fcAcceptText(u30s,u30a),'預測'+fcDirText(fdir)+'｜同向達 +100點才確認',u30s==='FORECAST_ACCEPTED_100'?fdir:0,u30s==='FORECAST_REJECTED');
         const u45s=String(pf.u45_state||'PENDING'), u45a=Number(pf.u45_acceptance)||0;
-        setNightCard('mme-night-fc-u45-main',fcAcceptText(u45s,u45a),'Forecast '+fcDirText(fdir)+'｜>=100 才接受',u45s==='FORECAST_ACCEPTED_100'?fdir:0,u45s==='FORECAST_REJECTED');
+        setNightCard('mme-night-fc-u45-main',fcAcceptText(u45s,u45a),'預測'+fcDirText(fdir)+'｜同向達 +100點才確認',u45s==='FORECAST_ACCEPTED_100'?fdir:0,u45s==='FORECAST_REJECTED');
         const u60s=String(pf.u60_state||'PENDING'), u60a=Number(pf.u60_acceptance)||0;
         const u60mf=String(pf.u60_mainforce_state||'PENDING'), u60d=Number(pf.u60_mainforce_direction)||0;
         let u60main='等待'; let u60warn=false;
-        if(u60mf==='POSTUS_MAINFORCE_EARLY_CONFIRMED') u60main='主力早期確認'+fcDirText(u60d);
-        else if(u60mf==='EVIDENCE_ONLY_PROVISIONAL'){u60main='Evidence-only provisional';u60warn=true;}
-        else if(u60mf==='AXIS_CONFLICT'){u60main='AXIS CONFLICT';u60warn=true;}
-        else if(u60mf==='UNRESOLVED'){u60main='未確認';u60warn=true;}
+        if(u60mf==='POSTUS_MAINFORCE_EARLY_CONFIRMED') u60main='主力已確認：'+fcDirText(u60d);
+        else if(u60mf==='EVIDENCE_ONLY_PROVISIONAL'){u60main='僅盤中證據，暫不確認';u60warn=true;}
+        else if(u60mf==='AXIS_CONFLICT'){u60main='預測與盤中證據衝突';u60warn=true;}
+        else if(u60mf==='UNRESOLVED'){u60main='主力方向未確認';u60warn=true;}
         else u60main=fcAcceptText(u60s,u60a);
-        setNightCard('mme-night-fc-u60-main',u60main,'Forecast '+signed(u60a,0)+'pt｜Evidence '+fcDirText(Number(pf.u60_evidence_direction)||0)+' '+signed(pf.u60_evidence_acceptance,0)+'pt',u60mf==='POSTUS_MAINFORCE_EARLY_CONFIRMED'?u60d:0,u60warn);
+        setNightCard('mme-night-fc-u60-main',u60main,'預測位移 '+signed(u60a,0)+'點｜盤中證據 '+fcDirText(Number(pf.u60_evidence_direction)||0)+' '+signed(pf.u60_evidence_acceptance,0)+'點',u60mf==='POSTUS_MAINFORCE_EARLY_CONFIRMED'?u60d:0,u60warn);
       }
       const u75ref=hasPf?String(pf.u75_reference_state||'PENDING'):String(data.us_open_prior_transition_state||'PENDING');
       const u75dir=hasPf?(Number(pf.u75_reference_direction)||0):(Number(data.night_operational_mindset_direction)||0);
       const u75confirmed=/MAINFORCE_CONFIRMED/.test(u75ref);
-      setNightCard('mme-night-fc-u75-main',u75confirmed?('Reference '+fcDirText(u75dir)):((data.us_open_prior_transition_state_zh&& !hasPf)?data.us_open_prior_transition_state_zh:zh(u75ref)),'舊版保守成熟點｜方向確認≠自動進場',u75confirmed?u75dir:0,!u75confirmed && !/PENDING/.test(u75ref));
+      setNightCard('mme-night-fc-u75-main',fcU75Text(u75ref,u75dir),'22:45 保守參考｜僅確認方向，不代表立即進場',u75confirmed?u75dir:0,!u75confirmed && !/PENDING/.test(u75ref));
 
       const st=String(data.night_segment_state||'');
       const marketAge=Math.max(0,Number(data.us_open_segment_age_seconds)||0);
