@@ -1,4 +1,5 @@
-<!-- MME_NIGHT_U75_PRICE_ACCEPTANCE_SF1_UI_v0.2_20260919 | presentation-only | Runtime RC1 companion | NightSegment v0.1.4 SF1 U75 Price Acceptance | PRE-US/Post-US Forecast v0.2 remains local shadow and is NOT fabricated from Firebase | no listener/schema/order-authority change -->
+<!-- MME_PREUS_POSTUS_FORECAST_UI_v0.2_RC2_20260920 | Runtime RC2 companion | Firebase observability-only nested preus_postus_forecast | PREOPEN/U30/U45/U60/U75 Reference | NightSegment v0.1.4 SF1 retained | Z2/Entry/Order authority 0/0/0 -->
+<!-- MME_NIGHT_U75_PRICE_ACCEPTANCE_SF1_UI_v0.2_20260919 | NightSegment v0.1.4 SF1 U75 Price Acceptance reference retained -->
 <!-- MME_CASHOPEN0900_SPA_GATE_UI_v0.1_RC1_20260919 | presentation-only | 08:45-09:00 evidence accumulation only | formal Day SPA/Session Intent lock >=09:00 | Early30/Mature60 clocks unchanged | pre-open gate mismatch observability | no Firebase/listener/logger/schema/order-authority change -->
 <!-- Z22_V098_RC2A_UNIFIED_RISK_ATM_UI_v0.1_20260918 | presentation-only | RC2A build recognition + ATM/ATM_SRC/ANCHOR observability | preserves z_bull_trigger/z_bear_trigger mapping | no Firebase/listener/logger/schema/order-authority change -->
 <!-- Z22_V097_RC3_PROFITLOCK200_RUNNER_UI_v0.1_20260908 | presentation-only | legacy-compatible Profit-Lock200 Runner parsing retained -->
@@ -23,8 +24,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.8-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.13-LAUNCH-v1.2-GEOMETRY-v1.0-WLA-v1.3-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2A-UNIFIEDRISK-ATMRECOVERY-UI-v0.1-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2A + MME CashOpen0900 + NightPA v0.1.4 SF1 RC1</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.8-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.13-LAUNCH-v1.2-GEOMETRY-v1.0-WLA-v1.3-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2A-UNIFIEDRISK-ATMRECOVERY-UI-v0.1-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2">
+  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2A + MME CashOpen0900 + Forecast v0.2 Runtime RC2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -6781,7 +6782,7 @@
 
 /* === Night Segment v0.1.4 SF1 U75 Price Acceptance: presentation-only overlay === */
 #v2-live-page .mme-night-context {
-  display:none; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin-top:6px;
+  display:none; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; margin-top:6px;
   padding:5px; border:1px solid rgba(191,90,242,.36); border-radius:6px;
   background:linear-gradient(135deg,rgba(191,90,242,.055),rgba(100,210,255,.025));
 }
@@ -7159,10 +7160,11 @@
     // Night Segment v0.1.4 SF1: PRE-US Prior -> Price Acceptance -> fixed U75 maturity; trading authority remains zero.
     const nightCtx=make('div','mme-night-context','mme-night-context');
     [
-      ['NIGHT STAGE','mme-night-stage-main','mme-night-stage-meta'],
-      ['PRE-US PRIOR','mme-night-pre-main','mme-night-pre-meta'],
-      ['U.S.-OPEN SEGMENT','mme-night-us-main','mme-night-us-meta'],
-      ['POST-US MAIN-FORCE','mme-night-shift-main','mme-night-shift-meta']
+      ['PREOPEN FORECAST','mme-night-fc-pre-main','mme-night-fc-pre-meta'],
+      ['U30｜22:00','mme-night-fc-u30-main','mme-night-fc-u30-meta'],
+      ['U45｜22:15','mme-night-fc-u45-main','mme-night-fc-u45-meta'],
+      ['U60｜22:30','mme-night-fc-u60-main','mme-night-fc-u60-meta'],
+      ['U75 REF｜22:45','mme-night-fc-u75-main','mme-night-fc-u75-meta']
     ].forEach(function(x){
       const c=make('div','mme-night-card');
       c.innerHTML='<span>'+x[0]+'</span><strong id="'+x[1]+'">--</strong><small id="'+x[2]+'">--</small>';
@@ -7352,7 +7354,7 @@
     const scoreAction=document.getElementById('mme-score-action');
     if(scoreAction){
       scoreAction.className='mme-score-action '+(nightActive?'score-neutral':scoreRead.cls);
-      scoreAction.textContent=nightActive ? 'Global memory 保留｜夜盤以 PRE-US Prior → Price Acceptance → U75 Maturity 為 Operational Read' : scoreRead.action;
+      scoreAction.textContent=nightActive ? 'Global memory 保留｜夜盤以 PREOPEN Forecast → U30/U45 Acceptance → U60 Early Confirm；U75僅Reference' : scoreRead.action;
     }
     const scoreLegend=document.getElementById('mme-score-legend');
     if(scoreLegend) scoreLegend.textContent=nightActive ? 'Global Night Score＝整夜背景 memory；v0.1.4 SF1 以 Evidence × Price Acceptance 驗證；U60 provisional、U75固定成熟，100pt為既有 clear-move 尺度，非勝率' : (backendV052?'±15＝+60m累積成熟門檻；Current Reproof / Memory Conflict + Role Maturity使用既有證據尺度；不是勝率':'±15＝日盤歷史研究的強 Session evidence 門檻；是證據強度，不是勝率');
@@ -7488,6 +7490,49 @@
     const nightCtxEl=document.getElementById('mme-night-context');
     if(nightCtxEl) nightCtxEl.classList.toggle('active',nightActive);
     if(nightActive){
+      const pf=(data.preus_postus_forecast && typeof data.preus_postus_forecast==='object') ? data.preus_postus_forecast : {};
+      const hasPf=Object.keys(pf).length>0;
+      const fdir=Number(pf.preopen_forecast_direction)||0;
+      const fbranch=String(pf.preopen_forecast_branch||'NO_FORECAST');
+      const ffrozen=Number(pf.preopen_forecast_frozen)||0;
+      const fplus=Number(pf.late_fmf_plus_share); const fminus=Number(pf.late_fmf_minus_share);
+      function fcDirText(d){ return d>0?'多':(d<0?'空':'未定'); }
+      function fcAcceptText(state,acc){
+        state=String(state||'PENDING');
+        if(state==='FORECAST_ACCEPTED_100') return '接受 '+signed(acc,0)+'pt';
+        if(state==='FORECAST_WEAK_POS') return '未成熟 '+signed(acc,0)+'pt';
+        if(state==='FORECAST_REJECTED') return '拒絕 '+signed(acc,0)+'pt';
+        if(state==='NO_FORECAST') return '無Forecast';
+        return '等待';
+      }
+      if(!hasPf){
+        setNightCard('mme-night-fc-pre-main','Forecast V0.2 未上傳','請搭配 Runtime RC2 MME',0,true);
+        setNightCard('mme-night-fc-u30-main','等待 Runtime RC2','Firebase observability 未就緒',0,true);
+        setNightCard('mme-night-fc-u45-main','等待 Runtime RC2','Firebase observability 未就緒',0,true);
+        setNightCard('mme-night-fc-u60-main','等待 Runtime RC2','Firebase observability 未就緒',0,true);
+      } else {
+        let preMain=ffrozen?(fdir?('預測'+fcDirText(fdir)):'NO FORECAST'):'建構中';
+        let preMeta=ffrozen?(fbranch+'｜Day '+String(pf.day_cohort||'--')):('21:00–21:30 FMF｜L '+(Number.isFinite(fplus)?fmt(fplus*100,0):'--')+'% / S '+(Number.isFinite(fminus)?fmt(fminus*100,0):'--')+'%');
+        setNightCard('mme-night-fc-pre-main',preMain,preMeta,fdir,ffrozen&&fdir===0);
+        const u30s=String(pf.u30_state||'PENDING'), u30a=Number(pf.u30_acceptance)||0;
+        setNightCard('mme-night-fc-u30-main',fcAcceptText(u30s,u30a),'Forecast '+fcDirText(fdir)+'｜>=100 才接受',u30s==='FORECAST_ACCEPTED_100'?fdir:0,u30s==='FORECAST_REJECTED');
+        const u45s=String(pf.u45_state||'PENDING'), u45a=Number(pf.u45_acceptance)||0;
+        setNightCard('mme-night-fc-u45-main',fcAcceptText(u45s,u45a),'Forecast '+fcDirText(fdir)+'｜>=100 才接受',u45s==='FORECAST_ACCEPTED_100'?fdir:0,u45s==='FORECAST_REJECTED');
+        const u60s=String(pf.u60_state||'PENDING'), u60a=Number(pf.u60_acceptance)||0;
+        const u60mf=String(pf.u60_mainforce_state||'PENDING'), u60d=Number(pf.u60_mainforce_direction)||0;
+        let u60main='等待'; let u60warn=false;
+        if(u60mf==='POSTUS_MAINFORCE_EARLY_CONFIRMED') u60main='主力早期確認'+fcDirText(u60d);
+        else if(u60mf==='EVIDENCE_ONLY_PROVISIONAL'){u60main='Evidence-only provisional';u60warn=true;}
+        else if(u60mf==='AXIS_CONFLICT'){u60main='AXIS CONFLICT';u60warn=true;}
+        else if(u60mf==='UNRESOLVED'){u60main='未確認';u60warn=true;}
+        else u60main=fcAcceptText(u60s,u60a);
+        setNightCard('mme-night-fc-u60-main',u60main,'Forecast '+signed(u60a,0)+'pt｜Evidence '+fcDirText(Number(pf.u60_evidence_direction)||0)+' '+signed(pf.u60_evidence_acceptance,0)+'pt',u60mf==='POSTUS_MAINFORCE_EARLY_CONFIRMED'?u60d:0,u60warn);
+      }
+      const u75ref=hasPf?String(pf.u75_reference_state||'PENDING'):String(data.us_open_prior_transition_state||'PENDING');
+      const u75dir=hasPf?(Number(pf.u75_reference_direction)||0):(Number(data.night_operational_mindset_direction)||0);
+      const u75confirmed=/MAINFORCE_CONFIRMED/.test(u75ref);
+      setNightCard('mme-night-fc-u75-main',u75confirmed?('Reference '+fcDirText(u75dir)):((data.us_open_prior_transition_state_zh&& !hasPf)?data.us_open_prior_transition_state_zh:zh(u75ref)),'舊版保守成熟點｜方向確認≠自動進場',u75confirmed?u75dir:0,!u75confirmed && !/PENDING/.test(u75ref));
+
       const st=String(data.night_segment_state||'');
       const marketAge=Math.max(0,Number(data.us_open_segment_age_seconds)||0);
       const observedAge=Math.max(0,Number(data.us_open_observed_age_seconds)||0);
@@ -7762,7 +7807,7 @@
     let breach='Trigger內';
     if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
     document.getElementById('mme-breach').textContent=breach;
-    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.day_early_mainforce_build?'｜'+data.day_early_mainforce_build:'')+(data.day_role_maturity_build?'｜'+data.day_role_maturity_build:'')+(data.day_challenge_lifecycle_build?'｜'+data.day_challenge_lifecycle_build:'')+(data.whole_day_reversal_watch_build?'｜'+data.whole_day_reversal_watch_build:'')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜UI CashOpen0900 SPA Gate RC1 + NightPA v0.1.4 SF1｜'+(data.timestamp||'--');
+    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.day_early_mainforce_build?'｜'+data.day_early_mainforce_build:'')+(data.day_role_maturity_build?'｜'+data.day_role_maturity_build:'')+(data.day_challenge_lifecycle_build?'｜'+data.day_challenge_lifecycle_build:'')+(data.whole_day_reversal_watch_build?'｜'+data.whole_day_reversal_watch_build:'')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜UI CashOpen0900 + Forecast v0.2 FirebaseOBS RC2 + NightPA v0.1.4 SF1｜'+(data.timestamp||'--');
     if(data.last_event) renderEvent(data.last_event);
     updateFreshness();
   }
