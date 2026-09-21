@@ -3896,6 +3896,12 @@
         }
 
         const directionDisplay = String(data.z_direction_display || "").trim().replace(/\|/g, "｜");
+        const rfdState = String(data.rfd_state || "").trim().toUpperCase();
+        const rfdCandidateDirection = Math.sign(toFiniteNumberOrNull(data.rfd_candidate_direction) ?? 0);
+        const rfdCandidateAge = Math.max(0, Math.round(toFiniteNumberOrNull(data.rfd_candidate_age_seconds) ?? 0));
+        const rfdRequiredAge = Math.max(0, Math.round(toFiniteNumberOrNull(data.rfd_required_establish_seconds) ?? 0));
+        const rfdBuilding = direction === 0 && rfdCandidateDirection !== 0 &&
+            (rfdState === "LONG_BUILDING" || rfdState === "SHORT_BUILDING") && rfdRequiredAge > 0;
         const scoreText = score === null
             ? "--"
             : `${score >= 0 ? "+" : ""}${formatRadarNumber(score, 1)}`;
@@ -3907,7 +3913,9 @@
                 ? `${scoreText}｜預估偏空`
                 : `${scoreText}｜方向未定`);
         let semanticDirectionDisplay = directionDisplay || fallbackDirection;
-        if (transitionToken.startsWith("FAST_REVERSE_")) {
+        if (rfdBuilding) {
+            semanticDirectionDisplay = `${scoreText}｜${rfdCandidateDirection > 0 ? "多方" : "空方"}結構建立中 ${Math.min(rfdCandidateAge, rfdRequiredAge)}/${rfdRequiredAge}秒`;
+        } else if (transitionToken.startsWith("FAST_REVERSE_")) {
             semanticDirectionDisplay = `${scoreText}｜${direction > 0 ? "多方" : "空方"}結構保留・${transitionTargetLong ? "多方" : "空方"}快速反轉確認`;
         } else if (transitionToken.startsWith("TRANSITION_")) {
             semanticDirectionDisplay = `${scoreText}｜${direction > 0 ? "多方" : "空方"}結構保留・${transitionTargetLong ? "多方" : "空方"}轉向確認中`;
@@ -3927,9 +3935,11 @@
         const directionElement = document.getElementById("ocf-live-direction");
         if (directionElement) {
             directionElement.textContent = semanticDirectionDisplay;
-            directionElement.className = "ocf-command-value " + ((ignitionOpposesLockedDirection || scoreOpposesLockedDirection)
+            directionElement.className = "ocf-command-value " + (rfdBuilding
                 ? "ocf-tone-wait"
-                : (direction > 0 ? "ocf-tone-bull" : (direction < 0 ? "ocf-tone-bear" : "ocf-tone-neutral")));
+                : ((ignitionOpposesLockedDirection || scoreOpposesLockedDirection)
+                    ? "ocf-tone-wait"
+                    : (direction > 0 ? "ocf-tone-bull" : (direction < 0 ? "ocf-tone-bear" : "ocf-tone-neutral"))));
         }
 
         const transitionBand = document.getElementById("ocf-transition-band");
@@ -4690,7 +4700,9 @@
                                         ? `Z2 偏多：價格實際向上穿越嘎空 Trigger ${formatOCFLevel(trigger)}，且無強烈空方點火後完成 2 次確認進場；若 Trigger 自行重新定位，須先回測再 Physical 重突破。K+2C 目標 ${formatOCFLevel(target)}。`
                                         : (direction < 0
                                             ? `Z2 偏空：價格實際向下穿越殺多 Trigger ${formatOCFLevel(trigger)}，且無強烈多方點火後完成 2 次確認進場；若 Trigger 自行重新定位，須先回測再 Physical 重突破。K-2P 目標 ${formatOCFLevel(target)}。`
-                                            : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。"))))))))));
+                                            : (rfdBuilding
+                                                ? `Z2 ${rfdCandidateDirection > 0 ? "多方" : "空方"}結構建立中 ${Math.min(rfdCandidateAge, rfdRequiredAge)}/${rfdRequiredAge}秒；尚未正式鎖定，固定上下緣只作價格表，不進場。`
+                                                : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。")))))))))));
         let actionContextText = [referenceContext, integrityContext, context]
             .filter(Boolean).join(" ");
         if (activeInventoryTrade && (holdingLong || holdingShort)) {
@@ -7303,6 +7315,16 @@
     const dayEarlyState=hasDayEarly ? String(data.day_early_mainforce_state||'WAITING').toUpperCase() : 'UNAVAILABLE';
     const dayEarlyDir=hasDayEarly ? (Number(data.day_early_mainforce_direction)||0) : 0;
     const dayEarlyText=hasDayEarly ? (data.day_early_mainforce_state_zh || zh(dayEarlyState)) : 'Early30欄位未收到';
+    const dayEarlyReason=hasDayEarly ? String(data.day_early_mainforce_reason||'').trim() : '';
+    function parseEarlyReason(reason){
+      const out={};
+      String(reason||'').split(';').forEach(part=>{
+        const i=part.indexOf('=');
+        if(i>0) out[part.slice(0,i).trim().toLowerCase()]=part.slice(i+1).trim();
+      });
+      return out;
+    }
+    const dayEarlyDiag=parseEarlyReason(dayEarlyReason);
     const roleState=String(data.day_role_maturity_state||'UNAVAILABLE').toUpperCase();
     const roleDir=Number(data.day_role_maturity_direction)||0;
     const roleText=data.day_role_maturity_state_zh || zh(roleState);
@@ -7429,13 +7451,21 @@
       const earlyMeta=document.getElementById('mme-early-read-meta');
       const earlyCell=document.getElementById('mme-early-read-cell');
       if(earlyReadEl){
-        earlyReadEl.textContent=hasDayEarly ? dayEarlyText : '等待新版 MME 欄位';
+        if(dayEarlyState==='WAITING' && dayEarlyDiag.checks){
+          earlyReadEl.textContent='等待成熟｜即時條件 '+dayEarlyDiag.checks;
+        } else {
+          earlyReadEl.textContent=hasDayEarly ? dayEarlyText : '等待新版 MME 欄位';
+        }
         setMmeDirClass(earlyReadEl,dayEarlyState==='EARLY_CONFIRMED'?dayEarlyDir:0,dayEarlyState==='ABSTAIN'||roleWarn);
       }
       if(earlyMeta){
         let roleMini=roleText||'Role --';
         if(roleAnchor && Number.isFinite(roleAnchorRoll)) roleMini+='｜'+roleAnchor+' '+signed(roleAnchorRoll,0)+'pt';
-        earlyMeta.textContent=(dayEarlyState==='EARLY_CONFIRMED'?'Research Shadow CONFIRMED':'Authority 0 / Entry 0')+'｜'+roleMini;
+        if(dayEarlyState==='WAITING' && dayEarlyDiag.checks){
+          earlyMeta.textContent='Authority 0 / Entry 0｜需3/4＋60秒｜'+roleMini;
+        } else {
+          earlyMeta.textContent=(dayEarlyState==='EARLY_CONFIRMED'?'Research Shadow CONFIRMED':'Authority 0 / Entry 0')+'｜'+roleMini;
+        }
       }
       if(earlyCell){
         earlyCell.className='mme-day-read-cell';
