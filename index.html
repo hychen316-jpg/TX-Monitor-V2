@@ -8057,5 +8057,269 @@
 
 
 
+
+<!-- ===================================================================
+     Z2 FIREBASE TRAFFIC GOVERNOR (Claude Phase 2 RC1)
+     transport-only：不動 Firebase schema、不動生產端、不動任何 UI 計算。
+
+     為什麼要有這一段
+     ──────────────────────────────────────────────────────────────
+     實測（omi_records 同源欄位，2026-09-22 日盤 400 列）：
+         每 5 秒有 286 個欄位變動，約 11.8 KB
+         看板實際引用的只有 197 / 1205 個欄位
+         那 197 個只佔變動位元組的 13.8%
+     也就是**下載的內容有 86% 從來不顯示**。
+     其中 mdi_status_note 一欄就佔 11.8%，而它在 HTML 出現 0 次。
+
+     三件事，由保守到積極
+     ──────────────────────────────────────────────────────────────
+     1. 流量計：先量再改。JS 看不到 WebSocket 實際位元組，
+        所以量的是「收到的 JSON 大小」，是下界不是帳單值。
+     2. 分頁隱藏時暫停：切到別的分頁超過 N 秒就卸載監聽，回來再裝。
+        放著不看的分頁本來就不需要即時資料。
+     3. 欄位白名單：只訂閱看板用得到的 197 個欄位。
+        **預設關閉**，因為它把 1 個父監聽換成 197 個精確路徑監聽，
+        要用流量計 A／B 過再開。
+        注意：這裡用的是「精確路徑」，不是 orderByKey 的範圍查詢——
+        範圍查詢在大節點上會退化，那是另一條路線出問題的原因。
+     =================================================================== -->
+<script>
+(function () {
+  'use strict';
+  if (window.__Z2FBGOV) return;
+
+  // 看板真正引用到的欄位。用 HTML 原始碼比對 1,205 個監控欄位自動取出，
+  // 另外補上巢狀節點與必備鍵。不是手寫清單。
+  var FIELDS = ["activation_trigger_level", "alpha_data", "captured_at", "exec_episode_age_seconds", "exec_episode_build", "exec_episode_committed", "exec_episode_cross_geometry_epoch", "exec_episode_cross_price", "exec_episode_current_chase", "exec_episode_current_geometry_epoch", "exec_episode_direction", "exec_episode_formal_authority", "exec_episode_handoff_ready", "exec_episode_last_error", "exec_episode_last_event", "exec_episode_max_favorable_extension", "exec_episode_original_trigger", "exec_episode_state", "exec_episode_strict_reentry_ready", "exec_episode_terminal", "force", "geometry_build", "geometry_committed_sc", "geometry_committed_sp", "geometry_coordinate_healthy", "geometry_coordinate_mode", "geometry_epoch", "geometry_epoch_reason", "geometry_formal_authority", "geometry_formal_reference_error", "geometry_last_error", "geometry_last_event", "geometry_mapping_basis", "hmf_formal_build", "hmf_formal_current_profit_r", "hmf_formal_deterioration_age", "hmf_formal_deterioration_now", "hmf_formal_eligible", "hmf_formal_fast_condition_age", "hmf_formal_fast_condition_now", "hmf_formal_fast_opposite_flow30", "hmf_formal_fast_peak_age", "hmf_formal_fast_peak_age_ok", "hmf_formal_fast_qualified", "hmf_formal_floor_r", "hmf_formal_flow30", "hmf_formal_flow3m", "hmf_formal_giveback_r", "hmf_formal_last_event", "hmf_formal_mfe_r", "hmf_formal_qualified", "hmf_formal_stage", "hmf_formal_stage_code", "hmf_formal_t1_progress", "mdi_data_quality", "mdi_execution_advice", "mme", "ocf_campaign_score", "ocf_confidence", "ocf_defense_power_comparable", "ocf_defense_power_direction", "ocf_defense_power_gap", "ocf_event_direction", "ocf_event_mode", "ocf_event_strength", "ocf_legacy_fallback", "ocf_resistance_defense_power", "ocf_support_defense_power", "ocf_target_strike", "ocf_valid", "omi3_entry_price", "omi3_target_one", "omi3_target_two", "p", "p9", "p9_slope", "pret1_adverse_absorption", "pret1_adverse_active", "pret1_adverse_adaptive_breached", "pret1_adverse_adaptive_defense", "pret1_adverse_adaptive_floor_r", "pret1_adverse_armed", "pret1_adverse_be_breached", "pret1_adverse_be_defense", "pret1_adverse_build", "pret1_adverse_condition_age", "pret1_adverse_condition_now", "pret1_adverse_initialized", "pret1_adverse_last_error", "pret1_adverse_last_event", "pret1_adverse_mfe_r", "pret1_adverse_replenishment", "pret1_adverse_retrace_r", "pret1_adverse_same_flow30", "price", "r7_delta", "rfd_candidate_age_seconds", "rfd_candidate_direction", "rfd_required_establish_seconds", "rfd_state", "session_date", "sop_locked_execution_trigger", "sop_locked_trigger", "spot", "t", "time", "timestamp", "true_call_iv", "true_put_iv", "vwap_day", "vwap_night", "wave_lifecycle_build", "wave_lifecycle_campaign_id", "wave_lifecycle_direction", "wave_lifecycle_formal_authority", "wave_lifecycle_last_error", "wave_lifecycle_last_event", "wave_lifecycle_last_reject_reason", "wave_lifecycle_opposite_rfd_seen", "wave_lifecycle_secondleg_reproof_ready", "wave_lifecycle_stage", "wave_lifecycle_t1_reached_while_flat", "wave_lifecycle_tracked_t1", "wave_lifecycle_tracked_t2", "z_anchor_strike", "z_bear_cross_origin_code", "z_bear_trigger", "z_bull_cross_origin_code", "z_bull_trigger", "z_campaign_completed", "z_campaign_completed_direction", "z_candidate_origin", "z_center", "z_confidence", "z_data_blind_block_entry", "z_data_blind_level", "z_data_blind_seconds", "z_decision_recovery_applied_age_seconds", "z_decision_recovery_build", "z_decision_recovery_checkpoint_age_seconds", "z_decision_recovery_fresh_ticks", "z_decision_recovery_guard_active", "z_decision_recovery_pending", "z_decision_recovery_status", "z_decision_recovery_stored_direction", "z_decision_recovery_stored_score", "z_decision_recovery_verified", "z_direction", "z_ignition_direction", "z_ignition_score", "z_invalid_reason", "z_l2_shadow_bear_physical_cross", "z_l2_shadow_bear_trigger", "z_l2_shadow_bear_trigger_eligible", "z_l2_shadow_build", "z_l2_shadow_bull_physical_cross", "z_l2_shadow_bull_trigger", "z_l2_shadow_bull_trigger_eligible", "z_l2_shadow_candidate_age_seconds", "z_l2_shadow_candidate_direction", "z_l2_shadow_candidate_hits", "z_l2_shadow_entry_signal", "z_l2_shadow_locked_trigger", "z_last_exit_reason", "z_locked_trigger_z21", "z_lower_target", "z_model_version", "z_physical_bear_cross_shadow", "z_physical_bull_cross_shadow", "z_physical_cross_build", "z_physical_cross_ready", "z_primary_target", "z_reentry_reject_reason", "z_reference_basis", "z_reference_error_points", "z_relative_bear_cross_live", "z_relative_bull_cross_live", "z_sc_l2_shadow_candidate_age_seconds", "z_sc_l2_shadow_candidate_strike", "z_sc_l2_shadow_peak", "z_sc_l2_shadow_peak_available", "z_sc_l2_shadow_peak_relative_weight", "z_sc_recent_center", "z_sc_roll", "z_score", "z_sp_l2_shadow_candidate_age_seconds", "z_sp_l2_shadow_candidate_strike", "z_sp_l2_shadow_peak", "z_sp_l2_shadow_peak_available", "z_sp_l2_shadow_peak_relative_weight", "z_sp_recent_center", "z_sp_roll", "z_true_cross", "z_upper_target", "z_uses_spot_reference", "z_using_previous_session", "z_valid"];
+
+  var LSKEY = 'z2fbgov.v1';
+  var cfg = { mode: 'parent', hideSuspend: true, hideDelay: 60 };
+  try { Object.assign(cfg, JSON.parse(localStorage.getItem(LSKEY) || '{}')); } catch (e) {}
+  function save() { try { localStorage.setItem(LSKEY, JSON.stringify(cfg)); } catch (e) {} }
+
+  var meter = { keys: Object.create(null), total: 0, t0: Date.now(), events: 0 };
+  function sizeOf(v) {
+    if (v === null || v === undefined) return 0;
+    var t = typeof v;
+    if (t === 'number') return 8;
+    if (t === 'boolean') return 4;
+    if (t === 'string') return v.length + 2;
+    try { return JSON.stringify(v).length; } catch (e) { return 0; }
+  }
+  function note(key, val) {
+    var n = sizeOf(val) + (key ? key.length + 6 : 0);
+    meter.keys[key] = (meter.keys[key] || 0) + n;
+    meter.total += n;
+    meter.events++;
+  }
+  window.__Z2FBMeter = meter;
+
+  // ── 流量計面板 ──────────────────────────────────────────────
+  var panel, body, timer;
+  function ensurePanel() {
+    if (panel) return;
+    panel = document.createElement('div');
+    panel.id = 'z2fbgov';
+    panel.style.cssText =
+      'position:fixed;right:10px;bottom:10px;z-index:99999;width:340px;max-height:56vh;' +
+      'background:#11161d;color:#dbe3ec;border:1px solid #2b3442;border-radius:10px;' +
+      'font:12px/1.55 Consolas,"Microsoft JhengHei",monospace;box-shadow:0 8px 28px #0008;' +
+      'overflow:hidden;display:flex;flex-direction:column';
+    panel.innerHTML =
+      '<div style="padding:8px 11px;background:#19212c;display:flex;align-items:center;gap:8px;cursor:pointer" id="z2fbgov-h">' +
+      '<b style="font-size:12.5px">Firebase 流量</b><span id="z2fbgov-rate" style="margin-left:auto;color:#7ee787"></span>' +
+      '<span id="z2fbgov-tog" style="color:#8b949e">▾</span></div>' +
+      '<div id="z2fbgov-b" style="padding:9px 11px;overflow:auto"></div>';
+    document.body.appendChild(panel);
+    body = panel.querySelector('#z2fbgov-b');
+    panel.querySelector('#z2fbgov-h').onclick = function () {
+      var open = body.style.display !== 'none';
+      body.style.display = open ? 'none' : 'block';
+      panel.querySelector('#z2fbgov-tog').textContent = open ? '▸' : '▾';
+    };
+  }
+  function fmt(n) {
+    return n < 1024 ? n.toFixed(0) + ' B'
+      : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB';
+  }
+  function render() {
+    if (!panel) return;
+    var mins = Math.max((Date.now() - meter.t0) / 60000, 1 / 60);
+    var rate = meter.total / mins;
+    panel.querySelector('#z2fbgov-rate').textContent = fmt(rate) + '/分';
+    if (body.style.display === 'none') return;
+    var top = Object.keys(meter.keys).map(function (k) { return [k, meter.keys[k]]; })
+      .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 14);
+    var rows = top.map(function (x) {
+      return '<tr><td style="color:#8b949e;padding:1px 0">' + x[0].slice(0, 30) +
+        '</td><td style="text-align:right;color:#dbe3ec">' + fmt(x[1] / mins) + '/分</td>' +
+        '<td style="text-align:right;color:#6e7681;width:44px">' +
+        (x[1] / meter.total * 100).toFixed(1) + '%</td></tr>';
+    }).join('');
+    body.innerHTML =
+      '<div style="color:#6e7681;margin-bottom:6px">累計 ' + fmt(meter.total) +
+      '　' + meter.events.toLocaleString() + ' 筆　' + mins.toFixed(1) + ' 分鐘<br>' +
+      '這是收到的 JSON 大小，不含通訊協定與加密開銷，是<b>下界</b>。</div>' +
+      '<div style="margin:7px 0;display:flex;gap:6px;flex-wrap:wrap">' +
+      btn('mode', cfg.mode === 'selective' ? '白名單 197 欄（開）' : '全欄位（預設）') +
+      btn('hide', cfg.hideSuspend ? '隱藏分頁暫停（開）' : '隱藏分頁暫停（關）') +
+      btn('reset', '歸零') + '</div>' +
+      '<table style="width:100%;border-collapse:collapse">' + rows + '</table>';
+    body.querySelectorAll('[data-a]').forEach(function (b) { b.onclick = act; });
+  }
+  function btn(a, t) {
+    return '<button data-a="' + a + '" style="background:#1d2531;color:#dbe3ec;' +
+      'border:1px solid #303b4a;border-radius:6px;padding:3px 9px;cursor:pointer;' +
+      'font:11.5px Consolas,monospace">' + t + '</button>';
+  }
+  function act(e) {
+    var a = e.currentTarget.getAttribute('data-a');
+    if (a === 'reset') { meter.keys = Object.create(null); meter.total = 0; meter.events = 0; meter.t0 = Date.now(); }
+    else if (a === 'hide') { cfg.hideSuspend = !cfg.hideSuspend; save(); }
+    else if (a === 'mode') {
+      cfg.mode = cfg.mode === 'selective' ? 'parent' : 'selective'; save();
+      alert('模式已切換為「' + (cfg.mode === 'selective' ? '白名單 197 欄' : '全欄位') +
+            '」。\n請重新整理頁面讓新的訂閱方式生效。');
+    }
+    render();
+  }
+
+  // ── 監聽管理 ────────────────────────────────────────────────
+  var handles = [];
+  function track(ref, ev, cb, err) {
+    ref.on(ev, cb, err);                 // 錯誤回呼要傳下去，否則讀取失敗會靜默
+    handles.push([ref, ev, cb]);
+  }
+  function detachAll() {
+    handles.forEach(function (h) { try { h[0].off(h[1], h[2]); } catch (e) {} });
+    handles = [];
+  }
+  window.__Z2FBGOV = {
+    cfg: cfg, meter: meter, fields: FIELDS,
+    detach: detachAll, note: note, track: track, render: render
+  };
+
+  // ── 分頁隱藏時暫停 ──────────────────────────────────────────
+  var hideTimer = null, suspended = false;
+  document.addEventListener('visibilitychange', function () {
+    if (!cfg.hideSuspend) return;
+    if (document.hidden) {
+      hideTimer = setTimeout(function () {
+        if (!document.hidden) return;
+        detachAll(); suspended = true;
+        console.info('[Z2FBGOV] 分頁隱藏，已卸載 Firebase 監聽');
+      }, cfg.hideDelay * 1000);
+    } else {
+      clearTimeout(hideTimer);
+      if (suspended) {
+        suspended = false;
+        console.info('[Z2FBGOV] 分頁回前景，重新裝載監聽');
+        if (typeof window.__Z2FBGOV_attach === 'function') window.__Z2FBGOV_attach();
+      }
+    }
+  });
+
+  ensurePanelWhenReady();
+  function ensurePanelWhenReady() {
+    if (document.body) { ensurePanel(); timer = setInterval(render, 2000); render(); }
+    else setTimeout(ensurePanelWhenReady, 300);
+  }
+})();
+</script>
+
+<script>
+/* Z2 Firebase Traffic Governor — 重新接線。
+   在原本的 startDataSync 之後執行：卸掉舊監聽，換成計量版本。
+   parent 模式行為與原本完全相同，只是多了計量。
+   selective 模式改成精確路徑訂閱，只收看板用得到的欄位。 */
+(function () {
+  'use strict';
+  function boot() {
+    var G = window.__Z2FBGOV;
+    if (!G || typeof startDataSync !== 'function' || typeof db === 'undefined') {
+      return setTimeout(boot, 300);
+    }
+    var NODE_RT = (typeof NODE_REALTIME !== 'undefined') ? NODE_REALTIME : 'monitor_realtime';
+    var NODE_HI = (typeof NODE_HISTORY !== 'undefined') ? NODE_HISTORY : 'monitor_history';
+    var NODE_RD = (typeof NODE_RADAR !== 'undefined') ? NODE_RADAR : 'radar_realtime';
+
+    window.__Z2RealtimeCache = window.__Z2RealtimeCache || {};
+    var uiTimer = null;
+    function refresh() {
+      if (uiTimer !== null) return;
+      uiTimer = setTimeout(function () {
+        uiTimer = null;
+        if (typeof updateUI === 'function') updateUI(window.__Z2RealtimeCache);
+      }, 20);
+    }
+    function nested(key, value) {
+      if (key === 'alpha_data') {
+        if (value && typeof updateAlphaUI === 'function') updateAlphaUI(value);
+        return true;
+      }
+      if (key === 'mme') {
+        if (typeof window.__Z2RenderMMEFromRealtime === 'function') {
+          window.__Z2RenderMMEFromRealtime(value || null);
+        } else { window.__Z2PendingMMERealtime = value || null; }
+        return true;
+      }
+      return false;
+    }
+    function apply(key, value) {
+      if (!key) return;
+      G.note(NODE_RT + '/' + key, value);
+      if (value === null || value === undefined) delete window.__Z2RealtimeCache[key];
+      else window.__Z2RealtimeCache[key] = value;
+      if (!nested(key, value)) refresh();
+    }
+
+    function attach() {
+      G.detach();
+      var err = function (e) { console.error('Firebase read error', e && e.code ? e.code : e); };
+
+      if (G.cfg.mode === 'selective') {
+        // 精確路徑，不使用 orderByKey 範圍查詢。
+        G.fields.forEach(function (f) {
+          G.track(db.ref(NODE_RT + '/' + f), 'value', function (s) { apply(f, s.val()); }, err);
+        });
+        console.info('[Z2FBGOV] 白名單模式：' + G.fields.length + ' 個欄位');
+      } else {
+        var ref = db.ref(NODE_RT);
+        G.track(ref, 'child_added',   function (s) { apply(s.key, s.val()); });
+        G.track(ref, 'child_changed', function (s) { apply(s.key, s.val()); });
+        G.track(ref, 'child_removed', function (s) { apply(s.key, null); });
+        console.info('[Z2FBGOV] 全欄位模式（父節點增量）');
+      }
+
+      G.track(db.ref(NODE_HI), 'value', function (s) {
+        var v = s.val(); if (!v) return;
+        G.note(NODE_HI, v);
+        var arr = Array.isArray(v) ? v : Object.values(v);
+        arr = arr.filter(function (d) { return d !== null && d !== undefined; });
+        window.lastHistoryData = arr;
+        if (typeof loadChartHistory === 'function') loadChartHistory(arr);
+      });
+
+      G.track(db.ref(NODE_RD), 'value', function (s) {
+        var v = s.val(); if (!v) return;
+        G.note(NODE_RD, v);
+        if (typeof updateRadarUI === 'function') updateRadarUI(v);
+      });
+    }
+    window.__Z2FBGOV_attach = attach;
+
+    var original = startDataSync;
+    startDataSync = function () {
+      // 先跑原本的流程（權限檢查、MME 面板掛載等副作用都保留），
+      // 再把資料監聽換成計量版本，避免重複訂閱。
+      original.apply(this, arguments);
+      setTimeout(attach, 0);
+    };
+    console.info('[Z2FBGOV] 已接管 Firebase 監聽');
+  }
+  boot();
+})();
+</script>
+
 </body>
 </html>
