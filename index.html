@@ -1,3 +1,4 @@
+<!-- FIREBASE_DOWNLOAD_OPTIMIZED_PHASE1_RC1_20260923 | transport-only | realtime top-level delta cache | MME/Alpha reuse parent delta | History/Radar unchanged | no Z2/MME/order/UI semantic change -->
 <!-- MME_PREUS_POSTUS_FORECAST_UI_v0.2_RC2_ZH1_20260920 | Runtime RC2 companion | Chinese operator-facing PREOPEN/U30/U45/U60/U75 Reference | Firebase observability-only nested preus_postus_forecast | NightSegment v0.1.4 SF1 retained | Z2/Entry/Order authority 0/0/0 -->
 <!-- MME_NIGHT_U75_PRICE_ACCEPTANCE_SF1_UI_v0.2_20260919 | NightSegment v0.1.4 SF1 U75 Price Acceptance reference retained -->
 <!-- MME_CASHOPEN0900_SPA_GATE_UI_v0.1_RC1_20260919 | presentation-only | 08:45-09:00 evidence accumulation only | formal Day SPA/Session Intent lock >=09:00 | Early30/Mature60 clocks unchanged | pre-open gate mismatch observability | no Firebase/listener/logger/schema/order-authority change -->
@@ -2845,12 +2846,80 @@
     }
     function showLogin() { document.getElementById('login-form').style.display='block'; document.getElementById('register-form').style.display='none'; }
 
+    // === Firebase Download Optimization Phase 1 RC1 ===
+    // Transport-only change:
+    // - Keep the same Firebase schema, producers, 5s cadence and UI functions.
+    // - Build the monitor_realtime object in browser memory from top-level child deltas.
+    // - Reuse the same parent stream for nested alpha_data and mme, avoiding duplicate listeners.
+    // - History and radar listeners remain unchanged for semantic safety.
+    window.__Z2_PHASE1_REALTIME_HUB = true;
+    window.__Z2RealtimeCache = window.__Z2RealtimeCache || {};
+    let realtimeUiTimer = null;
+
+    function scheduleRealtimeUiRefresh() {
+      if (realtimeUiTimer !== null) return;
+      realtimeUiTimer = window.setTimeout(() => {
+        realtimeUiTimer = null;
+        updateUI(window.__Z2RealtimeCache);
+      }, 20);
+    }
+
+    function dispatchRealtimeNestedNode(key, value) {
+      if (key === 'alpha_data') {
+        if (value && typeof updateAlphaUI === 'function') updateAlphaUI(value);
+        return true;
+      }
+      if (key === 'mme') {
+        if (typeof window.__Z2RenderMMEFromRealtime === 'function') {
+          window.__Z2RenderMMEFromRealtime(value || null);
+        } else {
+          window.__Z2PendingMMERealtime = value || null;
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function applyRealtimeChildSnapshot(snapshot, removed) {
+      const key = snapshot.key;
+      if (!key) return;
+      const value = removed ? null : snapshot.val();
+
+      if (removed) delete window.__Z2RealtimeCache[key];
+      else window.__Z2RealtimeCache[key] = value;
+
+      // These nested payloads have their own renderers and are intentionally not
+      // passed through updateUI(), matching the existing UI separation.
+      if (!dispatchRealtimeNestedNode(key, value)) {
+        scheduleRealtimeUiRefresh();
+      }
+    }
+
     function startDataSync() {
       if (!isDashboardOwner(auth.currentUser)) {
           console.warn('OWNER-ONLY: dashboard Firebase listeners blocked for non-owner account.');
           return;
       }
-      db.ref(NODE_REALTIME).on('value', (s) => { if(s.val()) updateUI(s.val()); });
+
+      const realtimeRef = db.ref(NODE_REALTIME);
+      const realtimeReadError = (err) => {
+          console.error('Realtime Firebase read error', err && err.code ? err.code : err);
+      };
+
+      // child_added supplies the initial top-level snapshot one child at a time and
+      // also captures any future schema-compatible child additions.
+      realtimeRef.on('child_added',
+          (s) => applyRealtimeChildSnapshot(s, false),
+          realtimeReadError);
+      realtimeRef.on('child_changed',
+          (s) => applyRealtimeChildSnapshot(s, false),
+          realtimeReadError);
+      realtimeRef.on('child_removed',
+          (s) => applyRealtimeChildSnapshot(s, true),
+          realtimeReadError);
+
+      // Keep History exactly as before. VBA replaces a rolling array, so converting
+      // this to child_changed would not reliably reduce traffic and could alter order.
       db.ref(NODE_HISTORY).on('value', (s) => { 
           if(s.val()) {
               let dataArray = Array.isArray(s.val()) ? s.val() : Object.values(s.val());
@@ -2859,7 +2928,9 @@
               loadChartHistory(dataArray); 
           }
       });
-      db.ref(NODE_ALPHA).on('value', (s) => { if(s.val()) updateAlphaUI(s.val()); });
+
+      // Alpha is now rendered from monitor_realtime/alpha_data delivered by the
+      // parent delta stream. No separate NODE_ALPHA listener is required.
       db.ref(NODE_RADAR).on('value', (s) => { if(s.val()) updateRadarUI(s.val()); });
     }
 
@@ -7872,6 +7943,22 @@
     updateFreshness();
   }
 
+
+  // Phase 1 RC1: expose the existing MME renderer to the shared monitor_realtime
+  // delta hub. This changes transport only; render() itself is untouched.
+  window.__Z2RenderMMEFromRealtime = function(data){
+    if(data) {
+      window.__Z2PendingMMERealtime = null;
+      render(data);
+    } else {
+      const n=document.getElementById('mme-transport');
+      if(n){ n.className='mme-transport offline'; n.textContent='MME NODE EMPTY'; }
+    }
+  };
+  if(window.__Z2PendingMMERealtime) {
+    window.__Z2RenderMMEFromRealtime(window.__Z2PendingMMERealtime);
+  }
+
   function renderEvent(ev){
     if(!ev) return;
     mmeLastEvent=ev;
@@ -7919,22 +8006,30 @@
     }
     mmeSyncStarted=true;
     buildPanel();
-    db.ref(MME_REALTIME_NODE).on('value',
-      function(s){
-        if(s.val()) render(s.val());
-        else {
+    if(window.__Z2_PHASE1_REALTIME_HUB) {
+      // Reuse monitor_realtime/mme from the shared parent delta stream.
+      // This removes the duplicate MME download without changing render semantics.
+      const cachedMme = window.__Z2RealtimeCache && window.__Z2RealtimeCache.mme;
+      if(cachedMme) render(cachedMme);
+    } else {
+      // Compatibility fallback if this MME UI is ever embedded without Phase 1 hub.
+      db.ref(MME_REALTIME_NODE).on('value',
+        function(s){
+          if(s.val()) render(s.val());
+          else {
+            const n=document.getElementById('mme-transport');
+            if(n){ n.className='mme-transport offline'; n.textContent='MME NODE EMPTY'; }
+          }
+        },
+        function(err){
           const n=document.getElementById('mme-transport');
-          if(n){ n.className='mme-transport offline'; n.textContent='MME NODE EMPTY'; }
+          if(n){ n.className='mme-transport offline'; n.textContent='MME READ ERROR '+String(err && err.code || ''); }
+          const p=document.getElementById('mme-primary');
+          if(p) p.textContent='Firebase MME 讀取失敗';
+          console.error('MME Firebase read error',err);
         }
-      },
-      function(err){
-        const n=document.getElementById('mme-transport');
-        if(n){ n.className='mme-transport offline'; n.textContent='MME READ ERROR '+String(err && err.code || ''); }
-        const p=document.getElementById('mme-primary');
-        if(p) p.textContent='Firebase MME 讀取失敗';
-        console.error('MME Firebase read error',err);
-      }
-    );
+      );
+    }
     // Event history is optional. Current alert is also retained inside monitor_realtime/mme.last_event.
     db.ref(MME_EVENTS_NODE).limitToLast(1).on('child_added',
       function(s){ if(s.val()) renderEvent(s.val()); },
