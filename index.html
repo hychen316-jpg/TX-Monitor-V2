@@ -1,4 +1,4 @@
-<!-- FIREBASE_DOWNLOAD_OPTIMIZED_PHASE1_RC1_20260923 | transport-only | realtime top-level delta cache | MME/Alpha reuse parent delta | History/Radar unchanged | no Z2/MME/order/UI semantic change -->
+<!-- FIREBASE_DOWNLOAD_OPTIMIZED_PHASE1_RC3_ROBUST_20260923 | transport-only | complete Z2 top-level child-delta stream excluding nested MME + MME child-delta stream | coherent initial hydration | History/Radar unchanged | no Z2/MME/order/UI semantic change -->
 <!-- MME_PREUS_POSTUS_FORECAST_UI_v0.2_RC2_ZH1_20260920 | Runtime RC2 companion | Chinese operator-facing PREOPEN/U30/U45/U60/U75 Reference | Firebase observability-only nested preus_postus_forecast | NightSegment v0.1.4 SF1 retained | Z2/Entry/Order authority 0/0/0 -->
 <!-- MME_NIGHT_U75_PRICE_ACCEPTANCE_SF1_UI_v0.2_20260919 | NightSegment v0.1.4 SF1 U75 Price Acceptance reference retained -->
 <!-- MME_CASHOPEN0900_SPA_GATE_UI_v0.1_RC1_20260919 | presentation-only | 08:45-09:00 evidence accumulation only | formal Day SPA/Session Intent lock >=09:00 | Early30/Mature60 clocks unchanged | pre-open gate mismatch observability | no Firebase/listener/logger/schema/order-authority change -->
@@ -2846,53 +2846,153 @@
     }
     function showLogin() { document.getElementById('login-form').style.display='block'; document.getElementById('register-form').style.display='none'; }
 
-    // === Firebase Download Optimization Phase 1 RC1 ===
-    // Transport-only change:
-    // - Keep the same Firebase schema, producers, 5s cadence and UI functions.
-    // - Build the monitor_realtime object in browser memory from top-level child deltas.
-    // - Reuse the same parent stream for nested alpha_data and mme, avoiding duplicate listeners.
-    // - History and radar listeners remain unchanged for semantic safety.
+    // === Firebase Download Optimization Phase 1 RC3 ROBUST ===
+    // Transport-only change. No producer/schema/algorithm/UI-formula changes.
+    // RC2 used many prefix queries. Field coverage was statically complete, but the
+    // 120 Z2 + 38 MME asynchronous query streams did not preserve the original
+    // full-object hydration semantics reliably enough on the live dashboard.
+    //
+    // RC3 keeps ALL Z2 top-level children (so no display field can be omitted),
+    // while excluding only the large nested /monitor_realtime/mme child from the
+    // Z2 stream. MME is listened to one level deeper with child events so a change
+    // does not force the browser to receive the whole MME snapshot.
     window.__Z2_PHASE1_REALTIME_HUB = true;
+    window.__Z2_PHASE1_RC3_ROBUST = true;
     window.__Z2RealtimeCache = window.__Z2RealtimeCache || {};
+    window.__Z2MMECache = window.__Z2MMECache || {};
+
     let realtimeUiTimer = null;
+    let mmeUiTimer = null;
+    let z2InitialHydrated = false;
+    let mmeInitialHydrated = false;
 
     function scheduleRealtimeUiRefresh() {
-      if (realtimeUiTimer !== null) return;
+      if (!z2InitialHydrated || realtimeUiTimer !== null) return;
       realtimeUiTimer = window.setTimeout(() => {
         realtimeUiTimer = null;
         updateUI(window.__Z2RealtimeCache);
       }, 20);
     }
 
-    function dispatchRealtimeNestedNode(key, value) {
-      if (key === 'alpha_data') {
-        if (value && typeof updateAlphaUI === 'function') updateAlphaUI(value);
-        return true;
-      }
-      if (key === 'mme') {
+    function scheduleMmeUiRefresh() {
+      if (!mmeInitialHydrated || mmeUiTimer !== null) return;
+      mmeUiTimer = window.setTimeout(() => {
+        mmeUiTimer = null;
+        const payload = window.__Z2MMECache;
         if (typeof window.__Z2RenderMMEFromRealtime === 'function') {
-          window.__Z2RenderMMEFromRealtime(value || null);
+          window.__Z2RenderMMEFromRealtime(payload);
         } else {
-          window.__Z2PendingMMERealtime = value || null;
+          window.__Z2PendingMMERealtime = payload;
         }
-        return true;
-      }
-      return false;
+      }, 20);
     }
 
-    function applyRealtimeChildSnapshot(snapshot, removed) {
-      const key = snapshot.key;
+    function mergeSnapshotChildren(cache, snapshot) {
+      if (!snapshot) return;
+      snapshot.forEach((child) => {
+        if (!child || !child.key) return false;
+        if (child.exists()) cache[child.key] = child.val();
+        else delete cache[child.key];
+        return false;
+      });
+    }
+
+    function applyChildSnapshot(cache, snapshot, removed, notify, onSpecialChild) {
+      const key = snapshot && snapshot.key;
       if (!key) return;
-      const value = removed ? null : snapshot.val();
+      if (removed || !snapshot.exists()) delete cache[key];
+      else cache[key] = snapshot.val();
+      if (typeof onSpecialChild === 'function') onSpecialChild(key, cache[key], removed);
+      notify();
+    }
 
-      if (removed) delete window.__Z2RealtimeCache[key];
-      else window.__Z2RealtimeCache[key] = value;
+    function attachChildDeltaQuery(query, cache, notify, errorLabel, onSpecialChild) {
+      const onError = (err) => console.error(errorLabel, err && err.code ? err.code : err);
+      query.on('child_added',
+        (s) => applyChildSnapshot(cache, s, false, notify, onSpecialChild), onError);
+      query.on('child_changed',
+        (s) => applyChildSnapshot(cache, s, false, notify, onSpecialChild), onError);
+      query.on('child_removed',
+        (s) => applyChildSnapshot(cache, s, true, notify, onSpecialChild), onError);
+    }
 
-      // These nested payloads have their own renderers and are intentionally not
-      // passed through updateUI(), matching the existing UI separation.
-      if (!dispatchRealtimeNestedNode(key, value)) {
-        scheduleRealtimeUiRefresh();
-      }
+    function makeZ2QueriesExcludingMme(baseRef) {
+      const orderedA = baseRef.orderByKey();
+      const orderedB = baseRef.orderByKey();
+      // Firebase 9.22 compat supports endBefore/startAfter. Fallback boundaries are
+      // safe for the current schema, which has no other top-level key beginning mme.
+      const beforeMme = (typeof orderedA.endBefore === 'function')
+        ? orderedA.endBefore('mme')
+        : orderedA.endAt('mmd\uf8ff');
+      const afterMme = (typeof orderedB.startAfter === 'function')
+        ? orderedB.startAfter('mme')
+        : orderedB.startAt('mmf');
+      return [beforeMme, afterMme];
+    }
+
+    function hydrateZ2AndAttach() {
+      const baseRef = db.ref(NODE_REALTIME);
+      const queries = makeZ2QueriesExcludingMme(baseRef);
+      const cache = window.__Z2RealtimeCache;
+      let alphaPending = null;
+      const special = (key, value) => {
+        if (key === 'alpha_data' && value) {
+          if (z2InitialHydrated) updateAlphaUI(value);
+          else alphaPending = value;
+        }
+      };
+
+      // Attach deltas first so no 5-second producer update can be missed while the
+      // initial cache is being hydrated. UI render remains gated until both ranges
+      // have delivered their initial snapshots.
+      queries.forEach((q, idx) => attachChildDeltaQuery(
+        q, cache, scheduleRealtimeUiRefresh,
+        'Z2 robust Firebase read error range ' + idx, special
+      ));
+
+      Promise.all(queries.map((q) => q.once('value')))
+        .then((snaps) => {
+          snaps.forEach((snap) => mergeSnapshotChildren(cache, snap));
+          z2InitialHydrated = true;
+          if (cache.alpha_data) updateAlphaUI(cache.alpha_data);
+          else if (alphaPending) updateAlphaUI(alphaPending);
+          updateUI(cache);
+          window.__Z2_RC3_Z2_HYDRATED = true;
+        })
+        .catch((err) => {
+          console.error('Z2 robust initial hydration error', err && err.code ? err.code : err);
+          // Do not leave the UI permanently blocked if a one-shot completion signal
+          // fails after child events have already populated useful data.
+          z2InitialHydrated = true;
+          if (cache.alpha_data) updateAlphaUI(cache.alpha_data);
+          updateUI(cache);
+        });
+    }
+
+    function hydrateMmeAndAttach() {
+      const ref = db.ref(MME_REALTIME_NODE);
+      const cache = window.__Z2MMECache;
+      attachChildDeltaQuery(
+        ref, cache, scheduleMmeUiRefresh,
+        'MME robust Firebase read error'
+      );
+      ref.once('value')
+        .then((snap) => {
+          mergeSnapshotChildren(cache, snap);
+          mmeInitialHydrated = true;
+          const payload = cache;
+          if (typeof window.__Z2RenderMMEFromRealtime === 'function') {
+            window.__Z2RenderMMEFromRealtime(payload);
+          } else {
+            window.__Z2PendingMMERealtime = payload;
+          }
+          window.__Z2_RC3_MME_HYDRATED = true;
+        })
+        .catch((err) => {
+          console.error('MME robust initial hydration error', err && err.code ? err.code : err);
+          mmeInitialHydrated = true;
+          scheduleMmeUiRefresh();
+        });
     }
 
     function startDataSync() {
@@ -2901,36 +3001,24 @@
           return;
       }
 
-      const realtimeRef = db.ref(NODE_REALTIME);
-      const realtimeReadError = (err) => {
-          console.error('Realtime Firebase read error', err && err.code ? err.code : err);
-      };
+      // Z2: all top-level fields except the large nested MME object.
+      hydrateZ2AndAttach();
 
-      // child_added supplies the initial top-level snapshot one child at a time and
-      // also captures any future schema-compatible child additions.
-      realtimeRef.on('child_added',
-          (s) => applyRealtimeChildSnapshot(s, false),
-          realtimeReadError);
-      realtimeRef.on('child_changed',
-          (s) => applyRealtimeChildSnapshot(s, false),
-          realtimeReadError);
-      realtimeRef.on('child_removed',
-          (s) => applyRealtimeChildSnapshot(s, true),
-          realtimeReadError);
+      // MME: one level deeper. All MME top-level children are retained; only the
+      // transport granularity changes from whole-snapshot to per-child deltas.
+      hydrateMmeAndAttach();
 
-      // Keep History exactly as before. VBA replaces a rolling array, so converting
-      // this to child_changed would not reliably reduce traffic and could alter order.
-      db.ref(NODE_HISTORY).on('value', (s) => { 
+      // History intentionally unchanged: VBA PUTs a rolling indexed array.
+      db.ref(NODE_HISTORY).on('value', (s) => {
           if(s.val()) {
               let dataArray = Array.isArray(s.val()) ? s.val() : Object.values(s.val());
               dataArray = dataArray.filter(d => d !== null && d !== undefined);
-              lastHistoryData = dataArray; 
-              loadChartHistory(dataArray); 
+              lastHistoryData = dataArray;
+              loadChartHistory(dataArray);
           }
       });
 
-      // Alpha is now rendered from monitor_realtime/alpha_data delivered by the
-      // parent delta stream. No separate NODE_ALPHA listener is required.
+      // Radar intentionally unchanged.
       db.ref(NODE_RADAR).on('value', (s) => { if(s.val()) updateRadarUI(s.val()); });
     }
 
@@ -8009,7 +8097,7 @@
     if(window.__Z2_PHASE1_REALTIME_HUB) {
       // Reuse monitor_realtime/mme from the shared parent delta stream.
       // This removes the duplicate MME download without changing render semantics.
-      const cachedMme = window.__Z2RealtimeCache && window.__Z2RealtimeCache.mme;
+      const cachedMme = window.__Z2MMECache && Object.keys(window.__Z2MMECache).length ? window.__Z2MMECache : null;
       if(cachedMme) render(cachedMme);
     } else {
       // Compatibility fallback if this MME UI is ever embedded without Phase 1 hub.
