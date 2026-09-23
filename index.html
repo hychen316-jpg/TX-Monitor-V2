@@ -1,4 +1,4 @@
-<!-- FIREBASE_DOWNLOAD_OPTIMIZED_PHASE1_RC2_SELECTIVE_FINAL_20260923 | transport-only | robust selective deep-path listeners | dynamic OCF/NSF/EventRadar/MME-last_event coverage | History/Radar unchanged | no Z2/MME/order/UI semantic change -->
+<!-- FIREBASE_DOWNLOAD_OPTIMIZED_PHASE1_RC1_20260923 | transport-only | realtime top-level delta cache | MME/Alpha reuse parent delta | History/Radar unchanged | no Z2/MME/order/UI semantic change -->
 <!-- MME_PREUS_POSTUS_FORECAST_UI_v0.2_RC2_ZH1_20260920 | Runtime RC2 companion | Chinese operator-facing PREOPEN/U30/U45/U60/U75 Reference | Firebase observability-only nested preus_postus_forecast | NightSegment v0.1.4 SF1 retained | Z2/Entry/Order authority 0/0/0 -->
 <!-- MME_NIGHT_U75_PRICE_ACCEPTANCE_SF1_UI_v0.2_20260919 | NightSegment v0.1.4 SF1 U75 Price Acceptance reference retained -->
 <!-- MME_CASHOPEN0900_SPA_GATE_UI_v0.1_RC1_20260919 | presentation-only | 08:45-09:00 evidence accumulation only | formal Day SPA/Session Intent lock >=09:00 | Early30/Mature60 clocks unchanged | pre-open gate mismatch observability | no Firebase/listener/logger/schema/order-authority change -->
@@ -2846,21 +2846,15 @@
     }
     function showLogin() { document.getElementById('login-form').style.display='block'; document.getElementById('register-form').style.display='none'; }
 
-    // === Firebase Download Optimization Phase 1 RC2 Selective ===
-    // Transport-only change. No producer/schema/algorithm/UI-formula changes.
-    // Instead of subscribing to the entire /monitor_realtime parent, subscribe
-    // only to key/prefix ranges actually consumed by the dashboard.
+    // === Firebase Download Optimization Phase 1 RC1 ===
+    // Transport-only change:
+    // - Keep the same Firebase schema, producers, 5s cadence and UI functions.
+    // - Build the monitor_realtime object in browser memory from top-level child deltas.
+    // - Reuse the same parent stream for nested alpha_data and mme, avoiding duplicate listeners.
+    // - History and radar listeners remain unchanged for semantic safety.
     window.__Z2_PHASE1_REALTIME_HUB = true;
-    window.__Z2_PHASE1_RC2_SELECTIVE = true;
     window.__Z2RealtimeCache = window.__Z2RealtimeCache || {};
-    window.__Z2MMECache = window.__Z2MMECache || {};
-
-    const Z2_SELECTIVE_PLAN = [{"type":"exact","value":"c1"},{"type":"exact","value":"c2"},{"type":"exact","value":"c3"},{"type":"exact","value":"c4"},{"type":"exact","value":"force"},{"type":"exact","value":"geometry_build"},{"type":"exact","value":"geometry_coordinate_healthy"},{"type":"exact","value":"geometry_coordinate_mode"},{"type":"exact","value":"geometry_epoch"},{"type":"exact","value":"mdi_price"},{"type":"exact","value":"mdi_version"},{"type":"exact","value":"ocf_confidence"},{"type":"exact","value":"ocf_event_direction"},{"type":"exact","value":"ocf_event_mode"},{"type":"exact","value":"ocf_event_strength"},{"type":"exact","value":"ocf_valid"},{"type":"exact","value":"ocf_version"},{"type":"exact","value":"p"},{"type":"exact","value":"p9"},{"type":"exact","value":"p_next"},{"type":"exact","value":"price"},{"type":"exact","value":"r7_delta"},{"type":"exact","value":"spot"},{"type":"exact","value":"t"},{"type":"exact","value":"time"},{"type":"exact","value":"timestamp"},{"type":"exact","value":"z_anchor_strike"},{"type":"exact","value":"z_candidate_origin"},{"type":"exact","value":"z_center"},{"type":"exact","value":"z_confidence"},{"type":"exact","value":"z_direction"},{"type":"exact","value":"z_invalid_reason"},{"type":"exact","value":"z_last_exit_reason"},{"type":"exact","value":"z_reentry_reject_reason"},{"type":"exact","value":"z_sc_roll"},{"type":"exact","value":"z_score"},{"type":"exact","value":"z_sp_roll"},{"type":"exact","value":"z_valid"},{"type":"prefix","value":"activation_"},{"type":"prefix","value":"ai_"},{"type":"prefix","value":"bear_"},{"type":"prefix","value":"bull_"},{"type":"prefix","value":"call_"},{"type":"prefix","value":"captured_"},{"type":"prefix","value":"day_"},{"type":"prefix","value":"event_"},{"type":"prefix","value":"exec_"},{"type":"prefix","value":"execution_"},{"type":"prefix","value":"force_"},{"type":"prefix","value":"four_"},{"type":"prefix","value":"futures_"},{"type":"prefix","value":"geometry_committed_"},{"type":"prefix","value":"geometry_epoch_"},{"type":"prefix","value":"geometry_formal_"},{"type":"prefix","value":"geometry_last_"},{"type":"prefix","value":"geometry_mapping_"},{"type":"prefix","value":"hmf_"},{"type":"prefix","value":"mdi_active_"},{"type":"prefix","value":"mdi_call_"},{"type":"prefix","value":"mdi_data_"},{"type":"prefix","value":"mdi_execution_"},{"type":"prefix","value":"mdi_live_"},{"type":"prefix","value":"mdi_locked_"},{"type":"prefix","value":"mdi_put_"},{"type":"prefix","value":"mdi_session_"},{"type":"prefix","value":"mini_"},{"type":"prefix","value":"nsf_"},{"type":"prefix","value":"ocf_campaign_"},{"type":"prefix","value":"ocf_defense_"},{"type":"prefix","value":"ocf_legacy_"},{"type":"prefix","value":"ocf_resistance_defense_"},{"type":"prefix","value":"ocf_support_defense_"},{"type":"prefix","value":"ocf_target_"},{"type":"prefix","value":"oi_"},{"type":"prefix","value":"omi3_blueprint_"},{"type":"prefix","value":"omi3_entry_"},{"type":"prefix","value":"omi3_target_"},{"type":"prefix","value":"omi_"},{"type":"prefix","value":"p9_"},{"type":"prefix","value":"pret1_"},{"type":"prefix","value":"put_"},{"type":"prefix","value":"pwr_"},{"type":"prefix","value":"r7_th_"},{"type":"prefix","value":"rfd_"},{"type":"prefix","value":"session_"},{"type":"prefix","value":"skew_"},{"type":"prefix","value":"sop_"},{"type":"prefix","value":"trading_"},{"type":"prefix","value":"true_"},{"type":"prefix","value":"updated_"},{"type":"prefix","value":"vwap_"},{"type":"prefix","value":"wave_"},{"type":"prefix","value":"z_bear_"},{"type":"prefix","value":"z_bull_"},{"type":"prefix","value":"z_campaign_"},{"type":"prefix","value":"z_data_"},{"type":"prefix","value":"z_decision_"},{"type":"prefix","value":"z_direction_"},{"type":"prefix","value":"z_ignition_"},{"type":"prefix","value":"z_l2_"},{"type":"prefix","value":"z_locked_"},{"type":"prefix","value":"z_lower_"},{"type":"prefix","value":"z_model_"},{"type":"prefix","value":"z_physical_bear_cross_"},{"type":"prefix","value":"z_physical_bull_cross_"},{"type":"prefix","value":"z_physical_cross_"},{"type":"prefix","value":"z_primary_"},{"type":"prefix","value":"z_reference_"},{"type":"prefix","value":"z_relative_"},{"type":"prefix","value":"z_sc_l2_"},{"type":"prefix","value":"z_sc_recent_"},{"type":"prefix","value":"z_sc_roll_"},{"type":"prefix","value":"z_sp_l2_"},{"type":"prefix","value":"z_sp_recent_"},{"type":"prefix","value":"z_sp_roll_"},{"type":"prefix","value":"z_status_"},{"type":"prefix","value":"z_true_"},{"type":"prefix","value":"z_upper_"},{"type":"prefix","value":"z_uses_"},{"type":"prefix","value":"z_using_"}];
-    const MME_SELECTIVE_PLAN = [{"type":"exact","value":"build"},{"type":"exact","value":"confidence"},{"type":"exact","value":"execution_score"},{"type":"exact","value":"execution_state"},{"type":"exact","value":"forecast_confidence"},{"type":"exact","value":"forecast_direction"},{"type":"exact","value":"forecast_edge"},{"type":"exact","value":"forecast_state"},{"type":"exact","value":"last_event"},{"type":"exact","value":"structural_score"},{"type":"exact","value":"structural_state"},{"type":"exact","value":"timestamp"},{"type":"prefix","value":"acceptance_"},{"type":"prefix","value":"bear_breach_"},{"type":"prefix","value":"bear_trap_"},{"type":"prefix","value":"bull_breach_"},{"type":"prefix","value":"bull_trap_"},{"type":"prefix","value":"day_"},{"type":"prefix","value":"evidence_"},{"type":"prefix","value":"forecast_direction_"},{"type":"prefix","value":"forecast_horizon_"},{"type":"prefix","value":"forecast_model_"},{"type":"prefix","value":"forecast_state_"},{"type":"prefix","value":"formal_"},{"type":"prefix","value":"late_"},{"type":"prefix","value":"mindset_"},{"type":"prefix","value":"night_"},{"type":"prefix","value":"positioning_"},{"type":"prefix","value":"preus_"},{"type":"prefix","value":"primary_"},{"type":"prefix","value":"regime_"},{"type":"prefix","value":"session_"},{"type":"prefix","value":"trend_"},{"type":"prefix","value":"trigger_"},{"type":"prefix","value":"us_"},{"type":"prefix","value":"wall_"},{"type":"prefix","value":"whole_"},{"type":"prefix","value":"z_"}];
-    window.__Z2_SELECTIVE_LISTENER_COUNTS = { z2: Z2_SELECTIVE_PLAN.length, mme: MME_SELECTIVE_PLAN.length };
-
     let realtimeUiTimer = null;
-    let mmeUiTimer = null;
 
     function scheduleRealtimeUiRefresh() {
       if (realtimeUiTimer !== null) return;
@@ -2870,41 +2864,35 @@
       }, 20);
     }
 
-    function scheduleMmeUiRefresh() {
-      if (mmeUiTimer !== null) return;
-      mmeUiTimer = window.setTimeout(() => {
-        mmeUiTimer = null;
-        const payload = window.__Z2MMECache;
+    function dispatchRealtimeNestedNode(key, value) {
+      if (key === 'alpha_data') {
+        if (value && typeof updateAlphaUI === 'function') updateAlphaUI(value);
+        return true;
+      }
+      if (key === 'mme') {
         if (typeof window.__Z2RenderMMEFromRealtime === 'function') {
-          window.__Z2RenderMMEFromRealtime(payload);
+          window.__Z2RenderMMEFromRealtime(value || null);
         } else {
-          window.__Z2PendingMMERealtime = payload;
+          window.__Z2PendingMMERealtime = value || null;
         }
-      }, 20);
+        return true;
+      }
+      return false;
     }
 
-    function applySelectiveSnapshot(cache, snapshot, removed, notify) {
+    function applyRealtimeChildSnapshot(snapshot, removed) {
       const key = snapshot.key;
       if (!key) return;
-      if (removed || !snapshot.exists()) delete cache[key];
-      else cache[key] = snapshot.val();
-      notify();
-    }
+      const value = removed ? null : snapshot.val();
 
-    function attachSelectivePlan(baseRef, plan, cache, notify, errorLabel) {
-      const onError = (err) => console.error(errorLabel, err && err.code ? err.code : err);
-      plan.forEach((item) => {
-        if (item.type === 'exact') {
-          baseRef.child(item.value).on('value',
-            (s) => applySelectiveSnapshot(cache, s, !s.exists(), notify),
-            onError);
-          return;
-        }
-        const q = baseRef.orderByKey().startAt(item.value).endAt(item.value + '\uf8ff');
-        q.on('child_added',   (s) => applySelectiveSnapshot(cache, s, false, notify), onError);
-        q.on('child_changed', (s) => applySelectiveSnapshot(cache, s, false, notify), onError);
-        q.on('child_removed', (s) => applySelectiveSnapshot(cache, s, true,  notify), onError);
-      });
+      if (removed) delete window.__Z2RealtimeCache[key];
+      else window.__Z2RealtimeCache[key] = value;
+
+      // These nested payloads have their own renderers and are intentionally not
+      // passed through updateUI(), matching the existing UI separation.
+      if (!dispatchRealtimeNestedNode(key, value)) {
+        scheduleRealtimeUiRefresh();
+      }
     }
 
     function startDataSync() {
@@ -2913,34 +2901,36 @@
           return;
       }
 
-      // Z2: only dashboard-consumed key ranges are synchronized.
-      attachSelectivePlan(
-        db.ref(NODE_REALTIME), Z2_SELECTIVE_PLAN,
-        window.__Z2RealtimeCache, scheduleRealtimeUiRefresh,
-        'Z2 selective Firebase read error'
-      );
+      const realtimeRef = db.ref(NODE_REALTIME);
+      const realtimeReadError = (err) => {
+          console.error('Realtime Firebase read error', err && err.code ? err.code : err);
+      };
 
-      // MME: reconstruct the same object expected by the unchanged render(data).
-      attachSelectivePlan(
-        db.ref(MME_REALTIME_NODE), MME_SELECTIVE_PLAN,
-        window.__Z2MMECache, scheduleMmeUiRefresh,
-        'MME selective Firebase read error'
-      );
+      // child_added supplies the initial top-level snapshot one child at a time and
+      // also captures any future schema-compatible child additions.
+      realtimeRef.on('child_added',
+          (s) => applyRealtimeChildSnapshot(s, false),
+          realtimeReadError);
+      realtimeRef.on('child_changed',
+          (s) => applyRealtimeChildSnapshot(s, false),
+          realtimeReadError);
+      realtimeRef.on('child_removed',
+          (s) => applyRealtimeChildSnapshot(s, true),
+          realtimeReadError);
 
-      // Alpha is a compact nested object and keeps its original renderer.
-      db.ref(NODE_ALPHA).on('value', (s) => { if (s.val()) updateAlphaUI(s.val()); });
-
-      // History intentionally unchanged: VBA PUTs a rolling indexed array.
-      db.ref(NODE_HISTORY).on('value', (s) => {
+      // Keep History exactly as before. VBA replaces a rolling array, so converting
+      // this to child_changed would not reliably reduce traffic and could alter order.
+      db.ref(NODE_HISTORY).on('value', (s) => { 
           if(s.val()) {
               let dataArray = Array.isArray(s.val()) ? s.val() : Object.values(s.val());
               dataArray = dataArray.filter(d => d !== null && d !== undefined);
-              lastHistoryData = dataArray;
-              loadChartHistory(dataArray);
+              lastHistoryData = dataArray; 
+              loadChartHistory(dataArray); 
           }
       });
 
-      // Radar intentionally unchanged.
+      // Alpha is now rendered from monitor_realtime/alpha_data delivered by the
+      // parent delta stream. No separate NODE_ALPHA listener is required.
       db.ref(NODE_RADAR).on('value', (s) => { if(s.val()) updateRadarUI(s.val()); });
     }
 
@@ -8019,7 +8009,7 @@
     if(window.__Z2_PHASE1_REALTIME_HUB) {
       // Reuse monitor_realtime/mme from the shared parent delta stream.
       // This removes the duplicate MME download without changing render semantics.
-      const cachedMme = window.__Z2MMECache && Object.keys(window.__Z2MMECache).length ? window.__Z2MMECache : null;
+      const cachedMme = window.__Z2RealtimeCache && window.__Z2RealtimeCache.mme;
       if(cachedMme) render(cachedMme);
     } else {
       // Compatibility fallback if this MME UI is ever embedded without Phase 1 hub.
