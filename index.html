@@ -1,3 +1,4 @@
+<!-- Z22_RC2E_D2E_ECONFRESH_UI_COMPAT_v0.1_20260924 | presentation/build-recognition only | RC2E inherits RC2A UnifiedRisk/ATM/Runner UI capability | D2E/EconFresh labels | no Firebase/listener/schema/order-authority change -->
 <!-- FIREBASE_DOWNLOAD_OPTIMIZED_PHASE1_RC1_20260923 | transport-only | realtime top-level delta cache | MME/Alpha reuse parent delta | History/Radar unchanged | no Z2/MME/order/UI semantic change -->
 <!-- MME_PREUS_POSTUS_FORECAST_UI_v0.2_RC2_ZH1_20260920 | Runtime RC2 companion | Chinese operator-facing PREOPEN/U30/U45/U60/U75 Reference | Firebase observability-only nested preus_postus_forecast | NightSegment v0.1.4 SF1 retained | Z2/Entry/Order authority 0/0/0 -->
 <!-- MME_NIGHT_U75_PRICE_ACCEPTANCE_SF1_UI_v0.2_20260919 | NightSegment v0.1.4 SF1 U75 Price Acceptance reference retained -->
@@ -25,8 +26,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.8-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.13-LAUNCH-v1.2-GEOMETRY-v1.0-WLA-v1.3-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2A-UNIFIEDRISK-ATMRECOVERY-UI-v0.1-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2A + MME CashOpen0900 + Forecast v0.2 Runtime RC2</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.8-CAMPAIGNDEF-v1.0-WAVE-v1.5.5-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.19-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0-WLA-v1.3-ICUA-v0.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2E-D2E-ECONFRESH-COMPAT-UI-v0.1-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2">
+  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2E Runtime Auto-Detect + MME CashOpen0900 + Forecast v0.2 Runtime RC2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -2171,7 +2172,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z2.2 v0.98 RC2A + Unified Risk Ownership + ATM Recovery｜固定 ATM 分界 + K±2權利金</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z2.2 v0.98 RC2E｜Runtime Auto-Detect｜固定 ATM 分界 + K±2權利金</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -2292,7 +2293,7 @@
 
                         <div id="ocf-exec-episode-card" class="ocf-authority-card is-info" hidden>
                             <div class="ocf-authority-head">
-                                <span id="ocf-exec-episode-name" class="ocf-authority-name">Execution Episode Authority v1.0.13</span>
+                                <span id="ocf-exec-episode-name" class="ocf-authority-name">Execution Episode Authority｜Runtime Auto-Detect</span>
                                 <span id="ocf-exec-episode-badge" class="ocf-authority-badge">FORMAL --</span>
                             </div>
                             <strong id="ocf-exec-episode-status" class="ocf-authority-status">等待 Episode 資料</strong>
@@ -3696,21 +3697,37 @@
         const build = buildMatch[1].trim();
         const version = ((build.match(/v(\d+\.\d+)/i) || [])[1] || "").trim();
         const rc = (((build.match(/(?:^|[-_])(RC\d+[A-Z]?)(?:[-_]|$)/i) || [])[1]) || "").toUpperCase();
-        const unifiedRisk = /UNIFIED[-_]?RISK/i.test(build);
-        const atmRecovery = /ATM[-_]?RECOVERY/i.test(build);
+        // RC2E Profitability-Redesign is a descendant of the RC2A execution stack.
+        // The newer Core build IDs intentionally no longer repeat legacy capability words
+        // such as UNIFIED-RISK / ATM-RECOVERY / AUTHORITY-ROUTER / RUNNER200.
+        // Treat RC2E as inheriting those UI capabilities so presentation does not regress
+        // when the runtime build marker evolves.
+        const profitabilityRc2e = /PROFITABILITY[-_]?REDESIGN/i.test(build) &&
+            /(?:^|[-_])RC2E(?:[-_]|$)/i.test(build);
+        const d2e = /(?:^|[-_])D2E(?:[-_]|$)/i.test(build);
+        const econFresh = /ECONFRESH|ECONOMIC[-_]?FRESHNESS/i.test(build);
+        const challengeTombstone = /CHALLENGE[-_]?TOMBSTONE/i.test(build);
+        const unifiedRisk = /UNIFIED[-_]?RISK/i.test(build) || profitabilityRc2e;
+        const atmRecovery = /ATM[-_]?RECOVERY/i.test(build) || profitabilityRc2e;
         const defaultOffBuild = /DEFAULT[-_]?OFF/i.test(build);
-        // RC2A keeps the existing B1 Authority-Router / Runner200 mechanics even though
-        // the superseding build marker no longer contains those legacy words.
-        const b1AuthorityRouter = /AUTHORITY[-_]?ROUTER/i.test(build) || unifiedRisk;
-        const runner200 = /RUNNER200|PROFITLOCK200.*RUNNER/i.test(build) || unifiedRisk;
+        const b1AuthorityRouter = /AUTHORITY[-_]?ROUTER/i.test(build) || unifiedRisk || profitabilityRc2e;
+        const runner200 = /RUNNER200|PROFITLOCK200.*RUNNER/i.test(build) || unifiedRisk || profitabilityRc2e;
         const b1Tp200 = /B1[-_]?TP200/i.test(build) || b1AuthorityRouter || runner200;
         const labelParts = [`Z2.2${version ? ` v${version}` : ""}${rc ? ` ${rc}` : ""}`];
         if (unifiedRisk) labelParts.push("Unified Risk");
         else if (b1AuthorityRouter) labelParts.push("Authority Router");
         if (atmRecovery) labelParts.push("ATM Recovery");
+        if (d2e) labelParts.push("D2E");
+        if (econFresh) labelParts.push("EconFresh");
+        else if (challengeTombstone) labelParts.push("Challenge Tombstone");
         if (runner200 && !unifiedRisk) labelParts.push(/PROFITLOCK200/i.test(build) ? "Profit-Lock200 Runner" : "Runner200");
         else if (b1Tp200 && !unifiedRisk) labelParts.push("B1 TP200");
-        return { build, version, rc, unifiedRisk, atmRecovery, defaultOffBuild, b1AuthorityRouter, b1Tp200, runner200, label: labelParts.join("｜") };
+        return {
+            build, version, rc, profitabilityRc2e, d2e, econFresh, challengeTombstone,
+            unifiedRisk, atmRecovery, defaultOffBuild,
+            b1AuthorityRouter, b1Tp200, runner200,
+            label: labelParts.join("｜")
+        };
     }
 
     function getOCFVersionLabel(data) {
