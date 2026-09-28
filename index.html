@@ -1114,7 +1114,7 @@
 #v2-live-page .v2-force-card { grid-column: span 5 !important; }
 #v2-live-page .v2-sniper-card { grid-column: span 3 !important; }
 
-/* Dashboard V9: primary decision area. OCF is the main live workspace; LCC is secondary. */
+/* Dashboard V9: primary decision area. OCF is the main live workspace; Radar VWAP is secondary. */
 #v2-live-page .v2-intel-grid {
   grid-template-columns:
     minmax(0, 2.35fr)
@@ -1138,7 +1138,7 @@
 #v2-live-page .v2-ocf-card .ocf-defense-zone { font-size: 16px !important; }
 #v2-live-page .v2-ocf-card .ocf-action-text { font-size: 12px !important; }
 
-/* LCC compact card: keep the latest Firebase values visible, hide diagnostics until requested. */
+/* Radar VWAP compact card: show current session; hide diagnostics until requested. */
 #v2-live-page .radar-compact-shell {
   display: flex;
   flex-direction: column;
@@ -1246,7 +1246,7 @@
   border-top: 1px solid #3a3a3c;
   padding: 5px;
 }
-/* When LCC details are opened, give the detailed diagnostics a full-width row. */
+/* When Radar VWAP details are opened, give the diagnostics a full-width row. */
 #v2-live-page .v2-intel-grid:has(.v2-radar-card .radar-detail-toggle[open]) {
   grid-template-columns: 1fr !important;
 }
@@ -2460,14 +2460,14 @@
       <div class="box req-level-4-flex" style="padding:5px 8px; flex-direction:row; align-items:center; gap:6px; border: 1px solid rgba(10, 132, 255, 0.4); box-shadow: inset 0 0 10px rgba(10, 132, 255, 0.1); background: linear-gradient(90deg, rgba(10,132,255,0.05) 0%, transparent 100%);">
           <div class="radar-static-container">
               <div id="radar-ticker" class="radar-ticker">
-                  <span style="color:#888;">連線中，等待 TX Radar LCC 即時成本資料... ⏳</span>
+                  <span style="color:#888;">連線中，等待 TX Radar 整盤主動買／賣均價... ⏳</span>
               </div>
           </div>
       </div>
       <div class="box upgrade-prompt lock-lvl-4" style="padding:6px; flex-direction:row; gap:8px;">
           <div style="font-size:14px;">📡</div>
           <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
-              <div style="font-size:10px; font-weight:bold; color:#aaa;">TX Radar LCC 即時主力成本</div>
+              <div style="font-size:10px; font-weight:bold; color:#aaa;">TX Radar 整盤主動買／賣均價</div>
               <div class="upgrade-btn" style="font-size:8px; padding:2px 6px;">需 Level 4 解鎖</div>
           </div>
       </div>
@@ -5084,344 +5084,103 @@
     }
 
 
-    function lccModeText(mode) {
-        const value = String(mode || "WAITING");
-        if (value === "BOOK_TRADE") return "Tick＋五檔完整";
-        if (value === "TRADE_ONLY_PROXY") return "僅成交代理";
-        return "等待資料";
-    }
 
-    function lccSurface(data, key) {
-        const prefix = `lcc_${key}`;
-        const legacyValid = toRadarBoolean(data[`${prefix}_valid`]);
-        const hasOperationalContract = data[`${prefix}_operational_valid`] !== undefined
-            && data[`${prefix}_operational_valid`] !== null;
-        const coreLow = toFiniteNumberOrNull(data[`${prefix}_core_low`]);
-        const coreHigh = toFiniteNumberOrNull(data[`${prefix}_core_high`]);
-        const zoneLow = toFiniteNumberOrNull(data[`${prefix}_zone_low`]);
-        const zoneHigh = toFiniteNumberOrNull(data[`${prefix}_zone_high`]);
-        return {
-            valid: hasOperationalContract
-                ? toRadarBoolean(data[`${prefix}_operational_valid`])
-                : legacyValid,
-            modelValid: hasOperationalContract
-                ? toRadarBoolean(data[`${prefix}_model_valid`])
-                : legacyValid,
-            center: toFiniteNumberOrNull(data[`${prefix}_center`]),
-            coreLow,
-            coreHigh,
-            zoneLow,
-            zoneHigh,
-            actionableLow: toFiniteNumberOrNull(data[`${prefix}_actionable_low`]) ?? coreLow,
-            actionableHigh: toFiniteNumberOrNull(data[`${prefix}_actionable_high`]) ?? coreHigh,
-            modelCoreLow: toFiniteNumberOrNull(data[`${prefix}_model_core_low`]) ?? coreLow,
-            modelCoreHigh: toFiniteNumberOrNull(data[`${prefix}_model_core_high`]) ?? coreHigh,
-            modelZoneLow: toFiniteNumberOrNull(data[`${prefix}_model_zone_low`]) ?? zoneLow,
-            modelZoneHigh: toFiniteNumberOrNull(data[`${prefix}_model_zone_high`]) ?? zoneHigh,
-            roleOk: data[`${prefix}_role_ok`] === undefined || data[`${prefix}_role_ok`] === null
-                ? null : toRadarBoolean(data[`${prefix}_role_ok`]),
-            centerStable: data[`${prefix}_center_stable`] === undefined || data[`${prefix}_center_stable`] === null
-                ? null : toRadarBoolean(data[`${prefix}_center_stable`]),
-            centerRange60s: toFiniteNumberOrNull(data[`${prefix}_center_range_60s`]),
-            centerSamples60s: Math.round(toFiniteNumberOrNull(data[`${prefix}_center_samples_60s`]) ?? 0),
-            invalidReason: String(data[`${prefix}_invalid_reason`] || (legacyValid ? "READY" : "")),
-            calibration: String(data[`${prefix}_calibration`] || (hasOperationalContract ? "CENTER_PM25_ROLE_STABLE60" : "LEGACY")),
-            weight: toFiniteNumberOrNull(data[`${prefix}_weight`]) ?? 0,
-            ess: toFiniteNumberOrNull(data[`${prefix}_effective_evidence`]) ?? 0,
-            count: Math.round(toFiniteNumberOrNull(data[`${prefix}_evidence_count`]) ?? 0),
-            confidence: Math.max(0, Math.min(100, toFiniteNumberOrNull(data[`${prefix}_confidence`]) ?? 0)),
-            concentration: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_concentration`]) ?? 0)),
-            finalRatio: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_final_maturity_ratio`]) ?? 0)),
-            dataQuality: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_data_quality`]) ?? 0)),
-            defenseProbability: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_defense_probability`]) ?? 0.5)),
-            defenseTouches: Math.round(toFiniteNumberOrNull(data[`${prefix}_defense_touches`]) ?? 0),
-            defenseProbabilityScope: String(data[`${prefix}_defense_probability_scope`] || "LEGACY_INTERNAL"),
-            source: String(data[`${prefix}_dominant_source`] || "--"),
-            secondaryCenter: toFiniteNumberOrNull(data[`${prefix}_secondary_center`]),
-            secondaryStrength: Math.max(0, Math.min(1, toFiniteNumberOrNull(data[`${prefix}_secondary_strength`]) ?? 0)),
-        };
-    }
-
-    function lccRange(low, high, digits = 0) {
-        if (low === null || high === null || low <= 0 || high <= 0) return "--";
-        return `${low.toFixed(digits)}～${high.toFixed(digits)}`;
-    }
-
-    function lccInvalidReasonText(reason) {
-        const labels = {
-            NO_CENTER: "無成本中心",
-            MODEL_NOT_READY: "證據模型未成熟",
-            LOW_CONFIDENCE: "信心未達60",
-            LOW_EVIDENCE: "ESS未達3",
-            STABILITY_WARMUP: "中心穩定度暖機",
-            CENTER_UNSTABLE: "中心60秒漂移超過10點",
-            WRONG_SIDE: "價格位於成本錯邊",
-            READY: "可操作",
-        };
-        return String(reason || "")
-            .split("|")
-            .filter(Boolean)
-            .map(item => labels[item] || item)
-            .join("、") || "資料尚未成熟";
-    }
-
-    function lccDisplayZone(surface) {
-        if (surface.actionableLow !== null && surface.actionableHigh !== null
-            && surface.actionableLow > 0 && surface.actionableHigh > 0) {
-            return { low: surface.actionableLow, high: surface.actionableHigh };
-        }
-        if (surface.modelValid && surface.center !== null && surface.center > 0) {
-            return { low: surface.center - 25, high: surface.center + 25 };
-        }
-        return { low: null, high: null };
-    }
-
-    function lccSurfaceStatus(surface, side) {
-        const isLong = side === "long";
-        if (surface.valid) return {
-            text: isLong ? "✅ 支撐候選" : "✅ 壓力候選",
-            className: "valid",
-        };
-        if (surface.center === null || surface.center <= 0) return { text: "⚪ 無資料", className: "empty" };
-        if (surface.invalidReason.includes("WRONG_SIDE")) return {
-            text: isLong ? "⛔ 支撐失效／多方套牢" : "⛔ 壓力失效／空方套牢",
-            className: "blocked",
-        };
-        if (surface.invalidReason.includes("CENTER_UNSTABLE")) return { text: "⛔ 中心漂移", className: "blocked" };
-        return {
-            text: isLong ? "🟡 支撐待成熟" : "🟡 壓力待成熟",
-            className: "provisional",
-        };
-    }
-
-    function renderLccSurface(surface, side) {
-        const isLong = side === "long";
-        const title = isLong ? "🔴 多方主力支撐成本" : "🟢 空方主力壓力成本";
-        const sideClass = isLong ? "long" : "short";
-        const status = lccSurfaceStatus(surface, side);
-        const displayZone = lccDisplayZone(surface);
-        const centerText = surface.center !== null && surface.center > 0
-            ? surface.center.toFixed(0) : "--";
-        const secondaryText = surface.secondaryCenter !== null && surface.secondaryCenter > 0
-            ? `${surface.secondaryCenter.toFixed(0)}（${(surface.secondaryStrength * 100).toFixed(0)}%）`
-            : "--";
-        const confidenceColor = surface.confidence >= 65
-            ? (isLong ? "var(--red)" : "var(--green)")
-            : (surface.confidence >= 45 ? "var(--yellow)" : "#8e8e93");
-        return `
-            <div class="radar-band-card ${sideClass}">
-                <div class="radar-band-title">
-                    <span>${title}</span>
-                    <span class="radar-band-status ${status.className}">${status.text}</span>
-                </div>
-                <div class="radar-band-main">中心 ${centerText}</div>
-                <div class="radar-band-range">${isLong ? "多方主力支撐區" : "空方主力壓力區"} ${lccRange(displayZone.low, displayZone.high)}（center±25）</div>
-                <div class="radar-band-range" style="color:#8e8e93;">模型輪廓 核心 ${lccRange(surface.modelCoreLow, surface.modelCoreHigh)}｜密度 ${lccRange(surface.modelZoneLow, surface.modelZoneHigh)}</div>
-                <div class="radar-band-meta">
-                    <span>信心：<strong style="color:${confidenceColor};">${surface.confidence.toFixed(0)}</strong></span>
-                    <span>ESS：${surface.ess.toFixed(2)}</span>
-                    <span>證據：${surface.count}筆</span>
-                    <span>權重：${surface.weight.toFixed(1)}</span>
-                    <span>集中：${(surface.concentration * 100).toFixed(0)}%</span>
-                    <span>成熟：${(surface.finalRatio * 100).toFixed(0)}%</span>
-                    <span>資料質量：${(surface.dataQuality * 100).toFixed(0)}%</span>
-                    <span>角色：${surface.roleOk === null ? "舊版未提供" : (surface.roleOk ? "正確" : "錯邊")}</span>
-                    <span>中心60秒：${surface.centerRange60s === null ? "--" : `${surface.centerRange60s.toFixed(0)}點／${surface.centerSamples60s}筆`}</span>
-                    <span>內建90秒診斷：${(surface.defenseProbability * 100).toFixed(0)}%／${surface.defenseTouches}次</span>
-                </div>
-                <div class="radar-event-row">狀態 ${escapeRadarHtml(lccInvalidReasonText(surface.invalidReason))}｜來源 ${escapeRadarHtml(surface.source)}｜次要成本 ${secondaryText}</div>
-            </div>`;
-    }
-
-    function lccPricePosition(price, surfaces) {
-        const px = toFiniteNumberOrNull(price);
-        if (px === null) return "價格位置：--";
-        const labels = [
-            [surfaces.shortLong, "短期多方支撐"],
-            [surfaces.shortShort, "短期空方壓力"],
-            [surfaces.sessionLong, "整盤多方支撐"],
-            [surfaces.sessionShort, "整盤空方壓力"],
-        ];
-        for (const [surface, label] of labels) {
-            const displayZone = lccDisplayZone(surface);
-            if (surface.valid && displayZone.low !== null && displayZone.high !== null
-                && px >= displayZone.low && px <= displayZone.high) {
-                return `⚠️ 正在測試${label} ${lccRange(displayZone.low, displayZone.high)}`;
-            }
-        }
-        return "價格位置：目前未進入有效的主力成本支撐／壓力區";
-    }
-
-    function renderLccTrack(title, caption, longSurface, shortSurface, trackClass) {
-        return `
-            <section class="radar-cost-track ${trackClass}">
-                <div class="radar-track-head">
-                    <div>
-                        <div class="radar-track-title">${escapeRadarHtml(title)}</div>
-                        <div class="radar-track-caption">${escapeRadarHtml(caption)}</div>
-                    </div>
-                    <span class="radar-track-badge">多空分開估計</span>
-                </div>
-                <div class="radar-band-grid" style="margin-top:4px;">
-                    ${renderLccSurface(longSurface, "long")}
-                    ${renderLccSurface(shortSurface, "short")}
-                </div>
-            </section>`;
-    }
-
-    function renderLccCompactCost(label, surface, side) {
-        const centerText = surface.center !== null && surface.center > 0 ? surface.center.toFixed(0) : "--";
-        const displayZone = lccDisplayZone(surface);
-        const costText = lccRange(displayZone.low, displayZone.high);
-        const status = lccSurfaceStatus(surface, side);
-        return `
-            <div class="radar-compact-cost ${side} ${status.className}">
-                <span class="radar-compact-cost-label">${escapeRadarHtml(label)}</span>
-                <strong>${costText}</strong>
-                <small>中心 ${centerText}｜${status.text}</small>
-            </div>`;
-    }
-
-    let lccDetailsOpen = false;
+    let sideVwapDetailsOpen = false;
 
     function updateRadarUI(data) {
         const ticker = document.getElementById('radar-ticker');
         if (!ticker || !data || typeof data !== 'object') return;
+        // New Radar publishes execution-side VWAP fields. Keep the original
+        // card and expand/collapse behavior, but never reinterpret LCC fields.
         try {
-            const actionStr = String(data.action || "計算中");
-            const actionColor = actionStr.includes('外盤') ? 'var(--red)' : (actionStr.includes('內盤') ? 'var(--green)' : '#aaa');
-            const actionIcon = actionStr.includes('外盤') ? '🔥' : (actionStr.includes('內盤') ? '💀' : '⏳');
-            const netWhale = toFiniteNumberOrNull(data.legacy_net_whale !== undefined ? data.legacy_net_whale : data.net_whale) ?? 0;
-            const retention = Math.max(0, Math.min(100, toFiniteNumberOrNull(data.legacy_retention !== undefined ? data.legacy_retention : data.retention) ?? 0));
-            const netColor = netWhale >= 0 ? 'var(--red)' : 'var(--green)';
-            const mode = String(data.lcc_data_mode || "WAITING");
-            const modeText = lccModeText(mode);
-            const modeColor = mode === "BOOK_TRADE" ? "#64d2ff" : (mode === "TRADE_ONLY_PROXY" ? "var(--yellow)" : "#8e8e93");
-            const fair = toFiniteNumberOrNull(data.lcc_fair_price);
-            const trade = toFiniteNumberOrNull(data.lcc_trade_price);
-            const lccTimestamp = toFiniteNumberOrNull(data.lcc_timestamp);
-            const updateText = lccTimestamp !== null && lccTimestamp > 0
-                ? new Date(lccTimestamp * 1000).toLocaleTimeString("zh-TW", {hour12:false})
-                : "--";
-            const tickUpdates = Math.round(toFiniteNumberOrNull(data.lcc_tick_updates) ?? 0);
-            const bookUpdates = Math.round(toFiniteNumberOrNull(data.lcc_book_updates) ?? 0);
-            const activeEvidence = Math.round(toFiniteNumberOrNull(data.lcc_active_evidence) ?? 0);
-            const pendingEpisodes = Math.round(toFiniteNumberOrNull(data.lcc_pending_episodes) ?? 0);
-            const queueSize = Math.round(toFiniteNumberOrNull(data.lcc_queue_size) ?? 0);
-            const droppedEvents = Math.round(toFiniteNumberOrNull(data.lcc_dropped_events) ?? 0);
-            const version = String(data.lcc_version || "LCC-0.3-COSTZONE25");
-            const contract = String(data.lcc_contract || "--");
-            const recovery = translateRecoveryStatus(data.lcc_recovery_status || "FRESH_START");
-            const limitations = String(data.lcc_limitations || "公開成交與委託簿推估控制成本，非帳戶真實持倉成本。")
-                .replace("Probabilistic control costs from public trades/order book; not account-level position costs.", "公開成交與委託簿推估控制成本，非帳戶真實持倉成本。");
-
-            const surfaces = {
-                shortLong: lccSurface(data, "short_long"),
-                shortShort: lccSurface(data, "short_short"),
-                sessionLong: lccSurface(data, "session_long"),
-                sessionShort: lccSurface(data, "session_short"),
+            if (!String(data.side_vwap_version || '').startsWith('TX-SIDE-VWAP-')
+                || !String(data.radar_version || '').includes('SIDE-VWAP-1')) {
+                ticker.innerHTML = '<div class="radar-compact-shell"><div class="radar-compact-head"><div class="radar-compact-title">TX Radar｜整盤主動買／賣均價</div></div><div class="radar-compact-status">等待新版 Radar；若已啟動，請確認舊 Radar 已停止，避免兩版同時發送。</div></div>';
+                return;
+            }
+            const num = value => toFiniteNumberOrNull(value);
+            const price = value => { const n = num(value); return n !== null && n > 0 ? n.toFixed(1) : '--'; };
+            const lots = value => { const n = num(value); return n !== null ? Math.round(n).toLocaleString('zh-TW') : '--'; };
+            const range = (low, high) => {
+                const a = num(low), b = num(high);
+                return a !== null && b !== null && a > 0 && b >= a ? `${a.toFixed(0)}～${b.toFixed(0)}` : '--';
             };
-            const positionText = lccPricePosition(data.price ?? trade ?? fair, surfaces);
-            const isTrigger = toRadarBoolean(data.is_trigger) || String(data.status || 'SCAN') !== 'SCAN';
-            const statusBadge = isTrigger
-                ? `<span style="background:var(--red);color:#fff;padding:2px 4px;border-radius:4px;font-size:10px;">${escapeRadarHtml(data.status || '觸發')}</span>`
-                : '';
-
+            const ts = num(data.side_vwap_timestamp) || 0;
+            const age = ts > 0 ? Math.max(0, Date.now() / 1000 - ts) : Infinity;
+            const asof = ts > 0 ? new Date(ts * 1000).toLocaleString('zh-TW', {hour12:false}) : '--';
+            const session = String(data.side_vwap_session || '--');
+            const contract = String(data.side_vwap_contract || '--');
+            const hasData = data.side_vwap_status === 'DATA' && ts > 0;
+            const dropped = Math.round(num(data.side_vwap_dropped_events) || 0);
+            const complete = hasData && toRadarBoolean(data.side_vwap_coverage_so_far) && dropped === 0;
+            const quality = !hasData ? '等待逐筆成交' : age > 30 ? '非即時／最後紀錄' : complete ? '目前涵蓋正常' : '資料不完整／待核對';
+            const qualityColor = !hasData || age > 30 || !complete ? 'var(--yellow)' : '#64d2ff';
+            const share = num(data.side_vwap_buy_share);
+            const shareText = share !== null ? `${(share * 100).toFixed(1)}%` : '--';
+            const unknown = lots(data.side_vwap_unknown_lots);
+            const source = String(data.side_vwap_source || '--');
+            const currentPrice = price(data.price ?? data.side_vwap_last_price);
+            const card = (label, side, prefix, note) => `
+                <div class="radar-compact-cost ${side}">
+                    <span class="radar-compact-cost-label">${escapeRadarHtml(label)}</span>
+                    <strong>${price(data[`${prefix}_vwap`])}</strong>
+                    <small>${lots(data[`${prefix}_lots`])}口｜中間50% ${range(data[`${prefix}_q25`], data[`${prefix}_q75`])}${note ? `｜${escapeRadarHtml(note)}` : ''}</small>
+                </div>`;
             const previousDetailToggle = ticker.querySelector('.radar-detail-toggle');
-            if (previousDetailToggle) lccDetailsOpen = previousDetailToggle.open;
-
+            if (previousDetailToggle) sideVwapDetailsOpen = previousDetailToggle.open;
+            ticker.dataset.sideVwapTimestamp = String(ts);
             ticker.innerHTML = `
                 <div class="radar-compact-shell">
                     <div class="radar-compact-head">
                         <div>
-                            <div class="radar-compact-title">TX Radar LCC｜主力成本摘要</div>
-                            <div class="radar-compact-sub">${escapeRadarHtml(modeText)}｜${escapeRadarHtml(contract)}｜主力成本防守／壓力區 center±25＋角色／穩定檢驗</div>
+                            <div class="radar-compact-title">TX Radar｜整盤主動買／賣均價</div>
+                            <div class="radar-compact-sub">${escapeRadarHtml(session)}｜${escapeRadarHtml(contract)}｜成交價 × 口數加權</div>
                         </div>
-                        <span class="radar-compact-time">${escapeRadarHtml(updateText)}</span>
+                        <span class="radar-compact-time">${escapeRadarHtml(asof)}</span>
                     </div>
                     <div class="radar-compact-grid">
-                        ${renderLccCompactCost("短期多方支撐", surfaces.shortLong, "long")}
-                        ${renderLccCompactCost("短期空方壓力", surfaces.shortShort, "short")}
-                        ${renderLccCompactCost("整盤多方支撐", surfaces.sessionLong, "long")}
-                        ${renderLccCompactCost("整盤空方壓力", surfaces.sessionShort, "short")}
+                        ${card('當盤主動買', 'long', 'side_vwap_buy', '')}
+                        ${card('當盤主動賣', 'short', 'side_vwap_sell', '')}
+                        ${card('近兩盤主動買', 'long', 'side_vwap_last2_buy', toRadarBoolean(data.side_vwap_last2_coverage_ok) ? '' : '跨盤待核對')}
+                        ${card('近兩盤主動賣', 'short', 'side_vwap_last2_sell', toRadarBoolean(data.side_vwap_last2_coverage_ok) ? '' : '跨盤待核對')}
                     </div>
-                    <div class="radar-compact-status"><strong>${escapeRadarHtml(positionText)}</strong><br>資料 ${escapeRadarHtml(modeText)}｜恢復 ${escapeRadarHtml(recovery)}${statusBadge ? '｜事件觸發' : ''}</div>
-                    <details class="radar-detail-toggle"${lccDetailsOpen ? ' open' : ''}>
-                        <summary>展開 LCC 完整診斷</summary>
+                    <div class="radar-compact-status"><strong data-side-vwap-freshness style="color:${qualityColor};">${escapeRadarHtml(quality)}</strong>｜期指 ${currentPrice}｜主動買量占比 ${shareText}｜未判別 ${unknown}口</div>
+                    <details class="radar-detail-toggle"${sideVwapDetailsOpen ? ' open' : ''}>
+                        <summary>展開價量與資料診斷</summary>
                         <div class="radar-detail-body">
                             <div class="radar-command-shell">
-                    <div class="radar-command-head">
-                        <div class="radar-command-heading">
-                            <div class="radar-command-title">TX Radar V19.5｜LCC CostZone25 即時主力成本</div>
-                            <div class="radar-command-subtitle">同一實體合約 Tick＋五檔 BidAsk｜center±25主力成本防守／壓力區＋價格角色＋60秒中心穩定度</div>
-                        </div>
-                        <div class="radar-command-meta">
-                            <span class="radar-version-badge">${escapeRadarHtml(version)}</span>
-                            <span class="radar-command-time">${escapeRadarHtml(updateText)}</span>
-                            ${statusBadge}
-                        </div>
-                    </div>
-                    <div class="radar-live-grid">
-                        <div class="radar-live-item">
-                            <span class="radar-live-label">即時成交</span>
-                            <strong class="radar-live-value" style="color:${actionColor};">${actionIcon} ${escapeRadarHtml(actionStr)} ${formatRadarNumber(data.vol, 0)}口</strong>
-                            <span class="radar-live-meta">成交價 ${trade !== null && trade > 0 ? trade.toFixed(0) : '--'}｜公平價 ${fair !== null && fair > 0 ? fair.toFixed(1) : '--'}</span>
-                        </div>
-                        <div class="radar-live-item">
-                            <span class="radar-live-label">原 TX Radar 大戶淨單</span>
-                            <strong class="radar-live-value" style="color:${netColor};">${formatRadarNumber(netWhale, 0)}</strong>
-                            <span class="radar-live-meta">保留率 ${retention.toFixed(1)}%（不參與 LCC 成本）</span>
-                        </div>
-                        <div class="radar-live-item">
-                            <span class="radar-live-label">LCC 資料模式</span>
-                            <strong class="radar-live-value" style="color:${modeColor};">${escapeRadarHtml(modeText)}</strong>
-                            <span class="radar-live-meta">Tick ${tickUpdates}｜五檔 ${bookUpdates}</span>
-                        </div>
-                        <div class="radar-live-item">
-                            <span class="radar-live-label">成本證據</span>
-                            <strong class="radar-live-value">${activeEvidence}／${pendingEpisodes}</strong>
-                            <span class="radar-live-meta">成熟／待驗證｜${escapeRadarHtml(contract)}</span>
-                        </div>
-                    </div>
-                    <div class="radar-phase-panel">
-                        <div class="radar-cost-track-grid">
-                            ${renderLccTrack("短期主力控制成本", "近期有效訂單流與價格影響，快速衰減", surfaces.shortLong, surfaces.shortShort, "tactical")}
-                            ${renderLccTrack("整盤主力控制成本", "本盤成熟控制證據，慢速衰減", surfaces.sessionLong, surfaces.sessionShort, "session-neutral")}
-                        </div>
-                        <div class="radar-cross-read">
-                            <strong>${escapeRadarHtml(positionText)}</strong>
-                            ｜模式 ${escapeRadarHtml(modeText)}｜恢復 ${escapeRadarHtml(recovery)}｜佇列 ${queueSize}｜丟棄 ${droppedEvents}
-                        </div>
-                        <div class="radar-session-foot">${escapeRadarHtml(limitations)}</div>
-                    </div>
+                                <div class="radar-command-head">
+                                    <div class="radar-command-heading">
+                                        <div class="radar-command-title">整盤成交方向均價｜${escapeRadarHtml(contract)}</div>
+                                        <div class="radar-command-subtitle">本盤從開盤累計；近兩盤只合併相同實體合約。紅＝主動買，綠＝主動賣。</div>
+                                    </div>
+                                    <div class="radar-command-meta"><span class="radar-version-badge">${escapeRadarHtml(String(data.side_vwap_version))}</span></div>
+                                </div>
+                                <div class="radar-live-grid">
+                                    <div class="radar-live-item"><span class="radar-live-label">本盤主動買</span><strong class="radar-live-value" style="color:var(--red);">${price(data.side_vwap_buy_vwap)}</strong><span class="radar-live-meta">${lots(data.side_vwap_buy_lots)}口｜25–75% ${range(data.side_vwap_buy_q25, data.side_vwap_buy_q75)}</span></div>
+                                    <div class="radar-live-item"><span class="radar-live-label">本盤主動賣</span><strong class="radar-live-value" style="color:var(--green);">${price(data.side_vwap_sell_vwap)}</strong><span class="radar-live-meta">${lots(data.side_vwap_sell_lots)}口｜25–75% ${range(data.side_vwap_sell_q25, data.side_vwap_sell_q75)}</span></div>
+                                    <div class="radar-live-item"><span class="radar-live-label">主動買量占比</span><strong class="radar-live-value">${shareText}</strong><span class="radar-live-meta">僅為買／賣積極度，不是多頭持倉比例</span></div>
+                                    <div class="radar-live-item"><span class="radar-live-label">資料狀態</span><strong class="radar-live-value" style="color:${qualityColor};">${escapeRadarHtml(quality)}</strong><span class="radar-live-meta">逐筆 ${lots(data.side_vwap_ticks)}｜遺漏 ${dropped}｜續接 ${escapeRadarHtml(source)}</span></div>
+                                </div>
+                                <div class="radar-session-foot">主動買／賣成交均價不是特定主力的未平倉成本；25–75% 是成交分布，不是支撐／壓力，也不直接產生進出場訊號。</div>
                             </div>
                         </div>
                     </details>
                 </div>`;
-
             const detailToggle = ticker.querySelector('.radar-detail-toggle');
-            if (detailToggle) {
-                detailToggle.addEventListener('toggle', () => {
-                    lccDetailsOpen = detailToggle.open;
-                });
-            }
-
-            if (isTrigger) {
-                const container = ticker.closest('.req-level-4-flex');
-                if (container) {
-                    container.style.boxShadow = 'inset 0 0 20px rgba(255,69,58,.4)';
-                    container.style.borderColor = 'rgba(255,69,58,.8)';
-                    setTimeout(() => {
-                        container.style.boxShadow = 'inset 0 0 10px rgba(10,132,255,.1)';
-                        container.style.borderColor = 'rgba(10,132,255,.4)';
-                    }, 1000);
-                }
-            }
+            if (detailToggle) detailToggle.addEventListener('toggle', () => { sideVwapDetailsOpen = detailToggle.open; });
+            if (typeof window !== 'undefined' && ts > 0) window.setTimeout(() => {
+                if (ticker.dataset.sideVwapTimestamp !== String(ts)) return;
+                const badge = ticker.querySelector('[data-side-vwap-freshness]');
+                if (badge) { badge.textContent = '非即時／最後紀錄'; badge.style.color = 'var(--yellow)'; }
+            }, 31000);
         } catch (error) {
-            console.error('TX Radar LCC 面板更新失敗:', error, data);
-            ticker.innerHTML = '<span style="color:var(--yellow);">⚠️ LCC 資料格式異常，已保留頁面其他功能。</span>';
+            console.error('TX Radar 整盤均價面板更新失敗:', error);
+            ticker.innerHTML = '<span style="color:var(--yellow);">⚠️ 整盤均價資料格式異常，其他區塊不受影響。</span>';
         }
+        return;
     }
+
 
     function updateAlphaUI(data) {
         const heatVal = parseFloat(data.heat || 50);
@@ -6838,7 +6597,7 @@
     const v10AdverseBand = document.getElementById('ocf-adverse-band');
     const v10HmfBand = document.getElementById('ocf-hmf-band');
 
-    const radarCard = card('TX Radar LCC 主力成本', '輔助觀察｜預設摘要；需要時展開完整 LCC 診斷', 'v2-radar-card');
+    const radarCard = card('TX Radar 整盤買賣均價', '輔助觀察｜價量加權；非主力持倉成本或支撐壓力', 'v2-radar-card');
     if (radarBox) radarCard.appendChild(radarBox);
     if (radarLocked) radarCard.appendChild(radarLocked);
     intelGrid.appendChild(radarCard);
