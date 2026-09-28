@@ -1,4 +1,4 @@
-<!-- Z22_LFZ4_A6_Z3_INV_LIFECYCLE_RC7_DATA_INTEGRITY_UI_v0.1_20260928 | input-validity + history-integrity + terminal-event display | LFZ-1.2.0-R5R6R8-MATCHED + Z3-INV-LIFECYCLE-v0.2.7-RC7-DATA-INTEGRITY-SHADOW | reuses monitor_realtime parent listener | no new listener/logger schema/order-authority change -->
+<!-- Z22_LFZ4_A7_RC8_REPRO_UI_v0.1_20260928 | F1 reproducible matched-S2 schema + F2 warmup precedence + F3 source-usability display | LFZ-1.2.1-F1SCHEMA-MATCHED + Z3-INV-LIFECYCLE-v0.2.7-RC7-DATA-INTEGRITY-SHADOW | reuses monitor_realtime parent listener | no new listener/order-authority change -->
 <!-- Z2_WAVE_v1.5.8_RC2_UI_COMPAT_20260927 | W1=0R/Entry-BE semantics + recovery/publish fix | presentation-only | no listener/schema/authority change -->
 <!-- Z3_INV_LIFECYCLE_DASHBOARD_UI_v0.1_20260927 | compact Chinese SHADOW radar | reuses monitor_realtime parent listener | no new listener | no formal authority change -->
 <!-- Z22_RC2H_A6_BIGWAVE_HOLD_UI_v0.1_20260926 | presentation/build-recognition only | A6 RC2 TP200 FORMAL + Big-Wave HOLD/OBS semantics | no Firebase/listener/schema/order-authority change -->
@@ -31,8 +31,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.8-RC2-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.0-R5R6R8-MATCHED-SHADOW">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A6 + Z3 InvLifecycle RC7 SHADOW｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.8-RC2-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.1-F1SCHEMA-MATCHED-SHADOW">
+  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A7 RC8 + Z3 InvLifecycle RC7 SHADOW｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -5763,16 +5763,21 @@
       const layoutSourceStatus = String(data.z3_layout_source_status || '').toUpperCase();
 
       const dirZh = dir > 0 ? '多方' : (dir < 0 ? '空方' : '尚未建立');
-      const layoutZh = !layoutValid ? '等待' : (bias > 0 ? '偏多' : (bias < 0 ? '偏空' : '中性'));
+      const layoutBiasZh = !layoutValid ? '等待' : (bias > 0 ? '偏多' : (bias < 0 ? '偏空' : '中性'));
+      const layoutSourceUsable = layoutSourceStatus.startsWith('VALID');
+      const layoutSourceWarn = layoutSourceStatus.startsWith('MISSING_PREV') ||
+                               layoutSourceStatus.startsWith('PREV_NOT_') ||
+                               layoutSourceStatus.startsWith('EXPECTED_PREV_');
+      const layoutZh = !layoutValid ? '等待' : (layoutSourceUsable ? layoutBiasZh : (layoutSourceWarn ? '來源不可用' : '待確認'));
 
       let pcZh = '等待';
       let pcClass = '';
       if (!inputValid) { pcZh = '資料暫停'; pcClass = 'warn'; }
+      else if ((state.includes('NOT_LAUNCHABLE') || state.includes('EXPIRED')) && validReason.startsWith('WARMUP_3M')) { pcZh = '3分鐘暖機'; pcClass = 'warn'; }
+      else if (state.startsWith('ICUA_NO_PREARM_PC_') && pcReason.startsWith('WARMUP_10M')) { pcZh = '10分鐘暖機'; pcClass = 'warn'; }
       else if (state.includes('EXPIRED') || state.includes('INVALIDATED') || state.includes('NOT_LAUNCHABLE') || state.startsWith('DATA_INVALID') || state.startsWith('CONTRACT_CHANGED')) { pcZh = '已失效'; pcClass = 'warn'; }
       else if (state.startsWith('PC_DECAYING_')) { pcZh = '轉弱中'; pcClass = 'warn'; }
       else if (state.startsWith('PC_VALID_') || state.startsWith('LAUNCHING_') || state.startsWith('LAUNCHED_')) { pcZh = '完成・有效'; pcClass = 'ok'; }
-      else if (state.startsWith('ICUA_NO_PREARM_PC_') && pcReason.startsWith('WARMUP_10M')) { pcZh = '10分鐘暖機'; pcClass = 'warn'; }
-      else if ((state.includes('NOT_LAUNCHABLE') || state.includes('EXPIRED')) && validReason.startsWith('WARMUP_3M')) { pcZh = '3分鐘暖機'; pcClass = 'warn'; }
       else if (state.startsWith('ICUA_NO_PREARM_PC_')) { pcZh = '尚未完成'; }
 
       let launchZh = '等待';
@@ -5816,7 +5821,7 @@
       const pcStep = document.getElementById('z3-step-pc');
       const launchStep = document.getElementById('z3-step-launch');
       const triggerStep = document.getElementById('z3-step-trigger');
-      if (layoutStep) layoutStep.className = 'z3-step ' + (inputValid && layoutValid && bias !== 0 ? 'ok' : (!inputValid ? 'warn' : ''));
+      if (layoutStep) layoutStep.className = 'z3-step ' + (!inputValid || layoutSourceWarn ? 'warn' : (layoutSourceUsable && layoutValid && bias !== 0 ? 'ok' : ''));
       if (pcStep) pcStep.className = 'z3-step ' + pcClass;
       if (launchStep) launchStep.className = 'z3-step ' + (currentLaunch ? 'hot' : (!inputValid ? 'warn' : ''));
       if (triggerStep) triggerStep.className = 'z3-step ' + (distValid && dist !== null && dist < 0 ? 'hot' : '');
@@ -5827,9 +5832,10 @@
         const dsText = dirSellValid && dirSell !== null ? `${dirSell >= 0 ? '+' : ''}${dirSell.toFixed(2)}` : '--';
         const qText = quality !== null ? `${Math.round(quality)}` : '--';
         let sourceText = layoutSource ? `｜來源 ${layoutSource}` : '';
-        if (layoutSourceStatus.startsWith('MISSING_PREV') || layoutSourceStatus.startsWith('PREV_NOT_') || layoutSourceStatus.startsWith('EXPECTED_PREV_')) sourceText += '・上一盤缺失／Paper停用';
-        else if (layoutSourceStatus.startsWith('VALID')) sourceText += '・上一盤有效';
-        sub.textContent = `LFZ ${layoutZh}｜S2 ${s2Text}｜${inventoryZh}｜DirSell ${dsText}｜品質 ${qText}${sourceText}`;
+        if (layoutSourceWarn) sourceText += '・上一盤缺失／Paper停用';
+        else if (layoutSourceUsable) sourceText += '・上一盤有效';
+        const layoutPrefix = layoutSourceUsable ? `LFZ ${layoutBiasZh}` : (layoutValid ? `LFZ 歷史背景 ${layoutBiasZh}` : 'LFZ 等待');
+        sub.textContent = `${layoutPrefix}｜S2 ${s2Text}｜${inventoryZh}｜DirSell ${dsText}｜品質 ${qText}${sourceText}`;
         sub.title = `PC=${pcReason || '--'} | VALID=${validReason || '--'} | INPUT=${inputReason || '--'} | STATE=${state} | SRC=${layoutSourceStatus || '--'}`;
       }
 
