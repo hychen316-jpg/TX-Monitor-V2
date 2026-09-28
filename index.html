@@ -5119,7 +5119,11 @@
             const shareText = share !== null ? `${(share * 100).toFixed(1)}%` : '--';
             const unknown = lots(data.side_vwap_unknown_lots);
             const source = String(data.side_vwap_source || '--');
-            const currentPrice = price(data.price ?? data.side_vwap_last_price);
+            // The generic Radar price may be a retained value from another
+            // publish time or contract. Use the price paired with this VWAP
+            // snapshot so a closed-market card stays internally consistent.
+            const currentPrice = price(data.side_vwap_last_price);
+            const priceLabel = age > 30 ? '該盤最後成交' : '期指成交';
             const card = (label, side, prefix, note) => `
                 <div class="radar-compact-cost ${side}">
                     <span class="radar-compact-cost-label">${escapeRadarHtml(label)}</span>
@@ -5144,7 +5148,7 @@
                         ${card('近兩盤主動買', 'long', 'side_vwap_last2_buy', toRadarBoolean(data.side_vwap_last2_coverage_ok) ? '' : '跨盤待核對')}
                         ${card('近兩盤主動賣', 'short', 'side_vwap_last2_sell', toRadarBoolean(data.side_vwap_last2_coverage_ok) ? '' : '跨盤待核對')}
                     </div>
-                    <div class="radar-compact-status"><strong data-side-vwap-freshness style="color:${qualityColor};">${escapeRadarHtml(quality)}</strong>｜期指 ${currentPrice}｜主動買量占比 ${shareText}｜未判別 ${unknown}口</div>
+                    <div class="radar-compact-status"><strong data-side-vwap-freshness style="color:${qualityColor};">${escapeRadarHtml(quality)}</strong>｜${priceLabel} ${currentPrice}｜主動買量占比 ${shareText}｜未判別 ${unknown}口</div>
                     <details class="radar-detail-toggle"${sideVwapDetailsOpen ? ' open' : ''}>
                         <summary>展開價量與資料診斷</summary>
                         <div class="radar-detail-body">
