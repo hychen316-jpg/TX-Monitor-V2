@@ -1,4 +1,4 @@
-<!-- Z22_LFZ4_A5_Z3_INV_LIFECYCLE_RC6_RUNTIME_HARDEN_UI_v0.1_20260928 | presentation/build-recognition only | LFZ-1.1.2 + Z3-INV-LIFECYCLE-v0.2.6-RC6-RUNTIME-HARDEN-SHADOW | reuses monitor_realtime parent listener | no new listener/logger schema/order-authority change -->
+<!-- Z22_LFZ4_A6_Z3_INV_LIFECYCLE_RC7_DATA_INTEGRITY_UI_v0.1_20260928 | input-validity + history-integrity + terminal-event display | LFZ-1.2.0-R5R6R8-MATCHED + Z3-INV-LIFECYCLE-v0.2.7-RC7-DATA-INTEGRITY-SHADOW | reuses monitor_realtime parent listener | no new listener/logger schema/order-authority change -->
 <!-- Z2_WAVE_v1.5.8_RC2_UI_COMPAT_20260927 | W1=0R/Entry-BE semantics + recovery/publish fix | presentation-only | no listener/schema/authority change -->
 <!-- Z3_INV_LIFECYCLE_DASHBOARD_UI_v0.1_20260927 | compact Chinese SHADOW radar | reuses monitor_realtime parent listener | no new listener | no formal authority change -->
 <!-- Z22_RC2H_A6_BIGWAVE_HOLD_UI_v0.1_20260926 | presentation/build-recognition only | A6 RC2 TP200 FORMAL + Big-Wave HOLD/OBS semantics | no Firebase/listener/schema/order-authority change -->
@@ -31,8 +31,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.8-RC2-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.6-RC6-RUNTIME-HARDEN-DASHUI-v0.1-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.1.2-SHADOW">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A5 + Z3 InvLifecycle RC6 SHADOW｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.8-RC2-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.0-R5R6R8-MATCHED-SHADOW">
+  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A6 + Z3 InvLifecycle RC7 SHADOW｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1339,6 +1339,9 @@
 #v2-live-page .z3-step.hot { border-color:rgba(255,69,58,.50); background:rgba(255,69,58,.055); }
 #v2-live-page .z3-step.warn { border-color:rgba(255,214,10,.50); background:rgba(255,214,10,.055); }
 #v2-live-page .z3-sub-read { margin-top:4px; color:#8e8e93; font-size:8px; line-height:1.3; overflow-wrap:anywhere; }
+#v2-live-page .z3-terminal-read { margin-top:3px; padding-top:3px; border-top:1px dashed #353539; color:#9a9aa0; font-size:8px; line-height:1.3; overflow-wrap:anywhere; }
+#v2-live-page .z3-terminal-read.confirm { color:#64d2ff; }
+#v2-live-page .z3-terminal-read.warn { color:var(--yellow); }
 
 @media (max-width: 1320px) {
   #v2-live-page .v2-intel-grid {
@@ -5696,55 +5699,110 @@
       const main = document.getElementById('z3-main-read');
       if (!main) return;
       const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+      const ageZh = (v) => { const n = num(v); if (n === null || n < 0) return ''; if (n < 60) return `${Math.round(n)}秒前`; return `${Math.floor(n/60)}分${Math.round(n%60)}秒前`; };
+      const priceZh = (v) => { const n = num(v); return n !== null && n > 0 ? `${Math.round(n)}` : '--'; };
+      const reasonZh = (raw) => {
+        const r = String(raw || '').toUpperCase();
+        if (!r) return '等待資料';
+        if (r.startsWith('WARMUP_10M')) return '10分鐘資料暖機中';
+        if (r.startsWith('WARMUP_3M')) return '3分鐘資料暖機中';
+        if (r.includes('MATRIX_STALE')) return '選擇權矩陣已過期';
+        if (r.includes('CORE_QUALITY_LOW')) return '選擇權資料品質不足';
+        if (r.includes('FUTURE_PRICE_INVALID')) return '期指價格資料無效';
+        if (r.includes('CONTRACT_KEY_MISSING')) return '合約識別不足';
+        if (r.includes('CONTRACT_KEY_MISMATCH')) return '合約資料不一致';
+        if (r.includes('SESSION_KEY_MISMATCH')) return '盤別資料不一致';
+        if (r.includes('CONTRACT_WARMUP')) return '換約後重新暖機';
+        if (r.includes('FMF_STATE_INVALID')) return 'FMF 狀態已失效';
+        if (r.includes('FMF_QUALITY_LOW')) return 'FMF 品質不足';
+        if (r.includes('FMF_SOURCE_STALE')) return 'FMF 行情來源已過期';
+        if (r.includes('SAMPLE_DENSITY_LOW')) return '有效樣本密度不足';
+        if (r.includes('HISTORY_GAP_TOO_LARGE')) return '歷史樣本中斷';
+        if (r.includes('SPAN_SHORT')) return '時間覆蓋不足';
+        if (r.includes('LATEST_SAMPLE_STALE')) return '最新樣本已過期';
+        if (r.includes('BEAR_DETERIORATION_STOPPED_10M')) return '舊空方庫存惡化已停止';
+        if (r.includes('WRITER_POSITIONING_10M')) return 'Call 賣方布局已成形';
+        if (r.includes('STABILIZED_RECLAIM')) return '支撐收回・下殺未延續';
+        if (r.includes('FAILED_DOWNSIDE_TRANSMISSION')) return '下殺傳導失敗';
+        if (r.includes('WRITER_MATURE_3M')) return 'Call Writer 成熟';
+        if (r.includes('RESISTANCE_DEFENSE_HANDOVER')) return 'SC 壓力防線已接手';
+        if (r.includes('STALE_SHORT_PC')) return '空方布局證據不足';
+        if (r.includes('NO_FAILED_DOWNSIDE_TRANSMISSION')) return '多方承接尚未成立';
+        return raw || '--';
+      };
+      const terminalZh = (state, dir) => {
+        const st = String(state || '').toUpperCase();
+        if (st.startsWith('STRUCTURAL_CONFIRMED_')) return `${dir > 0 ? '多方' : '空方'}已結構確認`;
+        if (st.startsWith('PC_INVALIDATED_')) return `${dir > 0 ? '多方' : '空方'}布局遭反向結構失效`;
+        if (st.startsWith('PC_EXPIRED_')) return `${dir > 0 ? '多方' : '空方'}布局已逾期`;
+        if (st.startsWith('DATA_INVALIDATED_')) return `${dir > 0 ? '多方' : '空方'}因資料失效終止`;
+        if (st.startsWith('CONTRACT_CHANGED_')) return `${dir > 0 ? '多方' : '空方'}因換約終止`;
+        return st || '';
+      };
+
       const dir = Math.sign(num(data.z3_lifecycle_direction) || 0);
       const state = String(data.z3_lifecycle_state || 'OBSERVE').toUpperCase();
       const pcReason = String(data.z3_lifecycle_pc_reason || '').toUpperCase();
       const validReason = String(data.z3_lifecycle_validity_reason || '').toUpperCase();
-      const launch = Number(data.z3_lifecycle_launch || 0) !== 0 || state.startsWith('LAUNCH');
+      const inputValid = Number(data.z3_input_valid || 0) !== 0;
+      const inputReason = String(data.z3_input_reason || '').toUpperCase();
+      const currentLaunch = inputValid && Number(data.z3_lifecycle_launch || 0) !== 0 && (state.startsWith('LAUNCH') || state.startsWith('LAUNCHED_'));
+      const launchAge = num(data.z3_lifecycle_launch_age_seconds);
+      const launchPrice = num(data.z3_lifecycle_launch_price);
+
       const layoutValid = Number(data.z3_layout_valid || 0) !== 0;
       const s2Valid = Number(data.z3_layout_s2_valid || 0) !== 0;
       const s2 = num(data.z3_layout_s2);
       const bias = Math.sign(num(data.z3_layout_bias) || 0);
       const dirSellValid = Number(data.z3_layout_dirsell_valid || 0) !== 0;
       const dirSell = num(data.z3_layout_dirsell);
-      const distValid = Number(data.z3_trigger_distance_valid || 0) !== 0;
+      const distValid = inputValid && Number(data.z3_trigger_distance_valid || 0) !== 0;
       const dist = num(data.z3_trigger_distance);
       const quality = num(data.z3_data_quality);
+      const layoutSource = String(data.z3_layout_source || '');
+      const layoutSourceStatus = String(data.z3_layout_source_status || '').toUpperCase();
 
       const dirZh = dir > 0 ? '多方' : (dir < 0 ? '空方' : '尚未建立');
       const layoutZh = !layoutValid ? '等待' : (bias > 0 ? '偏多' : (bias < 0 ? '偏空' : '中性'));
+
       let pcZh = '等待';
       let pcClass = '';
-      if (state.startsWith('PC_VALID_')) { pcZh = '完成・有效'; pcClass = 'ok'; }
+      if (!inputValid) { pcZh = '資料暫停'; pcClass = 'warn'; }
+      else if (state.includes('EXPIRED') || state.includes('INVALIDATED') || state.includes('NOT_LAUNCHABLE') || state.startsWith('DATA_INVALID') || state.startsWith('CONTRACT_CHANGED')) { pcZh = '已失效'; pcClass = 'warn'; }
       else if (state.startsWith('PC_DECAYING_')) { pcZh = '轉弱中'; pcClass = 'warn'; }
-      else if (state.includes('EXPIRED') || state.includes('INVALIDATED') || state.includes('NOT_LAUNCHABLE')) { pcZh = '未通過／失效'; pcClass = 'warn'; }
+      else if (state.startsWith('PC_VALID_') || state.startsWith('LAUNCHING_') || state.startsWith('LAUNCHED_')) { pcZh = '完成・有效'; pcClass = 'ok'; }
+      else if (state.startsWith('ICUA_NO_PREARM_PC_') && pcReason.startsWith('WARMUP_10M')) { pcZh = '10分鐘暖機'; pcClass = 'warn'; }
+      else if ((state.includes('NOT_LAUNCHABLE') || state.includes('EXPIRED')) && validReason.startsWith('WARMUP_3M')) { pcZh = '3分鐘暖機'; pcClass = 'warn'; }
       else if (state.startsWith('ICUA_NO_PREARM_PC_')) { pcZh = '尚未完成'; }
-      else if (launch || state.startsWith('LAUNCHED_')) { pcZh = '完成・有效'; pcClass = 'ok'; }
 
-      const launchZh = launch ? '已發動' : '等待';
+      let launchZh = '等待';
+      if (!inputValid) launchZh = '暫停';
+      else if (currentLaunch) launchZh = `已發動${launchPrice && launchPrice > 0 ? ' @'+Math.round(launchPrice) : ''}${launchAge !== null && launchAge >= 0 ? '・'+ageZh(launchAge) : ''}`;
+
       let triggerZh = '--';
-      if (distValid && dist !== null) {
+      if (distValid && dist !== null && dir !== 0) {
         const rounded = Math.round(Math.abs(dist));
-        const trigName = dir > 0 ? '嘎空' : (dir < 0 ? '殺多' : 'Trigger');
-        triggerZh = dist >= 0 ? `尚距${rounded}點` : `已越過${rounded}點`;
-        triggerZh = `${trigName} ${triggerZh}`;
+        const trigName = dir > 0 ? '嘎空' : '殺多';
+        triggerZh = `${trigName} ${dist >= 0 ? '尚距'+rounded+'點' : '已越過'+rounded+'點'}`;
       }
 
       let inventoryZh = '庫存觀察中';
-      if (pcReason === 'BEAR_DETERIORATION_STOPPED_10M') inventoryZh = '舊空方庫存惡化已停止';
-      else if (pcReason === 'WRITER_POSITIONING_10M') inventoryZh = 'Call 賣方布局已成形';
-      else if (validReason === 'STABILIZED_RECLAIM') inventoryZh = '支撐收回・下殺未延續';
-      else if (validReason === 'FAILED_DOWNSIDE_TRANSMISSION') inventoryZh = '下殺傳導失敗';
-      else if (validReason === 'WRITER_MATURE_3M') inventoryZh = 'Call Writer 成熟';
-      else if (validReason === 'RESISTANCE_DEFENSE_HANDOVER') inventoryZh = 'SC 壓力防線已接手';
+      if (!inputValid) inventoryZh = reasonZh(inputReason);
       else if (state.startsWith('PC_DECAYING_')) inventoryZh = '原布局證據正在衰退';
       else if (state.includes('EXPIRED') || state.includes('INVALIDATED')) inventoryZh = '原布局已失效';
+      else if (validReason) inventoryZh = reasonZh(validReason);
+      else if (pcReason) inventoryZh = reasonZh(pcReason);
 
-      let mainText = `${dirZh}｜${pcZh}｜${launchZh}`;
-      if (distValid && dist !== null && dir !== 0) mainText += `｜${triggerZh}`;
-      if (dir === 0 && !layoutValid) mainText = '等待主力布局生命週期形成';
+      let mainText = '';
+      if (!inputValid) {
+        mainText = `資料暫不可用｜${reasonZh(inputReason)}`;
+      } else {
+        mainText = `${dirZh}｜${pcZh}｜${launchZh}`;
+        if (distValid && dist !== null && dir !== 0) mainText += `｜${triggerZh}`;
+        if (dir === 0 && !layoutValid && state === 'OBSERVE') mainText = '等待主力布局生命週期形成';
+      }
       main.textContent = mainText;
-      main.className = 'z3-main-read ' + (launch ? (dir > 0 ? 'bull' : (dir < 0 ? 'bear' : 'warn')) : (pcClass === 'warn' ? 'warn' : ''));
+      main.className = 'z3-main-read ' + (!inputValid || pcClass === 'warn' ? 'warn' : (currentLaunch ? (dir > 0 ? 'bull' : (dir < 0 ? 'bear' : '')) : ''));
 
       const layoutText = document.getElementById('z3-layout-text');
       const pcText = document.getElementById('z3-pc-text');
@@ -5758,9 +5816,9 @@
       const pcStep = document.getElementById('z3-step-pc');
       const launchStep = document.getElementById('z3-step-launch');
       const triggerStep = document.getElementById('z3-step-trigger');
-      if (layoutStep) layoutStep.className = 'z3-step ' + (layoutValid && bias !== 0 ? 'ok' : '');
+      if (layoutStep) layoutStep.className = 'z3-step ' + (inputValid && layoutValid && bias !== 0 ? 'ok' : (!inputValid ? 'warn' : ''));
       if (pcStep) pcStep.className = 'z3-step ' + pcClass;
-      if (launchStep) launchStep.className = 'z3-step ' + (launch ? 'hot' : '');
+      if (launchStep) launchStep.className = 'z3-step ' + (currentLaunch ? 'hot' : (!inputValid ? 'warn' : ''));
       if (triggerStep) triggerStep.className = 'z3-step ' + (distValid && dist !== null && dist < 0 ? 'hot' : '');
 
       const sub = document.getElementById('z3-sub-read');
@@ -5768,8 +5826,33 @@
         const s2Text = s2Valid && s2 !== null ? `${s2 >= 0 ? '+' : ''}${s2.toFixed(0)}` : '--';
         const dsText = dirSellValid && dirSell !== null ? `${dirSell >= 0 ? '+' : ''}${dirSell.toFixed(2)}` : '--';
         const qText = quality !== null ? `${Math.round(quality)}` : '--';
-        sub.textContent = `LFZ ${layoutZh}｜S2 ${s2Text}｜${inventoryZh}｜DirSell ${dsText}｜品質 ${qText}`;
-        sub.title = `PC=${pcReason || '--'} | VALID=${validReason || '--'} | STATE=${state}`;
+        let sourceText = layoutSource ? `｜來源 ${layoutSource}` : '';
+        if (layoutSourceStatus.startsWith('MISSING_PREV') || layoutSourceStatus.startsWith('PREV_NOT_') || layoutSourceStatus.startsWith('EXPECTED_PREV_')) sourceText += '・上一盤缺失／Paper停用';
+        else if (layoutSourceStatus.startsWith('VALID')) sourceText += '・上一盤有效';
+        sub.textContent = `LFZ ${layoutZh}｜S2 ${s2Text}｜${inventoryZh}｜DirSell ${dsText}｜品質 ${qText}${sourceText}`;
+        sub.title = `PC=${pcReason || '--'} | VALID=${validReason || '--'} | INPUT=${inputReason || '--'} | STATE=${state} | SRC=${layoutSourceStatus || '--'}`;
+      }
+
+      const terminal = document.getElementById('z3-terminal-read');
+      if (terminal) {
+        const tState = String(data.z3_last_terminal_state || '').toUpperCase();
+        const tDir = Math.sign(num(data.z3_last_terminal_direction) || 0);
+        if (tState) {
+          const tAge = ageZh(data.z3_last_terminal_age_seconds);
+          const tPrice = priceZh(data.z3_last_terminal_price);
+          const tLaunch = Number(data.z3_last_terminal_launch || 0) !== 0;
+          const tLaunchPrice = priceZh(data.z3_last_terminal_launch_price);
+          const pieces = [`最近事件：${terminalZh(tState, tDir)}`];
+          if (tAge) pieces.push(tAge);
+          if (tPrice !== '--') pieces.push(`@${tPrice}`);
+          if (tLaunch && tLaunchPrice !== '--') pieces.push(`曾於${tLaunchPrice}發動`);
+          terminal.textContent = pieces.join('｜');
+          terminal.hidden = false;
+          terminal.className = 'z3-terminal-read ' + (tState.startsWith('STRUCTURAL_CONFIRMED_') ? 'confirm' : 'warn');
+          terminal.title = `PC=${data.z3_last_terminal_pc_reason || '--'} | VALID=${data.z3_last_terminal_validity_reason || '--'}`;
+        } else {
+          terminal.hidden = true;
+        }
       }
     }
 
@@ -6842,7 +6925,8 @@
         <div id="z3-step-launch" class="z3-step"><span>③ 開始發動</span><strong id="z3-launch-text">--</strong></div>
         <div id="z3-step-trigger" class="z3-step"><span>④ 正式 Trigger</span><strong id="z3-trigger-text">--</strong></div>
       </div>
-      <div id="z3-sub-read" class="z3-sub-read">LFZ / Inventory / Writer evidence：等待資料</div>`;
+      <div id="z3-sub-read" class="z3-sub-read">LFZ / Inventory / Writer evidence：等待資料</div>
+      <div id="z3-terminal-read" class="z3-terminal-read" hidden></div>`;
     v10SideRail.appendChild(z3Block);
 
     const v10PriorBand = ocfPanel ? ocfPanel.querySelector('.ocf-prior-band') : null;
