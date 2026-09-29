@@ -6696,7 +6696,7 @@
       </div>
       <div id="z3-sub-read" class="z3-sub-read">LFZ / Inventory / Writer evidence：等待資料</div>
       <div id="z3-terminal-read" class="z3-terminal-read" hidden></div>`;
-    v10SideRail.appendChild(z3Block);
+    radarCard.insertBefore(z3Block, radarCard.firstChild);
 
     const v10PriorBand = ocfPanel ? ocfPanel.querySelector('.ocf-prior-band') : null;
     if (v10PriorBand) {
