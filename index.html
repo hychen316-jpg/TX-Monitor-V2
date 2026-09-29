@@ -1,3 +1,4 @@
+<!-- TX_WHALE_METAORDER_V2_RC2_COST_UI_v0.1_20260929 | presentation-only | reuses existing radar_realtime payload/listener | cost eligibility = SPLIT_METAORDER score>=70 | whale authority remains SHADOW/0 | no order/schema/listener change -->
 <!-- Z22_LFZ4_A10_RC11_R7_PAIR_EPOCH_UI_v0.1_20260928 | selected-pair parity epoch + close-window integrity + table-persistence retry | LFZ-1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW + Z3-INV-LIFECYCLE-v0.2.7-RC7-DATA-INTEGRITY-SHADOW | reuses monitor_realtime parent listener | no new listener/order-authority change -->
 <!-- Z2_WAVE_v1.5.8_RC2_UI_COMPAT_20260927 | W1=0R/Entry-BE semantics + recovery/publish fix | presentation-only | no listener/schema/authority change -->
 <!-- Z3_INV_LIFECYCLE_DASHBOARD_UI_v0.1_20260927 | compact Chinese SHADOW radar | reuses monitor_realtime parent listener | no new listener | no formal authority change -->
@@ -1245,6 +1246,61 @@
 #v2-live-page .radar-detail-body {
   border-top: 1px solid #3a3a3c;
   padding: 5px;
+}
+
+/* Whale Metaorder v2 RC2 cost-eligibility diagnostics.
+   Detail-only except for the compact SHADOW badge in the existing header row. */
+#v2-live-page .radar-whale-badge {
+  flex:0 0 auto; color:#64d2ff; border:1px solid rgba(100,210,255,.55);
+  background:rgba(100,210,255,.07); border-radius:3px; padding:1px 4px;
+  font-size:7px; font-weight:900; white-space:nowrap;
+}
+#v2-live-page .radar-whale-badge.off {
+  color:#8e8e93; border-color:#48484a; background:#29292b;
+}
+#v2-live-page .radar-whale-panel {
+  margin-top:6px; border:1px solid #3a3a3c; border-left:3px solid #64d2ff;
+  background:rgba(100,210,255,.025); padding:6px 7px;
+}
+#v2-live-page .radar-whale-head {
+  display:flex; align-items:flex-start; justify-content:space-between; gap:6px;
+  padding-bottom:4px; border-bottom:1px dashed #3a3a3c;
+}
+#v2-live-page .radar-whale-title { color:#f2f2f7; font-size:10px; font-weight:900; line-height:1.2; }
+#v2-live-page .radar-whale-sub { color:#85858a; font-size:8px; line-height:1.25; margin-top:1px; }
+#v2-live-page .radar-whale-policy {
+  flex:0 0 auto; color:var(--yellow); border:1px solid rgba(255,214,10,.45);
+  background:rgba(255,214,10,.06); padding:1px 4px; font-size:7px; font-weight:900;
+  white-space:nowrap;
+}
+#v2-live-page .radar-whale-grid {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin-top:5px;
+}
+#v2-live-page .radar-whale-card {
+  min-width:0; border:1px solid #343438; background:rgba(0,0,0,.16); padding:5px 6px;
+}
+#v2-live-page .radar-whale-card.buy { border-left:3px solid var(--red); }
+#v2-live-page .radar-whale-card.sell { border-left:3px solid var(--green); }
+#v2-live-page .radar-whale-card-label { display:block; color:#8e8e93; font-size:8px; font-weight:800; }
+#v2-live-page .radar-whale-card strong { display:block; color:#f2f2f7; font-size:13px; font-weight:900; margin-top:2px; }
+#v2-live-page .radar-whale-card small { display:block; color:#9a9aa0; font-size:8px; line-height:1.3; margin-top:2px; overflow-wrap:anywhere; }
+#v2-live-page .radar-whale-metrics {
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; margin-top:5px;
+}
+#v2-live-page .radar-whale-metric { min-width:0; border-top:1px solid #343438; padding:3px 2px 0; }
+#v2-live-page .radar-whale-metric span { display:block; color:#777; font-size:7px; }
+#v2-live-page .radar-whale-metric strong { display:block; color:#d1d1d6; font-size:9px; font-weight:900; margin-top:1px; overflow-wrap:anywhere; }
+#v2-live-page .radar-whale-active {
+  margin-top:5px; padding-top:4px; border-top:1px dashed #3a3a3c;
+  color:#9a9aa0; font-size:8px; line-height:1.35; overflow-wrap:anywhere;
+}
+#v2-live-page .radar-whale-active strong { color:#d1d1d6; }
+#v2-live-page .radar-whale-foot {
+  margin-top:4px; color:#777; font-size:7px; line-height:1.3; overflow-wrap:anywhere;
+}
+@media (max-width:620px) {
+  #v2-live-page .radar-whale-grid { grid-template-columns:1fr; }
+  #v2-live-page .radar-whale-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 /* When Radar VWAP details are opened, give the diagnostics a full-width row. */
 #v2-live-page .v2-intel-grid:has(.v2-radar-card .radar-detail-toggle[open]) {
@@ -5155,6 +5211,62 @@
             // snapshot so a closed-market card stays internally consistent.
             const currentPrice = price(data.side_vwap_last_price);
             const priceLabel = age > 30 ? '該盤最後成交' : '期指成交';
+            const whaleVersion = String(data.whale_v2_version || '');
+            const whaleAvailable = whaleVersion.startsWith('TX-WHALE-METAORDER-v2.1');
+            const whaleAuthority = Math.round(num(data.whale_v2_authority) || 0);
+            const whaleStatus = String(data.whale_v2_status || '');
+            const whaleShadow = whaleAvailable && whaleAuthority === 0 && whaleStatus === 'SHADOW';
+            const whalePolicyRaw = String(data.whale_v2_cost_policy || '');
+            const whalePolicy = whalePolicyRaw.startsWith('SPLIT_METAORDER_SCORE_GE_')
+                ? `Split ≥${escapeRadarHtml(whalePolicyRaw.replace('SPLIT_METAORDER_SCORE_GE_', ''))}`
+                : escapeRadarHtml(whalePolicyRaw || '--');
+            const whaleAccepted = Math.round(num(data.whale_v2_accepted_episodes) || 0);
+            const whaleEligible = Math.round(num(data.whale_v2_cost_eligible_episodes) || 0);
+            const whaleThreshold = num(data.whale_v2_block_threshold);
+            const whaleThresholdText = whaleThreshold !== null ? whaleThreshold.toFixed(1) : '--';
+            const whaleWarm = toRadarBoolean(data.whale_v2_threshold_warm);
+            const whaleSamples = Math.round(num(data.whale_v2_threshold_samples) || 0);
+            const whaleSource = String(data.whale_v2_source || '--');
+            const whaleLastEvent = String(data.whale_v2_last_event || '--');
+            const scoreText = value => { const n = num(value); return n !== null ? n.toFixed(1) : '--'; };
+            const whaleCostCard = (label, side, prefix, sessionPrefix) => `
+                <div class="radar-whale-card ${side}">
+                    <span class="radar-whale-card-label">${escapeRadarHtml(label)}｜Tactical Cost</span>
+                    <strong>${price(data[`${prefix}_cost`])}</strong>
+                    <small>${lots(data[`${prefix}_lots`])}口｜${lots(data[`${prefix}_episodes`])} episodes｜Score ${scoreText(data[`${prefix}_score`])}<br>Q25–Q75 ${range(data[`${prefix}_q25`], data[`${prefix}_q75`])}</small>
+                    <span class="radar-whale-card-label" style="margin-top:4px;">Session Cost</span>
+                    <strong style="font-size:11px;">${price(data[`${sessionPrefix}_cost`])}</strong>
+                    <small>${lots(data[`${sessionPrefix}_lots`])}口｜Q25–Q75 ${range(data[`${sessionPrefix}_q25`], data[`${sessionPrefix}_q75`])}</small>
+                </div>`;
+            const activeWhaleText = whaleAvailable
+                ? `Active BUY ${price(data.whale_v2_active_buy_cost)} / ${lots(data.whale_v2_active_buy_lots)}口 / Score ${scoreText(data.whale_v2_active_buy_score)} ｜ Active SELL ${price(data.whale_v2_active_sell_cost)} / ${lots(data.whale_v2_active_sell_lots)}口 / Score ${scoreText(data.whale_v2_active_sell_score)}`
+                : '等待 Whale Metaorder v2 RC2 telemetry';
+            const whaleDetailHtml = whaleAvailable ? `
+                <div class="radar-whale-panel">
+                    <div class="radar-whale-head">
+                        <div>
+                            <div class="radar-whale-title">大額拆單執行成本候選｜Whale Metaorder v2 RC2</div>
+                            <div class="radar-whale-sub">偵測層與成本資格分離；只有通過 Cost Eligibility 的 Split Metaorder 才進成本面。</div>
+                        </div>
+                        <span class="radar-whale-policy">${whalePolicy}</span>
+                    </div>
+                    <div class="radar-whale-grid">
+                        ${whaleCostCard('BUY', 'buy', 'whale_v2_buy', 'whale_v2_buy_session')}
+                        ${whaleCostCard('SELL', 'sell', 'whale_v2_sell', 'whale_v2_sell_session')}
+                    </div>
+                    <div class="radar-whale-metrics">
+                        <div class="radar-whale-metric"><span>Cost Eligible</span><strong>${whaleEligible}</strong></div>
+                        <div class="radar-whale-metric"><span>Accepted Flow</span><strong>${whaleAccepted}</strong></div>
+                        <div class="radar-whale-metric"><span>Adaptive Block</span><strong>${whaleThresholdText}口</strong></div>
+                        <div class="radar-whale-metric"><span>Threshold</span><strong>${whaleWarm ? 'WARM' : 'WARMUP'}｜${whaleSamples}</strong></div>
+                    </div>
+                    <div class="radar-whale-active"><strong>形成中：</strong>${escapeRadarHtml(activeWhaleText)}<br><strong>Last：</strong>${escapeRadarHtml(whaleLastEvent)}｜Source ${escapeRadarHtml(whaleSource)}</div>
+                    <div class="radar-whale-foot">SHADOW / Authority 0。這是匿名逐筆成交推估的 Metaorder 執行成本候選，不等於特定帳戶、未平倉持倉或保證支撐／壓力；Active parent 在 finalized 且通過成本資格前不計入成本面。</div>
+                </div>` : `
+                <div class="radar-whale-panel" style="border-left-color:#636366;">
+                    <div class="radar-whale-title">Whale Metaorder v2 RC2｜等待 telemetry</div>
+                    <div class="radar-whale-sub">目前 SideVWAP 可正常顯示；啟動 RC2 Radar 後才會出現 cost-eligible Metaorder 成本候選。</div>
+                </div>`;
             const card = (label, side, prefix, note) => `
                 <div class="radar-compact-cost ${side}">
                     <span class="radar-compact-cost-label">${escapeRadarHtml(label)}</span>
@@ -5171,7 +5283,10 @@
                             <div class="radar-compact-title">TX Radar｜整盤主動買／賣均價</div>
                             <div class="radar-compact-sub">${escapeRadarHtml(session)}｜${escapeRadarHtml(contract)}｜成交價 × 口數加權</div>
                         </div>
-                        <span class="radar-compact-time">${escapeRadarHtml(asof)}</span>
+                        <div class="radar-command-meta">
+                            ${whaleAvailable ? `<span class="radar-whale-badge${whaleShadow ? '' : ' off'}">${whaleShadow ? 'WHALE RC2 SHADOW' : 'WHALE RC2'}</span>` : ''}
+                            <span class="radar-compact-time">${escapeRadarHtml(asof)}</span>
+                        </div>
                     </div>
                     <div class="radar-compact-grid">
                         ${card('當盤主動買', 'long', 'side_vwap_buy', '')}
@@ -5198,6 +5313,7 @@
                                     <div class="radar-live-item"><span class="radar-live-label">資料狀態</span><strong class="radar-live-value" style="color:${qualityColor};">${escapeRadarHtml(quality)}</strong><span class="radar-live-meta">逐筆 ${lots(data.side_vwap_ticks)}｜遺漏 ${dropped}｜續接 ${escapeRadarHtml(source)}</span></div>
                                 </div>
                                 <div class="radar-session-foot">主動買／賣成交均價不是特定主力的未平倉成本；25–75% 是成交分布，不是支撐／壓力，也不直接產生進出場訊號。</div>
+                                ${whaleDetailHtml}
                             </div>
                         </div>
                     </details>
