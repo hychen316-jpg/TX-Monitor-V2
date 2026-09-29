@@ -4079,7 +4079,21 @@
             : null;
         const triggerRelocationWaiting = rawExecutionAdvice.includes("TRIGGER_RELOCATION_WAIT_RETEST");
         const oppositeIgnitionBlocked = rawExecutionAdvice.includes("OPPOSITE_IGNITION_BLOCK_ENTRY");
+        const executionEpisodeBlocked = rawExecutionAdvice.includes("EXECUTION_EPISODE_BLOCK");
         const reentryRejectReason = String(data.z_reentry_reject_reason || "").trim();
+        const execEpisodeState = String(data.exec_episode_state || "IDLE").trim() || "IDLE";
+        const execEpisodeHandoffReady = toRadarBoolean(data.exec_episode_handoff_ready);
+        const execEpisodeStrictReentryReady = toRadarBoolean(data.exec_episode_strict_reentry_ready);
+        const currentFuturePrice = toFiniteNumberOrNull(data.price ?? data.mdi_price);
+        const targetRoomTarget = direction > 0
+            ? toFiniteNumberOrNull(data.z_upper_target ?? data.z_primary_target)
+            : (direction < 0 ? toFiniteNumberOrNull(data.z_lower_target ?? data.z_primary_target) : null);
+        const targetRoomPoints = currentFuturePrice !== null && targetRoomTarget !== null && direction !== 0
+            ? direction * (targetRoomTarget - currentFuturePrice)
+            : null;
+        const targetRoomDiagnosticBlocked = !executionEpisodeBlocked && !oppositeIgnitionBlocked &&
+            !triggerRelocationWaiting && targetRoomPoints !== null && targetRoomPoints >= 0 &&
+            targetRoomPoints < 80 && (trueCross || execEpisodeHandoffReady || execEpisodeStrictReentryReady);
         const lockedTriggerZ21 = toFiniteNumberOrNull(data.z_locked_trigger_z21);
         const invalidReasonMap = {
             PAIR_COUNT_LOW: "雙邊報價配對不足",
@@ -4737,8 +4751,17 @@
             } else if (triggerRelocationWaiting) {
                 semanticAdviceDisplay = `${direction > 0 ? "嘎空" : "殺多"} Trigger 重新定位｜不計入突破｜等待價格回測後 Physical 重突破`;
                 semanticAdviceClass = "wait";
+            } else if (executionEpisodeBlocked) {
+                const episodeReadyText = execEpisodeStrictReentryReady
+                    ? "Strict Re-entry READY"
+                    : (execEpisodeHandoffReady ? "Handoff READY／等待重新取得Entry authority" : "尚未取得Entry authority");
+                semanticAdviceDisplay = `${direction > 0 ? "多單" : (direction < 0 ? "空單" : "新單")}暫停｜EXECUTION EPISODE BLOCK｜${execEpisodeState}｜${episodeReadyText}`;
+                semanticAdviceClass = "wait";
             } else if (oppositeIgnitionBlocked) {
-                semanticAdviceDisplay = `Z2 ${direction > 0 ? "多方" : "空方"}方向保留｜即時反向點火｜Core 已暫停進場確認`;
+                semanticAdviceDisplay = `${direction > 0 ? "多單" : (direction < 0 ? "空單" : "新單")}暫停｜反向點火｜Ignition ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}｜Core 等待重新同向`;
+                semanticAdviceClass = "wait";
+            } else if (targetRoomDiagnosticBlocked) {
+                semanticAdviceDisplay = `${direction > 0 ? "多單" : "空單"}暫停｜TARGET ROOM不足｜現價 ${formatOCFLevel(currentFuturePrice)}｜目標 ${formatOCFLevel(targetRoomTarget)}｜剩餘 ${formatRadarNumber(targetRoomPoints, 0)}點 < 80點`;
                 semanticAdviceClass = "wait";
             } else if (reentryRejectReason) {
                 const rejectMap = {
@@ -4746,6 +4769,7 @@
                     REENTRY_SCORE_LOW: "再進場方向分不足",
                     REENTRY_AGREEMENT_LOW: "再進場成分一致度不足",
                     REENTRY_OPPOSITE_IGNITION: "反向點火中，拒絕同向再進場",
+                    EXECUTION_EPISODE_BLOCK: `Execution Episode 尚未放行｜${execEpisodeState}｜${execEpisodeStrictReentryReady ? "Strict Re-entry READY" : "等待重新取得Entry authority"}`,
                     CAMPAIGN_TARGET_TWO_COMPLETE: "本盤 T2 已完成，同向再進場封鎖"
                 };
                 semanticAdviceDisplay = rejectMap[reentryRejectReason] || reentryRejectReason;
@@ -4926,7 +4950,14 @@
                                             : (rfdBuilding
                                                 ? `Z2 ${rfdCandidateDirection > 0 ? "多方" : "空方"}結構建立中 ${Math.min(rfdCandidateAge, rfdRequiredAge)}/${rfdRequiredAge}秒；尚未正式鎖定，固定上下緣只作價格表，不進場。`
                                                 : "Z2 決策方向尚未鎖定；固定上下緣只作價格表，不進場。")))))))))));
-        let actionContextText = [referenceContext, integrityContext, context]
+        const entryBlockDiagnostic = executionEpisodeBlocked
+            ? `ENTRY BLOCK：EXECUTION_EPISODE｜Episode ${execEpisodeState}｜Strict Re-entry ${execEpisodeStrictReentryReady ? "READY" : "NOT READY"}`
+            : (oppositeIgnitionBlocked
+                ? `ENTRY BLOCK：OPPOSITE_IGNITION｜Ignition ${ignition === null ? "--" : formatRadarNumber(ignition, 1)}`
+                : (targetRoomDiagnosticBlocked
+                    ? `ENTRY BLOCK：TARGET_ROOM｜Room ${formatRadarNumber(targetRoomPoints, 0)} / Min 80｜Episode ${execEpisodeState}${execEpisodeStrictReentryReady ? "｜Strict Re-entry READY" : ""}`
+                    : ""));
+        let actionContextText = [entryBlockDiagnostic, referenceContext, integrityContext, context]
             .filter(Boolean).join(" ");
         if (activeInventoryTrade && (holdingLong || holdingShort)) {
             const defenseSuffix = activeDefense === null ? "" : `｜現行防守 ${activeDefenseText}`;
