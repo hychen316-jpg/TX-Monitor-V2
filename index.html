@@ -1,3 +1,4 @@
+<!-- Z31_A16_LIVE_RELAYOUT_UI_v0.1_20260930 | LIVE_RELAYOUT_REVERSAL ontology + localized Opportunity + FMF trigger / PC-local defense / risk | presentation-only | reuses monitor_realtime parent listener | no new Firebase listener -->
 <!-- Z31_FORMAL_DASH_SYNC_UI_v0.1_20260930 | Z3.1 FORMAL 3/3 + Economic Authority + G11 interlock | reuses monitor_realtime parent listener | no new Firebase listener -->
 <!-- LFZ_BAOZ_FIREBASE_UI_v0.2_LARGEFONT_20260930 | monitor_realtime/lfz_baoz child-delta | marked LFZ book rows: 近平/SCW/NSCW/SPW/NSPW/倒莊 + strike + mapped futures | no trading authority -->
 <!-- TX_WHALE_METAORDER_V2_RC2_COST_UI_v0.1_20260929 | presentation-only | reuses existing radar_realtime payload/listener | cost eligibility = SPLIT_METAORDER score>=70 | whale authority remains SHADOW/0 | no order/schema/listener change -->
@@ -34,8 +35,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.8-RC2-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.2-LARGEFONT-Z31FORMALSYNC-v0.1">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A10 + Z3.1 RC7 FORMAL-ON｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.8-RC2-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.2-LARGEFONT-Z31FORMALSYNC-v0.1-Z31A16-LIVE-RELAYOUT-UI-v0.1">
+  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A16 + Z3.1 A16 LIVE-RELAYOUT FORMAL-ON｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1395,6 +1396,11 @@
 #v2-live-page .z3-main-read.bull { color:var(--red); }
 #v2-live-page .z3-main-read.bear { color:var(--green); }
 #v2-live-page .z3-main-read.warn { color:var(--yellow); }
+#v2-live-page .z3-opportunity-read { margin-top:4px; padding:3px 5px; border:1px solid #353539; border-left:3px solid #64d2ff; background:rgba(100,210,255,.035); color:#d1d1d6; font-size:9px; font-weight:850; line-height:1.3; overflow-wrap:anywhere; }
+#v2-live-page .z3-opportunity-read.relayout { border-left-color:#bf5af2; background:rgba(191,90,242,.055); color:#e4c8ff; }
+#v2-live-page .z3-opportunity-read.bull { border-left-color:var(--red); background:rgba(255,69,58,.045); color:#ff9f9a; }
+#v2-live-page .z3-opportunity-read.bear { border-left-color:var(--green); background:rgba(48,209,88,.045); color:#8be8a2; }
+#v2-live-page .z3-opportunity-read.warn { border-left-color:var(--yellow); background:rgba(255,214,10,.045); color:var(--yellow); }
 #v2-live-page .z3-pipeline { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; margin-top:5px; }
 #v2-live-page .z3-step { min-width:0; border:1px solid #343438; background:rgba(0,0,0,.16); padding:3px 4px; }
 #v2-live-page .z3-step span { display:block; color:#777; font-size:7px; line-height:1.15; }
@@ -2288,7 +2294,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z3.1 RC7 FORMAL-ON｜G11 Execution Interlock｜LFZ4 + NSCW/NSPW｜TP200 FORMAL</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z3.1 A16 LIVE-RELAYOUT FORMAL-ON｜G11 Execution Interlock｜LFZ4 + NSCW/NSPW｜TP200 FORMAL</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -5689,6 +5695,14 @@
         return st || '';
       };
 
+      const opportunityZh = (value) => {
+        const v = String(value || '').toUpperCase();
+        if (v === 'LIVE_RELAYOUT_REVERSAL') return '盤中重新布局反轉';
+        if (v === 'CONTINUATION_LAYOUT') return '固定布局續攻';
+        if (v === 'REVERSAL_ICUA') return 'ICUA 結構反轉';
+        return v || '等待 Opportunity';
+      };
+
       const dir = Math.sign(num(data.z3_lifecycle_direction) || 0);
       const state = String(data.z3_lifecycle_state || 'OBSERVE').toUpperCase();
       const pcReason = String(data.z3_lifecycle_pc_reason || '').toUpperCase();
@@ -5728,6 +5742,11 @@
       const econEpochPrice = num(data.z31_economic_epoch_price);
       const econEpochAge = num(data.z31_economic_epoch_age_seconds);
       const econOpportunity = String(data.z31_economic_opportunity_type || '').toUpperCase();
+      const lifecycleLastEvent = String(data.z3_lifecycle_last_event || '').toUpperCase();
+      const isRelayoutState = state.startsWith('RELAYOUT_');
+      const relayoutInCycle = isRelayoutState || lifecycleLastEvent.includes('TYPE=LIVE_RELAYOUT_REVERSAL');
+      const effectiveOpportunity = econOpportunity || (relayoutInCycle ? 'LIVE_RELAYOUT_REVERSAL' : '');
+      const isRelayout = effectiveOpportunity === 'LIVE_RELAYOUT_REVERSAL';
       const econConflict = String(data.z31_economic_conflict_stage || '').toUpperCase();
       const econConflictReason = String(data.z31_economic_conflict_reason || '');
       const z31AdapterBuild = String(data.z31_formal_adapter_build || '');
@@ -5747,7 +5766,8 @@
         const t = formalTriggerOn ? 'ON' : 'OFF';
         const i = formalIcuaOn ? 'ON' : 'OFF';
         const g = execInterlockOn ? 'ON・允許送單' : `${execInterlockRaw || 'OFF'}・阻擋 Python 新單`;
-        const econ = econReady ? `Econ ${econDir > 0 ? 'LONG' : (econDir < 0 ? 'SHORT' : 'NEUTRAL')} READY` : `Econ ${econState || 'WAIT'}`;
+        const rootText = effectiveOpportunity ? `・${opportunityZh(effectiveOpportunity)}` : '';
+        const econ = econReady ? `Econ ${econDir > 0 ? 'LONG' : (econDir < 0 ? 'SHORT' : 'NEUTRAL')} READY${rootText}` : `Econ ${econState || 'WAIT'}${rootText}`;
         formalRead.textContent = `Direction ${d}｜Trigger ${t}｜ICUA ${i}｜G11 ${g}｜${econ}`;
         formalRead.className = 'z3-formal-read ' + (econConflict === 'CONFIRMED' ? 'conflict' : (!execInterlockOn ? 'blocked' : ''));
         formalRead.title = econConflictReason || z31AdapterBuild || '';
@@ -5765,20 +5785,27 @@
       let pcClass = '';
       if (!inputValid) { pcZh = '資料暫停'; pcClass = 'warn'; }
       else if ((state.includes('NOT_LAUNCHABLE') || state.includes('EXPIRED')) && validReason.startsWith('WARMUP_3M')) { pcZh = '3分鐘暖機'; pcClass = 'warn'; }
-      else if (state.startsWith('ICUA_NO_PREARM_PC_') && pcReason.startsWith('WARMUP_10M')) { pcZh = '10分鐘暖機'; pcClass = 'warn'; }
+      else if ((state.startsWith('ICUA_NO_PREARM_PC_') || state.startsWith('RELAYOUT_NO_PREARM_PC_')) && pcReason.startsWith('WARMUP_10M')) { pcZh = '10分鐘暖機'; pcClass = 'warn'; }
+      else if (state.startsWith('RELAYOUT_PC_NOT_VALID_')) { pcZh = 'PC未通過'; pcClass = 'warn'; }
       else if (state.includes('EXPIRED') || state.includes('INVALIDATED') || state.includes('NOT_LAUNCHABLE') || state.startsWith('DATA_INVALID') || state.startsWith('CONTRACT_CHANGED')) { pcZh = '已失效'; pcClass = 'warn'; }
       else if (state.startsWith('PC_DECAYING_')) { pcZh = '轉弱中'; pcClass = 'warn'; }
       else if (state.startsWith('PC_VALID_') || state.startsWith('LAUNCHING_') || state.startsWith('LAUNCHED_')) { pcZh = '完成・有效'; pcClass = 'ok'; }
-      else if (state.startsWith('ICUA_NO_PREARM_PC_')) { pcZh = '尚未完成'; }
+      else if (state.startsWith('ICUA_NO_PREARM_PC_') || state.startsWith('RELAYOUT_NO_PREARM_PC_')) { pcZh = '尚未完成'; }
 
       let launchZh = '等待';
       if (!inputValid) launchZh = '暫停';
       else if (currentLaunch) launchZh = `已發動${launchPrice && launchPrice > 0 ? ' @'+Math.round(launchPrice) : ''}${launchAge !== null && launchAge >= 0 ? '・'+ageZh(launchAge) : ''}`;
 
+      const riskPoints = econTriggerValid && econInvalidValid && econTrigger !== null && econInvalid !== null && econTrigger > 0 && econInvalid > 0
+        ? Math.round(Math.abs(econInvalid - econTrigger)) : null;
       let triggerZh = '--';
       if (econTriggerValid && econTrigger !== null && econTrigger > 0) {
-        triggerZh = `${Math.round(econTrigger)}${econInvalidValid && econInvalid !== null && econInvalid > 0 ? '｜失效 '+Math.round(econInvalid) : ''}`;
-      } else if (distValid && dist !== null && dir !== 0) {
+        if (isRelayout) {
+          triggerZh = `FMF ${Math.round(econTrigger)}${econInvalidValid && econInvalid !== null && econInvalid > 0 ? '｜防守 '+Math.round(econInvalid) : ''}${riskPoints !== null ? '｜R '+riskPoints+'點' : ''}`;
+        } else {
+          triggerZh = `${Math.round(econTrigger)}${econInvalidValid && econInvalid !== null && econInvalid > 0 ? '｜失效 '+Math.round(econInvalid) : ''}`;
+        }
+      } else if (distValid && dist !== null && dir !== 0 && !relayoutInCycle) {
         const rounded = Math.round(Math.abs(dist));
         const trigName = dir > 0 ? '嘎空' : '殺多';
         triggerZh = `${trigName} ${dist >= 0 ? '尚距'+rounded+'點' : '已越過'+rounded+'點'}`;
@@ -5786,6 +5813,8 @@
 
       let inventoryZh = '庫存觀察中';
       if (!inputValid) inventoryZh = reasonZh(inputReason);
+      else if (state.startsWith('RELAYOUT_NO_PREARM_PC_')) inventoryZh = 'LFZ重新布局已確認・等待Positioning成熟';
+      else if (state.startsWith('RELAYOUT_PC_NOT_VALID_')) inventoryZh = 'LFZ重新布局已確認・PC尚未通過';
       else if (state.startsWith('PC_DECAYING_')) inventoryZh = '原布局證據正在衰退';
       else if (state.includes('EXPIRED') || state.includes('INVALIDATED')) inventoryZh = '原布局已失效';
       else if (validReason) inventoryZh = reasonZh(validReason);
@@ -5795,11 +5824,12 @@
       let mainDirForTone = dir;
       if (formalAllOn && econReady && econDir !== 0) {
         const eDirZh = econDir > 0 ? '正式多方' : '正式空方';
-        const eTrigger = econTriggerValid && econTrigger !== null ? `Trigger ${Math.round(econTrigger)}` : 'Trigger --';
-        const eInvalid = econInvalidValid && econInvalid !== null ? `失效 ${Math.round(econInvalid)}` : '失效 --';
+        const eTrigger = econTriggerValid && econTrigger !== null ? `${isRelayout ? 'FMF Trigger' : 'Trigger'} ${Math.round(econTrigger)}` : 'Trigger --';
+        const eInvalid = econInvalidValid && econInvalid !== null ? `${isRelayout ? 'Local防守' : '失效'} ${Math.round(econInvalid)}` : '失效 --';
+        const eRisk = isRelayout && riskPoints !== null ? `｜Risk ${riskPoints}點` : '';
         const eAge = econEpochAge !== null && econEpochAge >= 0 ? `｜Epoch ${ageZh(econEpochAge)}` : '';
-        const eOpp = econOpportunity ? `｜${econOpportunity}` : '';
-        mainText = `Z3.1 ${eDirZh}｜${eTrigger}｜${eInvalid}${eOpp}${eAge}`;
+        const eOpp = effectiveOpportunity ? `｜${opportunityZh(effectiveOpportunity)}` : '';
+        mainText = `Z3.1 ${eDirZh}｜${eTrigger}｜${eInvalid}${eRisk}${eOpp}${eAge}`;
         mainDirForTone = econDir;
       } else if (formalAllOn && econConflict === 'CONFIRMED') {
         mainText = `Z3.1 CONFLICTED｜Formal Direction 暫停｜${econConflictReason || '等待反向 Launch / 恢復'}`;
@@ -5807,21 +5837,40 @@
       } else if (!inputValid) {
         mainText = `資料暫不可用｜${reasonZh(inputReason)}`;
       } else {
-        mainText = `${formalAllOn ? 'FORMAL待Economic｜' : ''}${dirZh}｜${pcZh}｜${launchZh}`;
-        if ((econTriggerValid && econTrigger !== null) || (distValid && dist !== null && dir !== 0)) mainText += `｜${triggerZh}`;
+        const pendingPrefix = relayoutInCycle ? `LFZ重新布局${dir > 0 ? '・多方' : (dir < 0 ? '・空方' : '')}｜` : `${formalAllOn ? 'FORMAL待Economic｜' : ''}${dirZh}｜`;
+        mainText = `${pendingPrefix}${pcZh}｜${launchZh}`;
+        if ((econTriggerValid && econTrigger !== null) || (distValid && dist !== null && dir !== 0 && !relayoutInCycle)) mainText += `｜${triggerZh}`;
         if (dir === 0 && !layoutValid && state === 'OBSERVE') mainText = formalAllOn ? 'Z3.1 FORMAL 已開｜等待 Economic lifecycle 成形' : '等待主力布局生命週期形成';
       }
       main.textContent = mainText;
       main.className = 'z3-main-read ' + (!inputValid || pcClass === 'warn' || econConflict === 'CONFIRMED' ? 'warn' : (econReady ? (mainDirForTone > 0 ? 'bull' : (mainDirForTone < 0 ? 'bear' : '')) : (currentLaunch ? (dir > 0 ? 'bull' : (dir < 0 ? 'bear' : '')) : '')));
 
+      const opportunityRead = document.getElementById('z3-opportunity-read');
+      if (opportunityRead) {
+        const oppDir = econReady && econDir !== 0 ? econDir : dir;
+        const oppDirZh = oppDir > 0 ? '多方' : (oppDir < 0 ? '空方' : '等待方向');
+        if (effectiveOpportunity) {
+          opportunityRead.textContent = `Opportunity｜${opportunityZh(effectiveOpportunity)}｜${oppDirZh}${isRelayout && econReady && riskPoints !== null ? '｜Local Risk '+riskPoints+'點' : ''}`;
+          opportunityRead.className = 'z3-opportunity-read ' + (isRelayout ? 'relayout ' : '') + (oppDir > 0 ? 'bull' : (oppDir < 0 ? 'bear' : ''));
+        } else if (relayoutInCycle) {
+          opportunityRead.textContent = `Opportunity｜盤中重新布局反轉｜${oppDirZh}｜等待 PC / FMF`;
+          opportunityRead.className = 'z3-opportunity-read relayout';
+        } else {
+          opportunityRead.textContent = 'Opportunity｜等待 LFZ / ICUA / Continuation';
+          opportunityRead.className = 'z3-opportunity-read';
+        }
+      }
+
       const layoutText = document.getElementById('z3-layout-text');
       const pcText = document.getElementById('z3-pc-text');
       const launchText = document.getElementById('z3-launch-text');
       const triggerText = document.getElementById('z3-trigger-text');
-      if (layoutText) layoutText.textContent = layoutZh;
+      const triggerLabel = document.getElementById('z3-trigger-label');
+      if (layoutText) layoutText.textContent = relayoutInCycle && !econReady ? `重新布局・${dir > 0 ? '多' : (dir < 0 ? '空' : '--')}` : layoutZh;
       if (pcText) pcText.textContent = pcZh;
       if (launchText) launchText.textContent = launchZh;
       if (triggerText) triggerText.textContent = triggerZh;
+      if (triggerLabel) triggerLabel.textContent = isRelayout ? '④ FMF Trigger / Local防守' : (relayoutInCycle ? '④ 等待 FMF / Local防守' : '④ Economic Trigger');
       const layoutStep = document.getElementById('z3-step-layout');
       const pcStep = document.getElementById('z3-step-pc');
       const launchStep = document.getElementById('z3-step-launch');
@@ -5840,8 +5889,9 @@
         if (layoutSourceWarn) sourceText += '・上一盤缺失／Paper停用';
         else if (layoutSourceUsable) sourceText += '・上一盤有效';
         const layoutPrefix = layoutSourceUsable ? `LFZ ${layoutBiasZh}` : (layoutValid ? `LFZ 歷史背景 ${layoutBiasZh}` : 'LFZ 等待');
-        sub.textContent = `${layoutPrefix}｜S2 ${s2Text}｜${inventoryZh}｜DirSell ${dsText}｜品質 ${qText}${sourceText}｜Econ ${econState || 'WAIT'}${econEpochPrice !== null && econEpochPrice > 0 ? ' @'+Math.round(econEpochPrice) : ''}`;
-        sub.title = `PC=${pcReason || '--'} | VALID=${validReason || '--'} | INPUT=${inputReason || '--'} | STATE=${state} | SRC=${layoutSourceStatus || '--'}`;
+        const rootText = effectiveOpportunity ? `｜Root ${opportunityZh(effectiveOpportunity)}` : (relayoutInCycle ? '｜Root 盤中重新布局反轉' : '');
+        sub.textContent = `${layoutPrefix}｜S2 ${s2Text}｜${inventoryZh}｜DirSell ${dsText}｜品質 ${qText}${sourceText}｜Econ ${econState || 'WAIT'}${econEpochPrice !== null && econEpochPrice > 0 ? ' @'+Math.round(econEpochPrice) : ''}${rootText}`;
+        sub.title = `ROOT=${effectiveOpportunity || (relayoutInCycle ? 'LIVE_RELAYOUT_REVERSAL' : '--')} | PC=${pcReason || '--'} | VALID=${validReason || '--'} | INPUT=${inputReason || '--'} | STATE=${state} | SRC=${layoutSourceStatus || '--'}`;
       }
 
       const terminal = document.getElementById('z3-terminal-read');
@@ -6982,14 +7032,15 @@
 
     const z3Block = el('section', 'v10-side-block z3-early-block');
     z3Block.innerHTML = `
-      <div class="z3-early-head"><div class="z3-early-title">Z3.1 主力經濟布局 / Formal Authority</div><span id="z3-authority-badge" class="z3-shadow-badge">FORMAL --</span></div>
-      <div id="z3-main-read" class="z3-main-read">等待 Z3.1 Formal 資料</div>
+      <div class="z3-early-head"><div class="z3-early-title">Z3.1 A16 主力經濟布局 / Formal Authority</div><span id="z3-authority-badge" class="z3-shadow-badge">FORMAL --</span></div>
+      <div id="z3-main-read" class="z3-main-read">等待 Z3.1 A16 Formal 資料</div>
       <div id="z3-formal-read" class="z3-formal-read">Direction / Trigger / ICUA / G11：等待資料</div>
+      <div id="z3-opportunity-read" class="z3-opportunity-read">Opportunity｜等待 LFZ / ICUA / Continuation</div>
       <div class="z3-pipeline">
-        <div id="z3-step-layout" class="z3-step"><span>① NS / 布局</span><strong id="z3-layout-text">--</strong></div>
+        <div id="z3-step-layout" class="z3-step"><span>① Opportunity / LFZ</span><strong id="z3-layout-text">--</strong></div>
         <div id="z3-step-pc" class="z3-step"><span>② PC 有效</span><strong id="z3-pc-text">--</strong></div>
         <div id="z3-step-launch" class="z3-step"><span>③ PC + FMF Launch</span><strong id="z3-launch-text">--</strong></div>
-        <div id="z3-step-trigger" class="z3-step"><span>④ Economic Trigger</span><strong id="z3-trigger-text">--</strong></div>
+        <div id="z3-step-trigger" class="z3-step"><span id="z3-trigger-label">④ Economic Trigger</span><strong id="z3-trigger-text">--</strong></div>
       </div>
       <div id="z3-sub-read" class="z3-sub-read">LFZ / NSCW-NSPW / Inventory：等待資料</div>
       <div id="z3-terminal-read" class="z3-terminal-read" hidden></div>`;
