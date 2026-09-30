@@ -1,3 +1,4 @@
+<!-- LFZ_BAOZ_FIREBASE_UI_v0.1_20260930 | monitor_realtime/lfz_baoz child-delta | marked LFZ book rows: 近平/SCW/NSCW/SPW/NSPW/倒莊 + strike + mapped futures | no trading authority -->
 <!-- TX_WHALE_METAORDER_V2_RC2_COST_UI_v0.1_20260929 | presentation-only | reuses existing radar_realtime payload/listener | cost eligibility = SPLIT_METAORDER score>=70 | whale authority remains SHADOW/0 | no order/schema/listener change -->
 <!-- Z22_LFZ4_A10_RC11_R7_PAIR_EPOCH_UI_v0.1_20260928 | selected-pair parity epoch + close-window integrity + table-persistence retry | LFZ-1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW + Z3-INV-LIFECYCLE-v0.2.7-RC7-DATA-INTEGRITY-SHADOW | reuses monitor_realtime parent listener | no new listener/order-authority change -->
 <!-- Z2_WAVE_v1.5.8_RC2_UI_COMPAT_20260927 | W1=0R/Entry-BE semantics + recovery/publish fix | presentation-only | no listener/schema/authority change -->
@@ -32,7 +33,7 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.8-RC2-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.8-RC2-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.1">
   <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A10 RC11 + Z3 InvLifecycle RC7 SHADOW｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -1398,6 +1399,26 @@
 #v2-live-page .z3-terminal-read { margin-top:3px; padding-top:3px; border-top:1px dashed #353539; color:#9a9aa0; font-size:8px; line-height:1.3; overflow-wrap:anywhere; }
 #v2-live-page .z3-terminal-read.confirm { color:#64d2ff; }
 #v2-live-page .z3-terminal-read.warn { color:var(--yellow); }
+
+/* LFZ 暴Z逐檔標註：沿用 monitor_realtime parent child-delta stream，不新增 Firebase listener。 */
+#v2-live-page .lfz-baoz-block { border-left:3px solid #bf5af2; padding:6px 7px; }
+#v2-live-page .lfz-baoz-head { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+#v2-live-page .lfz-baoz-title { color:#f2f2f7; font-size:10px; font-weight:900; }
+#v2-live-page .lfz-baoz-badge { color:#bf5af2; border:1px solid rgba(191,90,242,.55); background:rgba(191,90,242,.08); padding:1px 4px; font-size:7px; font-weight:900; white-space:nowrap; }
+#v2-live-page .lfz-baoz-meta { margin-top:3px; color:#8e8e93; font-size:8px; line-height:1.3; overflow-wrap:anywhere; }
+#v2-live-page .lfz-baoz-table { width:100%; border-collapse:collapse; margin-top:4px; table-layout:fixed; }
+#v2-live-page .lfz-baoz-table th { color:#777; font-size:7px; font-weight:800; text-align:right; padding:2px 4px; border-bottom:1px solid #353539; }
+#v2-live-page .lfz-baoz-table th:first-child { text-align:left; width:50%; }
+#v2-live-page .lfz-baoz-table td { color:#d1d1d6; font-size:9px; font-weight:800; text-align:right; padding:3px 4px; border-bottom:1px solid rgba(53,53,57,.55); white-space:nowrap; }
+#v2-live-page .lfz-baoz-table td:first-child { text-align:left; white-space:normal; }
+#v2-live-page .lfz-baoz-table tr:last-child td { border-bottom:0; }
+#v2-live-page .lfz-baoz-tags { display:flex; flex-wrap:wrap; gap:2px; }
+#v2-live-page .lfz-baoz-tag { display:inline-block; border:1px solid #48484a; background:#29292b; color:#d1d1d6; padding:1px 4px; font-size:7px; font-weight:900; line-height:1.2; }
+#v2-live-page .lfz-baoz-tag.call { color:#30d158; border-color:rgba(48,209,88,.50); background:rgba(48,209,88,.07); }
+#v2-live-page .lfz-baoz-tag.put { color:#ff453a; border-color:rgba(255,69,58,.50); background:rgba(255,69,58,.07); }
+#v2-live-page .lfz-baoz-tag.ref { color:#64d2ff; border-color:rgba(100,210,255,.50); background:rgba(100,210,255,.07); }
+#v2-live-page .lfz-baoz-tag.dual { color:#ffd60a; border-color:rgba(255,214,10,.52); background:rgba(255,214,10,.07); }
+#v2-live-page .lfz-baoz-empty { color:#8e8e93; font-size:9px; padding:5px 1px 2px; }
 
 @media (max-width: 1320px) {
   #v2-live-page .v2-intel-grid {
@@ -2933,7 +2954,7 @@
     // Transport-only change:
     // - Keep the same Firebase schema, producers, 5s cadence and UI functions.
     // - Build the monitor_realtime object in browser memory from top-level child deltas.
-    // - Reuse the same parent stream for nested alpha_data and mme, avoiding duplicate listeners.
+    // - Reuse the same parent stream for nested alpha_data, mme and lfz_baoz, avoiding duplicate listeners.
     // - History and radar listeners remain unchanged for semantic safety.
     window.__Z2_PHASE1_REALTIME_HUB = true;
     window.__Z2RealtimeCache = window.__Z2RealtimeCache || {};
@@ -2958,6 +2979,11 @@
         } else {
           window.__Z2PendingMMERealtime = value || null;
         }
+        return true;
+      }
+      if (key === 'lfz_baoz') {
+        window.__Z2LFZBaoZCache = value || null;
+        if (typeof updateLFZBaoZUI === 'function') updateLFZBaoZUI(value || null);
         return true;
       }
       return false;
@@ -5772,6 +5798,60 @@
       }
     }
 
+    function updateLFZBaoZUI(payload) {
+      const body = document.getElementById('lfz-baoz-body');
+      const meta = document.getElementById('lfz-baoz-meta');
+      const badge = document.getElementById('lfz-baoz-badge');
+      if (!body || !meta || !badge) return;
+
+      const data = payload || {};
+      const valid = Number(data.valid || 0) !== 0;
+      const rowsObj = data.rows && typeof data.rows === 'object' ? data.rows : {};
+      const rows = Object.values(rowsObj)
+        .filter(r => r && typeof r === 'object')
+        .sort((a,b) => (Number(a.order)||0) - (Number(b.order)||0));
+
+      const fmt = (v) => {
+        if (v === null || v === undefined || v === '') return '--';
+        const n = Number(v);
+        return Number.isFinite(n) ? Math.round(n).toLocaleString('en-US') : '--';
+      };
+      const esc = (v) => String(v ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      const tagClass = (tag) => {
+        const t = String(tag || '').toUpperCase();
+        if (t === 'SCW' || t === 'NSCW') return 'call';
+        if (t === 'SPW' || t === 'NSPW') return 'put';
+        if (tag === '近平') return 'ref';
+        if (tag === '倒莊') return 'dual';
+        return '';
+      };
+
+      badge.textContent = valid ? `LIVE｜${data.row_count ?? rows.length} 標註` : 'WAIT';
+      const metaBits = [];
+      if (data.table_source) metaBits.push(`來源 ${data.table_source}`);
+      if (data.basis_method) metaBits.push(`映射 ${data.basis_method}`);
+      if (data.mapping_basis !== null && data.mapping_basis !== undefined && data.mapping_basis !== '' && Number.isFinite(Number(data.mapping_basis))) metaBits.push(`Basis ${Number(data.mapping_basis).toFixed(1)}`);
+      if (data.updated_at) metaBits.push(String(data.updated_at).slice(11,19));
+      meta.textContent = metaBits.length ? metaBits.join('｜') : '等待 LFZ 暴Z資料';
+
+      if (!valid || rows.length === 0) {
+        body.innerHTML = '<tr><td colspan="3" class="lfz-baoz-empty">等待 LFZ 固定布局／標註資料</td></tr>';
+        return;
+      }
+
+      body.innerHTML = rows.map(r => {
+        const tags = String(r.marks || '').trim().split(/\s+/).filter(Boolean)
+          .map(t => `<span class="lfz-baoz-tag ${tagClass(t)}">${esc(t)}</span>`).join('');
+        return `<tr>
+          <td><div class="lfz-baoz-tags">${tags || '--'}</div></td>
+          <td>${fmt(r.strike)}</td>
+          <td>${fmt(r.futures)}</td>
+        </tr>`;
+      }).join('');
+    }
+
     function updateUI(data) {
       updateZ3LifecycleUI(data || {});
       document.getElementById('price').innerText = data.p;
@@ -6844,6 +6924,19 @@
       <div id="z3-sub-read" class="z3-sub-read">LFZ / Inventory / Writer evidence：等待資料</div>
       <div id="z3-terminal-read" class="z3-terminal-read" hidden></div>`;
     radarCard.insertBefore(z3Block, radarCard.firstChild);
+    const baoZBlock = el('section', 'v10-side-block lfz-baoz-block');
+    baoZBlock.innerHTML = `
+      <div class="lfz-baoz-head">
+        <div class="lfz-baoz-title">LFZ 暴Z逐檔標註</div>
+        <span id="lfz-baoz-badge" class="lfz-baoz-badge">WAIT</span>
+      </div>
+      <div id="lfz-baoz-meta" class="lfz-baoz-meta">等待 LFZ 暴Z資料</div>
+      <table class="lfz-baoz-table">
+        <thead><tr><th>標註</th><th>履約價</th><th>期指價</th></tr></thead>
+        <tbody id="lfz-baoz-body"><tr><td colspan="3" class="lfz-baoz-empty">等待資料</td></tr></tbody>
+      </table>`;
+    z3Block.insertAdjacentElement('afterend', baoZBlock);
+    updateLFZBaoZUI(window.__Z2LFZBaoZCache || null);
 
     const v10PriorBand = ocfPanel ? ocfPanel.querySelector('.ocf-prior-band') : null;
     if (v10PriorBand) {
