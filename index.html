@@ -1,3 +1,4 @@
+<!-- Z31_A37_FBRC1_UI_20261001 | parent Firebase pdr child-delta; no new listener; source unavailable fail closed; no trading authority -->
 <!-- Z31_A19_LFZ_FIXED_LIVE_UI_v0.3_20261001 | Fixed vs Live SCW/SPW/NSCW/NSPW + Live CSP/CSC/M + mapped futures coordinates via existing mapping_basis + delta/strike + freshness + bilateral conflict | reuses monitor_realtime/lfz_baoz child | no new Firebase listener | no authority change -->
 <!-- Z31_A19_SAFETY_CLOSURE_UI_v0.1_20261001 | A19 fail-closed + bilateral relayout conflict observability | schema 1.2 / 250C unchanged | presentation-only | reuses monitor_realtime parent listener | no new Firebase listener -->
 <!-- Z31_A16_LIVE_RELAYOUT_UI_v0.1_20260930 | historical capability retained beneath A18 UI | no authority change -->
@@ -37,8 +38,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.9-RC1-ECONOMIC-PROOF-SEMANTIC-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.3-FIXED-LIVE-Z31FORMALSYNC-v0.1-Z31A20-UNIVERSAL-LAUNCH-CONSUME-UI-v0.1-LFZ-FIXED-LIVE-UI-v0.1">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A20 + Z3.1 A20 UNIVERSAL-LAUNCH-CONSUME FORMAL-ON｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.9-RC1-ECONOMIC-PROOF-SEMANTIC-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.3-FIXED-LIVE-Z31FORMALSYNC-v0.1-Z31A20-UNIVERSAL-LAUNCH-CONSUME-UI-v0.1-LFZ-FIXED-LIVE-UI-v0.1-Z31A37-PDR-FBRC1-LIVE-UI-v0.1">
+  <title>極速戰情室｜OCF-Z3.1 A20/A37 相容顯示｜既有 Formal + A37 PDR 即時來源診斷（新增進場未授權）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1407,6 +1408,12 @@
 #v2-live-page .z3-a20-handoff-read.active { color:#64d2ff; border-color:rgba(100,210,255,.45); background:rgba(100,210,255,.035); }
 #v2-live-page .z3-a20-handoff-read.consumed { color:#30d158; border-color:rgba(48,209,88,.45); background:rgba(48,209,88,.035); }
 #v2-live-page .z3-a20-handoff-read.conflict { color:#ff9f0a; border-color:rgba(255,159,10,.5); background:rgba(255,159,10,.04); }
+/* A37 PDR: status is derived solely from actual parent Firebase fields, never from CSV assumptions. */
+#v2-live-page .z3-pdr-diagnostic { margin-top:4px; padding:5px 6px; border:1px dashed #636366; border-left:3px solid #ffd60a; border-radius:5px; background:rgba(255,214,10,.04); color:#d1d1d6; font-size:10px; line-height:1.35; overflow-wrap:anywhere; }
+#v2-live-page .z3-pdr-diagnostic.no-data { color:#ffd60a; }
+#v2-live-page .z3-pdr-diagnostic.source-valid { border-left-color:#64d2ff; color:#d1d1d6; }
+#v2-live-page .z3-pdr-diagnostic.source-invalid { border-left-color:#ff9f0a; color:#ff9f0a; }
+#v2-live-page .z3-pdr-diagnostic[hidden] { display:none !important; }
 #v2-live-page .z3-pipeline { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; margin-top:5px; }
 #v2-live-page .z3-step { min-width:0; border:1px solid #343438; background:rgba(0,0,0,.16); padding:3px 4px; }
 #v2-live-page .z3-step span { display:block; color:#777; font-size:7px; line-height:1.15; }
@@ -2373,7 +2380,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z3.1 A20 UNIVERSAL-LAUNCH-CONSUME FORMAL-ON｜G11 Execution Interlock｜LFZ4 + NSCW/NSPW｜TP200 FORMAL</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z3.1 依來源版本辨識｜G11 Execution Interlock｜LFZ4 + NSCW/NSPW｜TP200 FORMAL</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -5805,6 +5812,50 @@
       const layoutSource = String(data.z3_layout_source || '');
       const layoutSourceStatus = String(data.z3_layout_source_status || '').toUpperCase();
       const lifecycleBuild = String(data.z3_lifecycle_build || '');
+      const a37Detected = /A37-PDR|v1\.5\.0-A37/i.test(lifecycleBuild);
+      const a36Detected = /A36-FROZEN-PUT|v1\.4\.1-A36/i.test(lifecycleBuild);
+      const a20Detected = /A20-UNIVERSAL-LAUNCH|v1\.4\.0-A20/i.test(lifecycleBuild);
+      const originLabel = a37Detected ? 'A37（PDR 研究，原 A20 Formal）' :
+        (a36Detected ? 'A36（研究觀察）' : (a20Detected ? 'A20 Formal' : '版本待識別'));
+      const sidecarLabel = a37Detected ? '預期 schema 1.4 / 278欄（非網頁驗證）' :
+        (a36Detected ? '預期 schema 1.3 / 262欄（非網頁驗證）' :
+          (a20Detected ? '預期 schema 1.2 / 250欄（非網頁驗證）' : 'CSV schema 未知'));
+      const z3UiTitle = document.getElementById('z3-lifecycle-ui-title');
+      if (z3UiTitle) z3UiTitle.textContent = `Z3.1 ${originLabel}｜主力經濟布局 / Formal Authority`;
+      const z3RootUiTitle = document.getElementById('z3-root-audit-title');
+      if (z3RootUiTitle) z3RootUiTitle.textContent = `LIVE_RELAYOUT Root-Liveness + Bilateral Conflict｜${sidecarLabel}`;
+      // A37-FBRC1: new read-only PDR child on the EXISTING parent Firebase stream.
+      // Missing/stale child never creates a virtual PC_READY/Writer witness.
+      const pdrDisplay = document.getElementById('z3-pdr-diagnostic');
+      if (pdrDisplay) {
+        pdrDisplay.hidden = !a37Detected;
+        if (a37Detected) {
+          const pdr = (data.pdr && typeof data.pdr === 'object') ? data.pdr : null;
+          const parsedCapture = pdr && typeof pdr.pdr_snapshot_at === 'string' ?
+            new Date(pdr.pdr_snapshot_at.replace(' ', 'T')).getTime() : NaN;
+          const freshnessMs = Date.now() - parsedCapture;
+          const withinFreshWindow = Number.isFinite(freshnessMs) && freshnessMs >= -10000 && freshnessMs <= 90000;
+          const hasPdrState = Boolean(pdr) && Number(pdr.pdr_snapshot_valid) === 1 && withinFreshWindow &&
+            Object.prototype.hasOwnProperty.call(pdr, 'pdr_state') &&
+            Object.prototype.hasOwnProperty.call(pdr, 'pdr_source_valid') &&
+            Object.prototype.hasOwnProperty.call(pdr, 'pdr_source_ready') &&
+            Object.prototype.hasOwnProperty.call(pdr, 'pdr_new_writer_epochs');
+          if (!hasPdrState) {
+            pdrDisplay.className = 'z3-pdr-diagnostic no-data';
+            pdrDisplay.textContent = 'PDR 支撐回防｜新增進場 OFF｜資料未發布、已過期或尚未取得有效快照；請以本機 278 欄 CSV 查證';
+            pdrDisplay.title = 'pdr 子節點必須有 90 秒內快照且 source 有效。未收到資料不代表 IDLE 或 PC_READY。';
+          } else {
+            const valid = Number(pdr.pdr_source_valid) === 1 && Number(pdr.pdr_source_ready) === 1;
+            const pdrState = String(pdr.pdr_state || 'UNKNOWN').replace(/[\r\n]/g, ' ').slice(0, 48);
+            const witnesses = Number(pdr.pdr_new_writer_epochs);
+            const witnessZh = Number.isFinite(witnesses) ? Math.max(0, Math.floor(witnesses)) : '--';
+            const formal = Number(pdr.pdr_formal_promotion_enabled) === 1;
+            pdrDisplay.className = 'z3-pdr-diagnostic ' + (valid ? 'source-valid' : 'source-invalid');
+            pdrDisplay.textContent = `PDR 研究｜${pdrState}｜來源 ${valid ? '有效' : '無效/未確認'}｜Writer 更新 ${witnessZh}｜新增進場 ${formal ? '異常：欄位 ON，請檢查 BAS' : 'OFF'}`;
+            pdrDisplay.title = `Episode=${pdr.pdr_episode ?? '--'} | Frozen=${pdr.pdr_frozen_put_strike ?? '--'} | Support=${pdr.pdr_support_futures ?? '--'} | SOURCE=${pdr.pdr_source_status || '--'} | REASON=${pdr.pdr_reason || '--'} | AGE=${Math.round(freshnessMs/1000)}s`;
+          }
+        }
+      }
 
       // A20 retains A19 schema-1.2 root-liveness audit fields; CSV contract remains 250 columns.
       // A20 keeps A19 root provenance on the existing parent Firebase payload as z3_-prefixed fields; raw names remain supported for local replay.
@@ -5873,7 +5924,7 @@
         const execText = execInterlockOn ? 'G11 ON' : 'G11 OFF';
         authBadge.textContent = `FORMAL ${formalCount}/3｜${execText}`;
         authBadge.className = 'z3-shadow-badge ' + (formalAllOn ? (execInterlockOn ? 'formal-on' : 'exec-off') : 'formal-partial');
-        authBadge.title = `${lifecycleBuild || 'lifecycle --'} | schema 1.2 / 250C | ${z31AdapterBuild || 'adapter --'} | ${z31IcuaBuild || 'ICUA --'}`;
+        authBadge.title = `${lifecycleBuild || 'lifecycle --'} | ${sidecarLabel} | ${z31AdapterBuild || 'adapter --'} | ${z31IcuaBuild || 'ICUA --'}`;
       }
 
       const formalRead = document.getElementById('z3-formal-read');
@@ -6043,7 +6094,7 @@
         else if (withdrawnNow || withdrawnRecent) { auditClass = 'withdrawn'; statusText = 'WITHDRAWN｜終止'; }
         else if (rootTelemetryAvailable && rootTracked && rootLive) { auditClass = 'live'; statusText = 'ROOT LIVE'; }
         else if (rootTelemetryAvailable && rootTracked && !rootLive) { auditClass = 'invalid'; statusText = 'ROOT NOT LIVE'; }
-        else if (relayoutInCycle) { auditClass = 'active'; statusText = 'A20 ACTIVE｜ROOT TELEMETRY'; }
+        else if (relayoutInCycle) { auditClass = 'active'; statusText = 'ROOT ACTIVE｜TELEMETRY'; }
         rootAudit.className = 'z3-root-audit ' + auditClass;
         rootStatus.textContent = statusText;
 
@@ -6056,10 +6107,10 @@
         let reasonText = String(rootReasonRaw || '').trim();
         if (!reasonText && withdrawnNow) reasonText = state;
         if (!reasonText && withdrawnRecent) reasonText = lastTerminalState;
-        if (!reasonText && relayoutInCycle && !rootTelemetryAvailable) reasonText = '等待 Firebase root telemetry；A20 lifecycle 已進入 LIVE_RELAYOUT。';
+        if (!reasonText && relayoutInCycle && !rootTelemetryAvailable) reasonText = '等待 Firebase root telemetry；目前 lifecycle 已進入 LIVE_RELAYOUT。';
         if (!reasonText) reasonText = rootTelemetryAvailable ? '等待 LIVE_RELAYOUT root；Firebase root telemetry 已接通，IDLE 時欄位為 --。' : '等待 LIVE_RELAYOUT root；Firebase root telemetry 尚未收到。';
         rootReason.textContent = reasonText;
-        rootAudit.title = `${lifecycleBuild || 'lifecycle --'} | schema 1.2 / 250C`;
+        rootAudit.title = `${lifecycleBuild || 'lifecycle --'} | ${sidecarLabel}`;
       }
 
       const terminal = document.getElementById('z3-terminal-read');
@@ -7325,11 +7376,12 @@
 
     const z3Block = el('section', 'v10-side-block z3-early-block');
     z3Block.innerHTML = `
-      <div class="z3-early-head"><div class="z3-early-title">Z3.1 A20 主力經濟布局 / Formal Authority</div><span id="z3-authority-badge" class="z3-shadow-badge">FORMAL --</span></div>
-      <div id="z3-main-read" class="z3-main-read">等待 Z3.1 A20 Formal 資料</div>
+      <div class="z3-early-head"><div id="z3-lifecycle-ui-title" class="z3-early-title">Z3.1 主力經濟布局 / Formal Authority</div><span id="z3-authority-badge" class="z3-shadow-badge">FORMAL --</span></div>
+      <div id="z3-main-read" class="z3-main-read">等待 Z3.1 Formal 資料</div>
       <div id="z3-formal-read" class="z3-formal-read">Direction / Trigger / ICUA / G11：等待資料</div>
       <div id="z3-opportunity-read" class="z3-opportunity-read">Opportunity｜等待 LFZ / ICUA / Continuation</div>
       <div id="z3-a20-handoff-read" class="z3-a20-handoff-read">Opportunity Cycle｜IDLE｜Economic Authority｜IDLE</div>
+      <div id="z3-pdr-diagnostic" class="z3-pdr-diagnostic" hidden aria-live="polite"></div>
       <div class="z3-pipeline">
         <div id="z3-step-layout" class="z3-step"><span>① Opportunity / LFZ</span><strong id="z3-layout-text">--</strong></div>
         <div id="z3-step-pc" class="z3-step"><span>② PC 有效</span><strong id="z3-pc-text">--</strong></div>
@@ -7338,13 +7390,13 @@
       </div>
       <div id="z3-sub-read" class="z3-sub-read">LFZ / NSCW-NSPW / Inventory：等待資料</div>
       <div id="z3-root-audit" class="z3-root-audit">
-        <div class="z3-root-head"><span class="z3-root-title">A20 LIVE_RELAYOUT Root-Liveness + Bilateral Conflict｜schema 1.2 / 250C</span><span id="z3-root-status" class="z3-root-status">IDLE</span></div>
+        <div class="z3-root-head"><span id="z3-root-audit-title" class="z3-root-title">LIVE_RELAYOUT Root-Liveness + Bilateral Conflict｜版本待識別</span><span id="z3-root-status" class="z3-root-status">IDLE</span></div>
         <div class="z3-root-grid">
           <div class="z3-root-item"><span>Frozen baseline</span><strong id="z3-root-baseline">--</strong></div>
           <div class="z3-root-item"><span>Current root / displacement</span><strong id="z3-root-current">--</strong></div>
           <div class="z3-root-item"><span>Frozen universe</span><strong id="z3-root-universe">--</strong></div>
         </div>
-        <div id="z3-root-reason" class="z3-root-reason">等待 LIVE_RELAYOUT root；A20 root provenance 由既有 Firebase payload / 250-column sidecar 稽核。</div>
+        <div id="z3-root-reason" class="z3-root-reason">等待 LIVE_RELAYOUT root；Root 訊息由既有 Firebase payload 提供。</div>
       </div>
       <div id="z3-terminal-read" class="z3-terminal-read" hidden></div>`;
     radarCard.insertBefore(z3Block, radarCard.firstChild);
@@ -8818,6 +8870,42 @@
         function(err){
           const n=document.getElementById('mme-transport');
           if(n){ n.className='mme-transport offline'; n.textContent='MME READ ERROR '+String(err && err.code || ''); }
+          const p=document.getElementById('mme-primary');
+          if(p) p.textContent='Firebase MME 讀取失敗';
+          console.error('MME Firebase read error',err);
+        }
+      );
+    }
+    // Event history is optional. Current alert is also retained inside monitor_realtime/mme.last_event.
+    db.ref(MME_EVENTS_NODE).limitToLast(1).on('child_added',
+      function(s){ if(s.val()) renderEvent(s.val()); },
+      function(err){ console.warn('MME event history read unavailable',err && err.code); }
+    );
+    window.setInterval(updateFreshness,10000);
+  }
+
+  buildPanel();
+  // Attach to the exact point where the original dashboard starts Firebase listeners after approved login.
+  if(typeof startDataSync==='function') {
+    const originalStartDataSync=startDataSync;
+    startDataSync=function(){ originalStartDataSync(); startMMESync(); };
+  }
+  // Safety fallback for already-authenticated fast reloads; does not duplicate due to mmeSyncStarted.
+  if(typeof auth!=='undefined' && auth && typeof auth.onAuthStateChanged==='function') {
+    auth.onAuthStateChanged(function(user){
+      if(user && String(user.email || '').trim().toLowerCase() === 'hychen316@gmail.com') {
+        setTimeout(startMMESync,150);
+      }
+    });
+  }
+})();
+</script>
+
+
+
+</body>
+</html>
+     if(n){ n.className='mme-transport offline'; n.textContent='MME READ ERROR '+String(err && err.code || ''); }
           const p=document.getElementById('mme-primary');
           if(p) p.textContent='Firebase MME 讀取失敗';
           console.error('MME Firebase read error',err);
