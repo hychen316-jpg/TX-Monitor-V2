@@ -37,8 +37,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.9-RC1-ECONOMIC-PROOF-SEMANTIC-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.3-FIXED-LIVE-Z31FORMALSYNC-v0.1-Z31A19-SAFETY-CLOSURE-UI-v0.1-LFZ-FIXED-LIVE-UI-v0.1">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A19 + Z3.1 A19 SAFETY-CLOSURE FORMAL-ON｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.9-RC1-ECONOMIC-PROOF-SEMANTIC-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.3-FIXED-LIVE-Z31FORMALSYNC-v0.1-Z31A20-UNIVERSAL-LAUNCH-CONSUME-UI-v0.1-LFZ-FIXED-LIVE-UI-v0.1">
+  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A20 + Z3.1 A20 UNIVERSAL-LAUNCH-CONSUME FORMAL-ON｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1403,6 +1403,10 @@
 #v2-live-page .z3-opportunity-read.bull { border-left-color:var(--red); background:rgba(255,69,58,.045); color:#ff9f9a; }
 #v2-live-page .z3-opportunity-read.bear { border-left-color:var(--green); background:rgba(48,209,88,.045); color:#8be8a2; }
 #v2-live-page .z3-opportunity-read.warn { border-left-color:var(--yellow); background:rgba(255,214,10,.045); color:var(--yellow); }
+#v2-live-page .z3-a20-handoff-read { margin-top:3px; padding:3px 5px; border:1px dashed #3a3a3c; background:rgba(255,255,255,.02); color:#8e8e93; font-size:8px; font-weight:800; line-height:1.3; overflow-wrap:anywhere; }
+#v2-live-page .z3-a20-handoff-read.active { color:#64d2ff; border-color:rgba(100,210,255,.45); background:rgba(100,210,255,.035); }
+#v2-live-page .z3-a20-handoff-read.consumed { color:#30d158; border-color:rgba(48,209,88,.45); background:rgba(48,209,88,.035); }
+#v2-live-page .z3-a20-handoff-read.conflict { color:#ff9f0a; border-color:rgba(255,159,10,.5); background:rgba(255,159,10,.04); }
 #v2-live-page .z3-pipeline { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; margin-top:5px; }
 #v2-live-page .z3-step { min-width:0; border:1px solid #343438; background:rgba(0,0,0,.16); padding:3px 4px; }
 #v2-live-page .z3-step span { display:block; color:#777; font-size:7px; line-height:1.15; }
@@ -2369,7 +2373,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z3.1 A19 SAFETY-CLOSURE FORMAL-ON｜G11 Execution Interlock｜LFZ4 + NSCW/NSPW｜TP200 FORMAL</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z3.1 A20 UNIVERSAL-LAUNCH-CONSUME FORMAL-ON｜G11 Execution Interlock｜LFZ4 + NSCW/NSPW｜TP200 FORMAL</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -5802,8 +5806,8 @@
       const layoutSourceStatus = String(data.z3_layout_source_status || '').toUpperCase();
       const lifecycleBuild = String(data.z3_lifecycle_build || '');
 
-      // A19 retains A18 schema-1.2 root-liveness audit fields; CSV contract remains 250 columns.
-      // A19 root provenance now arrives in the existing parent Firebase payload as z3_-prefixed fields; raw names remain supported for local replay.
+      // A20 retains A19 schema-1.2 root-liveness audit fields; CSV contract remains 250 columns.
+      // A20 keeps A19 root provenance on the existing parent Firebase payload as z3_-prefixed fields; raw names remain supported for local replay.
       const rootField = (name) => {
         if (data[name] !== undefined && data[name] !== null) return data[name];
         const alias = 'z3_' + name;
@@ -5854,6 +5858,16 @@
       const z31AdapterBuild = String(data.z31_formal_adapter_build || '');
       const z31IcuaBuild = String(data.z31_icua_build || '');
 
+      // A20 ownership contract: a successful Launch hands authority to the immutable Economic Epoch,
+      // then the Opportunity cycle is consumed/terminal. Economic ACTIVE with OBSERVE+dir=0 therefore
+      // means handoff completed, not "PC/Launch still waiting".
+      const cycleIdle = state === 'OBSERVE' && dir === 0;
+      const cycleConsumedToEconomic = econReady && cycleIdle;
+      const cycleStatusZh = cycleConsumedToEconomic ? 'CONSUMED / IDLE' : (cycleIdle ? 'IDLE' : state);
+      const econAuthorityZh = econReady
+        ? `ACTIVE ${econDir > 0 ? 'LONG' : (econDir < 0 ? 'SHORT' : 'NEUTRAL')}`
+        : (econConflict === 'CONFIRMED' ? 'CONFLICTED' : (econState || 'IDLE'));
+
       const authBadge = document.getElementById('z3-authority-badge');
       if (authBadge) {
         const execText = execInterlockOn ? 'G11 ON' : 'G11 OFF';
@@ -5886,6 +5900,7 @@
       let pcZh = '等待';
       let pcClass = '';
       if (!inputValid) { pcZh = '資料暫停'; pcClass = 'warn'; }
+      else if (cycleConsumedToEconomic) { pcZh = '已完成・已交棒'; pcClass = 'ok'; }
       else if ((state.includes('NOT_LAUNCHABLE') || state.includes('EXPIRED')) && validReason.startsWith('WARMUP_3M')) { pcZh = '3分鐘暖機'; pcClass = 'warn'; }
       else if ((state.startsWith('ICUA_NO_PREARM_PC_') || state.startsWith('RELAYOUT_NO_PREARM_PC_')) && pcReason.startsWith('WARMUP_10M')) { pcZh = '10分鐘暖機'; pcClass = 'warn'; }
       else if (state.startsWith('RELAYOUT_PC_NOT_VALID_')) { pcZh = 'PC未通過'; pcClass = 'warn'; }
@@ -5897,7 +5912,10 @@
 
       let launchZh = '等待';
       if (!inputValid) launchZh = '暫停';
-      else if (currentLaunch) launchZh = `已發動${launchPrice && launchPrice > 0 ? ' @'+Math.round(launchPrice) : ''}${launchAge !== null && launchAge >= 0 ? '・'+ageZh(launchAge) : ''}`;
+      else if (cycleConsumedToEconomic) {
+        const completedLaunchPrice = econTriggerValid && econTrigger !== null && econTrigger > 0 ? econTrigger : econEpochPrice;
+        launchZh = `Launch完成・Cycle釋放${completedLaunchPrice !== null && completedLaunchPrice > 0 ? ' @'+Math.round(completedLaunchPrice) : ''}`;
+      } else if (currentLaunch) launchZh = `已發動${launchPrice && launchPrice > 0 ? ' @'+Math.round(launchPrice) : ''}${launchAge !== null && launchAge >= 0 ? '・'+ageZh(launchAge) : ''}`;
 
       const riskPoints = econTriggerValid && econInvalidValid && econTrigger !== null && econInvalid !== null && econTrigger > 0 && econInvalid > 0
         ? Math.round(Math.abs(econInvalid - econTrigger)) : null;
@@ -5954,7 +5972,8 @@
         const oppDir = econReady && econDir !== 0 ? econDir : dir;
         const oppDirZh = oppDir > 0 ? '多方' : (oppDir < 0 ? '空方' : '等待方向');
         if (effectiveOpportunity) {
-          opportunityRead.textContent = `Opportunity｜${opportunityZh(effectiveOpportunity)}｜${oppDirZh}${isRelayout && econReady && riskPoints !== null ? '｜Local Risk '+riskPoints+'點' : ''}`;
+          const oppPrefix = cycleConsumedToEconomic ? 'Economic Origin' : 'Opportunity';
+          opportunityRead.textContent = `${oppPrefix}｜${opportunityZh(effectiveOpportunity)}｜${oppDirZh}${isRelayout && econReady && riskPoints !== null ? '｜Local Risk '+riskPoints+'點' : ''}`;
           opportunityRead.className = 'z3-opportunity-read ' + (isRelayout ? 'relayout ' : '') + (oppDir > 0 ? 'bull' : (oppDir < 0 ? 'bear' : ''));
         } else if (relayoutInCycle) {
           opportunityRead.textContent = `Opportunity｜盤中重新布局反轉｜${oppDirZh}｜等待 PC / FMF`;
@@ -5963,6 +5982,14 @@
           opportunityRead.textContent = 'Opportunity｜等待 LFZ / ICUA / Continuation';
           opportunityRead.className = 'z3-opportunity-read';
         }
+      }
+
+      const handoffRead = document.getElementById('z3-a20-handoff-read');
+      if (handoffRead) {
+        const originText = effectiveOpportunity ? `｜Origin ${opportunityZh(effectiveOpportunity)}` : '';
+        handoffRead.textContent = `Opportunity Cycle｜${cycleStatusZh}｜Economic Authority｜${econAuthorityZh}${originText}`;
+        handoffRead.className = 'z3-a20-handoff-read ' + (econConflict === 'CONFIRMED' ? 'conflict' : (cycleConsumedToEconomic ? 'consumed' : (!cycleIdle ? 'active' : '')));
+        handoffRead.title = `CYCLE_STATE=${state} | CYCLE_DIR=${dir} | ECON=${econState || '--'} | ECON_READY=${econReady ? 1 : 0} | ROOT=${effectiveOpportunity || '--'}`;
       }
 
       const layoutText = document.getElementById('z3-layout-text');
@@ -5981,7 +6008,7 @@
       const triggerStep = document.getElementById('z3-step-trigger');
       if (layoutStep) layoutStep.className = 'z3-step ' + (!inputValid || layoutSourceWarn ? 'warn' : (layoutSourceUsable && layoutValid && bias !== 0 ? 'ok' : ''));
       if (pcStep) pcStep.className = 'z3-step ' + pcClass;
-      if (launchStep) launchStep.className = 'z3-step ' + (currentLaunch ? 'hot' : (!inputValid ? 'warn' : ''));
+      if (launchStep) launchStep.className = 'z3-step ' + (cycleConsumedToEconomic ? 'ok' : (currentLaunch ? 'hot' : (!inputValid ? 'warn' : '')));
       if (triggerStep) triggerStep.className = 'z3-step ' + (econTriggerValid && econReady ? 'ok' : (distValid && dist !== null && dist < 0 ? 'hot' : ''));
 
       const sub = document.getElementById('z3-sub-read');
@@ -6016,7 +6043,7 @@
         else if (withdrawnNow || withdrawnRecent) { auditClass = 'withdrawn'; statusText = 'WITHDRAWN｜終止'; }
         else if (rootTelemetryAvailable && rootTracked && rootLive) { auditClass = 'live'; statusText = 'ROOT LIVE'; }
         else if (rootTelemetryAvailable && rootTracked && !rootLive) { auditClass = 'invalid'; statusText = 'ROOT NOT LIVE'; }
-        else if (relayoutInCycle) { auditClass = 'active'; statusText = 'A19 ACTIVE｜ROOT TELEMETRY'; }
+        else if (relayoutInCycle) { auditClass = 'active'; statusText = 'A20 ACTIVE｜ROOT TELEMETRY'; }
         rootAudit.className = 'z3-root-audit ' + auditClass;
         rootStatus.textContent = statusText;
 
@@ -6029,7 +6056,7 @@
         let reasonText = String(rootReasonRaw || '').trim();
         if (!reasonText && withdrawnNow) reasonText = state;
         if (!reasonText && withdrawnRecent) reasonText = lastTerminalState;
-        if (!reasonText && relayoutInCycle && !rootTelemetryAvailable) reasonText = '等待 Firebase root telemetry；A19 lifecycle 已進入 LIVE_RELAYOUT。';
+        if (!reasonText && relayoutInCycle && !rootTelemetryAvailable) reasonText = '等待 Firebase root telemetry；A20 lifecycle 已進入 LIVE_RELAYOUT。';
         if (!reasonText) reasonText = rootTelemetryAvailable ? '等待 LIVE_RELAYOUT root；Firebase root telemetry 已接通，IDLE 時欄位為 --。' : '等待 LIVE_RELAYOUT root；Firebase root telemetry 尚未收到。';
         rootReason.textContent = reasonText;
         rootAudit.title = `${lifecycleBuild || 'lifecycle --'} | schema 1.2 / 250C`;
@@ -7298,10 +7325,11 @@
 
     const z3Block = el('section', 'v10-side-block z3-early-block');
     z3Block.innerHTML = `
-      <div class="z3-early-head"><div class="z3-early-title">Z3.1 A19 主力經濟布局 / Formal Authority</div><span id="z3-authority-badge" class="z3-shadow-badge">FORMAL --</span></div>
-      <div id="z3-main-read" class="z3-main-read">等待 Z3.1 A19 Formal 資料</div>
+      <div class="z3-early-head"><div class="z3-early-title">Z3.1 A20 主力經濟布局 / Formal Authority</div><span id="z3-authority-badge" class="z3-shadow-badge">FORMAL --</span></div>
+      <div id="z3-main-read" class="z3-main-read">等待 Z3.1 A20 Formal 資料</div>
       <div id="z3-formal-read" class="z3-formal-read">Direction / Trigger / ICUA / G11：等待資料</div>
       <div id="z3-opportunity-read" class="z3-opportunity-read">Opportunity｜等待 LFZ / ICUA / Continuation</div>
+      <div id="z3-a20-handoff-read" class="z3-a20-handoff-read">Opportunity Cycle｜IDLE｜Economic Authority｜IDLE</div>
       <div class="z3-pipeline">
         <div id="z3-step-layout" class="z3-step"><span>① Opportunity / LFZ</span><strong id="z3-layout-text">--</strong></div>
         <div id="z3-step-pc" class="z3-step"><span>② PC 有效</span><strong id="z3-pc-text">--</strong></div>
@@ -7310,13 +7338,13 @@
       </div>
       <div id="z3-sub-read" class="z3-sub-read">LFZ / NSCW-NSPW / Inventory：等待資料</div>
       <div id="z3-root-audit" class="z3-root-audit">
-        <div class="z3-root-head"><span class="z3-root-title">A19 LIVE_RELAYOUT Root-Liveness + Bilateral Conflict｜schema 1.2 / 250C</span><span id="z3-root-status" class="z3-root-status">IDLE</span></div>
+        <div class="z3-root-head"><span class="z3-root-title">A20 LIVE_RELAYOUT Root-Liveness + Bilateral Conflict｜schema 1.2 / 250C</span><span id="z3-root-status" class="z3-root-status">IDLE</span></div>
         <div class="z3-root-grid">
           <div class="z3-root-item"><span>Frozen baseline</span><strong id="z3-root-baseline">--</strong></div>
           <div class="z3-root-item"><span>Current root / displacement</span><strong id="z3-root-current">--</strong></div>
           <div class="z3-root-item"><span>Frozen universe</span><strong id="z3-root-universe">--</strong></div>
         </div>
-        <div id="z3-root-reason" class="z3-root-reason">等待 LIVE_RELAYOUT root；詳細 provenance 由 250-column sidecar 稽核。</div>
+        <div id="z3-root-reason" class="z3-root-reason">等待 LIVE_RELAYOUT root；A20 root provenance 由既有 Firebase payload / 250-column sidecar 稽核。</div>
       </div>
       <div id="z3-terminal-read" class="z3-terminal-read" hidden></div>`;
     radarCard.insertBefore(z3Block, radarCard.firstChild);
