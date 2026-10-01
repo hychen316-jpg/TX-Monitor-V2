@@ -5803,7 +5803,7 @@
       const lifecycleBuild = String(data.z3_lifecycle_build || '');
 
       // A19 retains A18 schema-1.2 root-liveness audit fields; CSV contract remains 250 columns.
-      // Support both raw sidecar names and future z3_-prefixed parent-payload aliases without adding a listener.
+      // A19 root provenance now arrives in the existing parent Firebase payload as z3_-prefixed fields; raw names remain supported for local replay.
       const rootField = (name) => {
         if (data[name] !== undefined && data[name] !== null) return data[name];
         const alias = 'z3_' + name;
@@ -6016,7 +6016,7 @@
         else if (withdrawnNow || withdrawnRecent) { auditClass = 'withdrawn'; statusText = 'WITHDRAWN｜終止'; }
         else if (rootTelemetryAvailable && rootTracked && rootLive) { auditClass = 'live'; statusText = 'ROOT LIVE'; }
         else if (rootTelemetryAvailable && rootTracked && !rootLive) { auditClass = 'invalid'; statusText = 'ROOT NOT LIVE'; }
-        else if (relayoutInCycle) { auditClass = 'active'; statusText = 'A19 ACTIVE｜CSV AUDIT'; }
+        else if (relayoutInCycle) { auditClass = 'active'; statusText = 'A19 ACTIVE｜ROOT TELEMETRY'; }
         rootAudit.className = 'z3-root-audit ' + auditClass;
         rootStatus.textContent = statusText;
 
@@ -6029,8 +6029,8 @@
         let reasonText = String(rootReasonRaw || '').trim();
         if (!reasonText && withdrawnNow) reasonText = state;
         if (!reasonText && withdrawnRecent) reasonText = lastTerminalState;
-        if (!reasonText && relayoutInCycle && !rootTelemetryAvailable) reasonText = 'A19 root-liveness / bilateral-conflict safety 正在執行；13欄詳細 provenance 目前僅在 schema 1.2 / 250-column sidecar。';
-        if (!reasonText) reasonText = '等待 LIVE_RELAYOUT root；A19 詳細 root provenance 由 250-column sidecar 稽核。';
+        if (!reasonText && relayoutInCycle && !rootTelemetryAvailable) reasonText = '等待 Firebase root telemetry；A19 lifecycle 已進入 LIVE_RELAYOUT。';
+        if (!reasonText) reasonText = rootTelemetryAvailable ? '等待 LIVE_RELAYOUT root；Firebase root telemetry 已接通，IDLE 時欄位為 --。' : '等待 LIVE_RELAYOUT root；Firebase root telemetry 尚未收到。';
         rootReason.textContent = reasonText;
         rootAudit.title = `${lifecycleBuild || 'lifecycle --'} | schema 1.2 / 250C`;
       }
