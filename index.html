@@ -1437,43 +1437,54 @@
 #v2-live-page .z3-root-item strong { display:block; color:#d1d1d6; font-size:9px; font-weight:900; line-height:1.2; margin-top:1px; overflow-wrap:anywhere; }
 #v2-live-page .z3-root-reason { margin-top:3px; color:#8e8e93; font-size:8px; line-height:1.25; overflow-wrap:anywhere; }
 @media (max-width:620px) { #v2-live-page .z3-root-grid { grid-template-columns:1fr; } }
+@media (max-width:620px) {
+  #v2-live-page .lfz-live-title { font-size:13px; }
+  #v2-live-page .lfz-live-source { font-size:10px; }
+  #v2-live-page .lfz-live-card-name { font-size:11px; }
+  #v2-live-page .lfz-live-fixed { font-size:15px; }
+  #v2-live-page .lfz-live-now { font-size:18px; }
+  #v2-live-page .lfz-live-futures { font-size:12px; }
+  #v2-live-page .lfz-live-delta { font-size:11px; }
+  #v2-live-page .lfz-relayout-read { font-size:11px; }
+}
+
 
 /* LFZ 暴Z逐檔標註：沿用 monitor_realtime parent child-delta stream，不新增 Firebase listener。 */
 #v2-live-page .lfz-baoz-block { border-left:3px solid #bf5af2; padding:6px 7px; }
-#v2-live-page .lfz-live-panel { margin-top:5px; border:1px solid #3a3a3c; background:rgba(255,255,255,.025); padding:5px 6px; }
+#v2-live-page .lfz-live-panel { margin-top:6px; border:1px solid #3a3a3c; background:rgba(255,255,255,.025); padding:8px 9px; }
 #v2-live-page .lfz-live-head { display:flex; align-items:flex-start; justify-content:space-between; gap:5px; }
-#v2-live-page .lfz-live-title { color:#d1d1d6; font-size:9px; font-weight:900; line-height:1.2; }
-#v2-live-page .lfz-live-source { color:#777; font-size:7px; line-height:1.2; margin-top:1px; overflow-wrap:anywhere; }
-#v2-live-page .lfz-live-status { flex:0 0 auto; border:1px solid #48484a; background:#29292b; color:#8e8e93; padding:1px 4px; font-size:7px; font-weight:900; white-space:nowrap; }
+#v2-live-page .lfz-live-title { color:#d1d1d6; font-size:14px; font-weight:900; line-height:1.25; }
+#v2-live-page .lfz-live-source { color:#8e8e93; font-size:11px; line-height:1.3; margin-top:3px; overflow-wrap:anywhere; }
+#v2-live-page .lfz-live-status { flex:0 0 auto; border:1px solid #48484a; background:#29292b; color:#8e8e93; padding:3px 7px; font-size:11px; font-weight:900; white-space:nowrap; }
 #v2-live-page .lfz-live-status.fresh { color:#30d158; border-color:rgba(48,209,88,.55); background:rgba(48,209,88,.07); }
 #v2-live-page .lfz-live-status.stale { color:#ff9f0a; border-color:rgba(255,159,10,.55); background:rgba(255,159,10,.07); }
-#v2-live-page .lfz-live-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin-top:5px; }
-#v2-live-page .lfz-live-card { min-width:0; border:1px solid #343438; background:rgba(0,0,0,.15); padding:4px 5px; }
+#v2-live-page .lfz-live-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin-top:8px; }
+#v2-live-page .lfz-live-card { min-width:0; border:1px solid #343438; background:rgba(0,0,0,.15); padding:7px 8px; }
 #v2-live-page .lfz-live-card.call { border-left:3px solid #30d158; }
 #v2-live-page .lfz-live-card.put { border-left:3px solid #ff453a; }
 #v2-live-page .lfz-live-card.root-hot { box-shadow:inset 0 0 10px rgba(255,214,10,.08); border-top-color:rgba(255,214,10,.6); border-bottom-color:rgba(255,214,10,.6); }
-#v2-live-page .lfz-live-card-name { color:#8e8e93; font-size:8px; font-weight:900; }
-#v2-live-page .lfz-live-levels { display:flex; align-items:baseline; justify-content:space-between; gap:4px; margin-top:2px; }
-#v2-live-page .lfz-live-fixed { color:#aaa; font-size:10px; font-weight:800; white-space:nowrap; }
-#v2-live-page .lfz-live-arrow { color:#555; font-size:8px; }
-#v2-live-page .lfz-live-now { color:#f2f2f7; font-size:13px; font-weight:950; white-space:nowrap; }
-#v2-live-page .lfz-live-futures { margin-top:2px; display:flex; align-items:baseline; justify-content:space-between; gap:4px; color:#64d2ff; font-size:8px; font-weight:850; line-height:1.2; }
+#v2-live-page .lfz-live-card-name { color:#a1a1a6; font-size:12px; font-weight:900; }
+#v2-live-page .lfz-live-levels { display:flex; align-items:baseline; justify-content:space-between; gap:7px; margin-top:4px; }
+#v2-live-page .lfz-live-fixed { color:#c7c7cc; font-size:17px; font-weight:850; white-space:nowrap; }
+#v2-live-page .lfz-live-arrow { color:#636366; font-size:14px; }
+#v2-live-page .lfz-live-now { color:#f2f2f7; font-size:20px; font-weight:950; white-space:nowrap; }
+#v2-live-page .lfz-live-futures { margin-top:4px; display:flex; align-items:baseline; justify-content:space-between; gap:7px; color:#64d2ff; font-size:14px; font-weight:900; line-height:1.3; }
 #v2-live-page .lfz-live-futures span { white-space:nowrap; }
 #v2-live-page .lfz-live-fut-arrow { color:#555; }
-#v2-live-page .lfz-live-delta { margin-top:2px; color:#8e8e93; font-size:8px; font-weight:800; line-height:1.25; }
+#v2-live-page .lfz-live-delta { margin-top:4px; color:#a1a1a6; font-size:12px; font-weight:850; line-height:1.3; }
 #v2-live-page .lfz-live-delta.up { color:#30d158; }
 #v2-live-page .lfz-live-delta.down { color:#ff453a; }
 #v2-live-page .lfz-center-panel { margin-top:5px; border-top:1px solid #343438; padding-top:5px; }
 #v2-live-page .lfz-center-head { display:flex; align-items:baseline; justify-content:space-between; gap:6px; margin-bottom:4px; }
-#v2-live-page .lfz-center-title { color:#ffd60a; font-size:9px; font-weight:950; letter-spacing:.02em; }
-#v2-live-page .lfz-center-note { color:#777; font-size:7px; line-height:1.2; text-align:right; }
+#v2-live-page .lfz-center-title { color:#ffd60a; font-size:13px; font-weight:950; letter-spacing:.02em; }
+#v2-live-page .lfz-center-note { color:#8e8e93; font-size:10px; line-height:1.25; text-align:right; }
 #v2-live-page .lfz-center-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
 #v2-live-page .lfz-center-card { min-width:0; border:1px solid #343438; background:rgba(255,214,10,.025); padding:4px 5px; }
-#v2-live-page .lfz-center-name { color:#8e8e93; font-size:8px; font-weight:900; }
-#v2-live-page .lfz-center-value { margin-top:2px; color:#ffd60a; font-size:13px; font-weight:950; white-space:nowrap; }
-#v2-live-page .lfz-center-futures { margin-top:1px; color:#64d2ff; font-size:8px; font-weight:850; line-height:1.2; white-space:nowrap; }
-#v2-live-page .lfz-center-sub { margin-top:2px; color:#777; font-size:7px; line-height:1.2; }
-#v2-live-page .lfz-relayout-read { margin-top:5px; padding:4px 5px; border-left:3px solid #636366; background:rgba(255,255,255,.025); color:#aaa; font-size:8px; font-weight:850; line-height:1.3; overflow-wrap:anywhere; }
+#v2-live-page .lfz-center-name { color:#a1a1a6; font-size:11px; font-weight:900; }
+#v2-live-page .lfz-center-value { margin-top:3px; color:#ffd60a; font-size:18px; font-weight:950; white-space:nowrap; }
+#v2-live-page .lfz-center-futures { margin-top:2px; color:#64d2ff; font-size:13px; font-weight:900; line-height:1.3; white-space:nowrap; }
+#v2-live-page .lfz-center-sub { margin-top:3px; color:#8e8e93; font-size:10px; line-height:1.25; }
+#v2-live-page .lfz-relayout-read { margin-top:8px; padding:7px 8px; border-left:4px solid #636366; background:rgba(255,255,255,.025); color:#c7c7cc; font-size:12px; font-weight:900; line-height:1.4; overflow-wrap:anywhere; }
 #v2-live-page .lfz-relayout-read.bull { border-left-color:#30d158; color:#8be8a2; background:rgba(48,209,88,.05); }
 #v2-live-page .lfz-relayout-read.bear { border-left-color:#ff453a; color:#ff9f9a; background:rgba(255,69,58,.05); }
 #v2-live-page .lfz-relayout-read.conflict { border-left-color:#ffd60a; color:#ffd60a; background:rgba(255,214,10,.06); }
