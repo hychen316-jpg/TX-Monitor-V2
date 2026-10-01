@@ -8905,39 +8905,3 @@
 
 </body>
 </html>
-     if(n){ n.className='mme-transport offline'; n.textContent='MME READ ERROR '+String(err && err.code || ''); }
-          const p=document.getElementById('mme-primary');
-          if(p) p.textContent='Firebase MME 讀取失敗';
-          console.error('MME Firebase read error',err);
-        }
-      );
-    }
-    // Event history is optional. Current alert is also retained inside monitor_realtime/mme.last_event.
-    db.ref(MME_EVENTS_NODE).limitToLast(1).on('child_added',
-      function(s){ if(s.val()) renderEvent(s.val()); },
-      function(err){ console.warn('MME event history read unavailable',err && err.code); }
-    );
-    window.setInterval(updateFreshness,10000);
-  }
-
-  buildPanel();
-  // Attach to the exact point where the original dashboard starts Firebase listeners after approved login.
-  if(typeof startDataSync==='function') {
-    const originalStartDataSync=startDataSync;
-    startDataSync=function(){ originalStartDataSync(); startMMESync(); };
-  }
-  // Safety fallback for already-authenticated fast reloads; does not duplicate due to mmeSyncStarted.
-  if(typeof auth!=='undefined' && auth && typeof auth.onAuthStateChanged==='function') {
-    auth.onAuthStateChanged(function(user){
-      if(user && String(user.email || '').trim().toLowerCase() === 'hychen316@gmail.com') {
-        setTimeout(startMMESync,150);
-      }
-    });
-  }
-})();
-</script>
-
-
-
-</body>
-</html>
