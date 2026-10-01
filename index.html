@@ -1,4 +1,5 @@
-<!-- Z31_A18_ROOT_LIVENESS_UI_v0.1_20261001 | A18 LIVE_RELAYOUT root-liveness termination observability + optional 250C root audit telemetry | presentation-only | reuses monitor_realtime parent listener | no new Firebase listener -->
+<!-- Z31_A19_LFZ_FIXED_LIVE_UI_v0.2_20261001 | Fixed vs Live SCW/SPW/NSCW/NSPW + Live CSP/CSC/M layout centers + delta/strike + freshness + bilateral conflict | reuses monitor_realtime/lfz_baoz child | no new Firebase listener | no authority change -->
+<!-- Z31_A19_SAFETY_CLOSURE_UI_v0.1_20261001 | A19 fail-closed + bilateral relayout conflict observability | schema 1.2 / 250C unchanged | presentation-only | reuses monitor_realtime parent listener | no new Firebase listener -->
 <!-- Z31_A16_LIVE_RELAYOUT_UI_v0.1_20260930 | historical capability retained beneath A18 UI | no authority change -->
 <!-- Z31_FORMAL_DASH_SYNC_UI_v0.1_20260930 | Z3.1 FORMAL 3/3 + Economic Authority + G11 interlock | reuses monitor_realtime parent listener | no new Firebase listener -->
 <!-- LFZ_BAOZ_FIREBASE_UI_v0.2_LARGEFONT_20260930 | monitor_realtime/lfz_baoz child-delta | marked LFZ book rows: 近平/SCW/NSCW/SPW/NSPW/倒莊 + strike + mapped futures | no trading authority -->
@@ -36,8 +37,8 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.9-RC1-ECONOMIC-PROOF-SEMANTIC-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.2-LARGEFONT-Z31FORMALSYNC-v0.1-Z31A18-ROOT-LIVENESS-UI-v0.1">
-  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A18 + Z3.1 A18 ROOT-LIVENESS FORMAL-ON｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.9-RC1-ECONOMIC-PROOF-SEMANTIC-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.3-FIXED-LIVE-Z31FORMALSYNC-v0.1-Z31A19-SAFETY-CLOSURE-UI-v0.1-LFZ-FIXED-LIVE-UI-v0.1">
+  <title>極速戰情室｜OCF-Z2.1 Core + Z2.2 v0.98 RC2H A6 RC2｜LFZ4 A19 + Z3.1 A19 SAFETY-CLOSURE FORMAL-ON｜TP200 Formal + Big-Wave HOLD/OBS + MME Runtime RC2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1439,6 +1440,41 @@
 
 /* LFZ 暴Z逐檔標註：沿用 monitor_realtime parent child-delta stream，不新增 Firebase listener。 */
 #v2-live-page .lfz-baoz-block { border-left:3px solid #bf5af2; padding:6px 7px; }
+#v2-live-page .lfz-live-panel { margin-top:5px; border:1px solid #3a3a3c; background:rgba(255,255,255,.025); padding:5px 6px; }
+#v2-live-page .lfz-live-head { display:flex; align-items:flex-start; justify-content:space-between; gap:5px; }
+#v2-live-page .lfz-live-title { color:#d1d1d6; font-size:9px; font-weight:900; line-height:1.2; }
+#v2-live-page .lfz-live-source { color:#777; font-size:7px; line-height:1.2; margin-top:1px; overflow-wrap:anywhere; }
+#v2-live-page .lfz-live-status { flex:0 0 auto; border:1px solid #48484a; background:#29292b; color:#8e8e93; padding:1px 4px; font-size:7px; font-weight:900; white-space:nowrap; }
+#v2-live-page .lfz-live-status.fresh { color:#30d158; border-color:rgba(48,209,88,.55); background:rgba(48,209,88,.07); }
+#v2-live-page .lfz-live-status.stale { color:#ff9f0a; border-color:rgba(255,159,10,.55); background:rgba(255,159,10,.07); }
+#v2-live-page .lfz-live-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin-top:5px; }
+#v2-live-page .lfz-live-card { min-width:0; border:1px solid #343438; background:rgba(0,0,0,.15); padding:4px 5px; }
+#v2-live-page .lfz-live-card.call { border-left:3px solid #30d158; }
+#v2-live-page .lfz-live-card.put { border-left:3px solid #ff453a; }
+#v2-live-page .lfz-live-card.root-hot { box-shadow:inset 0 0 10px rgba(255,214,10,.08); border-top-color:rgba(255,214,10,.6); border-bottom-color:rgba(255,214,10,.6); }
+#v2-live-page .lfz-live-card-name { color:#8e8e93; font-size:8px; font-weight:900; }
+#v2-live-page .lfz-live-levels { display:flex; align-items:baseline; justify-content:space-between; gap:4px; margin-top:2px; }
+#v2-live-page .lfz-live-fixed { color:#aaa; font-size:10px; font-weight:800; white-space:nowrap; }
+#v2-live-page .lfz-live-arrow { color:#555; font-size:8px; }
+#v2-live-page .lfz-live-now { color:#f2f2f7; font-size:13px; font-weight:950; white-space:nowrap; }
+#v2-live-page .lfz-live-delta { margin-top:2px; color:#8e8e93; font-size:8px; font-weight:800; line-height:1.25; }
+#v2-live-page .lfz-live-delta.up { color:#30d158; }
+#v2-live-page .lfz-live-delta.down { color:#ff453a; }
+#v2-live-page .lfz-center-panel { margin-top:5px; border-top:1px solid #343438; padding-top:5px; }
+#v2-live-page .lfz-center-head { display:flex; align-items:baseline; justify-content:space-between; gap:6px; margin-bottom:4px; }
+#v2-live-page .lfz-center-title { color:#ffd60a; font-size:9px; font-weight:950; letter-spacing:.02em; }
+#v2-live-page .lfz-center-note { color:#777; font-size:7px; line-height:1.2; text-align:right; }
+#v2-live-page .lfz-center-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+#v2-live-page .lfz-center-card { min-width:0; border:1px solid #343438; background:rgba(255,214,10,.025); padding:4px 5px; }
+#v2-live-page .lfz-center-name { color:#8e8e93; font-size:8px; font-weight:900; }
+#v2-live-page .lfz-center-value { margin-top:2px; color:#ffd60a; font-size:13px; font-weight:950; white-space:nowrap; }
+#v2-live-page .lfz-center-sub { margin-top:2px; color:#777; font-size:7px; line-height:1.2; }
+#v2-live-page .lfz-relayout-read { margin-top:5px; padding:4px 5px; border-left:3px solid #636366; background:rgba(255,255,255,.025); color:#aaa; font-size:8px; font-weight:850; line-height:1.3; overflow-wrap:anywhere; }
+#v2-live-page .lfz-relayout-read.bull { border-left-color:#30d158; color:#8be8a2; background:rgba(48,209,88,.05); }
+#v2-live-page .lfz-relayout-read.bear { border-left-color:#ff453a; color:#ff9f9a; background:rgba(255,69,58,.05); }
+#v2-live-page .lfz-relayout-read.conflict { border-left-color:#ffd60a; color:#ffd60a; background:rgba(255,214,10,.06); }
+#v2-live-page .lfz-fixed-table-label { margin-top:6px; color:#777; font-size:7px; font-weight:900; border-top:1px dashed #353539; padding-top:4px; }
+
 #v2-live-page .lfz-baoz-head { display:flex; align-items:center; justify-content:space-between; gap:6px; }
 #v2-live-page .lfz-baoz-title { color:#f2f2f7; font-size:12px; font-weight:900; }
 #v2-live-page .lfz-baoz-badge { color:#bf5af2; border:1px solid rgba(191,90,242,.55); background:rgba(191,90,242,.08); padding:2px 5px; font-size:9px; font-weight:900; white-space:nowrap; }
@@ -2318,7 +2354,7 @@
         <section id="ocf-battle-panel" class="ocf-battle-panel req-level-4-block" aria-label="OCF 暴 Z 未來一日預估">
             <div class="ocf-battle-header">
                 <div>
-                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z3.1 A18 ROOT-LIVENESS FORMAL-ON｜G11 Execution Interlock｜LFZ4 + NSCW/NSPW｜TP200 FORMAL</div>
+                    <div id="ocf-battle-version-title" class="ocf-battle-kicker">OCF-Z2.1 LIVE｜Z3.1 A19 SAFETY-CLOSURE FORMAL-ON｜G11 Execution Interlock｜LFZ4 + NSCW/NSPW｜TP200 FORMAL</div>
                     <div class="ocf-battle-title">暴 Z2 即時進場戰場</div>
                 </div>
                 <span id="ocf-model-status" class="ocf-model-badge is-stale">等待資料</span>
@@ -5751,7 +5787,7 @@
       const layoutSourceStatus = String(data.z3_layout_source_status || '').toUpperCase();
       const lifecycleBuild = String(data.z3_lifecycle_build || '');
 
-      // A18 schema-1.2 root-liveness audit fields are CSV-native today.
+      // A19 retains A18 schema-1.2 root-liveness audit fields; CSV contract remains 250 columns.
       // Support both raw sidecar names and future z3_-prefixed parent-payload aliases without adding a listener.
       const rootField = (name) => {
         if (data[name] !== undefined && data[name] !== null) return data[name];
@@ -5867,7 +5903,7 @@
       if (!inputValid) inventoryZh = reasonZh(inputReason);
       else if (state.startsWith('RELAYOUT_NO_PREARM_PC_')) inventoryZh = 'LFZ重新布局已確認・等待Positioning成熟';
       else if (state.startsWith('RELAYOUT_PC_NOT_VALID_')) inventoryZh = 'LFZ重新布局已確認・PC尚未通過';
-      else if (state.startsWith('RELAYOUT_ROOT_WITHDRAWN_')) inventoryZh = 'A18 Root 已撤回・舊 Cycle 已終止';
+      else if (state.startsWith('RELAYOUT_ROOT_WITHDRAWN_')) inventoryZh = 'A19 Root 已撤回／衝突・舊 Cycle 已終止';
       else if (state.startsWith('PC_DECAYING_')) inventoryZh = '原布局證據正在衰退';
       else if (state.includes('EXPIRED') || state.includes('INVALIDATED')) inventoryZh = '原布局已失效';
       else if (validReason) inventoryZh = reasonZh(validReason);
@@ -5957,12 +5993,15 @@
         const withdrawnNow = state.startsWith('RELAYOUT_ROOT_WITHDRAWN_');
         const lastTerminalState = String(data.z3_last_terminal_state || '').toUpperCase();
         const withdrawnRecent = lastTerminalState.startsWith('RELAYOUT_ROOT_WITHDRAWN_');
+        const rootReasonUpper = String(rootReasonRaw || validReason || '').toUpperCase();
+        const bilateralConflict = rootReasonUpper.includes('RELAYOUT_ROOT_CONFLICT');
         let auditClass = '';
         let statusText = 'IDLE';
-        if (withdrawnNow || withdrawnRecent) { auditClass = 'withdrawn'; statusText = 'WITHDRAWN｜終止'; }
+        if (bilateralConflict && (withdrawnNow || withdrawnRecent || relayoutInCycle)) { auditClass = 'invalid'; statusText = 'BILATERAL CONFLICT｜終止'; }
+        else if (withdrawnNow || withdrawnRecent) { auditClass = 'withdrawn'; statusText = 'WITHDRAWN｜終止'; }
         else if (rootTelemetryAvailable && rootTracked && rootLive) { auditClass = 'live'; statusText = 'ROOT LIVE'; }
         else if (rootTelemetryAvailable && rootTracked && !rootLive) { auditClass = 'invalid'; statusText = 'ROOT NOT LIVE'; }
-        else if (relayoutInCycle) { auditClass = 'active'; statusText = 'A18 ACTIVE｜CSV AUDIT'; }
+        else if (relayoutInCycle) { auditClass = 'active'; statusText = 'A19 ACTIVE｜CSV AUDIT'; }
         rootAudit.className = 'z3-root-audit ' + auditClass;
         rootStatus.textContent = statusText;
 
@@ -5975,8 +6014,8 @@
         let reasonText = String(rootReasonRaw || '').trim();
         if (!reasonText && withdrawnNow) reasonText = state;
         if (!reasonText && withdrawnRecent) reasonText = lastTerminalState;
-        if (!reasonText && relayoutInCycle && !rootTelemetryAvailable) reasonText = 'A18 root-liveness 正在執行；13欄詳細 provenance 目前僅在 schema 1.2 / 250-column sidecar。';
-        if (!reasonText) reasonText = '等待 LIVE_RELAYOUT root；A18 詳細 root provenance 由 250-column sidecar 稽核。';
+        if (!reasonText && relayoutInCycle && !rootTelemetryAvailable) reasonText = 'A19 root-liveness / bilateral-conflict safety 正在執行；13欄詳細 provenance 目前僅在 schema 1.2 / 250-column sidecar。';
+        if (!reasonText) reasonText = '等待 LIVE_RELAYOUT root；A19 詳細 root provenance 由 250-column sidecar 稽核。';
         rootReason.textContent = reasonText;
         rootAudit.title = `${lifecycleBuild || 'lifecycle --'} | schema 1.2 / 250C`;
       }
@@ -6011,16 +6050,22 @@
       if (!body || !meta || !badge) return;
 
       const data = payload || {};
+      const fixed = data.fixed_levels && typeof data.fixed_levels === 'object' ? data.fixed_levels : {};
+      const live = data.live_levels && typeof data.live_levels === 'object' ? data.live_levels : {};
       const valid = Number(data.valid || 0) !== 0;
       const rowsObj = data.rows && typeof data.rows === 'object' ? data.rows : {};
       const rows = Object.values(rowsObj)
         .filter(r => r && typeof r === 'object')
         .sort((a,b) => (Number(a.order)||0) - (Number(b.order)||0));
 
+      const numOrNaN = (v) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : NaN;
+      };
       const fmt = (v) => {
         if (v === null || v === undefined || v === '') return '--';
         const n = Number(v);
-        return Number.isFinite(n) ? Math.round(n).toLocaleString('en-US') : '--';
+        return Number.isFinite(n) && n !== 0 ? Math.round(n).toLocaleString('en-US') : '--';
       };
       const esc = (v) => String(v ?? '')
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -6033,14 +6078,116 @@
         if (tag === '倒莊') return 'dual';
         return '';
       };
+      const parseLocalTime = (text) => {
+        const t = String(text || '').trim();
+        if (!t) return NaN;
+        const ms = Date.parse(t.replace(' ', 'T'));
+        return Number.isFinite(ms) ? ms : NaN;
+      };
 
-      badge.textContent = valid ? `LIVE｜${data.row_count ?? rows.length} 標註` : 'WAIT';
+      badge.textContent = valid ? `FIXED｜${data.row_count ?? rows.length} 標註` : 'WAIT';
       const metaBits = [];
-      if (data.table_source) metaBits.push(`來源 ${data.table_source}`);
+      if (data.table_source) metaBits.push(`Fixed ${data.table_source}`);
       if (data.basis_method) metaBits.push(`映射 ${data.basis_method}`);
       if (data.mapping_basis !== null && data.mapping_basis !== undefined && data.mapping_basis !== '' && Number.isFinite(Number(data.mapping_basis))) metaBits.push(`Basis ${Number(data.mapping_basis).toFixed(1)}`);
       if (data.updated_at) metaBits.push(String(data.updated_at).slice(11,19));
       meta.textContent = metaBits.length ? metaBits.join('｜') : '等待 LFZ 暴Z資料';
+
+      // Fixed vs Live observability.  Source timestamp is authoritative; age is
+      // recomputed locally so freshness continues to age without extra Firebase traffic.
+      const sourceMs = parseLocalTime(live.source_at);
+      const fallbackAge = Math.max(0, Number(live.source_age_seconds || 0));
+      const ageSec = Number.isFinite(sourceMs) ? Math.max(0, Math.floor((Date.now() - sourceMs) / 1000)) : fallbackAge;
+      const maxAge = Math.max(1, Number(live.max_age_seconds || 180));
+      const liveValid = Number(live.valid || 0) !== 0;
+      const liveFresh = liveValid && ageSec <= maxAge;
+      const gap = numOrNaN(live.strike_gap);
+      const liveStatus = document.getElementById('lfz-live-status');
+      const liveSource = document.getElementById('lfz-live-source');
+      if (liveStatus) {
+        liveStatus.textContent = liveValid ? (liveFresh ? `FRESH ${ageSec}s` : `STALE ${ageSec}s`) : 'LIVE WAIT';
+        liveStatus.className = 'lfz-live-status ' + (liveValid ? (liveFresh ? 'fresh' : 'stale') : '');
+      }
+      if (liveSource) {
+        const bits = [];
+        if (live.source) bits.push(String(live.source));
+        if (live.reference_index && Number(live.reference_index) > 0) bits.push(`Ref ${fmt(live.reference_index)}`);
+        if (Number.isFinite(gap) && gap > 0) bits.push(`Gap ${Math.round(gap)}`);
+        liveSource.textContent = bits.length ? bits.join('｜') : '等待盤中 LFZ source';
+      }
+
+      const levelDefs = [
+        ['scw','SCW','call'], ['nscw','NSCW','call'], ['spw','SPW','put'], ['nspw','NSPW','put']
+      ];
+      const deltas = {};
+      levelDefs.forEach(([key,label,side]) => {
+        const f = numOrNaN(fixed[key]);
+        const l = numOrNaN(live[key]);
+        const d = Number.isFinite(f) && f > 0 && Number.isFinite(l) && l > 0 ? l - f : NaN;
+        const strikes = Number.isFinite(d) && Number.isFinite(gap) && gap > 0 ? d / gap : NaN;
+        deltas[key] = {d, strikes};
+        const fixedEl = document.getElementById(`lfz-${key}-fixed`);
+        const liveEl = document.getElementById(`lfz-${key}-live`);
+        const deltaEl = document.getElementById(`lfz-${key}-delta`);
+        const cardEl = document.getElementById(`lfz-${key}-card`);
+        if (fixedEl) fixedEl.textContent = fmt(f);
+        if (liveEl) liveEl.textContent = liveFresh ? fmt(l) : (liveValid ? `${fmt(l)}*` : '--');
+        if (deltaEl) {
+          if (Number.isFinite(d)) {
+            const ds = `${d > 0 ? '+' : ''}${Math.round(d)}`;
+            const ss = Number.isFinite(strikes) ? `｜${strikes > 0 ? '+' : ''}${strikes.toFixed(Math.abs(strikes % 1) < 0.001 ? 0 : 1)}檔` : '';
+            deltaEl.textContent = `Δ ${ds}${ss}`;
+            deltaEl.className = 'lfz-live-delta ' + (d > 0 ? 'up' : (d < 0 ? 'down' : ''));
+          } else {
+            deltaEl.textContent = 'Δ --';
+            deltaEl.className = 'lfz-live-delta';
+          }
+        }
+        if (cardEl) cardEl.className = `lfz-live-card ${side}`;
+      });
+
+      // Layout centers are context/regime telemetry, not relayout causal triggers.
+      const centerDefs = [
+        ['csp','CSP','賣 Put 重心'], ['csc','CSC','賣 Call 重心'], ['m','M','布局中心']
+      ];
+      centerDefs.forEach(([key,label,desc]) => {
+        const value = numOrNaN(live[key]);
+        const el = document.getElementById(`lfz-center-${key}`);
+        const sub = document.getElementById(`lfz-center-${key}-sub`);
+        if (el) el.textContent = liveFresh ? fmt(value) : (liveValid ? `${fmt(value)}*` : '--');
+        if (sub) sub.textContent = desc;
+      });
+
+      const longStrikes = Number.isFinite(deltas.nscw?.strikes) ? deltas.nscw.strikes : NaN;
+      const shortStrikes = Number.isFinite(deltas.nspw?.strikes) ? -deltas.nspw.strikes : NaN;
+      const longRoot = liveFresh && Number.isFinite(longStrikes) && longStrikes >= 2;
+      const shortRoot = liveFresh && Number.isFinite(shortStrikes) && shortStrikes >= 2;
+      const nscwCard = document.getElementById('lfz-nscw-card');
+      const nspwCard = document.getElementById('lfz-nspw-card');
+      if (nscwCard && longRoot) nscwCard.classList.add('root-hot');
+      if (nspwCard && shortRoot) nspwCard.classList.add('root-hot');
+      const relayout = document.getElementById('lfz-relayout-read');
+      if (relayout) {
+        if (!liveValid) {
+          relayout.textContent = 'Live relayout：等待盤中 LFZ。';
+          relayout.className = 'lfz-relayout-read';
+        } else if (!liveFresh) {
+          relayout.textContent = `Live relayout：來源逾時 ${ageSec}s > ${maxAge}s，Formal 應 fail-closed。`;
+          relayout.className = 'lfz-relayout-read conflict';
+        } else if (longRoot && shortRoot) {
+          relayout.textContent = `⚠ Bilateral Conflict｜NSCW↑ ${longStrikes.toFixed(1)}檔 + NSPW↓ ${shortStrikes.toFixed(1)}檔；A19 不應讓單邊 root 繼續取得 authority。`;
+          relayout.className = 'lfz-relayout-read conflict';
+        } else if (longRoot) {
+          relayout.textContent = `Long relayout candidate｜NSCW↑ ${longStrikes.toFixed(1)}檔；仍需 ownership / PC / state-safe FMF。`;
+          relayout.className = 'lfz-relayout-read bull';
+        } else if (shortRoot) {
+          relayout.textContent = `Short relayout candidate｜NSPW↓ ${shortStrikes.toFixed(1)}檔；仍需 ownership / PC / state-safe FMF。`;
+          relayout.className = 'lfz-relayout-read bear';
+        } else {
+          relayout.textContent = 'Live relayout：NS writer displacement 尚未達 ±2 檔 causal threshold。';
+          relayout.className = 'lfz-relayout-read';
+        }
+      }
 
       if (!valid || rows.length === 0) {
         body.innerHTML = '<tr><td colspan="3" class="lfz-baoz-empty">等待 LFZ 固定布局／標註資料</td></tr>';
@@ -7119,8 +7266,8 @@
 
     const z3Block = el('section', 'v10-side-block z3-early-block');
     z3Block.innerHTML = `
-      <div class="z3-early-head"><div class="z3-early-title">Z3.1 A18 主力經濟布局 / Formal Authority</div><span id="z3-authority-badge" class="z3-shadow-badge">FORMAL --</span></div>
-      <div id="z3-main-read" class="z3-main-read">等待 Z3.1 A18 Formal 資料</div>
+      <div class="z3-early-head"><div class="z3-early-title">Z3.1 A19 主力經濟布局 / Formal Authority</div><span id="z3-authority-badge" class="z3-shadow-badge">FORMAL --</span></div>
+      <div id="z3-main-read" class="z3-main-read">等待 Z3.1 A19 Formal 資料</div>
       <div id="z3-formal-read" class="z3-formal-read">Direction / Trigger / ICUA / G11：等待資料</div>
       <div id="z3-opportunity-read" class="z3-opportunity-read">Opportunity｜等待 LFZ / ICUA / Continuation</div>
       <div class="z3-pipeline">
@@ -7131,7 +7278,7 @@
       </div>
       <div id="z3-sub-read" class="z3-sub-read">LFZ / NSCW-NSPW / Inventory：等待資料</div>
       <div id="z3-root-audit" class="z3-root-audit">
-        <div class="z3-root-head"><span class="z3-root-title">A18 LIVE_RELAYOUT Root-Liveness｜schema 1.2 / 250C</span><span id="z3-root-status" class="z3-root-status">IDLE</span></div>
+        <div class="z3-root-head"><span class="z3-root-title">A19 LIVE_RELAYOUT Root-Liveness + Bilateral Conflict｜schema 1.2 / 250C</span><span id="z3-root-status" class="z3-root-status">IDLE</span></div>
         <div class="z3-root-grid">
           <div class="z3-root-item"><span>Frozen baseline</span><strong id="z3-root-baseline">--</strong></div>
           <div class="z3-root-item"><span>Current root / displacement</span><strong id="z3-root-current">--</strong></div>
@@ -7148,12 +7295,41 @@
         <span id="lfz-baoz-badge" class="lfz-baoz-badge">WAIT</span>
       </div>
       <div id="lfz-baoz-meta" class="lfz-baoz-meta">等待 LFZ 暴Z資料</div>
+      <div class="lfz-live-panel">
+        <div class="lfz-live-head">
+          <div><div class="lfz-live-title">Fixed vs Live｜Z3.1 實際使用位階</div><div id="lfz-live-source" class="lfz-live-source">等待盤中 LFZ source</div></div>
+          <span id="lfz-live-status" class="lfz-live-status">LIVE WAIT</span>
+        </div>
+        <div class="lfz-live-grid">
+          <div id="lfz-scw-card" class="lfz-live-card call"><div class="lfz-live-card-name">SCW</div><div class="lfz-live-levels"><span id="lfz-scw-fixed" class="lfz-live-fixed">--</span><span class="lfz-live-arrow">→</span><strong id="lfz-scw-live" class="lfz-live-now">--</strong></div><div id="lfz-scw-delta" class="lfz-live-delta">Δ --</div></div>
+          <div id="lfz-nscw-card" class="lfz-live-card call"><div class="lfz-live-card-name">NSCW</div><div class="lfz-live-levels"><span id="lfz-nscw-fixed" class="lfz-live-fixed">--</span><span class="lfz-live-arrow">→</span><strong id="lfz-nscw-live" class="lfz-live-now">--</strong></div><div id="lfz-nscw-delta" class="lfz-live-delta">Δ --</div></div>
+          <div id="lfz-spw-card" class="lfz-live-card put"><div class="lfz-live-card-name">SPW</div><div class="lfz-live-levels"><span id="lfz-spw-fixed" class="lfz-live-fixed">--</span><span class="lfz-live-arrow">→</span><strong id="lfz-spw-live" class="lfz-live-now">--</strong></div><div id="lfz-spw-delta" class="lfz-live-delta">Δ --</div></div>
+          <div id="lfz-nspw-card" class="lfz-live-card put"><div class="lfz-live-card-name">NSPW</div><div class="lfz-live-levels"><span id="lfz-nspw-fixed" class="lfz-live-fixed">--</span><span class="lfz-live-arrow">→</span><strong id="lfz-nspw-live" class="lfz-live-now">--</strong></div><div id="lfz-nspw-delta" class="lfz-live-delta">Δ --</div></div>
+        </div>
+        <div id="lfz-relayout-read" class="lfz-relayout-read">Live relayout：等待盤中 LFZ。</div>
+        <div class="lfz-center-panel">
+          <div class="lfz-center-head">
+            <div class="lfz-center-title">布局中心｜Live CSP / CSC / M</div>
+            <div class="lfz-center-note">資金重心 / regime context｜不作 Relayout causal trigger</div>
+          </div>
+          <div class="lfz-center-grid">
+            <div class="lfz-center-card"><div class="lfz-center-name">CSP</div><div id="lfz-center-csp" class="lfz-center-value">--</div><div id="lfz-center-csp-sub" class="lfz-center-sub">賣 Put 重心</div></div>
+            <div class="lfz-center-card"><div class="lfz-center-name">CSC</div><div id="lfz-center-csc" class="lfz-center-value">--</div><div id="lfz-center-csc-sub" class="lfz-center-sub">賣 Call 重心</div></div>
+            <div class="lfz-center-card"><div class="lfz-center-name">M</div><div id="lfz-center-m" class="lfz-center-value">--</div><div id="lfz-center-m-sub" class="lfz-center-sub">布局中心</div></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="lfz-fixed-table-label">固定布局逐檔標註｜上一完成盤 blueprint</div>
       <table class="lfz-baoz-table">
         <thead><tr><th>標註</th><th>履約價</th><th>期指價</th></tr></thead>
         <tbody id="lfz-baoz-body"><tr><td colspan="3" class="lfz-baoz-empty">等待資料</td></tr></tbody>
       </table>`;
     z3Block.insertAdjacentElement('afterend', baoZBlock);
     updateLFZBaoZUI(window.__Z2LFZBaoZCache || null);
+    if (!window.__Z2LFZBaoZFreshTimer) {
+      window.__Z2LFZBaoZFreshTimer = setInterval(() => updateLFZBaoZUI(window.__Z2LFZBaoZCache || null), 15000);
+    }
 
     const v10PriorBand = ocfPanel ? ocfPanel.querySelector('.ocf-prior-band') : null;
     if (v10PriorBand) {
