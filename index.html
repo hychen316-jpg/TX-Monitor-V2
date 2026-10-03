@@ -4384,13 +4384,25 @@
         const guardBand = document.getElementById("ocf-entry-guard-band");
         const guardStatus = document.getElementById("ocf-entry-guard-status");
         const guardDetail = document.getElementById("ocf-entry-guard-detail");
-        let guardClass = "guard-valid";
-        let guardStatusText = "ALLOW｜可執行";
-        let guardDetailText = "結構方向有效，Entry Guard目前無阻擋";
+        // A38.1 presentation safety: ONLY an explicit VALID token may say ALLOW.
+        // UNKNOWN and unrecognized future Guard values stay WAIT; no trading authority.
+        let guardClass = "guard-pause";
+        let guardStatusText = "WAIT｜Guard狀態未確認";
+        let guardDetailText = "尚未取得明確的ENTRY_GUARD=VALID；不得以顯示層判斷可進場";
         if (!isLive) {
-            guardClass = "guard-pause";
             guardStatusText = "WAIT｜資料未就緒";
             guardDetailText = "Z2尚未LIVE，不建立新進場";
+        } else if (entryGuardToken === "VALID") {
+            guardClass = "guard-valid";
+            guardStatusText = "ALLOW｜Guard無阻擋";
+            guardDetailText = "EntryGuard報告VALID；仍須其他正式進場條件與授權全部成立";
+        } else if (entryGuardToken === "ENTRY_GUARD_NOT_READY") {
+            guardStatusText = "BLOCKED｜Guard未就緒";
+            guardDetailText = "A38.1：初始化或完整正式狀態觀測未完成，禁止新曝險";
+        } else if (entryGuardToken === "ENTRY_GUARD_RUNTIME_ERROR") {
+            guardClass = "guard-conflict";
+            guardStatusText = "BLOCKED｜Guard例外";
+            guardDetailText = "A38.1：EntryAllowed出現非預期錯誤，需重建有效狀態才能重新進場";
         } else if (entryGuardToken === "ENTRY_FMF_HARD_CONFLICT") {
             guardClass = "guard-pause";
             guardStatusText = "PAUSE｜FMF反向攻擊";
@@ -4910,6 +4922,9 @@
                 semanticAdviceClass = "wait";
             } else if (transitionBlocked) {
                 semanticAdviceDisplay = `${direction > 0 ? "多方" : (direction < 0 ? "空方" : "原")}正式結構保留｜Structural Transition=${transitionToken}｜舊方向新進場／再進場已封鎖`;
+                semanticAdviceClass = "wait";
+            } else if (entryGuardToken === "ENTRY_GUARD_NOT_READY" || entryGuardToken === "ENTRY_GUARD_RUNTIME_ERROR") {
+                semanticAdviceDisplay = `Guard ${entryGuardToken}｜未獲進場許可・等待有效來源狀態`;
                 semanticAdviceClass = "wait";
             } else if (entryGuardToken === "ENTRY_FMF_HARD_CONFLICT") {
                 semanticAdviceDisplay = `Z2 ${direction > 0 ? "多方" : (direction < 0 ? "空方" : "")}結構保留｜FMF反向攻擊｜暫停2/2，等待重新確認`;
