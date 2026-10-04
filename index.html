@@ -1,3 +1,4 @@
+<!-- Z31_OFI_LEAD_R0.1 HTML candidate, derived from exact source below; no extra Firebase listener -->
 <!-- Z31_A38_MAPPING_CAUSAL_UI_20261001 | parent Firebase pdr child-delta; no new listener; source unavailable fail closed; no trading authority -->
 <!-- Z31_A19_LFZ_FIXED_LIVE_UI_v0.3_20261001 | Fixed vs Live SCW/SPW/NSCW/NSPW + Live CSP/CSC/M + mapped futures coordinates via existing mapping_basis + delta/strike + freshness + bilateral conflict | reuses monitor_realtime/lfz_baoz child | no new Firebase listener | no authority change -->
 <!-- Z31_A19_SAFETY_CLOSURE_UI_v0.1_20261001 | A19 fail-closed + bilateral relayout conflict observability | schema 1.2 / 250C unchanged | presentation-only | reuses monitor_realtime parent listener | no new Firebase listener -->
@@ -2765,6 +2766,15 @@
                 <div id="p9-thresholds-display" style="font-size:7px; color:#888; margin-top:1px; text-align:center; line-height:1; letter-spacing:0.3px;">
                     攻: <span id="p9-th-at">--</span> / 竭: <span id="p9-th-ex">--</span>
                 </div>
+                <!-- Z31 OFI-Lead R0.1, observation-only, no trading authority -->
+                <div id="ofi-lead-r0" style="width:100%;margin-top:4px;padding:4px 2px;border-top:1px dotted #5e6673;font-size:10px;line-height:1.35;">
+                  <div style="font-weight:800;color:#c7d2fe;">OFI-Lead R0 <span id="ofi-r0-state" style="font-size:9px;color:#a1a1aa;">未提供</span></div>
+                  <div id="ofi-r0-score" style="font-size:13px;font-weight:800;">--</div>
+                  <div id="ofi-r0-breakdown" style="font-size:9px;color:#a1a1aa;">Call -- / Put --</div>
+                  <div id="ofi-r0-coverage" style="font-size:9px;color:#a1a1aa;">RTD 可用性等待中</div>
+                  <div style="font-size:8px;color:#808998;">快照OFI·60秒·僅觀察</div>
+                </div>
+
             </div>
             <div class="p9-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
@@ -6334,6 +6344,43 @@
       }).join('');
     }
 
+
+    // Z31_OFI_LEAD_R0.1: render only. Reuses monitor_realtime parent listener.
+    function renderOFILeadR0(data) {
+      const q = (data && typeof data.ofi_lead === 'object') ? data.ofi_lead : null;
+      const score = document.getElementById('ofi-r0-score');
+      const status = document.getElementById('ofi-r0-state');
+      const split = document.getElementById('ofi-r0-breakdown');
+      const coverage = document.getElementById('ofi-r0-coverage');
+      if (!score || !status || !split || !coverage) return;
+      score.textContent = '--'; score.style.color = '#9ca3af';
+      status.textContent = '未提供'; split.textContent = 'Call -- / Put --';
+      coverage.textContent = '等待 RTD／Firebase 研究資料';
+      if (!q || !/^R0[.]1$/.test(String(q.version || ''))) return;
+      const ts = Date.parse(String(q.sample_at || ''));
+      const fresh = Number.isFinite(ts) && ts <= Date.now() + 5000 && (Date.now() - ts) <= 30000;
+      const pairs = Number(q.pairs_valid), events = Number(q.event_count);
+      coverage.textContent = '有效 ' + (Number.isFinite(pairs) ? pairs : '--') + '/21 | 60秒變化 ' +
+                             (Number.isFinite(events) ? events : '--') + ' | 非原子RTD';
+      if (!fresh) { status.textContent = '資料過時／時間不明'; return; }
+      const stateLabels = {
+        OBSERVED: '已觀測', NO_RECENT_CHANGE: '近期無新變動',
+        WARMUP_OR_NO_CHANGE: '暖機／報價未變',
+        INSUFFICIENT_QUOTE_COVERAGE: '報價不足',
+        RTD_INVALID_OR_MISSING: 'RTD無效', ERROR: '計算異常'
+      };
+      status.textContent = stateLabels[q.status] || '狀態未知';
+      const val = q.score === null ? NaN : Number(q.score);
+      const call = q.call_ofi === null ? NaN : Number(q.call_ofi);
+      const put = q.put_ofi === null ? NaN : Number(q.put_ofi);
+      const show = n => Number.isFinite(n) ? (n > 0 ? '+' : '') + Math.round(n).toLocaleString('en-US') : '--';
+      split.textContent = 'Call ' + show(call) + ' / Put ' + show(put);
+      if (!Number.isFinite(val) || !['OBSERVED','NO_RECENT_CHANGE'].includes(q.status)) return;
+      score.textContent = show(val) + '  ' +
+        (q.signal === 'BULLISH_RAW' ? '偏多觀察' : q.signal === 'BEARISH_RAW' ? '偏空觀察' : '中性觀察');
+      score.style.color = val > 0 ? 'var(--red)' : val < 0 ? 'var(--green)' : '#d1d5db';
+    }
+
     function updateUI(data) {
       updateZ3LifecycleUI(data || {});
       document.getElementById('price').innerText = data.p;
@@ -6552,6 +6599,8 @@
       let display_th_ex = valP9 >= 0 ? th_ex_p : th_ex_n;
       let thAtEl = document.getElementById('p9-th-at'); if(thAtEl) thAtEl.innerText = (display_th_at > 0 ? "+" : "") + display_th_at.toLocaleString('en-US');
       let thExEl = document.getElementById('p9-th-ex'); if(thExEl) thExEl.innerText = (display_th_ex > 0 ? "+" : "") + display_th_ex.toLocaleString('en-US');
+
+      renderOFILeadR0(data);
 
       let valP7 = parseFloat(data.force || 0); 
       let r7El = document.getElementById('r7-val'); 
