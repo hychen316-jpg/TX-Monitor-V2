@@ -2314,6 +2314,25 @@
   line-height: 1 !important;
   min-height: 0 !important;
 }
+/* Z31 20261004: freeze both the futures market row and second core row.
+   Pure presentation; no data source, Firebase listener or authority changes. */
+#v2-live-page .v2-market-slot {
+  top: var(--z31-sticky-nav-height, 38px) !important;
+  z-index: 940;
+  background: #000;
+}
+#v2-live-page .v2-core-grid {
+  position: sticky;
+  top: calc(var(--z31-sticky-nav-height, 38px) + var(--z31-sticky-market-height, 96px) + 4px);
+  z-index: 939;
+  background: #000;
+}
+/* Keep the already-working market freeze but do not trap the entire viewport
+   when screen height is insufficient for the full second row. */
+#v2-live-page.z31-sticky-core-overflow .v2-core-grid {
+  position: static;
+}
+
 </style>
 </head>
 <body>
@@ -7673,6 +7692,33 @@
       if (t) t.textContent = document.getElementById('target-force-summary')?.textContent || '--';
     }, 1000);
     updateCoreSummaries();
+    /* Z31 two-row freeze geometry: attach only to existing V2 DOM nodes.
+       ResizeObserver keeps the core row exactly beneath the live TX quote row
+       as quotes wrap, fonts load, or window dimensions change. */
+    const z31MarketSlot = liveStack.querySelector('.v2-market-slot');
+    function z31SyncStickyRows() {
+      if (!livePage.isConnected || !nav.isConnected) return;
+      const navH = Math.ceil(nav.getBoundingClientRect().height);
+      const marketH = z31MarketSlot ? Math.ceil(z31MarketSlot.getBoundingClientRect().height) : 0;
+      const coreH = Math.ceil(coreGrid.getBoundingClientRect().height);
+      livePage.style.setProperty('--z31-sticky-nav-height', navH + 'px');
+      livePage.style.setProperty('--z31-sticky-market-height', marketH + 'px');
+      const enoughViewport = navH + marketH + coreH + 120 <= window.innerHeight;
+      livePage.classList.toggle('z31-sticky-core-overflow', !enoughViewport);
+    }
+    z31SyncStickyRows();
+    if (typeof ResizeObserver !== 'undefined') {
+      const z31StickyObserver = new ResizeObserver(z31SyncStickyRows);
+      livePage.__z31StickyRowsObserver = z31StickyObserver; // retain observer while page lives
+      z31StickyObserver.observe(nav);
+      if (z31MarketSlot) z31StickyObserver.observe(z31MarketSlot);
+      z31StickyObserver.observe(coreGrid);
+    }
+    window.addEventListener('resize', z31SyncStickyRows, { passive: true });
+    window.requestAnimationFrame(z31SyncStickyRows);
+    // Fallback for pages where ResizeObserver is throttled during data updates.
+    window.setInterval(z31SyncStickyRows, 1000);
+
   }
 
   if (document.readyState === 'loading') {
