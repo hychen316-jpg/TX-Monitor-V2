@@ -1,3 +1,4 @@
+<!-- Z31_P9_PRO_R0.1 | A38.3 + OFI R0.1.1 | research-only | no trading authority -->
 <!-- Z31_OFI_LEAD_UI_R0.1.1 stale-watchdog candidate based on uploaded A38.1 UI reference; no new Firebase listener -->
 <!-- Z31_A38_MAPPING_CAUSAL_UI_20261001 | parent Firebase pdr child-delta; no new listener; source unavailable fail closed; no trading authority -->
 <!-- Z31_A19_LFZ_FIXED_LIVE_UI_v0.3_20261001 | Fixed vs Live SCW/SPW/NSCW/NSPW + Live CSP/CSC/M + mapped futures coordinates via existing mapping_basis + delta/strike + freshness + bilateral conflict | reuses monitor_realtime/lfz_baoz child | no new Firebase listener | no authority change -->
@@ -2775,6 +2776,14 @@
                   <div style="font-size:8px;color:#808998;">快照OFI·60秒·僅觀察</div>
                 </div>
 
+            </div>
+            <!-- Z31 P9-Pro R0.1, research-only, right of original P9 -->
+            <div class="p9-container" id="p9-pro-r0" style="flex:1; flex-direction:column; padding:2px 3px; margin-top:0; background:rgba(100,210,255,0.045); border:1px solid rgba(100,210,255,0.28);">
+                <div class="p9-label" style="font-size:9px;color:#64d2ff;">🧪 P9-Pro R0 <span id="p9-pro-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
+                <div id="p9-pro-score" class="p9-val" style="font-size:16px;margin-top:1px;">--</div>
+                <div id="p9-pro-agreement" style="font-size:8px;color:#d1d1d6;margin-top:1px;">一致性 --</div>
+                <div id="p9-pro-components" style="font-size:8px;color:#a1a1aa;line-height:1.25;margin-top:1px;">Fresh -- | OFI -- | Excess --</div>
+                <div id="p9-pro-coverage" style="font-size:8px;color:#808998;line-height:1.2;margin-top:1px;">等待研究資料</div>
             </div>
             <div class="p9-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
@@ -6397,6 +6406,48 @@
       }
     }, 5000);
 
+
+    // Z31 P9-Pro R0.1: presentation only; reuses monitor_realtime parent listener.
+    let p9ProR0LastPayload = null;
+    function renderP9ProR0(data) {
+      const q = (data && typeof data.p9_pro === 'object') ? data.p9_pro : null;
+      const score = document.getElementById('p9-pro-score');
+      const state = document.getElementById('p9-pro-state');
+      const agreement = document.getElementById('p9-pro-agreement');
+      const components = document.getElementById('p9-pro-components');
+      const coverage = document.getElementById('p9-pro-coverage');
+      if (!score || !state || !agreement || !components || !coverage) return;
+      score.textContent = '--'; score.style.color = '#9ca3af';
+      state.textContent = '未提供'; agreement.textContent = '一致性 --';
+      components.textContent = 'Fresh -- | OFI -- | Excess --';
+      coverage.textContent = '等待研究資料';
+      p9ProR0LastPayload = q;
+      if (!q || !/^R0[.]1$/.test(String(q.version || ''))) return;
+      const ts = Date.parse(String(q.sample_at || ''));
+      const fresh = Number.isFinite(ts) && ts <= Date.now() + 5000 && (Date.now() - ts) <= 30000;
+      const pairs = Number(q.pairs_valid), comparable = Number(q.pairs_comparable);
+      coverage.textContent = '有效 ' + (Number.isFinite(pairs)?pairs:'--') + '/21 | 可比 ' + (Number.isFinite(comparable)?comparable:'--') + '/21';
+      if (!fresh) { state.textContent = '資料過時／時間不明'; return; }
+      const labels = {OBSERVED:'已觀測',WARMUP:'暖機',INSUFFICIENT_QUOTE_COVERAGE:'報價不足',OFI_UNAVAILABLE:'OFI不足',INVALID_CONTEXT:'資料無效',ERROR:'計算異常'};
+      state.textContent = labels[q.status] || '狀態未知';
+      const show = (n,d=0) => Number.isFinite(Number(n)) ? ((Number(n)>0?'+':'') + Number(n).toFixed(d)) : '--';
+      components.textContent = 'Fresh ' + show(q.fresh_net,1) + ' | OFI ' + show(q.ofi_net,0) + ' | Excess ' + show(q.excess_repricing,2);
+      agreement.textContent = '一致性 ' + String(q.agreement || '--').replaceAll('_',' ');
+      const val = q.score === null ? NaN : Number(q.score);
+      if (!Number.isFinite(val) || q.status !== 'OBSERVED') return;
+      const label = q.signal === 'BULLISH_RAW' ? '偏多研究' : q.signal === 'BEARISH_RAW' ? '偏空研究' : '中性研究';
+      score.textContent = show(val,0) + '  ' + label;
+      score.style.color = val > 0 ? 'var(--red)' : val < 0 ? 'var(--green)' : '#d1d5db';
+    }
+
+    window.setInterval(() => {
+      const q = p9ProR0LastPayload;
+      if (!q) return;
+      const ts = Date.parse(String(q.sample_at || ''));
+      const expired = !Number.isFinite(ts) || Date.now() - ts > 30000 || ts > Date.now() + 5000;
+      if (expired) renderP9ProR0({p9_pro:q});
+    }, 5000);
+
     function updateUI(data) {
       updateZ3LifecycleUI(data || {});
       document.getElementById('price').innerText = data.p;
@@ -6617,6 +6668,7 @@
       let thExEl = document.getElementById('p9-th-ex'); if(thExEl) thExEl.innerText = (display_th_ex > 0 ? "+" : "") + display_th_ex.toLocaleString('en-US');
 
       renderOFILeadR0(data);
+      renderP9ProR0(data);
 
       let valP7 = parseFloat(data.force || 0); 
       let r7El = document.getElementById('r7-val'); 
