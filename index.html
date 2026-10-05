@@ -2337,6 +2337,20 @@
   grid-template-columns: minmax(0, 1fr) !important;
 }
 
+/* Narrow the next-month C3/C4 column and transfer core-row width to P9/R7. */
+#v2-live-page .v2-c1c4-card .chip-grid {
+  grid-template-columns: minmax(0, 2fr) minmax(88px, 1fr) !important;
+}
+#v2-live-page .v2-c1c4-card .chip-card { min-width: 0; }
+@media (min-width: 1181px) {
+  #v2-live-page .v2-c1c4-card { grid-column: span 3 !important; }
+  #v2-live-page .v2-force-card { grid-column: span 6 !important; }
+}
+@media (min-width: 621px) and (max-width: 1180px) {
+  #v2-live-page .v2-c1c4-card { grid-column: span 5 !important; }
+  #v2-live-page .v2-force-card { grid-column: span 7 !important; }
+}
+
 </style>
 </head>
 <body>
