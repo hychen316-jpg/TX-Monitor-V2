@@ -7425,10 +7425,8 @@
     const v10AdverseBand = document.getElementById('ocf-adverse-band');
     const v10HmfBand = document.getElementById('ocf-hmf-band');
 
-    const radarCard = card('TX Radar 整盤買賣均價', '輔助觀察｜價量加權；非主力持倉成本或支撐壓力', 'v2-radar-card');
-    if (radarBox) radarCard.appendChild(radarBox);
-    if (radarLocked) radarCard.appendChild(radarLocked);
-    intelGrid.appendChild(radarCard);
+    const auxiliaryCard = card('LFZ 暴Z／Z3.1 Formal／壓力支撐', '研究與盤勢參考', 'v2-aux-card');
+    intelGrid.appendChild(auxiliaryCard);
 
     /* Append-only Shadow + Formal HMF observability: full-width at the very bottom of Live page.
        It is intentionally excluded from every existing optimized grid/state matrix. */
@@ -7504,9 +7502,8 @@
       new MutationObserver(updateCompactAdvice).observe(v10RawAdvice, {childList:true, subtree:true, characterData:true});
     }
 
-    /* Fill the right-side vertical space with existing low-frequency auxiliary state. */
+    /* Keep existing low-frequency support and recovery state in the lower auxiliary group. */
     const v10SideRail = el('div', 'v10-side-rail req-level-4-block');
-    radarCard.appendChild(v10SideRail);
 
     const z3Block = el('section', 'v10-side-block z3-early-block');
     z3Block.innerHTML = `
@@ -7533,7 +7530,7 @@
         <div id="z3-root-reason" class="z3-root-reason">等待 LIVE_RELAYOUT root；Root 訊息由既有 Firebase payload 提供。</div>
       </div>
       <div id="z3-terminal-read" class="z3-terminal-read" hidden></div>`;
-    radarCard.insertBefore(z3Block, radarCard.firstChild);
+    auxiliaryCard.appendChild(z3Block);
     const baoZBlock = el('section', 'v10-side-block lfz-baoz-block');
     baoZBlock.innerHTML = `
       <div class="lfz-baoz-head">
@@ -7571,7 +7568,7 @@
         <thead><tr><th>標註</th><th>履約價</th><th>期指價</th></tr></thead>
         <tbody id="lfz-baoz-body"><tr><td colspan="3" class="lfz-baoz-empty">等待資料</td></tr></tbody>
       </table>`;
-    z3Block.insertAdjacentElement('afterend', baoZBlock);
+    auxiliaryCard.insertBefore(baoZBlock, z3Block);
     updateLFZBaoZUI(window.__Z2LFZBaoZCache || null);
     if (!window.__Z2LFZBaoZFreshTimer) {
       window.__Z2LFZBaoZFreshTimer = setInterval(() => updateLFZBaoZUI(window.__Z2LFZBaoZCache || null), 15000);
@@ -7604,6 +7601,7 @@
     v10SystemMeta.innerHTML = '<div><span>資料呈現</span><strong>Firebase Retained</strong></div><div><span>Flat Safety</span><strong>Recovery Guard</strong></div>';
     v10SystemBlock.appendChild(v10SystemMeta);
     v10SideRail.appendChild(v10SystemBlock);
+    auxiliaryCard.appendChild(v10SideRail);
 
     const historyNote = el('div', 'v2-page-note');
     historyNote.textContent = '原有時間軸與歷史推移圖表集中於此頁；圖表資料來源、Canvas ID及Chart.js實例均保持不變。';
@@ -9063,6 +9061,39 @@
 </script>
 
 
+
+<style id="z31-layout-reorder-20261005">
+  /* Keep the full research/support group directly below the OCF panel. */
+  #v2-live-page .v2-intel-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: start !important;
+  }
+  #v2-live-page .v2-ocf-card,
+  #v2-live-page .v2-aux-card {
+    grid-column: 1 / -1 !important;
+    width: 100%;
+    min-width: 0;
+  }
+  #v2-live-page .v2-ocf-card { order: 1; }
+  #v2-live-page .v2-aux-card {
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  /* The second column contains next-month night/day cells (C3/C4 in the source IDs). */
+  #v2-live-page .v2-c1c4-card .chip-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, .72fr) !important;
+  }
+
+  /* On wide screens, give the P9/R7 card more of the core row. */
+  @media (min-width: 1181px) {
+    #v2-live-page .v2-c1c4-card { grid-column: span 3 !important; }
+    #v2-live-page .v2-force-card { grid-column: span 6 !important; }
+    #v2-live-page .v2-sniper-card { grid-column: span 3 !important; }
+  }
+</style>
 
 </body>
 </html>
