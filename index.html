@@ -6,7 +6,6 @@
 <!-- Z31_A16_LIVE_RELAYOUT_UI_v0.1_20260930 | historical capability retained beneath A18 UI | no authority change -->
 <!-- Z31_FORMAL_DASH_SYNC_UI_v0.1_20260930 | Z3.1 FORMAL 3/3 + Economic Authority + G11 interlock | reuses monitor_realtime parent listener | no new Firebase listener -->
 <!-- LFZ_BAOZ_FIREBASE_UI_v0.2_LARGEFONT_20260930 | monitor_realtime/lfz_baoz child-delta | marked LFZ book rows: 近平/SCW/NSCW/SPW/NSPW/倒莊 + strike + mapped futures | no trading authority -->
-<!-- TX_WHALE_METAORDER_V2_RC2_COST_UI_v0.1_20260929 | presentation-only | reuses existing radar_realtime payload/listener | cost eligibility = SPLIT_METAORDER score>=70 | whale authority remains SHADOW/0 | no order/schema/listener change -->
 <!-- Z22_LFZ4_A10_RC11_R7_PAIR_EPOCH_UI_v0.1_20260928 | selected-pair parity epoch + close-window integrity + table-persistence retry | LFZ-1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW + Z3-INV-LIFECYCLE-v0.2.7-RC7-DATA-INTEGRITY-SHADOW | reuses monitor_realtime parent listener | no new listener/order-authority change -->
 <!-- Z2_WAVE_v1.5.9_RC1_UI_COMPAT_20261001 | Economic-Proof semantic + prior W1/BE/Recovery behavior retained | presentation-only | no listener/schema/authority change -->
 <!-- Z3_INV_LIFECYCLE_DASHBOARD_UI_v0.1_20260927 | compact Chinese SHADOW radar | reuses monitor_realtime parent listener | no new listener | no formal authority change -->
@@ -2660,20 +2659,6 @@
         </div>
       </div>
 
-      <div class="box req-level-4-flex" style="padding:5px 8px; flex-direction:row; align-items:center; gap:6px; border: 1px solid rgba(10, 132, 255, 0.4); box-shadow: inset 0 0 10px rgba(10, 132, 255, 0.1); background: linear-gradient(90deg, rgba(10,132,255,0.05) 0%, transparent 100%);">
-          <div class="radar-static-container">
-              <div id="radar-ticker" class="radar-ticker">
-                  <span style="color:#888;">連線中，等待 TX Radar 整盤主動買／賣均價... ⏳</span>
-              </div>
-          </div>
-      </div>
-      <div class="box upgrade-prompt lock-lvl-4" style="padding:6px; flex-direction:row; gap:8px;">
-          <div style="font-size:14px;">📡</div>
-          <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
-              <div style="font-size:10px; font-weight:bold; color:#aaa;">TX Radar 整盤主動買／賣均價</div>
-              <div class="upgrade-btn" style="font-size:8px; padding:2px 6px;">需 Level 4 解鎖</div>
-          </div>
-      </div>
       <div class="box req-level-2-flex" style="flex-direction:row; justify-content:space-between; align-items:center; padding:6px 8px;" id="pwr-box">
         <div style="display:flex; flex-direction:column; justify-content:center;">
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
@@ -2921,7 +2906,6 @@
     const NODE_REALTIME = 'monitor_realtime';
     const NODE_HISTORY  = 'monitor_history';
     const NODE_ALPHA    = 'monitor_realtime/alpha_data';
-    const NODE_RADAR    = 'radar_realtime';
 
     // OWNER-ONLY build: no other Firebase Auth account may unlock or start data listeners.
     const DASHBOARD_OWNER_EMAIL = 'hychen316@gmail.com';
@@ -3183,7 +3167,6 @@
 
       // Alpha is now rendered from monitor_realtime/alpha_data delivered by the
       // parent delta stream. No separate NODE_ALPHA listener is required.
-      db.ref(NODE_RADAR).on('value', (s) => { if(s.val()) updateRadarUI(s.val()); });
     }
 
     const DIRECTION_CONFIRMATION_MODE_ZH = {
@@ -3217,10 +3200,6 @@
         SESSION_SHORT_TACTICAL_NEUTRAL: "整盤偏空／近期未定",
         SESSION_NEUTRAL: "整盤中性"
     };
-
-    function escapeRadarHtml(value) {
-        return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
-    }
 
     function toFiniteNumberOrNull(value) {
         if (value === null || value === undefined || value === "") return null;
@@ -5356,167 +5335,6 @@
 
 
 
-    let sideVwapDetailsOpen = false;
-
-    function updateRadarUI(data) {
-        const ticker = document.getElementById('radar-ticker');
-        if (!ticker || !data || typeof data !== 'object') return;
-        // New Radar publishes execution-side VWAP fields. Keep the original
-        // card and expand/collapse behavior, but never reinterpret LCC fields.
-        try {
-            if (!String(data.side_vwap_version || '').startsWith('TX-SIDE-VWAP-')
-                || !String(data.radar_version || '').includes('SIDE-VWAP-1')) {
-                ticker.innerHTML = '<div class="radar-compact-shell"><div class="radar-compact-head"><div class="radar-compact-title">TX Radar｜整盤主動買／賣均價</div></div><div class="radar-compact-status">等待新版 Radar；若已啟動，請確認舊 Radar 已停止，避免兩版同時發送。</div></div>';
-                return;
-            }
-            const num = value => toFiniteNumberOrNull(value);
-            const price = value => { const n = num(value); return n !== null && n > 0 ? n.toFixed(1) : '--'; };
-            const lots = value => { const n = num(value); return n !== null ? Math.round(n).toLocaleString('zh-TW') : '--'; };
-            const range = (low, high) => {
-                const a = num(low), b = num(high);
-                return a !== null && b !== null && a > 0 && b >= a ? `${a.toFixed(0)}～${b.toFixed(0)}` : '--';
-            };
-            const ts = num(data.side_vwap_timestamp) || 0;
-            const age = ts > 0 ? Math.max(0, Date.now() / 1000 - ts) : Infinity;
-            const asof = ts > 0 ? new Date(ts * 1000).toLocaleString('zh-TW', {hour12:false}) : '--';
-            const session = String(data.side_vwap_session || '--');
-            const contract = String(data.side_vwap_contract || '--');
-            const hasData = data.side_vwap_status === 'DATA' && ts > 0;
-            const dropped = Math.round(num(data.side_vwap_dropped_events) || 0);
-            const complete = hasData && toRadarBoolean(data.side_vwap_coverage_so_far) && dropped === 0;
-            const quality = !hasData ? '等待逐筆成交' : age > 30 ? '非即時／最後紀錄' : complete ? '目前涵蓋正常' : '資料不完整／待核對';
-            const qualityColor = !hasData || age > 30 || !complete ? 'var(--yellow)' : '#64d2ff';
-            const share = num(data.side_vwap_buy_share);
-            const shareText = share !== null ? `${(share * 100).toFixed(1)}%` : '--';
-            const unknown = lots(data.side_vwap_unknown_lots);
-            const source = String(data.side_vwap_source || '--');
-            // The generic Radar price may be a retained value from another
-            // publish time or contract. Use the price paired with this VWAP
-            // snapshot so a closed-market card stays internally consistent.
-            const currentPrice = price(data.side_vwap_last_price);
-            const priceLabel = age > 30 ? '該盤最後成交' : '期指成交';
-            const whaleVersion = String(data.whale_v2_version || '');
-            const whaleAvailable = whaleVersion.startsWith('TX-WHALE-METAORDER-v2.1');
-            const whaleAuthority = Math.round(num(data.whale_v2_authority) || 0);
-            const whaleStatus = String(data.whale_v2_status || '');
-            const whaleShadow = whaleAvailable && whaleAuthority === 0 && whaleStatus === 'SHADOW';
-            const whalePolicyRaw = String(data.whale_v2_cost_policy || '');
-            const whalePolicy = whalePolicyRaw.startsWith('SPLIT_METAORDER_SCORE_GE_')
-                ? `Split ≥${escapeRadarHtml(whalePolicyRaw.replace('SPLIT_METAORDER_SCORE_GE_', ''))}`
-                : escapeRadarHtml(whalePolicyRaw || '--');
-            const whaleAccepted = Math.round(num(data.whale_v2_accepted_episodes) || 0);
-            const whaleEligible = Math.round(num(data.whale_v2_cost_eligible_episodes) || 0);
-            const whaleThreshold = num(data.whale_v2_block_threshold);
-            const whaleThresholdText = whaleThreshold !== null ? whaleThreshold.toFixed(1) : '--';
-            const whaleWarm = toRadarBoolean(data.whale_v2_threshold_warm);
-            const whaleSamples = Math.round(num(data.whale_v2_threshold_samples) || 0);
-            const whaleSource = String(data.whale_v2_source || '--');
-            const whaleLastEvent = String(data.whale_v2_last_event || '--');
-            const scoreText = value => { const n = num(value); return n !== null ? n.toFixed(1) : '--'; };
-            const whaleCostCard = (label, side, prefix, sessionPrefix) => `
-                <div class="radar-whale-card ${side}">
-                    <span class="radar-whale-card-label">${escapeRadarHtml(label)}｜Tactical Cost</span>
-                    <strong>${price(data[`${prefix}_cost`])}</strong>
-                    <small>${lots(data[`${prefix}_lots`])}口｜${lots(data[`${prefix}_episodes`])} episodes｜Score ${scoreText(data[`${prefix}_score`])}<br>Q25–Q75 ${range(data[`${prefix}_q25`], data[`${prefix}_q75`])}</small>
-                    <span class="radar-whale-card-label" style="margin-top:4px;">Session Cost</span>
-                    <strong style="font-size:11px;">${price(data[`${sessionPrefix}_cost`])}</strong>
-                    <small>${lots(data[`${sessionPrefix}_lots`])}口｜Q25–Q75 ${range(data[`${sessionPrefix}_q25`], data[`${sessionPrefix}_q75`])}</small>
-                </div>`;
-            const activeWhaleText = whaleAvailable
-                ? `Active BUY ${price(data.whale_v2_active_buy_cost)} / ${lots(data.whale_v2_active_buy_lots)}口 / Score ${scoreText(data.whale_v2_active_buy_score)} ｜ Active SELL ${price(data.whale_v2_active_sell_cost)} / ${lots(data.whale_v2_active_sell_lots)}口 / Score ${scoreText(data.whale_v2_active_sell_score)}`
-                : '等待 Whale Metaorder v2 RC2 telemetry';
-            const whaleDetailHtml = whaleAvailable ? `
-                <div class="radar-whale-panel">
-                    <div class="radar-whale-head">
-                        <div>
-                            <div class="radar-whale-title">大額拆單執行成本候選｜Whale Metaorder v2 RC2</div>
-                            <div class="radar-whale-sub">偵測層與成本資格分離；只有通過 Cost Eligibility 的 Split Metaorder 才進成本面。</div>
-                        </div>
-                        <span class="radar-whale-policy">${whalePolicy}</span>
-                    </div>
-                    <div class="radar-whale-grid">
-                        ${whaleCostCard('BUY', 'buy', 'whale_v2_buy', 'whale_v2_buy_session')}
-                        ${whaleCostCard('SELL', 'sell', 'whale_v2_sell', 'whale_v2_sell_session')}
-                    </div>
-                    <div class="radar-whale-metrics">
-                        <div class="radar-whale-metric"><span>Cost Eligible</span><strong>${whaleEligible}</strong></div>
-                        <div class="radar-whale-metric"><span>Accepted Flow</span><strong>${whaleAccepted}</strong></div>
-                        <div class="radar-whale-metric"><span>Adaptive Block</span><strong>${whaleThresholdText}口</strong></div>
-                        <div class="radar-whale-metric"><span>Threshold</span><strong>${whaleWarm ? 'WARM' : 'WARMUP'}｜${whaleSamples}</strong></div>
-                    </div>
-                    <div class="radar-whale-active"><strong>形成中：</strong>${escapeRadarHtml(activeWhaleText)}<br><strong>Last：</strong>${escapeRadarHtml(whaleLastEvent)}｜Source ${escapeRadarHtml(whaleSource)}</div>
-                    <div class="radar-whale-foot">SHADOW / Authority 0。這是匿名逐筆成交推估的 Metaorder 執行成本候選，不等於特定帳戶、未平倉持倉或保證支撐／壓力；Active parent 在 finalized 且通過成本資格前不計入成本面。</div>
-                </div>` : `
-                <div class="radar-whale-panel" style="border-left-color:#636366;">
-                    <div class="radar-whale-title">Whale Metaorder v2 RC2｜等待 telemetry</div>
-                    <div class="radar-whale-sub">目前 SideVWAP 可正常顯示；啟動 RC2 Radar 後才會出現 cost-eligible Metaorder 成本候選。</div>
-                </div>`;
-            const card = (label, side, prefix, note) => `
-                <div class="radar-compact-cost ${side}">
-                    <span class="radar-compact-cost-label">${escapeRadarHtml(label)}</span>
-                    <strong>${price(data[`${prefix}_vwap`])}</strong>
-                    <small>${lots(data[`${prefix}_lots`])}口｜中間50% ${range(data[`${prefix}_q25`], data[`${prefix}_q75`])}${note ? `｜${escapeRadarHtml(note)}` : ''}</small>
-                </div>`;
-            const previousDetailToggle = ticker.querySelector('.radar-detail-toggle');
-            if (previousDetailToggle) sideVwapDetailsOpen = previousDetailToggle.open;
-            ticker.dataset.sideVwapTimestamp = String(ts);
-            ticker.innerHTML = `
-                <div class="radar-compact-shell">
-                    <div class="radar-compact-head">
-                        <div>
-                            <div class="radar-compact-title">TX Radar｜整盤主動買／賣均價</div>
-                            <div class="radar-compact-sub">${escapeRadarHtml(session)}｜${escapeRadarHtml(contract)}｜成交價 × 口數加權</div>
-                        </div>
-                        <div class="radar-command-meta">
-                            ${whaleAvailable ? `<span class="radar-whale-badge${whaleShadow ? '' : ' off'}">${whaleShadow ? 'WHALE RC2 SHADOW' : 'WHALE RC2'}</span>` : ''}
-                            <span class="radar-compact-time">${escapeRadarHtml(asof)}</span>
-                        </div>
-                    </div>
-                    <div class="radar-compact-grid">
-                        ${card('當盤主動買', 'long', 'side_vwap_buy', '')}
-                        ${card('當盤主動賣', 'short', 'side_vwap_sell', '')}
-                        ${card('近兩盤主動買', 'long', 'side_vwap_last2_buy', toRadarBoolean(data.side_vwap_last2_coverage_ok) ? '' : '跨盤待核對')}
-                        ${card('近兩盤主動賣', 'short', 'side_vwap_last2_sell', toRadarBoolean(data.side_vwap_last2_coverage_ok) ? '' : '跨盤待核對')}
-                    </div>
-                    <div class="radar-compact-status"><strong data-side-vwap-freshness style="color:${qualityColor};">${escapeRadarHtml(quality)}</strong>｜${priceLabel} ${currentPrice}｜主動買量占比 ${shareText}｜未判別 ${unknown}口</div>
-                    <details class="radar-detail-toggle"${sideVwapDetailsOpen ? ' open' : ''}>
-                        <summary>展開價量與資料診斷</summary>
-                        <div class="radar-detail-body">
-                            <div class="radar-command-shell">
-                                <div class="radar-command-head">
-                                    <div class="radar-command-heading">
-                                        <div class="radar-command-title">整盤成交方向均價｜${escapeRadarHtml(contract)}</div>
-                                        <div class="radar-command-subtitle">本盤從開盤累計；近兩盤只合併相同實體合約。紅＝主動買，綠＝主動賣。</div>
-                                    </div>
-                                    <div class="radar-command-meta"><span class="radar-version-badge">${escapeRadarHtml(String(data.side_vwap_version))}</span></div>
-                                </div>
-                                <div class="radar-live-grid">
-                                    <div class="radar-live-item"><span class="radar-live-label">本盤主動買</span><strong class="radar-live-value" style="color:var(--red);">${price(data.side_vwap_buy_vwap)}</strong><span class="radar-live-meta">${lots(data.side_vwap_buy_lots)}口｜25–75% ${range(data.side_vwap_buy_q25, data.side_vwap_buy_q75)}</span></div>
-                                    <div class="radar-live-item"><span class="radar-live-label">本盤主動賣</span><strong class="radar-live-value" style="color:var(--green);">${price(data.side_vwap_sell_vwap)}</strong><span class="radar-live-meta">${lots(data.side_vwap_sell_lots)}口｜25–75% ${range(data.side_vwap_sell_q25, data.side_vwap_sell_q75)}</span></div>
-                                    <div class="radar-live-item"><span class="radar-live-label">主動買量占比</span><strong class="radar-live-value">${shareText}</strong><span class="radar-live-meta">僅為買／賣積極度，不是多頭持倉比例</span></div>
-                                    <div class="radar-live-item"><span class="radar-live-label">資料狀態</span><strong class="radar-live-value" style="color:${qualityColor};">${escapeRadarHtml(quality)}</strong><span class="radar-live-meta">逐筆 ${lots(data.side_vwap_ticks)}｜遺漏 ${dropped}｜續接 ${escapeRadarHtml(source)}</span></div>
-                                </div>
-                                <div class="radar-session-foot">主動買／賣成交均價不是特定主力的未平倉成本；25–75% 是成交分布，不是支撐／壓力，也不直接產生進出場訊號。</div>
-                                ${whaleDetailHtml}
-                            </div>
-                        </div>
-                    </details>
-                </div>`;
-            const detailToggle = ticker.querySelector('.radar-detail-toggle');
-            if (detailToggle) detailToggle.addEventListener('toggle', () => { sideVwapDetailsOpen = detailToggle.open; });
-            if (typeof window !== 'undefined' && ts > 0) window.setTimeout(() => {
-                if (ticker.dataset.sideVwapTimestamp !== String(ts)) return;
-                const badge = ticker.querySelector('[data-side-vwap-freshness]');
-                if (badge) { badge.textContent = '非即時／最後紀錄'; badge.style.color = 'var(--yellow)'; }
-            }, 31000);
-        } catch (error) {
-            console.error('TX Radar 整盤均價面板更新失敗:', error);
-            ticker.innerHTML = '<span style="color:var(--yellow);">⚠️ 整盤均價資料格式異常，其他區塊不受影響。</span>';
-        }
-        return;
-    }
-
-
     function updateAlphaUI(data) {
         const heatVal = parseFloat(data.heat || 50);
         const heatExVal = data.heat_ex !== undefined ? parseFloat(data.heat_ex) : 50;
@@ -7309,10 +7127,8 @@
     const topChildren = topSection ? Array.from(topSection.children) : [];
 
     const marketBox = topChildren[0] || null;
-    const radarBox = topChildren[1] || null;
-    const radarLocked = topChildren[2] || null;
-    const powerBox = topChildren[3] || null;
-    const powerLocked = topChildren[4] || null;
+    const powerBox = topChildren[1] || null;
+    const powerLocked = topChildren[2] || null;
 
     const ocfPanel = document.getElementById('ocf-battle-panel');
     const ocfLocked = marketBox ? marketBox.querySelector('.range-box.upgrade-prompt.lock-lvl-4') : null;
@@ -7432,7 +7248,7 @@
     sniperCard.appendChild(targetSummary);
     coreGrid.appendChild(sniperCard);
 
-    /* 5. 下段模組 (TX Radar 與 OCF) */
+    /* 5. 下段模組 (OCF 與輔助側欄) */
     const intelGrid = el('div', 'v2-intel-grid');
     liveStack.appendChild(intelGrid);
 
@@ -7446,10 +7262,8 @@
     const v10AdverseBand = document.getElementById('ocf-adverse-band');
     const v10HmfBand = document.getElementById('ocf-hmf-band');
 
-    const radarCard = card('TX Radar 整盤買賣均價', '輔助觀察｜價量加權；非主力持倉成本或支撐壓力', 'v2-radar-card');
-    if (radarBox) radarCard.appendChild(radarBox);
-    if (radarLocked) radarCard.appendChild(radarLocked);
-    intelGrid.appendChild(radarCard);
+    const auxCard = el('section', 'v2-section-card v2-radar-card');
+    intelGrid.appendChild(auxCard);
 
     /* Append-only Shadow + Formal HMF observability: full-width at the very bottom of Live page.
        It is intentionally excluded from every existing optimized grid/state matrix. */
@@ -7527,7 +7341,7 @@
 
     /* Fill the right-side vertical space with existing low-frequency auxiliary state. */
     const v10SideRail = el('div', 'v10-side-rail req-level-4-block');
-    radarCard.appendChild(v10SideRail);
+    auxCard.appendChild(v10SideRail);
 
     const z3Block = el('section', 'v10-side-block z3-early-block');
     z3Block.innerHTML = `
@@ -7554,7 +7368,7 @@
         <div id="z3-root-reason" class="z3-root-reason">等待 LIVE_RELAYOUT root；Root 訊息由既有 Firebase payload 提供。</div>
       </div>
       <div id="z3-terminal-read" class="z3-terminal-read" hidden></div>`;
-    radarCard.insertBefore(z3Block, radarCard.firstChild);
+    auxCard.insertBefore(z3Block, auxCard.firstChild);
     const baoZBlock = el('section', 'v10-side-block lfz-baoz-block');
     baoZBlock.innerHTML = `
       <div class="lfz-baoz-head">
@@ -7592,7 +7406,7 @@
         <thead><tr><th>標註</th><th>履約價</th><th>期指價</th></tr></thead>
         <tbody id="lfz-baoz-body"><tr><td colspan="3" class="lfz-baoz-empty">等待資料</td></tr></tbody>
       </table>`;
-    z3Block.insertAdjacentElement('afterend', baoZBlock);
+    z3Block.insertAdjacentElement('beforebegin', baoZBlock);
     updateLFZBaoZUI(window.__Z2LFZBaoZCache || null);
     if (!window.__Z2LFZBaoZFreshTimer) {
       window.__Z2LFZBaoZFreshTimer = setInterval(() => updateLFZBaoZUI(window.__Z2LFZBaoZCache || null), 15000);
