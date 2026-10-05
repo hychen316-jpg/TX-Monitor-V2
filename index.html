@@ -2804,7 +2804,7 @@
                 <div id="p9-pro-components" style="font-size:8px;color:#a1a1aa;line-height:1.25;margin-top:1px;">Fresh -- | OFI -- | Excess --</div>
                 <div id="p9-pro-coverage" style="font-size:8px;color:#808998;line-height:1.2;margin-top:1px;">等待研究資料</div>
                 <div id="op-force-exact" style="width:100%;margin-top:4px;padding-top:4px;border-top:1px dotted rgba(100,210,255,.35);line-height:1.25;">
-                  <div style="font-size:9px;font-weight:800;color:#ffd166;">OP 力道差 Exact｜23檔 <span id="op-force-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
+                  <div style="font-size:9px;font-weight:800;color:#ffd166;">OP 力道差 Exact｜23檔 Epoch <span id="op-force-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
                   <div id="op-force-value" style="font-size:15px;font-weight:900;color:#9ca3af;">--</div>
                   <div id="op-force-breakdown" style="font-size:8px;color:#d1d5db;">Call -- | Put --</div>
                   <div id="op-force-detail" style="font-size:8px;color:#808998;">Shioaji TickFOPv1｜等待23檔覆蓋證據</div>
@@ -6461,24 +6461,32 @@
       const detail = document.getElementById('op-force-detail');
       if (!state || !value || !breakdown || !detail) return;
       state.textContent='未提供'; value.textContent='--'; value.style.color='#9ca3af';
-      breakdown.textContent='Call -- | Put --'; detail.textContent='Shioaji TickFOPv1｜等待23檔覆蓋證據';
+      breakdown.textContent='Call -- | Put --'; detail.textContent='Shioaji TickFOPv1｜等待23檔證據';
       if (!q || String(q.op_force_source || '') !== 'SHIOAJI_TICKFOPV1') return;
       const st=String(q.op_force_status||'UNKNOWN'), cov=String(q.op_force_coverage||'ASOF_UNPROVEN'), scope=String(q.op_force_scope||'UNKNOWN');
-      const labels={OBSERVED_EXACT:'逐筆已觀測',NO_TICKS:'尚無成交',INTEGRITY_ERROR:'事件不連續',JOURNAL_PARSE_ERROR:'Journal 解析錯誤',STALE:'資料逾時',SESSION_MISMATCH:'盤別不符',CONTRACT_MISMATCH:'合約不符',SCHEMA_MISMATCH:'Schema 不符',SOURCE_MISMATCH:'來源不符',NO_FILE:'尚未啟動',EMPTY:'空資料',ERROR:'讀取異常'};
+      const tier=String(q.op_force_evidence_tier||'UNPROVEN'), epoch=String(q.op_force_connection_epoch||'');
+      const labels={OBSERVED_EXACT:'逐筆已觀測',PARTIAL_FORWARD_EXACT:'重連後 Forward Exact',PARTIAL_FORWARD_OBSERVED:'重連後研究觀測',ASOF_UNPROVEN:'覆蓋未證',NO_TICKS:'尚無成交',INTEGRITY_ERROR:'目前 Epoch 事件不連續',JOURNAL_PARSE_ERROR:'Journal 解析錯誤',STALE:'資料逾時',SESSION_MISMATCH:'盤別不符',CONTRACT_MISMATCH:'合約不符',SCHEMA_MISMATCH:'Schema 不符',SOURCE_MISMATCH:'來源不符',NO_FILE:'尚未啟動',EMPTY:'空資料',ERROR:'讀取異常'};
       const complete = q.op_force_complete === true;
-      state.textContent=(labels[st]||st)+'｜'+(cov==='ACTIVE_23_PROVEN'?'23檔已證':'23檔覆蓋未證');
-      state.style.color=complete?'#34d399':(st==='OBSERVED_EXACT'?'#ffd166':'#fb7185');
+      const eligible = q.op_force_eligible === true;
+      const observedFallback = st==='PARTIAL_FORWARD_OBSERVED' && Number.isFinite(Number(q.op_force_observed_raw));
+      const proofLabel=complete?'完整盤已證':(eligible && tier==='PARTIAL_FORWARD_EXACT'?'部分盤｜重連後':(observedFallback?'研究觀測｜累量未完全對帳':'覆蓋未證'));
+      state.textContent=(labels[st]||st)+'｜'+proofLabel;
+      state.style.color=complete?'#34d399':eligible?'#ffd166':observedFallback?'#fb923c':(st==='OBSERVED_EXACT'?'#ffd166':'#fb7185');
       const show=n=>Number.isFinite(Number(n))?((Number(n)>0?'+':'')+Math.round(Number(n)).toLocaleString('en-US')):'--';
       const exact=q.op_force===null?NaN:Number(q.op_force);
-      if(complete && Number.isFinite(exact)){
+      const raw=q.op_force_observed_raw===null?NaN:Number(q.op_force_observed_raw);
+      if(eligible && Number.isFinite(exact)){
         value.textContent=show(exact); value.style.color=exact>0?'var(--red)':exact<0?'var(--green)':'#d1d5db';
+      } else if(observedFallback && Number.isFinite(raw)){
+        value.textContent='≈'+show(raw); value.style.color='#fb923c';
       } else {
         value.textContent='--'; value.style.color='#9ca3af';
       }
-      breakdown.textContent=complete?('Call '+show(q.op_call_force)+' | Put '+show(q.op_put_force)):'Call -- | Put --';
+      breakdown.textContent=(eligible||observedFallback)?('Call '+show(q.op_call_force)+' | Put '+show(q.op_put_force)):'Call -- | Put --';
       const obs=Number(q.op_force_observed_contracts), exp=Number(q.op_force_expected_contracts), un=Number(q.op_force_unclassified_lots);
-      detail.textContent=(scope||'UNKNOWN')+'｜Tick '+(Number.isFinite(Number(q.op_force_tick_count))?Number(q.op_force_tick_count).toLocaleString('en-US'):'--')+
-        '｜合約 '+(Number.isFinite(obs)?obs:'--')+'/'+(Number.isFinite(exp)?exp:'--')+'｜未判定 '+(Number.isFinite(un)?un.toLocaleString('en-US'):'--')+'口';
+      const epochShort=epoch?('｜Epoch '+epoch.slice(0,20)) : '';
+      detail.textContent=(scope||'UNKNOWN')+'｜'+tier+'｜Tick '+(Number.isFinite(Number(q.op_force_tick_count))?Number(q.op_force_tick_count).toLocaleString('en-US'):'--')+
+        '｜合約 '+(Number.isFinite(obs)?obs:'--')+'/'+(Number.isFinite(exp)?exp:'--')+'｜未判定 '+(Number.isFinite(un)?un.toLocaleString('en-US'):'--')+'口'+epochShort;
     }
 
 
