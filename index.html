@@ -2812,7 +2812,7 @@
                 </div>
                 <div style="font-size:8px;color:#ffca6c;">研究專用｜逾時保護暫停，數值可能過時</div>
             </div>
-            <div class="p9-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
+            <div class="p9-container r7-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
                 <div id="r7-val" class="p9-val" style="font-size:15px; margin-top:1px;">--</div>
                 <div id="force-amount-display" style="font-size:8px; color:#888; margin-top:1px;">資金淨力：<span id="force-amount-val">--</span> 萬</div>
@@ -9129,7 +9129,11 @@
 
   /* The second column contains next-month night/day cells (C3/C4 in the source IDs). */
   #v2-live-page .v2-c1c4-card .chip-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, .72fr) !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .55fr) !important;
+  }
+  /* Slightly narrow R7 within the P9/R7 card to give its neighbors more room. */
+  #v2-live-page .v2-force-card .r7-container {
+    flex: .82 1 0% !important;
   }
 
   /* On wide screens, give the P9/R7 card more of the core row. */
