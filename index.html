@@ -1,3 +1,4 @@
+<!-- Z31_P9PRO_ASSIST_R1_UI_20261006 | based on user current index_z31.html | original P9 primary | Fresh+OFI assist direction | Excess diagnostic only | authority=0 -->
 <!-- Z31_P9_PRO_R0.1 | A38.3 + OFI R0.1.1 | research-only | no trading authority -->
 <!-- Z31_OFI_LEAD_UI_R0.1.2 retain-last-sample on transport pause; no 30s timeout blanking; no new Firebase listener -->
 <!-- Z31_A38_MAPPING_CAUSAL_UI_20261001 | parent Firebase pdr child-delta; no new listener; source unavailable fail closed; no trading authority -->
@@ -2796,9 +2797,9 @@
                 </div>
 
             </div>
-            <!-- Z31 P9-Pro R0.1, research-only, right of original P9 -->
+            <!-- Z31 P9-Pro Assist R1.0 | original P9 remains primary | Fresh+OFI stable assist direction | Excess diagnostic only | authority=0 -->
             <div class="p9-container" id="p9-pro-r0" style="flex:1; flex-direction:column; padding:2px 3px; margin-top:0; background:rgba(100,210,255,0.045); border:1px solid rgba(100,210,255,0.28);">
-                <div class="p9-label" style="font-size:9px;color:#64d2ff;">🧪 P9-Pro R0 <span id="p9-pro-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
+                <div class="p9-label" style="font-size:9px;color:#64d2ff;">🧭 P9-Pro Assist R1 <span id="p9-pro-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
                 <div id="p9-pro-score" class="p9-val" style="font-size:16px;margin-top:1px;">--</div>
                 <div id="p9-pro-agreement" style="font-size:8px;color:#d1d1d6;margin-top:1px;">一致性 --</div>
                 <div id="p9-pro-components" style="font-size:8px;color:#a1a1aa;line-height:1.25;margin-top:1px;">Fresh -- | OFI -- | Excess --</div>
@@ -2809,7 +2810,7 @@
                   <div id="op-force-breakdown" style="font-size:8px;color:#d1d5db;">Call --｜Put --</div>
                   <div id="op-force-detail" style="font-size:8px;color:#808998;">等待資料</div>
                 </div>
-                <div style="font-size:8px;color:#ffca6c;">研究用｜數值可能過時</div>
+                <div style="font-size:8px;color:#ffca6c;">輔助原 P9｜研究用｜authority=0｜數值可能過時</div>
             </div>
             <div class="p9-container r7-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
@@ -6420,7 +6421,9 @@
 
 
 
-    // Z31 P9-Pro R0.1: presentation only; reuses monitor_realtime parent listener.
+    // Z31 P9-Pro Assist R1.0:
+    // Original P9 remains primary. Assist direction uses backend Fresh+OFI state;
+    // Excess is diagnostic only. R0.1/R0.2 remain backward-compatible.
     function renderP9ProR0(data) {
       const q = (data && typeof data.p9_pro === 'object') ? data.p9_pro : null;
       const score = document.getElementById('p9-pro-score');
@@ -6429,28 +6432,134 @@
       const components = document.getElementById('p9-pro-components');
       const coverage = document.getElementById('p9-pro-coverage');
       if (!score || !state || !agreement || !components || !coverage) return;
-      score.textContent = '--'; score.style.color = '#9ca3af';
-      state.textContent = '未提供'; agreement.textContent = '一致性 --';
+
+      score.textContent = '--';
+      score.style.color = '#9ca3af';
+      state.textContent = '未提供';
+      state.style.color = '#a1a1aa';
+      agreement.textContent = '輔助 --';
+      agreement.style.color = '#d1d1d6';
       components.textContent = 'Fresh -- | OFI -- | Excess --';
       coverage.textContent = '等待研究資料';
-      if (!q || !/^R0[.](1|2)$/.test(String(q.version || ''))) return;
+
+      if (!q) return;
+
+      const version = String(q.version || '');
+      if (!/^(R0[.](1|2)|R1[.]0)$/.test(version)) return;
+
       const ts = Date.parse(String(q.sample_at || ''));
-      const sampleTime = Number.isFinite(ts) ? new Date(ts).toLocaleTimeString('zh-TW', {hour12:false, timeZone:'Asia/Taipei'}) : '時間未知';
-      const pairs = Number(q.pairs_valid), comparable = Number(q.pairs_comparable);
-      coverage.textContent = '有效 ' + (Number.isFinite(pairs)?pairs:'--') + '/21 | 可比 ' + (Number.isFinite(comparable)?comparable:'--') + '/21';
-      coverage.textContent += ' | 樣本 ' + sampleTime; // 只提示時間，不因逾時清空數值
-      const labels = {OBSERVED:'已觀測',WARMUP:'暖機',INSUFFICIENT_QUOTE_COVERAGE:'報價不足',OFI_UNAVAILABLE:'OFI不足',INVALID_CONTEXT:'資料無效',ERROR:'計算異常'};
+      const sampleTime = Number.isFinite(ts)
+        ? new Date(ts).toLocaleTimeString('zh-TW', {hour12:false, timeZone:'Asia/Taipei'})
+        : '時間未知';
+
+      const pairs = Number(q.pairs_valid);
+      const comparable = Number(q.pairs_comparable);
+      coverage.textContent =
+        '有效 ' + (Number.isFinite(pairs) ? pairs : '--') + '/21' +
+        ' | 可比 ' + (Number.isFinite(comparable) ? comparable : '--') + '/21' +
+        ' | 樣本 ' + sampleTime; // 只提示時間，不因逾時清空數值
+
+      const labels = {
+        OBSERVED:'已觀測',
+        WARMUP:'暖機',
+        INSUFFICIENT_QUOTE_COVERAGE:'報價不足',
+        OFI_UNAVAILABLE:'OFI不足',
+        INVALID_CONTEXT:'資料無效',
+        ERROR:'計算異常'
+      };
+      const show = (n,d=0) =>
+        Number.isFinite(Number(n))
+          ? ((Number(n)>0?'+':'') + Number(n).toFixed(d))
+          : '--';
+
+      // A38.567 / Assist R1.0
+      if (version === 'R1.0') {
+        const st = String(q.assist_state || 'UNAVAILABLE').toUpperCase();
+        const rel = String(q.assist_relation || 'UNAVAILABLE').toUpperCase();
+        const age = Number(q.assist_age_seconds);
+        const excess = String(q.excess_role || 'QUIET').toUpperCase();
+
+        const stateLabels = {
+          BULL_CONFIRM:'多方確認',
+          BEAR_CONFIRM:'空方確認',
+          REVERSAL_WATCH_BULL:'反轉監控 → 多',
+          REVERSAL_WATCH_BEAR:'反轉監控 → 空',
+          BULL_BUILDING:'多方建構中',
+          BEAR_BUILDING:'空方建構中',
+          NEUTRAL:'等待一致',
+          UNAVAILABLE:'資料不足'
+        };
+        const relationLabels = {
+          P9_CONFIRMED:'與原 P9 同向',
+          P9_DIVERGENCE:'與原 P9 背離',
+          P9_EARLY_LAYOUT:'P9 未達攻擊門檻',
+          P9_REVERSAL_WATCH:'反向證據累積',
+          BUILDING:'等待確認',
+          NEUTRAL:'中性',
+          UNAVAILABLE:'資料不足'
+        };
+        const excessLabels = {
+          SUPPORT:'支持',
+          DIVERGENCE:'背離',
+          QUIET:'中性'
+        };
+
+        const stateText = stateLabels[st] || st.replaceAll('_',' ');
+        const relationText = relationLabels[rel] || rel.replaceAll('_',' ');
+        const excessText = excessLabels[excess] || excess.replaceAll('_',' ');
+
+        state.textContent = labels[String(q.status || '').toUpperCase()] || '狀態未知';
+
+        score.textContent = stateText;
+        if (st.includes('WATCH')) {
+          score.style.color = 'var(--yellow)';
+        } else if (st.includes('BULL')) {
+          score.style.color = 'var(--red)';
+        } else if (st.includes('BEAR')) {
+          score.style.color = 'var(--green)';
+        } else {
+          score.style.color = '#d1d5db';
+        }
+
+        agreement.textContent =
+          relationText + (Number.isFinite(age) ? (' | ' + Math.round(age) + '秒') : '');
+        agreement.style.color =
+          rel === 'P9_CONFIRMED' ? '#30d158' :
+          rel === 'P9_DIVERGENCE' ? '#ffd60a' :
+          rel === 'P9_REVERSAL_WATCH' ? '#ff9f0a' :
+          '#d1d1d6';
+
+        components.textContent =
+          'FreshN ' + show(q.norm_fresh,2) +
+          ' | OFIN ' + show(q.norm_ofi,2) +
+          ' | Excess ' + excessText +
+          ' | Raw ' + show(q.score,0);
+
+        if (q.status !== 'OBSERVED' || q.assist_available !== true) {
+          score.textContent = '--';
+          score.style.color = '#9ca3af';
+        }
+        return;
+      }
+
+      // Backward compatibility for R0.1/R0.2 payloads.
       state.textContent = labels[q.status] || '狀態未知';
-      const show = (n,d=0) => Number.isFinite(Number(n)) ? ((Number(n)>0?'+':'') + Number(n).toFixed(d)) : '--';
-      components.textContent = 'Fresh ' + show(q.fresh_net,1) + ' | OFI ' + show(q.ofi_net,0) + ' | Excess ' + show(q.excess_repricing,2);
-      agreement.textContent = '一致性 ' + String(q.agreement || '--').replaceAll('_',' ');
+      components.textContent =
+        'Fresh ' + show(q.fresh_net,1) +
+        ' | OFI ' + show(q.ofi_net,0) +
+        ' | Excess ' + show(q.excess_repricing,2);
+      agreement.textContent =
+        '一致性 ' + String(q.agreement || '--').replaceAll('_',' ');
       const val = q.score === null ? NaN : Number(q.score);
       if (!Number.isFinite(val) || q.status !== 'OBSERVED') return;
-      const label = q.signal === 'BULLISH_RAW' ? '偏多研究' : q.signal === 'BEARISH_RAW' ? '偏空研究' : '中性研究';
+      const label =
+        q.signal === 'BULLISH_RAW' ? '偏多研究' :
+        q.signal === 'BEARISH_RAW' ? '偏空研究' : '中性研究';
       score.textContent = show(val,0) + '  ' + label;
-      score.style.color = val > 0 ? 'var(--red)' : val < 0 ? 'var(--green)' : '#d1d5db';
+      score.style.color =
+        val > 0 ? 'var(--red)' :
+        val < 0 ? 'var(--green)' : '#d1d5db';
     }
-
 
     function renderOPForceExact(data) {
       const q = (data && typeof data.p9_pro === 'object') ? data.p9_pro : null;
