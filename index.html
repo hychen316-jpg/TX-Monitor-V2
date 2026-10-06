@@ -6475,7 +6475,7 @@
       if(eligible && Number.isFinite(exact)){
         value.textContent=show(exact); value.style.color=exact>0?'var(--red)':exact<0?'var(--green)':'#d1d5db';
       } else if(observedFallback && Number.isFinite(raw)){
-        value.textContent='≈'+show(raw); value.style.color='#fb923c';
+        value.textContent=show(raw); value.style.color=raw>0?'var(--red)':raw<0?'var(--green)':'#d1d5db';
       } else {
         value.textContent='--'; value.style.color='#9ca3af';
       }
