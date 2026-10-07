@@ -1,3 +1,4 @@
+<!-- Z31_A38_574_OP_SCOPE_CURRENT_OBS_R1_20261007 | SCOPE_CHANGED_FAIL_CLOSED current-scope observed display only | full-session eligible unchanged | authority=0 -->
 <!-- Z31_A38_574_OFI_R12_NEUTRALIZER_SOURCE_ISOLATION_20261007 | geometry ref unchanged | Lead neutralizer Day=B1 Night=B2 | authority=0 -->
 <!-- Z31_A38_572_OFI_OPERATOR_R11_UI_20261007 | current user HTML base | active/expired lifecycle + manual-prep operator state | research shadow | authority=0 -->
 <!-- Z31_A38_570_OFI_LEAD_RESIDUAL_R1_UI_20261006 | current HTML base | raw OFI preserved | futures-neutralized lead shadow | no new Firebase listener | authority=0 -->
@@ -6723,11 +6724,11 @@
       breakdown.textContent='Call --｜Put --'; detail.textContent='等待資料';
       if (!q || String(q.op_force_source || '') !== 'SHIOAJI_TICKFOPV1') return;
       const st=String(q.op_force_status||'UNKNOWN');
-      const labels={OBSERVED_EXACT:'逐筆觀測',PARTIAL_FORWARD_EXACT:'重連精確',PARTIAL_FORWARD_OBSERVED:'重連觀測',CURRENT_SCOPE_ONLY:'當前Scope',SESSION_SCOPE_CONTINUOUS:'當盤連續',SESSION_SCOPE_WITH_RECONNECTS:'當盤重連',SCOPE_CHANGED_FAIL_CLOSED:'Scope變更阻擋',ASOF_UNPROVEN:'覆蓋待證',NO_TICKS:'無成交',INTEGRITY_ERROR:'事件不連續',JOURNAL_PARSE_ERROR:'紀錄錯誤',STALE:'資料逾時',SESSION_MISMATCH:'盤別不符',CONTRACT_MISMATCH:'合約不符',SCHEMA_MISMATCH:'格式不符',SOURCE_MISMATCH:'來源不符',NO_FILE:'尚未啟動',EMPTY:'無資料',ERROR:'讀取異常'};
+      const labels={OBSERVED_EXACT:'逐筆觀測',PARTIAL_FORWARD_EXACT:'重連精確',PARTIAL_FORWARD_OBSERVED:'重連觀測',CURRENT_SCOPE_ONLY:'當前Scope',SESSION_SCOPE_CONTINUOUS:'當盤連續',SESSION_SCOPE_WITH_RECONNECTS:'當盤重連',SCOPE_CHANGED_FAIL_CLOSED:'Scope變更｜目前Scope觀測',ASOF_UNPROVEN:'覆蓋待證',NO_TICKS:'無成交',INTEGRITY_ERROR:'事件不連續',JOURNAL_PARSE_ERROR:'紀錄錯誤',STALE:'資料逾時',SESSION_MISMATCH:'盤別不符',CONTRACT_MISMATCH:'合約不符',SCHEMA_MISMATCH:'格式不符',SOURCE_MISMATCH:'來源不符',NO_FILE:'尚未啟動',EMPTY:'無資料',ERROR:'讀取異常'};
       const complete = q.op_force_complete === true;
       const eligible = q.op_force_eligible === true;
       const raw = q.op_force_observed_raw===null?NaN:Number(q.op_force_observed_raw);
-      const observedStatuses = new Set(['PARTIAL_FORWARD_OBSERVED','CURRENT_SCOPE_ONLY','SESSION_SCOPE_CONTINUOUS','SESSION_SCOPE_WITH_RECONNECTS']);
+      const observedStatuses = new Set(['PARTIAL_FORWARD_OBSERVED','CURRENT_SCOPE_ONLY','SESSION_SCOPE_CONTINUOUS','SESSION_SCOPE_WITH_RECONNECTS','SCOPE_CHANGED_FAIL_CLOSED']);
       const observedFallback = observedStatuses.has(st) && Number.isFinite(raw);
       state.textContent=labels[st]||'狀態未知';
       state.style.color=complete?'#34d399':eligible?'#ffd166':observedFallback?'#fb923c':(st==='OBSERVED_EXACT'?'#ffd166':'#fb7185');
@@ -6742,7 +6743,7 @@
       }
       breakdown.textContent=(eligible||observedFallback)?('Call '+show(q.op_call_force)+'｜Put '+show(q.op_put_force)):'Call --｜Put --';
       const obs=Number(q.op_force_observed_contracts), exp=Number(q.op_force_expected_contracts), un=Number(q.op_force_unclassified_lots);
-      detail.textContent='Tick '+(Number.isFinite(Number(q.op_force_tick_count))?Number(q.op_force_tick_count).toLocaleString('en-US'):'--')+
+      detail.textContent=(st==='SCOPE_CHANGED_FAIL_CLOSED'?'目前Scope｜非完整當盤｜':'')+'Tick '+(Number.isFinite(Number(q.op_force_tick_count))?Number(q.op_force_tick_count).toLocaleString('en-US'):'--')+
         '｜合約 '+(Number.isFinite(obs)?obs:'--')+'/'+(Number.isFinite(exp)?exp:'--')+'｜未判定 '+(Number.isFinite(un)?un.toLocaleString('en-US'):'--')+'口';
     }
 
