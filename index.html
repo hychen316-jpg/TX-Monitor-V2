@@ -1,3 +1,4 @@
+<!-- Z31_A38_572_OFI_OPERATOR_R11_UI_20261007 | current user HTML base | active/expired lifecycle + manual-prep operator state | research shadow | authority=0 -->
 <!-- Z31_A38_570_OFI_LEAD_RESIDUAL_R1_UI_20261006 | current HTML base | raw OFI preserved | futures-neutralized lead shadow | no new Firebase listener | authority=0 -->
 <!-- Z31_P9PRO_ASSIST_R1_UI_20261006 | based on user current index_z31.html | original P9 primary | Fresh+OFI assist direction | Excess diagnostic only | authority=0 -->
 <!-- Z31_A38_568_OP_R141_DISPLAY_COMPAT_CURRENTBASE_20261006 | CURRENT_SCOPE_ONLY / SESSION_SCOPE_* observed-raw display only | existing P9-Pro layout preserved | authority=0 -->
@@ -2796,12 +2797,16 @@
                   <div id="ofi-r0-breakdown" style="font-size:9px;color:#a1a1aa;">Call -- / Put --</div>
                   <div id="ofi-r0-coverage" style="font-size:9px;color:#a1a1aa;">RTD 可用性等待中</div>
                   <div style="font-size:8px;color:#ffca6c;">快照OFI·60秒·僅觀察｜逾時保護暫停，數值可能過時</div>
-                  <div id="ofi-lead-residual-r1" style="width:100%;margin-top:4px;padding-top:4px;border-top:1px dotted rgba(191,90,242,.45);line-height:1.3;">
-                    <div style="font-size:9px;font-weight:900;color:#bf5af2;">OFI Lead Residual R1 <span id="ofi-r1-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
-                    <div id="ofi-r1-signal" style="font-size:13px;font-weight:900;color:#9ca3af;">--</div>
+                  <div id="ofi-lead-residual-r1" style="width:100%;margin-top:4px;padding:5px 5px 4px;border:1px solid rgba(191,90,242,.35);border-left:4px solid #636366;background:rgba(191,90,242,.025);border-radius:5px;line-height:1.3;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                      <div style="font-size:10px;font-weight:950;color:#bf5af2;">OFI 操作雷達 R1.1</div>
+                      <span id="ofi-r1-state" style="font-size:8px;color:#a1a1aa;">未提供</span>
+                    </div>
+                    <div id="ofi-r1-action" style="font-size:15px;font-weight:950;color:#9ca3af;margin-top:2px;">等待有效 Lead</div>
+                    <div id="ofi-r1-signal" style="font-size:10px;font-weight:900;color:#d1d5db;">Lead方向 --</div>
                     <div id="ofi-r1-strength" style="font-size:9px;color:#d1d5db;">Strength --｜Residual --</div>
-                    <div id="ofi-r1-detail" style="font-size:8px;color:#808998;">Reprice30 --｜Fut30 --｜Beta --</div>
-                    <div style="font-size:8px;color:#ffca6c;">扣除期指30秒已發生移動｜5分鐘因果beta｜Shadow｜authority=0</div>
+                    <div id="ofi-r1-detail" style="font-size:8px;color:#808998;">Fut30 --｜Signed --｜LeadAge --｜β --</div>
+                    <div id="ofi-r1-guidance" style="font-size:8px;color:#ffca6c;margin-top:1px;">人工準備提示 ≠ 進場授權｜仍需 Trigger / FMF / 期指結構確認｜authority=0</div>
                   </div>
                 </div>
 
@@ -6429,60 +6434,125 @@
 
 
 
-    // Z31 OFI Lead Residual R1.0 Shadow. Existing monitor_realtime listener only.
+    // Z31 OFI Lead Residual R1.1 Shadow. Existing monitor_realtime listener only.
+    // Operator state is MANUAL PREP semantics only; it never grants entry/order authority.
     function renderOFILeadResidualR1(data) {
       const q = (data && typeof data.ofi_lead_residual === 'object') ? data.ofi_lead_residual : null;
+      const panel = document.getElementById('ofi-lead-residual-r1');
       const state = document.getElementById('ofi-r1-state');
+      const action = document.getElementById('ofi-r1-action');
       const signal = document.getElementById('ofi-r1-signal');
       const strength = document.getElementById('ofi-r1-strength');
       const detail = document.getElementById('ofi-r1-detail');
-      if (!state || !signal || !strength || !detail) return;
+      const guidance = document.getElementById('ofi-r1-guidance');
+      if (!panel || !state || !action || !signal || !strength || !detail || !guidance) return;
 
-      state.textContent = '未提供';
-      signal.textContent = '--'; signal.style.color = '#9ca3af';
-      strength.textContent = 'Strength --｜Residual --';
-      detail.textContent = 'Reprice30 --｜Fut30 --｜Beta --';
-      if (!q || String(q.version || '') !== 'R1.0') return;
+      const resetPanel = () => {
+        panel.style.borderLeftColor = '#636366';
+        panel.style.background = 'rgba(191,90,242,.025)';
+        state.textContent = '未提供';
+        action.textContent = '等待有效 Lead'; action.style.color = '#9ca3af';
+        signal.textContent = 'Lead方向 --'; signal.style.color = '#d1d5db';
+        strength.textContent = 'Strength --｜Residual --';
+        detail.textContent = 'Fut30 --｜Signed --｜LeadAge --｜β --';
+        guidance.textContent = '人工準備提示 ≠ 進場授權｜仍需 Trigger / FMF / 期指結構確認｜authority=0';
+      };
+      resetPanel();
+
+      const version = q ? String(q.version || '') : '';
+      if (!q || !/^(R1[.](0|1))$/.test(version)) return;
 
       const show = (n, d=1) => Number.isFinite(Number(n))
         ? ((Number(n) > 0 ? '+' : '') + Number(n).toFixed(d)) : '--';
       const showX = n => Number.isFinite(Number(n)) ? Number(n).toFixed(2) + '×' : '--';
+      const showAge = n => Number.isFinite(Number(n)) ? Math.max(0, Math.round(Number(n))) + 's' : '--';
       const st = String(q.status || 'UNAVAILABLE').toUpperCase();
       const ls = String(q.lead_state || 'UNAVAILABLE').toUpperCase();
       const watch = String(q.lead_watch || 'NONE').toUpperCase();
+      const op = String(q.operator_action || '').toUpperCase();
+      const activeDir = Number(q.active_direction || 0);
+      const lastDir = Number(q.last_confirmed_direction || 0);
 
       const statusLabels = {
-        OBSERVED:'已確認', OBSERVED_HOLD:'維持', BUILDING:'建構中', DECAYED:'衰退',
+        OBSERVED:'有效', OBSERVED_HOLD:'有效維持', BUILDING:'建構中', DECAYED:'已失效',
         WARMUP_FUTURES_30S:'暖機30秒', WARMUP_BETA:'暖機Beta',
-        WARMUP_RESIDUAL_BASELINE:'暖機基準', OBSERVED_NO_STRONG_LEAD:'無強Lead',
+        WARMUP_RESIDUAL_BASELINE:'暖機基準', OBSERVED_NO_STRONG_LEAD:'等待Lead',
         RAW_OFI_NOT_ELIGIBLE:'Raw OFI不可用', GEOMETRY_UNAVAILABLE:'幾何不可用',
         RTD_INVALID_OR_MISSING:'RTD無效'
       };
       state.textContent = statusLabels[st] || st.replaceAll('_',' ');
 
-      let label = '等待Lead';
-      if (watch === 'REVERSAL_WATCH_BULL') label = '反轉監控 → 多';
-      else if (watch === 'REVERSAL_WATCH_BEAR') label = '反轉監控 → 空';
-      else if (watch === 'BUILDING_BULL') label = '多方Lead建構';
-      else if (watch === 'BUILDING_BEAR') label = '空方Lead建構';
-      else if (ls === 'BULL_LEAD') label = '多方Lead';
-      else if (ls === 'BEAR_LEAD') label = '空方Lead';
-      else if (ls === 'BULL_DECAY') label = '多方Lead衰退';
-      else if (ls === 'BEAR_DECAY') label = '空方Lead衰退';
-      else if (ls === 'NEUTRAL') label = '中性／無強Lead';
+      let leadLabel = 'Lead方向 --';
+      if (activeDir > 0 || ls === 'BULL_LEAD') leadLabel = 'Lead方向：多';
+      else if (activeDir < 0 || ls === 'BEAR_LEAD') leadLabel = 'Lead方向：空';
+      else if (ls === 'EXPIRED' || st === 'DECAYED') {
+        leadLabel = lastDir > 0 ? 'Lead已失效｜Last 多' : lastDir < 0 ? 'Lead已失效｜Last 空' : 'Lead已失效';
+      } else if (watch === 'BUILDING_BULL') leadLabel = '多方 Lead 建構';
+      else if (watch === 'BUILDING_BEAR') leadLabel = '空方 Lead 建構';
 
-      signal.textContent = label;
-      if (watch.includes('WATCH')) signal.style.color = 'var(--yellow)';
-      else if (label.includes('多')) signal.style.color = 'var(--red)';
-      else if (label.includes('空')) signal.style.color = 'var(--green)';
-      else signal.style.color = '#d1d5db';
+      let actionText = '等待有效 Lead';
+      let tone = 'neutral';
+      if (op === 'MANUAL_PREP_LONG') { actionText = '準備多方期指｜等待進場條件'; tone = 'bull'; }
+      else if (op === 'MANUAL_PREP_SHORT') { actionText = '準備空方期指｜等待進場條件'; tone = 'bear'; }
+      else if (op === 'WAIT_TRIGGER_LONG') { actionText = '多方開始跟進｜等 Trigger / FMF'; tone = 'bull'; }
+      else if (op === 'WAIT_TRIGGER_SHORT') { actionText = '空方開始跟進｜等 Trigger / FMF'; tone = 'bear'; }
+      else if (op === 'DO_NOT_CHASE_LONG') { actionText = '多方已延伸｜勿追價'; tone = 'warn'; }
+      else if (op === 'DO_NOT_CHASE_SHORT') { actionText = '空方已延伸｜勿追價'; tone = 'warn'; }
+      else if (op === 'WAIT_FUTURES_CONFLICT') { actionText = 'OFI／期指衝突｜暫不準備'; tone = 'warn'; }
+      else if (op === 'STOP_PREPARE_REASSESS_BULL') { actionText = '反轉監控 → 多｜停止原方向準備'; tone = 'warn'; }
+      else if (op === 'STOP_PREPARE_REASSESS_BEAR') { actionText = '反轉監控 → 空｜停止原方向準備'; tone = 'warn'; }
+      else if (op === 'WATCH_ONLY_BULL') { actionText = '多方建構｜僅預警'; tone = 'watch'; }
+      else if (op === 'WATCH_ONLY_BEAR') { actionText = '空方建構｜僅預警'; tone = 'watch'; }
+      else if (op.startsWith('WAIT_NEW_LEAD')) { actionText = 'Lead 已失效｜等待新方向'; tone = 'expired'; }
+      else if (version === 'R1.0') {
+        // Backward-compatible fallback before BAS R1.1 is installed.
+        if (watch === 'REVERSAL_WATCH_BULL') { actionText = '反轉監控 → 多｜僅預警'; tone = 'warn'; }
+        else if (watch === 'REVERSAL_WATCH_BEAR') { actionText = '反轉監控 → 空｜僅預警'; tone = 'warn'; }
+        else if (watch === 'BUILDING_BULL') { actionText = '多方建構｜僅預警'; tone = 'watch'; }
+        else if (watch === 'BUILDING_BEAR') { actionText = '空方建構｜僅預警'; tone = 'watch'; }
+        else if (ls === 'BULL_LEAD') { actionText = '多方 Lead 已確認｜準備觀察期指'; tone = 'bull'; }
+        else if (ls === 'BEAR_LEAD') { actionText = '空方 Lead 已確認｜準備觀察期指'; tone = 'bear'; }
+        else if (ls === 'BULL_DECAY' || ls === 'BEAR_DECAY') { actionText = '舊 Lead 已衰退｜不再當現行方向'; tone = 'expired'; }
+      }
+
+      action.textContent = actionText;
+      signal.textContent = leadLabel;
+      if (tone === 'bull') {
+        action.style.color = 'var(--red)'; signal.style.color = 'var(--red)';
+        panel.style.borderLeftColor = 'var(--red)'; panel.style.background = 'rgba(255,69,58,.05)';
+      } else if (tone === 'bear') {
+        action.style.color = 'var(--green)'; signal.style.color = 'var(--green)';
+        panel.style.borderLeftColor = 'var(--green)'; panel.style.background = 'rgba(48,209,88,.05)';
+      } else if (tone === 'warn') {
+        action.style.color = 'var(--yellow)'; signal.style.color = '#d1d5db';
+        panel.style.borderLeftColor = 'var(--yellow)'; panel.style.background = 'rgba(255,214,10,.05)';
+      } else if (tone === 'watch') {
+        action.style.color = '#64d2ff'; signal.style.color = '#64d2ff';
+        panel.style.borderLeftColor = '#64d2ff'; panel.style.background = 'rgba(100,210,255,.04)';
+      } else if (tone === 'expired') {
+        action.style.color = '#8e8e93'; signal.style.color = '#8e8e93';
+        panel.style.borderLeftColor = '#636366'; panel.style.background = 'rgba(142,142,147,.035)';
+      }
 
       strength.textContent = 'Strength ' + showX(q.lead_strength) +
         '｜Residual ' + show(q.lead_residual,0);
-      detail.textContent = 'Reprice30 ' + show(q.reprice_ofi_30s,0) +
-        '｜Fut30 ' + show(q.futures_move_30s,1) +
-        '｜β ' + show(q.beta_5m,1) +
-        '｜n=' + (Number.isFinite(Number(q.beta_points)) ? Number(q.beta_points) : '--');
+
+      const signed = Number.isFinite(Number(q.signed_futures_30s))
+        ? show(q.signed_futures_30s,1) : '--';
+      detail.textContent = 'Fut30 ' + show(q.futures_move_30s,1) +
+        '｜Signed ' + signed +
+        '｜LeadAge ' + showAge(q.lead_age_seconds) +
+        '｜β ' + show(q.beta_5m,1);
+
+      if (op === 'MANUAL_PREP_LONG' || op === 'MANUAL_PREP_SHORT') {
+        guidance.textContent = '人工準備：OFI Lead 有效、期指尚未明顯延伸；等待你原本 Trigger / FMF / 價格接受後自行決定｜authority=0';
+      } else if (op === 'WAIT_TRIGGER_LONG' || op === 'WAIT_TRIGGER_SHORT') {
+        guidance.textContent = '期指已開始同向跟進，但此層不代表進場；確認 Trigger / FMF / 防守位置後再自行決定｜authority=0';
+      } else if (op.startsWith('DO_NOT_CHASE')) {
+        guidance.textContent = 'Lead 仍可作方向背景，但期指30秒已延伸；避免把晚到的價格追隨誤當早期 OFI Lead｜authority=0';
+      } else if (op === 'WAIT_FUTURES_CONFLICT' || op.startsWith('STOP_PREPARE')) {
+        guidance.textContent = '目前不列入人工準備；等待衝突解除或新的 2-frame Lead 重新確認｜authority=0';
+      }
     }
 
     // Z31 P9-Pro Assist R1.0:
