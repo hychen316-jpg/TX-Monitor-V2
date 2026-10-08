@@ -1,3 +1,4 @@
+<!-- Z31_OFISR_R121_RESPFREEZE_LAYOUT2_20261008 | mobile freeze OFF default / desktop ON + toggle | core row full 12/12 width | authority=0 -->
 <!-- Z31_OFISR_R12_CUMAVG_UI_20261008 | symmetric lower-Put support + upper-Call resistance | sniper visible card removed | authority=0 -->
 <!-- Z31_OFISR_R12_UI2_20261008 | OP Force moved under P9 | OP main values same 15px as P9 | data ids unchanged -->
 <!-- Z31_A38_577_SETTLEMENT_REFERENCE_POLICY_20261008 | Formal: exact expiry Day=SPOT→FUT, otherwise FUTURES_NATIVE | LFZ display mapping remains audit-only | authority unchanged -->
@@ -49,7 +50,7 @@
   <!-- Z22_V097_D2N_PREMIUM_SELLER_EVIDENCE_UI_v0.2_SESSIONDATE_20260909 | presentation-only | true Premium-Notional Seller Force + local rolling 10/20/30m medians + Day freeze + existing MME Sticky agreement | no new Firebase listener/logger/schema/order-authority -->
   <!-- Z22_V094_SELLER_FORCE_UI_v0.1_20260906 | presentation-only | existing Firebase fields -->
   <meta charset="utf-8">
-  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.9-RC1-ECONOMIC-PROOF-SEMANTIC-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.3-FIXED-LIVE-Z31FORMALSYNC-v0.1-Z31A20-UNIVERSAL-LAUNCH-CONSUME-UI-v0.1-LFZ-FIXED-LIVE-UI-v0.1-Z31A38-PDR-MAPPING-DIAG-UI-v0.1">
+  <meta name="z2-dashboard-build" content="Z2-DASHBOARD-V10.1.3.9-CAMPAIGNDEF-v1.0-WAVE-v1.5.9-RC1-ECONOMIC-PROOF-SEMANTIC-HMF-v1.4-NEART1-POSTRFDRELEASE-MME-v0.5.2-MATURE60M-RC1-ROLEMATURITY-v0.1-EARLY30-v0.1-CHALLENGELIFECYCLE-v0.1-WHOLEDAYMINDSET-UI-v0.3-WDWATCH-v0.1-NIGHTSEG-v0.1.4-SF1-U75PA-PREUSPRIOR-DAYPOS-v0.1.4-LIFECYCLE-v0.1-DETAILONLY-EXEC-EPISODE-v1.0.20-COMPAT-LAUNCH-v1.2-GEOMETRY-v1.0.6-WLA-v1.3-ICUA-v0.1.1-RC1-MINITSMC-v0.1.1-DEFENSEUI-v0.1-POSSUM-v0.1-NOAL2AM2-v0.1-CORECOMPACT-v0.1-P0MMEYIELDUI-v0.1-Z22-v0.93-RC1-OBSUI-v0.1-Z22-v0.98-RC2H-A6-W1BE-RECOVERY-ROLEISO-BIGWAVE-HOLD-UI-v0.1-Z3INV-v0.2.7-RC7-DATA-INTEGRITY-DASHUI-v0.2-MME-CASHOPEN0900-SPAGATE-v0.1-RC1-UI-v0.1-PREUSPOSTUS-v0.2-FIREBASEOBS-RC2-LFZ-v1.2.4-R7-PAIR-EPOCH-CLOSE-GATE-SHADOW-LFZBAOZ-FBUI-v0.3-FIXED-LIVE-Z31FORMALSYNC-v0.1-Z31A20-UNIVERSAL-LAUNCH-CONSUME-UI-v0.1-LFZ-FIXED-LIVE-UI-v0.1-Z31A38-PDR-MAPPING-DIAG-UI-v0.1-RESPFREEZE-v0.1">
   <title>極速戰情室｜OCF-Z3.1 A20/A37/A38 相容顯示｜既有 Formal + A38 PDR 正式來源診斷（新增進場未授權）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
   
@@ -2339,6 +2340,63 @@
    when screen height is insufficient for the full second row. */
 #v2-live-page.z31-sticky-core-overflow .v2-core-grid {
   position: static;
+}
+
+/* =============================================================
+   OFI-SR R1.2.1 Responsive Freeze UI
+   - Desktop (>900px): freeze ON by default.
+   - Mobile/tablet (<=900px): freeze OFF by default.
+   - User can override with the nav toggle; preference is stored
+     separately for mobile and desktop in localStorage.
+   Presentation only; no Firebase/data/authority changes.
+   ============================================================= */
+.v2-dashboard-nav {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto !important;
+}
+.z31-freeze-toggle {
+  appearance: none;
+  border: 1px solid #3a3a3c;
+  background: #1c1c1e;
+  color: #d1d1d6;
+  border-radius: 6px;
+  min-height: 28px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.z31-freeze-toggle.is-on {
+  color: #64d2ff;
+  border-color: rgba(100,210,255,.72);
+  background: rgba(100,210,255,.10);
+}
+.z31-freeze-toggle.is-off {
+  color: #8e8e93;
+  border-color: #3a3a3c;
+  background: #1c1c1e;
+}
+body.z31-sticky-off .v2-dashboard-nav,
+body.z31-sticky-off #v2-live-page .v2-market-slot,
+body.z31-sticky-off #v2-live-page .v2-core-grid {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+}
+body.z31-sticky-off #v2-live-page .v2-market-slot,
+body.z31-sticky-off #v2-live-page .v2-core-grid {
+  background: #000;
+}
+@media (max-width: 560px) {
+  .v2-dashboard-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto !important;
+    gap: 3px !important;
+  }
+  .z31-freeze-toggle {
+    min-width: 54px;
+    padding: 3px 5px;
+    font-size: 9px;
+  }
 }
 
 </style>
@@ -7686,7 +7744,8 @@
     nav.innerHTML =
       '<button type="button" class="v2-tab-btn active" data-page="v2-live-page">即時戰情</button>' +
       '<button type="button" class="v2-tab-btn" data-page="v2-history-page">歷史時間軸</button>' +
-      '<button type="button" class="v2-tab-btn" data-page="v2-detail-page">完整資訊</button>';
+      '<button type="button" class="v2-tab-btn" data-page="v2-detail-page">完整資訊</button>' +
+      '<button type="button" id="z31-freeze-toggle" class="z31-freeze-toggle" aria-pressed="true" title="桌面預設凍結；手機預設不凍結。點擊可手動切換。">📌 凍結 ON</button>';
 
     const livePage = el('main', 'v2-page active', 'v2-live-page');
     const historyPage = el('section', 'v2-page', 'v2-history-page');
@@ -8036,12 +8095,56 @@
       if (f) f.textContent = document.getElementById('p9-r7-resonance')?.textContent || '--';
     }, 1000);
     updateCoreSummaries();
-    /* Z31 two-row freeze geometry: attach only to existing V2 DOM nodes.
-       ResizeObserver keeps the core row exactly beneath the live TX quote row
-       as quotes wrap, fonts load, or window dimensions change. */
+    /* OFI-SR R1.2.1 responsive freeze policy.
+       Desktop default = ON; mobile/tablet <=900px default = OFF.
+       Manual preference is stored separately per viewport class. */
     const z31MarketSlot = liveStack.querySelector('.v2-market-slot');
+    const z31FreezeButton = nav.querySelector('#z31-freeze-toggle');
+    const Z31_STICKY_BREAKPOINT = 900;
+    let z31StickyBucket = window.innerWidth <= Z31_STICKY_BREAKPOINT ? 'mobile' : 'desktop';
+
+    function z31StickyPreferenceKey(bucket) {
+      return 'z31_sticky_freeze_' + bucket + '_v2';
+    }
+
+    function z31ReadStickyPreference() {
+      try {
+        const stored = window.localStorage.getItem(z31StickyPreferenceKey(z31StickyBucket));
+        if (stored === 'on') return true;
+        if (stored === 'off') return false;
+      } catch (err) {
+        console.warn('Sticky preference read skipped:', err);
+      }
+      return z31StickyBucket === 'desktop';
+    }
+
+    function z31WriteStickyPreference(enabled) {
+      try {
+        window.localStorage.setItem(z31StickyPreferenceKey(z31StickyBucket), enabled ? 'on' : 'off');
+      } catch (err) {
+        console.warn('Sticky preference write skipped:', err);
+      }
+    }
+
+    function z31UpdateFreezeButton(enabled) {
+      if (!z31FreezeButton) return;
+      z31FreezeButton.textContent = enabled ? '📌 凍結 ON' : '📌 凍結 OFF';
+      z31FreezeButton.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      z31FreezeButton.classList.toggle('is-on', enabled);
+      z31FreezeButton.classList.toggle('is-off', !enabled);
+      z31FreezeButton.title = (z31StickyBucket === 'mobile' ? '手機/平板' : '桌面') +
+        '目前' + (enabled ? '凍結上方區塊' : '不凍結上方區塊') + '；點擊切換。';
+    }
+
     function z31SyncStickyRows() {
       if (!livePage.isConnected || !nav.isConnected) return;
+      const enabled = !document.body.classList.contains('z31-sticky-off');
+      if (!enabled) {
+        livePage.classList.remove('z31-sticky-core-overflow');
+        livePage.style.removeProperty('--z31-sticky-nav-height');
+        livePage.style.removeProperty('--z31-sticky-market-height');
+        return;
+      }
       const navH = Math.ceil(nav.getBoundingClientRect().height);
       const marketH = z31MarketSlot ? Math.ceil(z31MarketSlot.getBoundingClientRect().height) : 0;
       const coreH = Math.ceil(coreGrid.getBoundingClientRect().height);
@@ -8050,7 +8153,34 @@
       const enoughViewport = navH + marketH + coreH + 120 <= window.innerHeight;
       livePage.classList.toggle('z31-sticky-core-overflow', !enoughViewport);
     }
-    z31SyncStickyRows();
+
+    function z31ApplyStickyPreference(enabled, persist) {
+      document.body.classList.toggle('z31-sticky-off', !enabled);
+      z31UpdateFreezeButton(enabled);
+      if (persist) z31WriteStickyPreference(enabled);
+      window.requestAnimationFrame(z31SyncStickyRows);
+    }
+
+    function z31HandleViewportChange() {
+      const nextBucket = window.innerWidth <= Z31_STICKY_BREAKPOINT ? 'mobile' : 'desktop';
+      if (nextBucket !== z31StickyBucket) {
+        z31StickyBucket = nextBucket;
+        z31ApplyStickyPreference(z31ReadStickyPreference(), false);
+      } else {
+        z31SyncStickyRows();
+      }
+    }
+
+    if (z31FreezeButton) {
+      z31FreezeButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const currentlyEnabled = !document.body.classList.contains('z31-sticky-off');
+        z31ApplyStickyPreference(!currentlyEnabled, true);
+      });
+    }
+
+    z31ApplyStickyPreference(z31ReadStickyPreference(), false);
     if (typeof ResizeObserver !== 'undefined') {
       const z31StickyObserver = new ResizeObserver(z31SyncStickyRows);
       livePage.__z31StickyRowsObserver = z31StickyObserver; // retain observer while page lives
@@ -8058,7 +8188,7 @@
       if (z31MarketSlot) z31StickyObserver.observe(z31MarketSlot);
       z31StickyObserver.observe(coreGrid);
     }
-    window.addEventListener('resize', z31SyncStickyRows, { passive: true });
+    window.addEventListener('resize', z31HandleViewportChange, { passive: true });
     window.requestAnimationFrame(z31SyncStickyRows);
     // Fallback for pages where ResizeObserver is throttled during data updates.
     window.setInterval(z31SyncStickyRows, 1000);
@@ -9429,7 +9559,7 @@
 
 
 
-<style id="z31-layout-reorder-20261005">
+<style id="z31-layout-reorder-20261008-r121-layout2">
   /* Keep the full research/support group directly below the OCF panel. */
   #v2-live-page .v2-intel-grid {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -9449,20 +9579,87 @@
     gap: 5px;
   }
 
-  /* The second column contains next-month night/day cells (C3/C4 in the source IDs). */
+  /* C1-C4 second column is intentionally narrower (next-month day/night). */
   #v2-live-page .v2-c1c4-card .chip-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, .55fr) !important;
   }
-  /* Slightly narrow R7 within the P9/R7 card to give its neighbors more room. */
-  #v2-live-page .v2-force-card .r7-container {
-    flex: .82 1 0% !important;
+
+  /* R1.2.1 Layout2 root-cause fix:
+     Sniper card is no longer constructed, therefore the second core row must
+     consume the full 12/12 grid instead of preserving the old 3+6+3 allocation. */
+  #v2-live-page .v2-core-grid {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  }
+  #v2-live-page .v2-c1c4-card {
+    grid-column: span 4 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #v2-live-page .v2-force-card {
+    grid-column: span 8 !important;
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
-  /* On wide screens, give the P9/R7 card more of the core row. */
-  @media (min-width: 1181px) {
-    #v2-live-page .v2-c1c4-card { grid-column: span 3 !important; }
-    #v2-live-page .v2-force-card { grid-column: span 6 !important; }
-    #v2-live-page .v2-sniper-card { grid-column: span 3 !important; }
+  /* Allocate the P9/OP, OFI-SR and R7 regions explicitly on desktop.
+     OFI-SR gets the majority because it contains symmetric Put/Call candidates. */
+  #v2-live-page .v2-force-card #battle-card > .req-level-2-flex {
+    display: grid !important;
+    grid-template-columns: minmax(150px, 1.0fr) minmax(380px, 2.7fr) minmax(150px, 1.0fr) !important;
+    gap: 4px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+  }
+  #v2-live-page .v2-force-card #battle-card > .req-level-2-flex > .p9-container {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  #v2-live-page .v2-force-card #ofi-sr-r12 {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  #v2-live-page .v2-force-card .r7-container {
+    min-width: 0 !important;
+    width: 100% !important;
+    flex: initial !important;
+  }
+
+  /* Tablet: do not squeeze the two major second-row cards side by side.
+     Each card becomes full width; the page still keeps desktop-like internal allocation. */
+  @media (max-width: 900px) {
+    #v2-live-page .v2-c1c4-card,
+    #v2-live-page .v2-force-card {
+      grid-column: 1 / -1 !important;
+      width: 100% !important;
+    }
+  }
+
+  /* Phone: compact two-stage distribution. P9/OP and R7 share the first line;
+     OFI-SR takes the full second line so Put/Call evidence remains readable. */
+  @media (max-width: 640px) {
+    #v2-live-page .v2-force-card #battle-card > .req-level-2-flex {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      grid-template-areas:
+        "p9 r7"
+        "ofi ofi" !important;
+      gap: 4px !important;
+    }
+    #v2-live-page .v2-force-card #battle-card > .req-level-2-flex > .p9-container:first-child {
+      grid-area: p9 !important;
+    }
+    #v2-live-page .v2-force-card #ofi-sr-r12 {
+      grid-area: ofi !important;
+    }
+    #v2-live-page .v2-force-card .r7-container {
+      grid-area: r7 !important;
+    }
+    #v2-live-page #ofi-sr-r12 > div:nth-child(2) {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
   }
 </style>
 
