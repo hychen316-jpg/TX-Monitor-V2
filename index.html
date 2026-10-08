@@ -1,4 +1,5 @@
 <!-- Z31_OFISR_R12_CUMAVG_UI_20261008 | symmetric lower-Put support + upper-Call resistance | sniper visible card removed | authority=0 -->
+<!-- Z31_OFISR_R12_UI2_20261008 | OP Force moved under P9 | OP main values same 15px as P9 | data ids unchanged -->
 <!-- Z31_A38_577_SETTLEMENT_REFERENCE_POLICY_20261008 | Formal: exact expiry Day=SPOT→FUT, otherwise FUTURES_NATIVE | LFZ display mapping remains audit-only | authority unchanged -->
 <!-- Z31_A38_574_OP_SCOPE_CURRENT_OBS_R1_20261007 | SCOPE_CHANGED_FAIL_CLOSED current-scope observed display only | full-session eligible unchanged | authority=0 -->
 <!-- Z31_A38_574_OFI_R12_NEUTRALIZER_SOURCE_ISOLATION_20261007 | geometry ref unchanged | Lead neutralizer Day=B1 Night=B2 | authority=0 -->
@@ -1126,7 +1127,7 @@
   font-weight: 900 !important;
 }
 
-/* Core row: C1-C4 4/12, P9 / OFI-SR / R7 8/12. Sniper visible card removed. */
+/* Core row: C1-C4 4/12, P9 / OFI-PD / R7 8/12. Sniper UI removed. */
 #v2-live-page .v2-c1c4-card { grid-column: span 4 !important; }
 #v2-live-page .v2-force-card { grid-column: span 8 !important; }
 
@@ -2772,28 +2773,32 @@
                 <div id="p9-thresholds-display" style="font-size:7px; color:#888; margin-top:1px; text-align:center; line-height:1; letter-spacing:0.3px;">
                     攻: <span id="p9-th-at">--</span> / 竭: <span id="p9-th-ex">--</span>
                 </div>
-
-
+                <div id="op-force-exact" style="width:100%;margin-top:5px;padding-top:4px;border-top:1px dotted rgba(255,209,102,.38);line-height:1.15;text-align:center;">
+                  <div class="p9-label" style="font-size:9px;color:#ffd166;font-weight:900;">OP 力道差｜23檔 <span id="op-force-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
+                  <div id="op-force-value" class="p9-val" style="font-size:15px;font-weight:900;color:#9ca3af;margin-top:2px;">--</div>
+                  <div id="op-force-breakdown" style="font-size:15px;font-weight:850;color:#d1d5db;margin-top:1px;">Call --｜Put --</div>
+                  <div id="op-force-detail" style="font-size:8px;color:#808998;margin-top:2px;">獨立研究資料｜等待資料</div>
+                </div>
             </div>
             <!-- Z31 OFI-SR R1.2 | lower Put support + upper Call resistance | authority=0 -->
             <div class="p9-container" id="ofi-sr-r12" style="flex:2.45; flex-direction:column; padding:4px 5px; margin-top:0; background:rgba(100,210,255,0.025); border:1px solid rgba(100,210,255,0.28); border-left:4px solid #636366;">
                 <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:5px;">
-                    <div class="p9-label" style="font-size:10px;color:#64d2ff;font-weight:950;">🧭 OFI-SR｜選擇權累委均支撐 / 壓力</div>
+                    <div class="p9-label" style="font-size:10px;color:#64d2ff;font-weight:950;">🧭 OFI-SR｜選擇權累委均支撐 / 壓力 R1.2.1</div>
                     <span id="ofi-sr-state" style="font-size:8px;color:#a1a1aa;">未提供</span>
                 </div>
                 <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:3px;">
                     <div id="ofi-sr-put-box" style="padding:4px;border-radius:5px;border:1px solid rgba(52,211,153,.25);background:rgba(52,211,153,.035);">
                         <div style="font-size:9px;font-weight:900;color:#34d399;">🛡 下方 Put 支撐候選</div>
-                        <div id="ofi-sr-put-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待候選</div>
-                        <div id="ofi-sr-put-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">座標 --｜距期指 --</div>
+                        <div id="ofi-sr-put-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
+                        <div id="ofi-sr-put-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
                         <div id="ofi-sr-put-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">均買 --｜均賣 --｜差 --</div>
                         <div id="ofi-sr-put-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">賣方均單優勢 --</div>
                         <div id="ofi-sr-put-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
                     </div>
                     <div id="ofi-sr-call-box" style="padding:4px;border-radius:5px;border:1px solid rgba(251,113,133,.25);background:rgba(251,113,133,.035);">
                         <div style="font-size:9px;font-weight:900;color:#fb7185;">🧱 上方 Call 壓力候選</div>
-                        <div id="ofi-sr-call-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待候選</div>
-                        <div id="ofi-sr-call-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">座標 --｜距期指 --</div>
+                        <div id="ofi-sr-call-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
+                        <div id="ofi-sr-call-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
                         <div id="ofi-sr-call-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">均買 --｜均賣 --｜差 --</div>
                         <div id="ofi-sr-call-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">賣方均單優勢 --</div>
                         <div id="ofi-sr-call-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
@@ -2802,12 +2807,6 @@
                 <div id="ofi-sr-coverage" style="font-size:8px;color:#808998;margin-top:3px;">Put有效 --/21｜Call有效 --/21｜下方 --｜上方 --｜RTD --</div>
                 <div id="ofi-sr-source" style="font-size:8px;color:#808998;line-height:1.2;">來源 money.excel｜期指 --｜Mapping --</div>
                 <div id="ofi-sr-proof" style="font-size:8px;color:#ffca6c;margin-top:1px;">支撐/壓力均未證明｜authority=0</div>
-                <div id="op-force-exact" style="width:100%;margin-top:4px;padding-top:4px;border-top:1px dotted rgba(100,210,255,.35);line-height:1.25;">
-                  <div style="font-size:9px;font-weight:800;color:#ffd166;">OP 力道差｜23檔 <span id="op-force-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
-                  <div id="op-force-value" style="font-size:13px;font-weight:900;color:#9ca3af;">--</div>
-                  <div id="op-force-breakdown" style="font-size:8px;color:#d1d5db;">Call --｜Put --</div>
-                  <div id="op-force-detail" style="font-size:8px;color:#808998;">獨立研究資料｜等待資料</div>
-                </div>
             </div>
             <div class="p9-container r7-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
@@ -6566,7 +6565,7 @@
       }
     }
 
-    // Z31 OFI-SR R1.2 cumulative-average option support/resistance observation.
+    // Z31 OFI-SR R1.2.1 candidate/evidence separation; candidate identity no longer disappears on sign flip/baseline reset.
     // Descriptive only: no threshold proves support/resistance and no order authority.
     function renderOFISR12(data) {
       const q = (data && typeof data.ofi_sr === 'object') ? data.ofi_sr : null;
@@ -6597,21 +6596,22 @@
       };
       const fmt0 = v => { const n=num(v); return n===null?'--':Math.round(n).toLocaleString('en-US'); };
       const trend = v => { const n=num(v); return n===null?'':(n>0?' 擴大':(n<0?' 收斂':' 持平')); };
+      const evidenceLabel = v => { const x=String(v||'').toUpperCase(); return x==='SELL_DOMINANCE_POSITIVE'?'賣方均單較大':(x==='BUY_SIZE_DOMINANT'?'買方均單較大':(x==='BALANCED'?'均衡':(x==='BASELINE_ONLY'?'基準建立中':'觀測中'))); };
       const reset = () => {
         panel.style.borderLeftColor='#636366'; panel.style.background='rgba(100,210,255,0.025)';
         state.textContent='未提供'; state.style.color='#a1a1aa';
-        putCandidate.textContent='等待候選'; putLevel.textContent='座標 --｜距期指 --';
+        putCandidate.textContent='等待資料'; putLevel.textContent='距現價 --｜候選狀態 --';
         putAvg.textContent='均買 --｜均賣 --｜差 --'; putDom.textContent='賣方均單優勢 --'; putDelta.textContent='Δ30 --｜Δ60 --';
-        callCandidate.textContent='等待候選'; callLevel.textContent='座標 --｜距期指 --';
+        callCandidate.textContent='等待資料'; callLevel.textContent='距現價 --｜候選狀態 --';
         callAvg.textContent='均買 --｜均賣 --｜差 --'; callDom.textContent='賣方均單優勢 --'; callDelta.textContent='Δ30 --｜Δ60 --';
         coverage.textContent='Put有效 --/21｜Call有效 --/21｜下方 --｜上方 --｜RTD --';
         source.textContent='來源 money.excel｜期指 --｜Mapping --'; proof.textContent='支撐/壓力均未證明｜authority=0';
       };
       reset();
-      if (!q || String(q.version||'') !== 'R1.2-RTD-CUMAVG-SR') return;
+      if (!q || !['R1.2-RTD-CUMAVG-SR','R1.2.1-RTD-CUMAVG-SR'].includes(String(q.version||''))) return;
 
       const st=String(q.status||'UNKNOWN').toUpperCase();
-      const labels={OBSERVED:'已觀測',OBSERVED_MAPPING_UNAVAILABLE:'映射不可用',OBSERVED_NO_SR_CANDIDATE:'目前無上下候選',RTD_CUMULATIVE_ORDER_FIELDS_UNAVAILABLE_OR_WARMUP:'RTD暖機/缺欄',MODEL_RESET:'模型重建',ERROR:'計算異常'};
+      const labels={OBSERVED:'已觀測',OBSERVED_MAPPING_UNAVAILABLE:'映射不可用',OBSERVED_NO_SR_CANDIDATE:'目前無有效上下合約',RTD_CUMULATIVE_ORDER_FIELDS_UNAVAILABLE_OR_WARMUP:'RTD暖機/缺欄',MODEL_RESET:'模型重建',ERROR:'計算異常'};
       state.textContent=labels[st] || (st.startsWith('ERROR_')?'計算異常':st.replaceAll('_',' '));
       state.style.color=st==='OBSERVED'?'#34d399':(st.includes('ERROR')?'#fb7185':'#ffd166');
 
@@ -6619,22 +6619,30 @@
       const ps=num(q.best_lower_put_strike), pf=num(q.best_lower_put_futures);
       const cs=num(q.best_upper_call_strike), cf=num(q.best_upper_call_futures);
       if(ps!==null){
-        putCandidate.textContent='P'+fmt0(ps);
+        putCandidate.textContent='P'+fmt0(ps)+' ｜期指 '+fmt0(pf);
         putCandidate.style.color='#34d399';
-        putLevel.textContent='期指座標 '+fmt0(pf)+'｜距期指 '+(fut!==null&&pf!==null?fmt(fut-pf,0,true):'--')+'點';
+        const pe=String(q.best_put_evidence_state||'');
+        putLevel.textContent='距現價 '+(fut!==null&&pf!==null?fmt(fut-pf,0,true):'--')+'點｜'+evidenceLabel(pe);
         putAvg.textContent='均買 '+fmt(q.best_put_bid_avg,2)+'｜均賣 '+fmt(q.best_put_ask_avg,2)+'｜差 '+fmt(q.best_put_diff,2,true);
         putDom.textContent='賣方均單優勢 '+fmt(q.best_put_sell_dominance,2,true);
         const pd30=num(q.best_put_sell_dominance_delta_30s), pd60=num(q.best_put_sell_dominance_delta_60s);
         putDelta.textContent='Δ30 '+fmt(pd30,2,true)+trend(pd30)+'｜Δ60 '+fmt(pd60,2,true)+trend(pd60);
+      } else {
+        putCandidate.textContent=(num(q.lower_put_contracts)||0)>0?'候選建立中':'無有效下方Put';
+        putLevel.textContent='距現價 --｜'+(st==='OBSERVED_MAPPING_UNAVAILABLE'?'Mapping不可用':'等待有效RTD/Mapping');
       }
       if(cs!==null){
-        callCandidate.textContent='C'+fmt0(cs);
+        callCandidate.textContent='C'+fmt0(cs)+' ｜期指 '+fmt0(cf);
         callCandidate.style.color='#fb7185';
-        callLevel.textContent='期指座標 '+fmt0(cf)+'｜距期指 '+(fut!==null&&cf!==null?fmt(cf-fut,0,true):'--')+'點';
+        const ce=String(q.best_call_evidence_state||'');
+        callLevel.textContent='距現價 '+(fut!==null&&cf!==null?fmt(cf-fut,0,true):'--')+'點｜'+evidenceLabel(ce);
         callAvg.textContent='均買 '+fmt(q.best_call_bid_avg,2)+'｜均賣 '+fmt(q.best_call_ask_avg,2)+'｜差 '+fmt(q.best_call_diff,2,true);
         callDom.textContent='賣方均單優勢 '+fmt(q.best_call_sell_dominance,2,true);
         const cd30=num(q.best_call_sell_dominance_delta_30s), cd60=num(q.best_call_sell_dominance_delta_60s);
         callDelta.textContent='Δ30 '+fmt(cd30,2,true)+trend(cd30)+'｜Δ60 '+fmt(cd60,2,true)+trend(cd60);
+      } else {
+        callCandidate.textContent=(num(q.upper_call_contracts)||0)>0?'候選建立中':'無有效上方Call';
+        callLevel.textContent='距現價 --｜'+(st==='OBSERVED_MAPPING_UNAVAILABLE'?'Mapping不可用':'等待有效RTD/Mapping');
       }
       const probe=String(q.rtd_probe_status||'UNKNOWN').toUpperCase();
       const probeText=probe==='RTD_CUMULATIVE_FIELDS_OBSERVED'?'四欄正常':(probe==='PROBE_PENDING'?'探針等待':probe.replaceAll('_',' '));
@@ -9453,7 +9461,8 @@
   /* On wide screens, give the P9/R7 card more of the core row. */
   @media (min-width: 1181px) {
     #v2-live-page .v2-c1c4-card { grid-column: span 3 !important; }
-    #v2-live-page .v2-force-card { grid-column: span 9 !important; }
+    #v2-live-page .v2-force-card { grid-column: span 6 !important; }
+    #v2-live-page .v2-sniper-card { grid-column: span 3 !important; }
   }
 </style>
 
