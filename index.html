@@ -1,3 +1,4 @@
+<!-- Z31_A38_577_SETTLEMENT_REFERENCE_POLICY_20261008 | Formal: exact expiry Day=SPOT→FUT, otherwise FUTURES_NATIVE | LFZ display mapping remains audit-only | authority unchanged -->
 <!-- Z31_A38_574_OP_SCOPE_CURRENT_OBS_R1_20261007 | SCOPE_CHANGED_FAIL_CLOSED current-scope observed display only | full-session eligible unchanged | authority=0 -->
 <!-- Z31_A38_574_OFI_R12_NEUTRALIZER_SOURCE_ISOLATION_20261007 | geometry ref unchanged | Lead neutralizer Day=B1 Night=B2 | authority=0 -->
 <!-- Z31_A38_572_OFI_OPERATOR_R11_UI_20261007 | current user HTML base | active/expired lifecycle + manual-prep operator state | research shadow | authority=0 -->
@@ -6263,8 +6264,20 @@
       badge.textContent = valid ? `FIXED｜${data.row_count ?? rows.length} 標註` : 'WAIT';
       const metaBits = [];
       if (data.table_source) metaBits.push(`Fixed ${data.table_source}`);
-      if (data.basis_method) metaBits.push(`映射 ${data.basis_method}`);
-      if (data.mapping_basis !== null && data.mapping_basis !== undefined && data.mapping_basis !== '' && Number.isFinite(Number(data.mapping_basis))) metaBits.push(`Basis ${Number(data.mapping_basis).toFixed(1)}`);
+      if (data.table_reference_method) metaBits.push(`選檔 ${data.table_reference_method}`);
+      const formalMethod = String(data.formal_basis_method || '');
+      const formalBasis = numOrNaN(data.formal_mapping_basis);
+      if (formalMethod) {
+        if (formalMethod.includes('FORMAL_FUTURES_NATIVE')) {
+          metaBits.push('正式座標 FUTURES_NATIVE');
+        } else if (formalMethod.includes('FORMAL_EXPIRY_SPOT_TO_FUTURES')) {
+          metaBits.push(`正式座標 結算日加權→期指${Number.isFinite(formalBasis) ? ` ${formalBasis >= 0 ? '+' : ''}${formalBasis.toFixed(1)}` : ''}`);
+        } else {
+          metaBits.push(`正式座標 ${formalMethod}`);
+        }
+      }
+      if (data.basis_method) metaBits.push(`LFZ顯示映射 ${data.basis_method}`);
+      if (data.mapping_basis !== null && data.mapping_basis !== undefined && data.mapping_basis !== '' && Number.isFinite(Number(data.mapping_basis))) metaBits.push(`顯示Basis ${Number(data.mapping_basis).toFixed(1)}`);
       if (data.updated_at) metaBits.push(String(data.updated_at).slice(11,19));
       meta.textContent = metaBits.length ? metaBits.join('｜') : '等待 LFZ 暴Z資料';
 
@@ -6292,6 +6305,7 @@
         const bits = [];
         if (live.source) bits.push(String(live.source));
         if (live.reference_index && Number(live.reference_index) > 0) bits.push(`Ref ${fmt(live.reference_index)}`);
+        if (live.reference_method) bits.push(`RefMode ${String(live.reference_method)}`);
         if (Number.isFinite(gap) && gap > 0) bits.push(`Gap ${Math.round(gap)}`);
         liveSource.textContent = bits.length ? bits.join('｜') : '等待盤中 LFZ source';
       }
@@ -7844,7 +7858,7 @@
       <div id="lfz-baoz-meta" class="lfz-baoz-meta">等待 LFZ 暴Z資料</div>
       <div class="lfz-live-panel">
         <div class="lfz-live-head">
-          <div><div class="lfz-live-title">Fixed vs Live｜履約價 + 對應期指座標</div><div id="lfz-live-source" class="lfz-live-source">等待盤中 LFZ source</div></div>
+          <div><div class="lfz-live-title">Fixed vs Live｜履約價 + LFZ顯示映射期指座標</div><div id="lfz-live-source" class="lfz-live-source">等待盤中 LFZ source</div></div>
           <span id="lfz-live-status" class="lfz-live-status">LIVE WAIT</span>
         </div>
         <div class="lfz-live-grid">
@@ -7857,7 +7871,7 @@
         <div class="lfz-center-panel">
           <div class="lfz-center-head">
             <div class="lfz-center-title">布局中心｜Live CSP / CSC / M</div>
-            <div class="lfz-center-note">資金重心 / regime context｜期指座標依當下 Mapping Basis｜不作 Relayout causal trigger</div>
+            <div class="lfz-center-note">資金重心 / regime context｜LFZ顯示映射僅供觀察；正式座標依 Settlement Policy｜不作 Relayout causal trigger</div>
           </div>
           <div class="lfz-center-grid">
             <div class="lfz-center-card"><div class="lfz-center-name">CSP</div><div id="lfz-center-csp" class="lfz-center-value">--</div><div id="lfz-center-csp-fut" class="lfz-center-futures">期指 --</div><div id="lfz-center-csp-sub" class="lfz-center-sub">賣 Put 重心</div></div>
@@ -7867,7 +7881,7 @@
         </div>
 
       </div>
-      <div class="lfz-fixed-table-label">固定布局逐檔標註｜上一完成盤 blueprint</div>
+      <div class="lfz-fixed-table-label">固定布局逐檔標註｜上一完成盤 blueprint｜LFZ映射僅供顯示</div>
       <table class="lfz-baoz-table">
         <thead><tr><th>標註</th><th>履約價</th><th>期指價</th></tr></thead>
         <tbody id="lfz-baoz-body"><tr><td colspan="3" class="lfz-baoz-empty">等待資料</td></tr></tbody>
