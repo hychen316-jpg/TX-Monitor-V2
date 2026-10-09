@@ -2841,7 +2841,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
             <!-- Z31 OFI-SR R1.2 | lower Put support + upper Call resistance | authority=0 -->
             <div class="p9-container" id="ofi-sr-r12" style="flex:2.45; flex-direction:column; padding:4px 5px; margin-top:0; background:rgba(100,210,255,0.025); border:1px solid rgba(100,210,255,0.28); border-left:4px solid #636366;">
                 <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:5px;">
-                    <div class="p9-label" style="font-size:10px;color:#64d2ff;font-weight:950;">🧭 OFI-SR｜選擇權累委均支撐 / 壓力 R1.2.1</div>
+                    <div class="p9-label" style="font-size:10px;color:#64d2ff;font-weight:950;">🧭 OFI-SR｜選擇權累委均支撐 / 壓力 <span id="ofi-sr-version">R1.2.x</span></div>
                     <span id="ofi-sr-state" style="font-size:8px;color:#a1a1aa;">未提供</span>
                 </div>
                 <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:3px;">
@@ -6629,6 +6629,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       const q = (data && typeof data.ofi_sr === 'object') ? data.ofi_sr : null;
       const panel = document.getElementById('ofi-sr-r12');
       const state = document.getElementById('ofi-sr-state');
+      const versionLabel = document.getElementById('ofi-sr-version');
       const putCandidate = document.getElementById('ofi-sr-put-candidate');
       const putLevel = document.getElementById('ofi-sr-put-level');
       const putAvg = document.getElementById('ofi-sr-put-avg');
@@ -6654,10 +6655,24 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       };
       const fmt0 = v => { const n=num(v); return n===null?'--':Math.round(n).toLocaleString('en-US'); };
       const trend = v => { const n=num(v); return n===null?'':(n>0?' 擴大':(n<0?' 收斂':' 持平')); };
-      const evidenceLabel = v => { const x=String(v||'').toUpperCase(); return x==='SELL_DOMINANCE_POSITIVE'?'賣方均單較大':(x==='BUY_SIZE_DOMINANT'?'買方均單較大':(x==='BALANCED'?'均衡':(x==='BASELINE_ONLY'?'基準建立中':'觀測中'))); };
+      const evidenceLabel = v => {
+        const x=String(v||'').toUpperCase();
+        const labels={
+          SELL_DOMINANCE_POSITIVE:'賣方均單較大',
+          BUY_SIZE_DOMINANT:'買方均單較大',
+          BALANCED:'均衡',
+          BASELINE_ONLY:'基準建立中',
+          VALUE_FRESHNESS_UNPROVEN:'數值新鮮度未證明',
+          COMPARISON_GAP_COUNTER_REGRESSION:'累計回修・比較斷層',
+          NO_CANDIDATE:'無候選',
+          UNAVAILABLE:'證據不可用'
+        };
+        return labels[x] || '觀測中';
+      };
       const reset = () => {
         panel.style.borderLeftColor='#636366'; panel.style.background='rgba(100,210,255,0.025)';
         state.textContent='未提供'; state.style.color='#a1a1aa';
+        if (versionLabel) versionLabel.textContent='R1.2.x';
         putCandidate.textContent='等待資料'; putLevel.textContent='距現價 --｜候選狀態 --';
         putAvg.textContent='均買 --｜均賣 --｜差 --'; putDom.textContent='賣方均單優勢 --'; putDelta.textContent='Δ30 --｜Δ60 --';
         callCandidate.textContent='等待資料'; callLevel.textContent='距現價 --｜候選狀態 --';
@@ -6666,10 +6681,13 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         source.textContent='來源 money.excel｜期指 --｜Mapping --'; proof.textContent='支撐/壓力均未證明｜authority=0';
       };
       reset();
-      if (!q || !['R1.2-RTD-CUMAVG-SR','R1.2.1-RTD-CUMAVG-SR'].includes(String(q.version||''))) return;
+      const acceptedVersions=['R1.2-RTD-CUMAVG-SR','R1.2.1-RTD-CUMAVG-SR',
+                              'R1.2.2-RTD-CUMAVG-SR','R1.2.3-RTD-CUMAVG-SR'];
+      if (!q || !acceptedVersions.includes(String(q.version||''))) return;
+      if (versionLabel) versionLabel.textContent=String(q.version).split('-')[0];
 
       const st=String(q.status||'UNKNOWN').toUpperCase();
-      const labels={OBSERVED:'已觀測',OBSERVED_MAPPING_UNAVAILABLE:'映射不可用',OBSERVED_NO_SR_CANDIDATE:'目前無有效上下合約',RTD_CUMULATIVE_ORDER_FIELDS_UNAVAILABLE_OR_WARMUP:'RTD暖機/缺欄',MODEL_RESET:'模型重建',ERROR:'計算異常'};
+      const labels={OBSERVED:'已觀測',OBSERVED_MAPPING_UNAVAILABLE:'映射不可用',OBSERVED_NO_SR_CANDIDATE:'目前無有效上下合約',OBSERVED_VALUE_FRESHNESS_UNPROVEN:'已觀測・數值新鮮度未證明',RTD_CUMULATIVE_ORDER_FIELDS_UNAVAILABLE_OR_WARMUP:'RTD暖機/缺欄',MODEL_RESET:'模型重建',ERROR:'計算異常'};
       state.textContent=labels[st] || (st.startsWith('ERROR_')?'計算異常':st.replaceAll('_',' '));
       state.style.color=st==='OBSERVED'?'#34d399':(st.includes('ERROR')?'#fb7185':'#ffd166');
 
