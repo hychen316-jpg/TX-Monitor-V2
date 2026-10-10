@@ -2832,7 +2832,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
                     攻: <span id="p9-th-at">--</span> / 竭: <span id="p9-th-ex">--</span>
                 </div>
                 <div id="op-force-exact" style="width:100%;margin-top:5px;padding-top:4px;border-top:1px dotted rgba(255,209,102,.38);line-height:1.15;text-align:center;">
-                  <div class="p9-label" style="font-size:9px;color:#ffd166;font-weight:900;">OP 力道差｜23檔 <span id="op-force-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
+                  <div class="p9-label" style="font-size:9px;color:#ffd166;font-weight:900;"><span id="op-force-title">OP 力道差｜--檔</span> <span id="op-force-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
                   <div id="op-force-value" class="p9-val" style="font-size:15px;font-weight:900;color:#9ca3af;margin-top:2px;">--</div>
                   <div id="op-force-breakdown" style="font-size:15px;font-weight:850;color:#d1d5db;margin-top:1px;">Call --｜Put --</div>
                   <div id="op-force-detail" style="font-size:8px;color:#808998;margin-top:2px;">獨立研究資料｜等待資料</div>
@@ -6871,20 +6871,27 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 
     function renderOPForceExact(data) {
       const q = (data && typeof data.p9_pro === 'object') ? data.p9_pro : null;
+      const title = document.getElementById('op-force-title');
       const state = document.getElementById('op-force-state');
       const value = document.getElementById('op-force-value');
       const breakdown = document.getElementById('op-force-breakdown');
       const detail = document.getElementById('op-force-detail');
-      if (!state || !value || !breakdown || !detail) return;
+      if (!title || !state || !value || !breakdown || !detail) return;
+      title.textContent='OP 力道差｜--檔';
       state.textContent='未提供'; value.textContent='--'; value.style.color='#9ca3af';
       breakdown.textContent='Call --｜Put --'; detail.textContent='等待資料';
       if (!q || String(q.op_force_source || '') !== 'SHIOAJI_TICKFOPV1') return;
       const st=String(q.op_force_status||'UNKNOWN');
-      const labels={OBSERVED_EXACT:'逐筆觀測',PARTIAL_FORWARD_EXACT:'重連精確',PARTIAL_FORWARD_OBSERVED:'重連觀測',CURRENT_SCOPE_ONLY:'當前Scope',SESSION_SCOPE_CONTINUOUS:'當盤連續',SESSION_SCOPE_WITH_RECONNECTS:'當盤重連',SCOPE_CHANGED_FAIL_CLOSED:'Scope變更｜目前Scope觀測',ASOF_UNPROVEN:'覆蓋待證',NO_TICKS:'無成交',INTEGRITY_ERROR:'事件不連續',JOURNAL_PARSE_ERROR:'紀錄錯誤',STALE:'資料逾時',SESSION_MISMATCH:'盤別不符',CONTRACT_MISMATCH:'合約不符',SCHEMA_MISMATCH:'格式不符',SOURCE_MISMATCH:'來源不符',NO_FILE:'尚未啟動',EMPTY:'無資料',ERROR:'讀取異常'};
+      const expContracts=Number(q.op_force_expected_contracts);
+      const scope=String(q.op_force_scope||'');
+      const strikeCount=(expContracts===122||scope==='ACTIVE_61_STRIKES')?61:
+                        (expContracts===46||scope==='ACTIVE_23_STRIKES')?23:null;
+      title.textContent='OP 力道差｜'+(strikeCount===null?'--':strikeCount)+'檔';
+      const labels={OBSERVED_EXACT:'逐筆觀測',PARTIAL_FORWARD_EXACT:'重連精確',PARTIAL_FORWARD_OBSERVED:'重連觀測',OBSERVED_EXACT_61:'逐筆觀測',PARTIAL_FORWARD_EXACT_61:'重連精確',PARTIAL_FORWARD_OBSERVED_61:'重連觀測',CURRENT_SCOPE_ONLY:'當前Scope',SESSION_SCOPE_CONTINUOUS:'當盤連續',SESSION_SCOPE_WITH_RECONNECTS:'當盤重連',SCOPE_CHANGED_FAIL_CLOSED:'Scope變更｜目前Scope觀測',ASOF_UNPROVEN:'覆蓋待證',NO_TICKS:'無成交',INTEGRITY_ERROR:'事件不連續',JOURNAL_PARSE_ERROR:'紀錄錯誤',STALE:'資料逾時',SESSION_MISMATCH:'盤別不符',CONTRACT_MISMATCH:'合約不符',SCHEMA_MISMATCH:'格式不符',SOURCE_MISMATCH:'來源不符',NO_FILE:'尚未啟動',EMPTY:'無資料',ERROR:'讀取異常'};
       const complete = q.op_force_complete === true;
       const eligible = q.op_force_eligible === true;
       const raw = q.op_force_observed_raw===null?NaN:Number(q.op_force_observed_raw);
-      const observedStatuses = new Set(['PARTIAL_FORWARD_OBSERVED','CURRENT_SCOPE_ONLY','SESSION_SCOPE_CONTINUOUS','SESSION_SCOPE_WITH_RECONNECTS','SCOPE_CHANGED_FAIL_CLOSED']);
+      const observedStatuses = new Set(['PARTIAL_FORWARD_OBSERVED','PARTIAL_FORWARD_OBSERVED_61','CURRENT_SCOPE_ONLY','SESSION_SCOPE_CONTINUOUS','SESSION_SCOPE_WITH_RECONNECTS','SCOPE_CHANGED_FAIL_CLOSED']);
       const observedFallback = observedStatuses.has(st) && Number.isFinite(raw);
       state.textContent=labels[st]||'狀態未知';
       state.style.color=complete?'#34d399':eligible?'#ffd166':observedFallback?'#fb923c':(st==='OBSERVED_EXACT'?'#ffd166':'#fb7185');
