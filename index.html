@@ -2853,6 +2853,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
                         <div id="ofi-sr-put-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">累委均賣買差 --｜證據不足</div>
                         <div id="ofi-sr-put-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
                         <div id="ofi-sr-put-writer" style="font-size:8px;color:#9ca3af;line-height:1.2;">同合約連續觀測 --｜未證明持倉</div>
+                       <div id="ofi-sr-put-raw" style="font-size:8px;color:#808998;">原始最高排名 --｜診斷用</div>
                     </div>
                     <div id="ofi-sr-call-box" style="padding:4px;border-radius:5px;border:1px solid rgba(251,113,133,.25);background:rgba(251,113,133,.035);">
                         <div style="font-size:9px;font-weight:900;color:#fb7185;">🧱 上方 Call｜賣方優勢觀察</div>
@@ -2862,6 +2863,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
                         <div id="ofi-sr-call-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">累委均賣買差 --｜證據不足</div>
                         <div id="ofi-sr-call-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
                         <div id="ofi-sr-call-writer" style="font-size:8px;color:#9ca3af;line-height:1.2;">同合約連續觀測 --｜未證明持倉</div>
+                       <div id="ofi-sr-call-raw" style="font-size:8px;color:#808998;">原始最高排名 --｜診斷用</div>
                     </div>
                 </div>
                 <div id="ofi-sr-coverage" style="font-size:8px;color:#808998;margin-top:3px;">Put有效 --/21｜Call有效 --/21｜下方 --｜上方 --｜RTD --</div>
@@ -6647,6 +6649,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       const proof = document.getElementById('ofi-sr-proof');
       const putWriter = document.getElementById('ofi-sr-put-writer');
       const callWriter = document.getElementById('ofi-sr-call-writer');
+      const putRaw = document.getElementById('ofi-sr-put-raw');
+      const callRaw = document.getElementById('ofi-sr-call-raw');
       if (!panel || !state || !putCandidate || !callCandidate || !coverage || !source || !proof) return;
 
       const num = v => {
@@ -6736,6 +6740,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         source.textContent='來源 money.excel｜期指 --｜Mapping --'; proof.textContent='委託優勢≠持倉/支撐｜期指跌破≠佈局失敗｜authority=0';
         if (putWriter) putWriter.textContent='同合約連續觀測 --｜未證明持倉';
         if (callWriter) callWriter.textContent='同合約連續觀測 --｜未證明持倉';
+        if(putRaw)putRaw.textContent='原始最高排名 --｜診斷用';
+        if(callRaw)callRaw.textContent='原始最高排名 --｜診斷用';
       };
       reset();
       const acceptedVersions=['R1.2-RTD-CUMAVG-SR','R1.2.1-RTD-CUMAVG-SR',
@@ -6831,13 +6837,58 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       if(callWriter) callWriter.textContent=cRank==='POSITIVE' ? writerLabel('call',cs) :
         '本幀原始排名非正值／未證｜同合約真實持倉未知';
 
+      // R6: dual-channel. The original source-quality-first rank is diagnostic only.
+      if(putRaw) putRaw.textContent='原始最高排名 '+(ps===null?'--':'P'+fmt0(ps))+'｜賣買差 '+fmt(q.best_put_sell_dominance,3,true);
+      if(callRaw) callRaw.textContent='原始最高排名 '+(cs===null?'--':'C'+fmt0(cs))+'｜賣買差 '+fmt(q.best_call_sell_dominance,3,true);
+      const r6=q.seller_positive_r6;
+      if(r6 && typeof r6==='object') {
+        const schemaOK=st==='OBSERVED' && r6.selection_policy==='SELLDOM_POSITIVE_FRESH_CONTINUOUS_EXCEL_PROXY'
+          && r6.publisher_atomicity_proven===false && r6.authority===0
+          && r6.put && typeof r6.put==='object' && r6.call && typeof r6.call==='object';
+        const geometryOK=String(r6.mapping_provenance_state)==='PARITY_WINDOW_PROVEN';
+        const renderR6Side=(cp,v,name,level,avg,dom,delta,writer)=>{
+          const sd=num(v&&v.sell_dominance),ask=num(v&&v.ask_avg),bid=num(v&&v.bid_avg);
+          const strike=num(v&&v.strike),mapped=num(v&&v.mapped_futures);
+          const coherent=sd!==null && ask!==null && bid!==null && sd>0 && Math.abs(sd-(ask-bid))<0.00001;
+          const qualified=schemaOK && v.state==='POSITIVE_COMPARABLE_EXCEL_SNAPSHOT'
+            && v.counter_state==='CONTINUOUS' && strike!==null && mapped!==null && coherent;
+          if(qualified) {
+            name.textContent=(cp==='put'?'P':'C')+fmt0(strike)+'｜賣方正差觀察';
+            name.style.color=cp==='put'?'#34d399':'#fb7185';
+            level.textContent='期指座標 '+fmt0(mapped)+'｜'+positionLabel(mapped,fut)
+              +'｜'+(geometryOK?'Mapping 時間證據成立':'Mapping 時間證據未證');
+            renderSellerSide(avg,dom,bid,ask,sd,null);
+            const d30=num(v.delta_30s),d60=num(v.delta_60s);
+            delta.textContent='Δ30 '+fmt(d30,2,true)+trend(d30)+'｜Δ60 '+fmt(d60,2,true)+trend(d60);
+            if(writer)writer.textContent='R6 Excel 正差觀測 '+fmt(v.consecutive_excel_frames,0)+' 幀｜非莊家持倉證據';
+          }else{
+            name.textContent=schemaOK?'當幀無可比較正差候選':'R6 資料狀態或格式待核對';
+            name.style.color='#a1a1aa';
+            level.textContent=v&&v.state==='POSITIVE_SEEN_QUALITY_UNPROVEN'?'有正差但 Counter／新鮮度未證'
+              :v&&v.state==='NO_POSITIVE_OBSERVED_IN_CURRENT_SCOPE'?'當幀未見正差｜非莊家退出證明'
+              :'R6 證據不可用／未知';
+            avg.textContent='賣均 --｜買均 --';
+            dom.textContent='賣買差 --｜未建立可比較的正差候選';dom.style.color='#ffca6c';
+            delta.textContent='Δ30/60 --｜不可由缺資料推斷撤退';
+            if(writer)writer.textContent='正差觀察 '+fmt(v&&v.observed_positive_count,0)
+              +' 合約｜可比較 '+fmt(v&&v.comparable_positive_count,0)+' 合約｜持倉未知';
+          }
+          return qualified;
+        };
+        const qp=renderR6Side('put',r6.put,putCandidate,putLevel,putAvg,putDom,putDelta,putWriter);
+        const qc=renderR6Side('call',r6.call,callCandidate,callLevel,callAvg,callDom,callDelta,callWriter);
+        state.textContent=st!=='OBSERVED'?'R6｜資料狀態待證':(qp||qc)?'R6｜可比較賣方正差觀察':'R6｜正差候選待證';
+        state.style.color=(qp||qc)?'#34d399':'#ffca6c';
+        if(versionLabel)versionLabel.textContent='R1.2.3 / R6';
+        panel.style.borderLeftColor=(qp||qc)?'#64d2ff':'#636366';
+      }
       const probe=String(q.rtd_probe_status||'UNKNOWN').toUpperCase();
       const probeText=probe==='RTD_CUMULATIVE_FIELDS_OBSERVED'?'四欄正常':(probe==='PROBE_PENDING'?'探針等待':probe.replaceAll('_',' '));
       coverage.textContent='Put有效 '+fmt0(q.valid_put_contracts)+'/21｜Call有效 '+fmt0(q.valid_call_contracts)+'/21｜下方 '+fmt0(q.lower_put_contracts)+'｜上方 '+fmt0(q.upper_call_contracts)+'｜RTD '+probeText;
       source.textContent='money.excel｜期指 '+String(q.futures_source||'--')+' @'+fmt0(fut)+'｜Mapping '+String(q.mapping_source||'--')+'｜basis '+fmt(q.mapping_basis,1);
       proof.textContent='賣方委託優勢≠實際持倉；期指跌破≠賣方退出｜支撐 '+String(q.support_proof||'NOT_PROVEN')+' / 壓力 '+String(q.resistance_proof||'NOT_PROVEN')+'｜authority=0';
       const putD=num(q.best_put_sell_dominance), callD=num(q.best_call_sell_dominance);
-      if(pRank==='POSITIVE' || cRank==='POSITIVE'){ panel.style.borderLeftColor='#64d2ff'; panel.style.background='rgba(100,210,255,0.04)'; }
+      if(!q.seller_positive_r6 && (pRank==='POSITIVE' || cRank==='POSITIVE')){ panel.style.borderLeftColor='#64d2ff'; panel.style.background='rgba(100,210,255,0.04)'; }
     }
 
     // Z31 P9-Pro Assist R1.0:
