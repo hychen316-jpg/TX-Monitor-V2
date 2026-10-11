@@ -6854,9 +6854,12 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
             && v.counter_state==='CONTINUOUS' && strike!==null && mapped!==null && coherent;
           if(qualified) {
             name.textContent=(cp==='put'?'P':'C')+fmt0(strike)+'｜賣方正差觀察';
-            name.style.color=cp==='put'?'#34d399':'#fb7185';
-            level.textContent='期指座標 '+fmt0(mapped)+'｜'+positionLabel(mapped,fut)
-              +'｜'+(geometryOK?'Mapping 時間證據成立':'Mapping 時間證據未證');
+            name.style.color=geometryOK?(cp==='put'?'#34d399':'#fb7185'):'#ffca6c';
+            // Options quote evidence and futures coordinate as-of evidence are independent.
+            // Without PARITY_WINDOW_PROVEN, do not publish the mapped point as an accepted level.
+            level.textContent=geometryOK
+              ? '期指試算座標 '+fmt0(mapped)+'｜'+positionLabel(mapped,fut)+'｜Mapping 時間證據成立（非支撐/持倉證明）'
+              : '期指座標 --｜Mapping 時間證據未證（試算位置不作因果判斷）';
             renderSellerSide(avg,dom,bid,ask,sd,null);
             const d30=num(v.delta_30s),d60=num(v.delta_60s);
             delta.textContent='Δ30 '+fmt(d30,2,true)+trend(d30)+'｜Δ60 '+fmt(d60,2,true)+trend(d60);
@@ -6877,18 +6880,39 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         };
         const qp=renderR6Side('put',r6.put,putCandidate,putLevel,putAvg,putDom,putDelta,putWriter);
         const qc=renderR6Side('call',r6.call,callCandidate,callLevel,callAvg,callDom,callDelta,callWriter);
-        state.textContent=st!=='OBSERVED'?'R6｜資料狀態待證':(qp||qc)?'R6｜可比較賣方正差觀察':'R6｜正差候選待證';
-        state.style.color=(qp||qc)?'#34d399':'#ffca6c';
+        state.textContent=st!=='OBSERVED'?'R6｜資料狀態待證':(qp||qc)
+          ?(geometryOK?'R6｜正差觀察・Mapping 時間已證':'R6｜賣方正差已觀測・期指座標未證')
+          :'R6｜正差候選待證';
+        state.style.color=(qp||qc)&&geometryOK?'#34d399':'#ffca6c';
         if(versionLabel)versionLabel.textContent='R1.2.3 / R6';
-        panel.style.borderLeftColor=(qp||qc)?'#64d2ff':'#636366';
+        panel.style.borderLeftColor=(qp||qc)&&geometryOK?'#64d2ff':'#636366';
       }
       const probe=String(q.rtd_probe_status||'UNKNOWN').toUpperCase();
       const probeText=probe==='RTD_CUMULATIVE_FIELDS_OBSERVED'?'四欄正常':(probe==='PROBE_PENDING'?'探針等待':probe.replaceAll('_',' '));
       coverage.textContent='Put有效 '+fmt0(q.valid_put_contracts)+'/21｜Call有效 '+fmt0(q.valid_call_contracts)+'/21｜下方 '+fmt0(q.lower_put_contracts)+'｜上方 '+fmt0(q.upper_call_contracts)+'｜RTD '+probeText;
       source.textContent='money.excel｜期指 '+String(q.futures_source||'--')+' @'+fmt0(fut)+'｜Mapping '+String(q.mapping_source||'--')+'｜basis '+fmt(q.mapping_basis,1);
-      proof.textContent='賣方委託優勢≠實際持倉；期指跌破≠賣方退出｜支撐 '+String(q.support_proof||'NOT_PROVEN')+' / 壓力 '+String(q.resistance_proof||'NOT_PROVEN')+'｜authority=0';
+       const r6WriteErr=num(q.r6_record_write_errors);
+      const r6LogWarn=(r6WriteErr!==null && r6WriteErr>0)
+        ? '｜R6記錄曾失敗 '+fmt0(r6WriteErr)+' 次（'+String(q.r6_record_write_state||'UNKNOWN')+'）'
+        : '';
+      proof.textContent='賣方委託優勢≠實際持倉；期指跌破≠賣方退出｜支撐 '+String(q.support_proof||'NOT_PROVEN')+' / 壓力 '+String(q.resistance_proof||'NOT_PROVEN')+'｜authority=0'+r6LogWarn;
       const putD=num(q.best_put_sell_dominance), callD=num(q.best_call_sell_dominance);
       if(!q.seller_positive_r6 && (pRank==='POSITIVE' || cRank==='POSITIVE')){ panel.style.borderLeftColor='#64d2ff'; panel.style.background='rgba(100,210,255,0.04)'; }
+      // R6.1 ERROR supremacy: never downgrade real BAS ERROR_* to a yellow R6 warning.
+      // Do not show any earlier raw/r6 candidate as current when frame calculation failed.
+      if(st==='ERROR' || st.startsWith('ERROR_')) {
+        state.textContent='計算異常 '+st;
+        state.style.color='#fb7185';
+        panel.style.borderLeftColor='#fb7185';
+        panel.style.background='rgba(251,113,133,0.08)';
+        for(const el of [putCandidate,callCandidate]){
+          el.textContent='OFI-SR 計算異常｜本幀候選不可用';el.style.color='#fb7185';
+        }
+        for(const el of [putLevel,callLevel])el.textContent='來源計算錯誤｜期指座標不可用';
+        for(const el of [putAvg,callAvg])el.textContent='賣均 --｜買均 --';
+        for(const el of [putDom,callDom]){el.textContent='賣買差 --｜不得沿用舊值';el.style.color='#fb7185';}
+        for(const el of [putDelta,callDelta])el.textContent='Δ30/60 --｜計算異常';
+      }
     }
 
     // Z31 P9-Pro Assist R1.0:
