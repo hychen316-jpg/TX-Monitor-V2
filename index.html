@@ -2832,39 +2832,41 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
                     攻: <span id="p9-th-at">--</span> / 竭: <span id="p9-th-ex">--</span>
                 </div>
                 <div id="op-force-exact" style="width:100%;margin-top:5px;padding-top:4px;border-top:1px dotted rgba(255,209,102,.38);line-height:1.15;text-align:center;">
-                  <div class="p9-label" style="font-size:9px;color:#ffd166;font-weight:900;"><span id="op-force-title">OP 力道差｜--檔</span> <span id="op-force-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
+                  <div class="p9-label" style="font-size:9px;color:#ffd166;font-weight:900;">OP 力道差｜23檔 <span id="op-force-state" style="font-size:8px;color:#a1a1aa;">未提供</span></div>
                   <div id="op-force-value" class="p9-val" style="font-size:15px;font-weight:900;color:#9ca3af;margin-top:2px;">--</div>
                   <div id="op-force-breakdown" style="font-size:15px;font-weight:850;color:#d1d5db;margin-top:1px;">Call --｜Put --</div>
                   <div id="op-force-detail" style="font-size:8px;color:#808998;margin-top:2px;">獨立研究資料｜等待資料</div>
                 </div>
             </div>
-            <!-- Z31 OFI-SR R1.2 | lower Put support + upper Call resistance | authority=0 -->
+            <!-- Z31 OFI-SR R5 UI: current winner is NOT same-contract writer inventory. authority=0 -->
             <div class="p9-container" id="ofi-sr-r12" style="flex:2.45; flex-direction:column; padding:4px 5px; margin-top:0; background:rgba(100,210,255,0.025); border:1px solid rgba(100,210,255,0.28); border-left:4px solid #636366;">
                 <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:5px;">
-                    <div class="p9-label" style="font-size:10px;color:#64d2ff;font-weight:950;">🧭 OFI-SR｜選擇權累委均支撐 / 壓力 <span id="ofi-sr-version">R1.2.x</span></div>
+                    <div class="p9-label" style="font-size:10px;color:#64d2ff;font-weight:950;">🧭 OFI-SR｜賣方累委均差・佈局觀察 <span id="ofi-sr-version">R1.2.x</span></div>
                     <span id="ofi-sr-state" style="font-size:8px;color:#a1a1aa;">未提供</span>
                 </div>
                 <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:3px;">
                     <div id="ofi-sr-put-box" style="padding:4px;border-radius:5px;border:1px solid rgba(52,211,153,.25);background:rgba(52,211,153,.035);">
-                        <div style="font-size:9px;font-weight:900;color:#34d399;">🛡 下方 Put 支撐候選</div>
+                        <div style="font-size:9px;font-weight:900;color:#34d399;">🛡 下方 Put 賣方優勢</div>
                         <div id="ofi-sr-put-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
                         <div id="ofi-sr-put-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
                         <div id="ofi-sr-put-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">均買 --｜均賣 --｜差 --</div>
                         <div id="ofi-sr-put-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">賣方均單優勢 --</div>
                         <div id="ofi-sr-put-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
+                        <div id="ofi-sr-put-writer" style="font-size:8px;color:#9ca3af;line-height:1.2;">同合約連續觀測 --｜未證明持倉</div>
                     </div>
                     <div id="ofi-sr-call-box" style="padding:4px;border-radius:5px;border:1px solid rgba(251,113,133,.25);background:rgba(251,113,133,.035);">
-                        <div style="font-size:9px;font-weight:900;color:#fb7185;">🧱 上方 Call 壓力候選</div>
+                        <div style="font-size:9px;font-weight:900;color:#fb7185;">🧱 上方 Call 賣方優勢</div>
                         <div id="ofi-sr-call-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
                         <div id="ofi-sr-call-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
                         <div id="ofi-sr-call-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">均買 --｜均賣 --｜差 --</div>
                         <div id="ofi-sr-call-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">賣方均單優勢 --</div>
                         <div id="ofi-sr-call-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
+                        <div id="ofi-sr-call-writer" style="font-size:8px;color:#9ca3af;line-height:1.2;">同合約連續觀測 --｜未證明持倉</div>
                     </div>
                 </div>
                 <div id="ofi-sr-coverage" style="font-size:8px;color:#808998;margin-top:3px;">Put有效 --/21｜Call有效 --/21｜下方 --｜上方 --｜RTD --</div>
                 <div id="ofi-sr-source" style="font-size:8px;color:#808998;line-height:1.2;">來源 money.excel｜期指 --｜Mapping --</div>
-                <div id="ofi-sr-proof" style="font-size:8px;color:#ffca6c;margin-top:1px;">支撐/壓力均未證明｜authority=0</div>
+                <div id="ofi-sr-proof" style="font-size:8px;color:#ffca6c;margin-top:1px;">委託優勢≠持倉/支撐｜期指跌破≠佈局失敗｜authority=0</div>
             </div>
             <div class="p9-container r7-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
@@ -6643,6 +6645,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       const coverage = document.getElementById('ofi-sr-coverage');
       const source = document.getElementById('ofi-sr-source');
       const proof = document.getElementById('ofi-sr-proof');
+      const putWriter = document.getElementById('ofi-sr-put-writer');
+      const callWriter = document.getElementById('ofi-sr-call-writer');
       if (!panel || !state || !putCandidate || !callCandidate || !coverage || !source || !proof) return;
 
       const num = v => {
@@ -6678,7 +6682,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         callCandidate.textContent='等待資料'; callLevel.textContent='距現價 --｜候選狀態 --';
         callAvg.textContent='均買 --｜均賣 --｜差 --'; callDom.textContent='賣方均單優勢 --'; callDelta.textContent='Δ30 --｜Δ60 --';
         coverage.textContent='Put有效 --/21｜Call有效 --/21｜下方 --｜上方 --｜RTD --';
-        source.textContent='來源 money.excel｜期指 --｜Mapping --'; proof.textContent='支撐/壓力均未證明｜authority=0';
+        source.textContent='來源 money.excel｜期指 --｜Mapping --'; proof.textContent='委託優勢≠持倉/支撐｜期指跌破≠佈局失敗｜authority=0';
+        if (putWriter) putWriter.textContent='同合約連續觀測 --｜未證明持倉';
+        if (callWriter) callWriter.textContent='同合約連續觀測 --｜未證明持倉';
       };
       reset();
       const acceptedVersions=['R1.2-RTD-CUMAVG-SR','R1.2.1-RTD-CUMAVG-SR',
@@ -6720,11 +6726,35 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         callCandidate.textContent=(num(q.upper_call_contracts)||0)>0?'候選建立中':'無有效上方Call';
         callLevel.textContent='距現價 --｜'+(st==='OBSERVED_MAPPING_UNAVAILABLE'?'Mapping不可用':'等待有效RTD/Mapping');
       }
+      // R5 is independent, non-atomic Excel frame observation, never a dealer-position claim.
+      const w=(q.writer_r5 && typeof q.writer_r5==='object') ? q.writer_r5 : null;
+      const writerLabel = (side, currentStrike) => {
+        if(!w) return '未提供 R5 觀測鏈｜持倉未知';
+        const st=String(w['current_'+side+'_state']||'UNKNOWN');
+        const n=num(w['current_'+side+'_consecutive_excel_frames']);
+        if(currentStrike===null){
+          const last=num(w['last_'+side+'_strike']);
+          const at=String(w['last_'+side+'_seen_at']||'');
+          return last===null ? '目前無候選｜賣方是否撤退未知'
+            : '上次觀測 '+(side==='put'?'P':'C')+fmt0(last)+' '+(at||'時間未知')+'｜目前未知≠撤退';
+        }
+        if(st==='POSITIVE_CONSECUTIVE_EXCEL_FRAMES_PROXY' && n!==null)
+          return '同合約連續 Excel 觀測 '+fmt0(n)+' 幀｜非持倉/原子證明';
+        if(st==='POSITIVE_CURRENT_SNAPSHOT_ONLY') return '正值快照｜連續性未證明';
+        if(st==='NO_POSITIVE_SELLDOM_CURRENT') return '當幀賣方優勢非正｜不等於平倉';
+        if(st==='UNKNOWN_COUNTER_COMPARISON_GAP') return 'Counter 回修｜比較斷層';
+        if(st==='UNKNOWN_VALUE_FRESHNESS') return '新鮮度未知｜不能證明持續';
+        if(st==='UNKNOWN_COUNTER_BASELINE') return 'Counter 基線｜連續性未知';
+        return '觀察證據不足｜持倉未知';
+      };
+      if(putWriter) putWriter.textContent=writerLabel('put',ps);
+      if(callWriter) callWriter.textContent=writerLabel('call',cs);
+
       const probe=String(q.rtd_probe_status||'UNKNOWN').toUpperCase();
       const probeText=probe==='RTD_CUMULATIVE_FIELDS_OBSERVED'?'四欄正常':(probe==='PROBE_PENDING'?'探針等待':probe.replaceAll('_',' '));
       coverage.textContent='Put有效 '+fmt0(q.valid_put_contracts)+'/21｜Call有效 '+fmt0(q.valid_call_contracts)+'/21｜下方 '+fmt0(q.lower_put_contracts)+'｜上方 '+fmt0(q.upper_call_contracts)+'｜RTD '+probeText;
       source.textContent='money.excel｜期指 '+String(q.futures_source||'--')+' @'+fmt0(fut)+'｜Mapping '+String(q.mapping_source||'--')+'｜basis '+fmt(q.mapping_basis,1);
-      proof.textContent='Put支撐 '+String(q.support_proof||'NOT_PROVEN')+'｜Call壓力 '+String(q.resistance_proof||'NOT_PROVEN')+'｜authority=0';
+      proof.textContent='賣方委託優勢≠實際持倉；期指跌破≠賣方退出｜支撐 '+String(q.support_proof||'NOT_PROVEN')+' / 壓力 '+String(q.resistance_proof||'NOT_PROVEN')+'｜authority=0';
       const putD=num(q.best_put_sell_dominance), callD=num(q.best_call_sell_dominance);
       if(putD!==null || callD!==null){ panel.style.borderLeftColor='#64d2ff'; panel.style.background='rgba(100,210,255,0.04)'; }
     }
@@ -6871,27 +6901,20 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 
     function renderOPForceExact(data) {
       const q = (data && typeof data.p9_pro === 'object') ? data.p9_pro : null;
-      const title = document.getElementById('op-force-title');
       const state = document.getElementById('op-force-state');
       const value = document.getElementById('op-force-value');
       const breakdown = document.getElementById('op-force-breakdown');
       const detail = document.getElementById('op-force-detail');
-      if (!title || !state || !value || !breakdown || !detail) return;
-      title.textContent='OP 力道差｜--檔';
+      if (!state || !value || !breakdown || !detail) return;
       state.textContent='未提供'; value.textContent='--'; value.style.color='#9ca3af';
       breakdown.textContent='Call --｜Put --'; detail.textContent='等待資料';
       if (!q || String(q.op_force_source || '') !== 'SHIOAJI_TICKFOPV1') return;
       const st=String(q.op_force_status||'UNKNOWN');
-      const expContracts=Number(q.op_force_expected_contracts);
-      const scope=String(q.op_force_scope||'');
-      const strikeCount=(expContracts===122||scope==='ACTIVE_61_STRIKES')?61:
-                        (expContracts===46||scope==='ACTIVE_23_STRIKES')?23:null;
-      title.textContent='OP 力道差｜'+(strikeCount===null?'--':strikeCount)+'檔';
-      const labels={OBSERVED_EXACT:'逐筆觀測',PARTIAL_FORWARD_EXACT:'重連精確',PARTIAL_FORWARD_OBSERVED:'重連觀測',OBSERVED_EXACT_61:'逐筆觀測',PARTIAL_FORWARD_EXACT_61:'重連精確',PARTIAL_FORWARD_OBSERVED_61:'重連觀測',CURRENT_SCOPE_ONLY:'當前Scope',SESSION_SCOPE_CONTINUOUS:'當盤連續',SESSION_SCOPE_WITH_RECONNECTS:'當盤重連',SCOPE_CHANGED_FAIL_CLOSED:'Scope變更｜目前Scope觀測',ASOF_UNPROVEN:'覆蓋待證',NO_TICKS:'無成交',INTEGRITY_ERROR:'事件不連續',JOURNAL_PARSE_ERROR:'紀錄錯誤',STALE:'資料逾時',SESSION_MISMATCH:'盤別不符',CONTRACT_MISMATCH:'合約不符',SCHEMA_MISMATCH:'格式不符',SOURCE_MISMATCH:'來源不符',NO_FILE:'尚未啟動',EMPTY:'無資料',ERROR:'讀取異常'};
+      const labels={OBSERVED_EXACT:'逐筆觀測',PARTIAL_FORWARD_EXACT:'重連精確',PARTIAL_FORWARD_OBSERVED:'重連觀測',CURRENT_SCOPE_ONLY:'當前Scope',SESSION_SCOPE_CONTINUOUS:'當盤連續',SESSION_SCOPE_WITH_RECONNECTS:'當盤重連',SCOPE_CHANGED_FAIL_CLOSED:'Scope變更｜目前Scope觀測',ASOF_UNPROVEN:'覆蓋待證',NO_TICKS:'無成交',INTEGRITY_ERROR:'事件不連續',JOURNAL_PARSE_ERROR:'紀錄錯誤',STALE:'資料逾時',SESSION_MISMATCH:'盤別不符',CONTRACT_MISMATCH:'合約不符',SCHEMA_MISMATCH:'格式不符',SOURCE_MISMATCH:'來源不符',NO_FILE:'尚未啟動',EMPTY:'無資料',ERROR:'讀取異常'};
       const complete = q.op_force_complete === true;
       const eligible = q.op_force_eligible === true;
       const raw = q.op_force_observed_raw===null?NaN:Number(q.op_force_observed_raw);
-      const observedStatuses = new Set(['PARTIAL_FORWARD_OBSERVED','PARTIAL_FORWARD_OBSERVED_61','CURRENT_SCOPE_ONLY','SESSION_SCOPE_CONTINUOUS','SESSION_SCOPE_WITH_RECONNECTS','SCOPE_CHANGED_FAIL_CLOSED']);
+      const observedStatuses = new Set(['PARTIAL_FORWARD_OBSERVED','CURRENT_SCOPE_ONLY','SESSION_SCOPE_CONTINUOUS','SESSION_SCOPE_WITH_RECONNECTS','SCOPE_CHANGED_FAIL_CLOSED']);
       const observedFallback = observedStatuses.has(st) && Number.isFinite(raw);
       state.textContent=labels[st]||'狀態未知';
       state.style.color=complete?'#34d399':eligible?'#ffd166':observedFallback?'#fb923c':(st==='OBSERVED_EXACT'?'#ffd166':'#fb7185');
@@ -7856,7 +7879,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     cCard.appendChild(cSummary);
     coreGrid.appendChild(cCard);
 
-    const forceCard = card('P9 × OFI-SR × R7', '實單能量・Put支撐 / Call壓力累委均・累積方向', 'v2-force-card');
+    const forceCard = card('P9 × OFI-SR × R7', '實單能量・Put/Call賣方累委均差・累積方向（未證持倉）', 'v2-force-card');
     if (battleCard) forceCard.appendChild(battleCard);
     if (battleLocked) forceCard.appendChild(battleLocked);
     const forceSummary = el('div', 'v2-summary-value', 'p9-r7-resonance');
