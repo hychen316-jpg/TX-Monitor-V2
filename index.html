@@ -2846,7 +2846,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
                 </div>
                 <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:3px;">
                     <div id="ofi-sr-put-box" style="padding:4px;border-radius:5px;border:1px solid rgba(52,211,153,.25);background:rgba(52,211,153,.035);">
-                        <div style="font-size:9px;font-weight:900;color:#34d399;">🛡 下方 Put｜賣買差排名候選</div>
+                        <div style="font-size:9px;font-weight:900;color:#34d399;">🛡 下方 Put｜賣方優勢觀察</div>
                         <div id="ofi-sr-put-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
                         <div id="ofi-sr-put-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
                         <div id="ofi-sr-put-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">賣均 --｜買均 --</div>
@@ -2855,7 +2855,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
                         <div id="ofi-sr-put-writer" style="font-size:8px;color:#9ca3af;line-height:1.2;">同合約連續觀測 --｜未證明持倉</div>
                     </div>
                     <div id="ofi-sr-call-box" style="padding:4px;border-radius:5px;border:1px solid rgba(251,113,133,.25);background:rgba(251,113,133,.035);">
-                        <div style="font-size:9px;font-weight:900;color:#fb7185;">🧱 上方 Call｜賣買差排名候選</div>
+                        <div style="font-size:9px;font-weight:900;color:#fb7185;">🧱 上方 Call｜賣方優勢觀察</div>
                         <div id="ofi-sr-call-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
                         <div id="ofi-sr-call-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
                         <div id="ofi-sr-call-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">賣均 --｜買均 --</div>
@@ -6678,6 +6678,33 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         domEl.style.color=sd>0?'#34d399':(sd<0?'#ffca6c':'#a1a1aa');
         // Displayed means are rounded to 3 decimals; signed difference uses original precision.
       };
+      // R5.3: raw best rank and seller-side evidence are different propositions.
+      // The BAS best rank is intentionally sign-agnostic for diagnostic continuity.
+      // Do NOT infer that every observed strike is negative from one quality-first best rank.
+      const sellerRankStatus = (bidRaw, askRaw, sdRaw, legacyRaw, evidenceRaw) => {
+        const bid=num(bidRaw), ask=num(askRaw), sd=num(sdRaw), legacy=num(legacyRaw);
+        if(bid===null || ask===null || sd===null ||
+           Math.abs(sd-(ask-bid))>=0.00001 ||
+           (legacy!==null && Math.abs(sd+legacy)>=0.00001)) return 'UNKNOWN';
+        const e=String(evidenceRaw||'').toUpperCase();
+        if(sd>0 && (e==='BUY_SIZE_DOMINANT' || e==='BALANCED')) return 'UNKNOWN';
+        return sd>0?'POSITIVE':sd<0?'NEGATIVE':'BALANCED';
+      };
+      const renderRankWithoutSellerEvidence = (kind, rankStatus, strike, mapped, future,
+          bidRaw, askRaw, sdRaw, evidenceRaw, nameEl, levelEl, avgEl, domEl, deltaEl) => {
+        const symbol=kind==='put'?'P':'C';
+        const tag=rankStatus==='NEGATIVE'?'最高排名為負':
+                  rankStatus==='BALANCED'?'最高排名為零':'來源或符號待核對';
+        nameEl.textContent=rankStatus==='UNKNOWN'?'賣方證據待核對':'本幀未確認賣方優勢';
+        nameEl.style.color='#a1a1aa';
+        levelEl.textContent='原始排名對照：'+symbol+fmt0(strike)+'／期指 '+fmt0(mapped)
+          +'｜'+positionLabel(mapped,future)+'｜'+tag;
+        avgEl.textContent='排名對照｜賣均 '+fmt(askRaw,3)+'｜買均 '+fmt(bidRaw,3);
+        domEl.textContent=rankStatus==='UNKNOWN'?'賣買差 --｜來源欄位未通過核對':
+          '原始最高賣買差 '+fmt(sdRaw,3,true)+'｜不屬於正值賣方佈局候選';
+        domEl.style.color=rankStatus==='UNKNOWN'?'#ffca6c':'#a1a1aa';
+        deltaEl.textContent='Δ30/60 不作賣方強化判斷｜'+evidenceLabel(evidenceRaw);
+      };
       const positionLabel = (mapped, future) => {
         if (mapped===null || future===null) return '距現價 --';
         const d=mapped-future;
@@ -6701,9 +6728,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         panel.style.borderLeftColor='#636366'; panel.style.background='rgba(100,210,255,0.025)';
         state.textContent='未提供'; state.style.color='#a1a1aa';
         if (versionLabel) versionLabel.textContent='R1.2.x';
-        putCandidate.textContent='等待資料'; putLevel.textContent='距現價 --｜候選狀態 --';
+        putCandidate.textContent='等待資料'; putCandidate.style.color='#d1d5db'; putLevel.textContent='距現價 --｜候選狀態 --';
         putAvg.textContent='賣均 --｜買均 --'; putDom.textContent='累委均賣買差 --｜證據不足'; putDelta.textContent='Δ30 --｜Δ60 --';
-        callCandidate.textContent='等待資料'; callLevel.textContent='距現價 --｜候選狀態 --';
+        callCandidate.textContent='等待資料'; callCandidate.style.color='#d1d5db'; callLevel.textContent='距現價 --｜候選狀態 --';
         callAvg.textContent='賣均 --｜買均 --'; callDom.textContent='累委均賣買差 --｜證據不足'; callDelta.textContent='Δ30 --｜Δ60 --';
         coverage.textContent='Put有效 --/21｜Call有效 --/21｜下方 --｜上方 --｜RTD --';
         source.textContent='來源 money.excel｜期指 --｜Mapping --'; proof.textContent='委託優勢≠持倉/支撐｜期指跌破≠佈局失敗｜authority=0';
@@ -6724,29 +6751,59 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       const fut=num(q.futures_price);
       const ps=num(q.best_lower_put_strike), pf=num(q.best_lower_put_futures);
       const cs=num(q.best_upper_call_strike), cf=num(q.best_upper_call_futures);
+      const pRank=ps===null?'MISSING':sellerRankStatus(q.best_put_bid_avg,q.best_put_ask_avg,
+        q.best_put_sell_dominance,q.best_put_diff,q.best_put_evidence_state);
+      const cRank=cs===null?'MISSING':sellerRankStatus(q.best_call_bid_avg,q.best_call_ask_avg,
+        q.best_call_sell_dominance,q.best_call_diff,q.best_call_evidence_state);
       if(ps!==null){
-        putCandidate.textContent='P'+fmt0(ps)+' ｜期指 '+fmt0(pf);
-        putCandidate.style.color=num(q.best_put_sell_dominance)>0?'#34d399':'#d1d5db';
-        const pe=String(q.best_put_evidence_state||'');
-        putLevel.textContent=positionLabel(pf,fut)+'｜'+evidenceLabel(pe);
-        renderSellerSide(putAvg,putDom,q.best_put_bid_avg,q.best_put_ask_avg,q.best_put_sell_dominance,q.best_put_diff);
-        const pd30=num(q.best_put_sell_dominance_delta_30s), pd60=num(q.best_put_sell_dominance_delta_60s);
-        putDelta.textContent='Δ30 '+fmt(pd30,2,true)+trend(pd30)+'｜Δ60 '+fmt(pd60,2,true)+trend(pd60);
+        if(pRank==='POSITIVE') {
+          putCandidate.textContent='P'+fmt0(ps)+' ｜期指 '+fmt0(pf);
+          putCandidate.style.color='#34d399';
+          const pe=String(q.best_put_evidence_state||'');
+          putLevel.textContent=positionLabel(pf,fut)+'｜'+evidenceLabel(pe);
+          renderSellerSide(putAvg,putDom,q.best_put_bid_avg,q.best_put_ask_avg,q.best_put_sell_dominance,q.best_put_diff);
+          const pd30=num(q.best_put_sell_dominance_delta_30s), pd60=num(q.best_put_sell_dominance_delta_60s);
+          putDelta.textContent='Δ30 '+fmt(pd30,2,true)+trend(pd30)+'｜Δ60 '+fmt(pd60,2,true)+trend(pd60);
+        } else {
+          renderRankWithoutSellerEvidence('put',pRank,ps,pf,fut,
+            q.best_put_bid_avg,q.best_put_ask_avg,q.best_put_sell_dominance,q.best_put_evidence_state,
+            putCandidate,putLevel,putAvg,putDom,putDelta);
+        }
       } else {
         putCandidate.textContent=(num(q.lower_put_contracts)||0)>0?'候選建立中':'無有效下方Put';
         putLevel.textContent='距現價 --｜'+(st==='OBSERVED_MAPPING_UNAVAILABLE'?'Mapping不可用':'等待有效RTD/Mapping');
       }
       if(cs!==null){
-        callCandidate.textContent='C'+fmt0(cs)+' ｜期指 '+fmt0(cf);
-        callCandidate.style.color=num(q.best_call_sell_dominance)>0?'#fb7185':'#d1d5db';
-        const ce=String(q.best_call_evidence_state||'');
-        callLevel.textContent=positionLabel(cf,fut)+'｜'+evidenceLabel(ce);
-        renderSellerSide(callAvg,callDom,q.best_call_bid_avg,q.best_call_ask_avg,q.best_call_sell_dominance,q.best_call_diff);
-        const cd30=num(q.best_call_sell_dominance_delta_30s), cd60=num(q.best_call_sell_dominance_delta_60s);
-        callDelta.textContent='Δ30 '+fmt(cd30,2,true)+trend(cd30)+'｜Δ60 '+fmt(cd60,2,true)+trend(cd60);
+        if(cRank==='POSITIVE') {
+          callCandidate.textContent='C'+fmt0(cs)+' ｜期指 '+fmt0(cf);
+          callCandidate.style.color='#fb7185';
+          const ce=String(q.best_call_evidence_state||'');
+          callLevel.textContent=positionLabel(cf,fut)+'｜'+evidenceLabel(ce);
+          renderSellerSide(callAvg,callDom,q.best_call_bid_avg,q.best_call_ask_avg,q.best_call_sell_dominance,q.best_call_diff);
+          const cd30=num(q.best_call_sell_dominance_delta_30s), cd60=num(q.best_call_sell_dominance_delta_60s);
+          callDelta.textContent='Δ30 '+fmt(cd30,2,true)+trend(cd30)+'｜Δ60 '+fmt(cd60,2,true)+trend(cd60);
+        } else {
+          renderRankWithoutSellerEvidence('call',cRank,cs,cf,fut,
+            q.best_call_bid_avg,q.best_call_ask_avg,q.best_call_sell_dominance,q.best_call_evidence_state,
+            callCandidate,callLevel,callAvg,callDom,callDelta);
+        }
       } else {
         callCandidate.textContent=(num(q.upper_call_contracts)||0)>0?'候選建立中':'無有效上方Call';
         callLevel.textContent='距現價 --｜'+(st==='OBSERVED_MAPPING_UNAVAILABLE'?'Mapping不可用':'等待有效RTD/Mapping');
+      }
+      // R5.3: a healthy quote feed does not assert a qualifying seller footprint.
+      if(st==='OBSERVED') {
+        if(pRank==='POSITIVE' || cRank==='POSITIVE') {
+          state.textContent='RTD 已觀測｜有賣方正差候選';
+          state.style.color='#34d399';
+        } else if(pRank==='UNKNOWN' || cRank==='UNKNOWN' ||
+                  (pRank==='MISSING' && cRank==='MISSING')) {
+          state.textContent='RTD 已觀測｜賣方候選待證';
+          state.style.color='#ffca6c';
+        } else {
+          state.textContent='RTD 已觀測｜最佳排名未見正值賣方優勢';
+          state.style.color='#ffca6c';
+        }
       }
       // R5 is independent, non-atomic Excel frame observation, never a dealer-position claim.
       const w=(q.writer_r5 && typeof q.writer_r5==='object') ? q.writer_r5 : null;
@@ -6769,8 +6826,10 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         if(st==='UNKNOWN_COUNTER_BASELINE') return 'Counter 基線｜連續性未知';
         return '觀察證據不足｜持倉未知';
       };
-      if(putWriter) putWriter.textContent=writerLabel('put',ps);
-      if(callWriter) callWriter.textContent=writerLabel('call',cs);
+      if(putWriter) putWriter.textContent=pRank==='POSITIVE' ? writerLabel('put',ps) :
+        '本幀原始排名非正值／未證｜同合約真實持倉未知';
+      if(callWriter) callWriter.textContent=cRank==='POSITIVE' ? writerLabel('call',cs) :
+        '本幀原始排名非正值／未證｜同合約真實持倉未知';
 
       const probe=String(q.rtd_probe_status||'UNKNOWN').toUpperCase();
       const probeText=probe==='RTD_CUMULATIVE_FIELDS_OBSERVED'?'四欄正常':(probe==='PROBE_PENDING'?'探針等待':probe.replaceAll('_',' '));
@@ -6778,7 +6837,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       source.textContent='money.excel｜期指 '+String(q.futures_source||'--')+' @'+fmt0(fut)+'｜Mapping '+String(q.mapping_source||'--')+'｜basis '+fmt(q.mapping_basis,1);
       proof.textContent='賣方委託優勢≠實際持倉；期指跌破≠賣方退出｜支撐 '+String(q.support_proof||'NOT_PROVEN')+' / 壓力 '+String(q.resistance_proof||'NOT_PROVEN')+'｜authority=0';
       const putD=num(q.best_put_sell_dominance), callD=num(q.best_call_sell_dominance);
-      if(putD!==null || callD!==null){ panel.style.borderLeftColor='#64d2ff'; panel.style.background='rgba(100,210,255,0.04)'; }
+      if(pRank==='POSITIVE' || cRank==='POSITIVE'){ panel.style.borderLeftColor='#64d2ff'; panel.style.background='rgba(100,210,255,0.04)'; }
     }
 
     // Z31 P9-Pro Assist R1.0:
