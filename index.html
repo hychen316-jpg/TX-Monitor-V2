@@ -9790,37 +9790,37 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     gap: 5px;
   }
 
-  /* C1-C4 second column is intentionally narrower (next-month day/night). */
+  /* Give the near-month day/night cells slightly less width while retaining the next-month column. */
   #v2-live-page .v2-c1c4-card .chip-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, .55fr) !important;
+    grid-template-columns: minmax(0, .93fr) minmax(0, .55fr) !important;
   }
 
   /* R1.2.1 Layout2 root-cause fix:
      Sniper card is no longer constructed, therefore the second core row must
-     consume the full 12/12 grid instead of preserving the old 3+6+3 allocation. */
+     consume the full row instead of preserving the old 3+6+3 allocation.
+     Rebalance C1-C4 / Force from 4:8 to 5:11 to favor P9 and OP force. */
   #v2-live-page .v2-core-grid {
     width: 100% !important;
     max-width: none !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(16, minmax(0, 1fr)) !important;
   }
   #v2-live-page .v2-c1c4-card {
-    grid-column: span 4 !important;
+    grid-column: span 5 !important;
     width: 100% !important;
     min-width: 0 !important;
   }
   #v2-live-page .v2-force-card {
-    grid-column: span 8 !important;
+    grid-column: span 11 !important;
     width: 100% !important;
     min-width: 0 !important;
   }
 
-  /* Allocate the P9/OP, OFI-SR and R7 regions explicitly on desktop.
-     OFI-SR gets the majority because it contains symmetric Put/Call candidates. */
+  /* Give P9/OP some of R7's width; OFI-SR remains the largest region. */
   #v2-live-page .v2-force-card #battle-card > .req-level-2-flex {
     display: grid !important;
-    grid-template-columns: minmax(150px, 1.0fr) minmax(380px, 2.7fr) minmax(150px, 1.0fr) !important;
+    grid-template-columns: minmax(160px, 1.25fr) minmax(380px, 2.7fr) minmax(140px, .9fr) !important;
     gap: 4px !important;
     width: 100% !important;
     align-items: stretch !important;
@@ -9853,7 +9853,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
      OFI-SR takes the full second line so Put/Call evidence remains readable. */
   @media (max-width: 640px) {
     #v2-live-page .v2-force-card #battle-card > .req-level-2-flex {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) !important;
       grid-template-areas:
         "p9 r7"
         "ofi ofi" !important;
