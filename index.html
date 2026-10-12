@@ -6887,6 +6887,74 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         if(versionLabel)versionLabel.textContent='R1.2.3 / R6';
         panel.style.borderLeftColor=(qp||qc)&&geometryOK?'#64d2ff':'#636366';
       }
+
+      // R6.3 lifecycle overlay: preserve last valid seller-layout identity through
+      // temporary evidence gaps without weakening R6 instant freshness/counter guards.
+      const life63=q.seller_lifecycle_r63;
+      const lifeGeometryOK=String(r6&&r6.mapping_provenance_state||'')==='PARITY_WINDOW_PROVEN';
+      if(life63 && typeof life63==='object' && life63.authority===0) {
+        const lifeLabel=(st63)=>{
+          if(st63==='ACTIVE_CURRENT_ESTABLISHED'||st63==='ACTIVE_CURRENT') return '當幀成立';
+          if(st63==='ACTIVE_CURRENT_REACQUIRED_SNAPSHOT') return '當幀重新取得';
+          if(st63==='RELOCATED_CURRENT') return '布局搬移';
+          if(st63==='RELOCATION_CANDIDATE_PENDING_CONFIRMATION') return '新位置待連續確認';
+          if(st63==='CURRENT_NOT_POSITIVE_LAYOUT_IDENTITY_PRESERVED') return '當幀正差未成立・布局身分保留';
+          if(st63==='LAYOUT_IDENTITY_PRESERVED_ROLE_SCOPE_CHANGED') return '角色區域改變・布局身分保留';
+          if(String(st63||'').startsWith('TEMP_EVIDENCE_GAP_')) return '暫時證據斷層・布局身分保留';
+          if(st63==='POSITIVE_SEEN_QUALITY_UNPROVEN_LAYOUT_IDENTITY_PRESERVED') return '正差可見但品質未證・布局身分保留';
+          return String(st63||'').replaceAll('_',' ');
+        };
+        const renderLife63Side=(cp,v,inst,name,level,avg,dom,delta,writer)=>{
+          if(!v || typeof v!=='object') return false;
+          const strike=num(v.strike);
+          if(strike===null) return false;
+          const st63=String(v.state||'UNKNOWN');
+          const active=st63==='ACTIVE_CURRENT_ESTABLISHED'||st63==='ACTIVE_CURRENT'||
+                       st63==='ACTIVE_CURRENT_REACQUIRED_SNAPSHOT'||st63==='RELOCATED_CURRENT';
+          const lastSd=num(v.last_valid_sell_dominance);
+          const currentSeen=v.current_seen===true;
+          const curSd=num(v.current_sell_dominance);
+          const curBid=num(v.current_bid_avg),curAsk=num(v.current_ask_avg);
+          const instBid=num(inst&&inst.bid_avg),instAsk=num(inst&&inst.ask_avg),instSd=num(inst&&inst.sell_dominance);
+          const showBid=currentSeen?curBid:instBid, showAsk=currentSeen?curAsk:instAsk;
+          const showSd=currentSeen?curSd:instSd;
+          const prev=num(v.previous_strike), pending=num(v.pending_relocation_strike);
+          const tag=lifeLabel(st63);
+          name.textContent=(cp==='put'?'P':'C')+fmt0(strike)+'｜賣方布局觀察';
+          name.style.color=active?(cp==='put'?'#34d399':'#fb7185'):'#ffca6c';
+          if(st63==='RELOCATED_CURRENT' && prev!==null) {
+            level.textContent='由 '+(cp==='put'?'P':'C')+fmt0(prev)+' 搬移至 '+(cp==='put'?'P':'C')+fmt0(strike)+'｜'+tag;
+          } else if(st63==='RELOCATION_CANDIDATE_PENDING_CONFIRMATION' && pending!==null) {
+            level.textContent='原布局履約價保留｜新正差 '+(cp==='put'?'P':'C')+fmt0(pending)+' 尚待連續確認';
+          } else if(active && lifeGeometryOK && inst && num(inst.mapped_futures)!==null) {
+            const mp=num(inst.mapped_futures);
+            level.textContent='期指試算座標 '+fmt0(mp)+'｜'+positionLabel(mp,fut)+'｜'+tag;
+          } else {
+            level.textContent='布局履約價保留｜期指座標暫不沿用｜'+tag;
+          }
+          if(showBid!==null && showAsk!==null && showSd!==null) {
+            const prefix=currentSeen?'當幀':'最近有效';
+            avg.textContent=prefix+'｜賣均 '+fmt(showAsk,3)+'｜買均 '+fmt(showBid,3);
+            dom.textContent='賣買差 '+fmt(showSd,3,true)+(currentSeen&&showSd<=0?'｜當幀賣方優勢未成立，≠退出':'');
+            dom.style.color=(showSd>0)?'#34d399':(showSd<0?'#ffca6c':'#a1a1aa');
+          } else if(lastSd!==null) {
+            avg.textContent='最近有效賣方布局｜即時均值暫不可比較';
+            dom.textContent='最近有效賣買差 '+fmt(lastSd,3,true)+'｜非當幀持倉證明';
+            dom.style.color='#ffca6c';
+          }
+          delta.textContent='Instant '+String(inst&&inst.state||'NO_CURRENT_QUALIFIED')+'｜Lifecycle '+st63;
+          if(writer) writer.textContent='R6.3 '+tag+'｜暫時缺口/負值不等於莊家退出｜持倉未知';
+          return true;
+        };
+        const lp=renderLife63Side('put',life63.put,r6&&r6.put,putCandidate,putLevel,putAvg,putDom,putDelta,putWriter);
+        const lc=renderLife63Side('call',life63.call,r6&&r6.call,callCandidate,callLevel,callAvg,callDom,callDelta,callWriter);
+        if(lp||lc) {
+          state.textContent='R6.3｜賣方布局生命週期觀察';
+          state.style.color='#64d2ff';
+          if(versionLabel)versionLabel.textContent='R1.2.3 / R6.3';
+          panel.style.borderLeftColor='#64d2ff';
+        }
+      }
       const probe=String(q.rtd_probe_status||'UNKNOWN').toUpperCase();
       const probeText=probe==='RTD_CUMULATIVE_FIELDS_OBSERVED'?'四欄正常':(probe==='PROBE_PENDING'?'探針等待':probe.replaceAll('_',' '));
       coverage.textContent='Put有效 '+fmt0(q.valid_put_contracts)+'/21｜Call有效 '+fmt0(q.valid_call_contracts)+'/21｜下方 '+fmt0(q.lower_put_contracts)+'｜上方 '+fmt0(q.upper_call_contracts)+'｜RTD '+probeText;
