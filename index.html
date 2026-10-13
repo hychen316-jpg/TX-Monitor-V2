@@ -6751,6 +6751,11 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         if (callWriter) callWriter.textContent='同合約連續觀測 --｜未證明持倉';
         if(putRaw)putRaw.textContent='原始最高排名 --｜診斷用';
         if(callRaw)callRaw.textContent='原始最高排名 --｜診斷用';
+        // R6.4F display-only fail-close: clear Formation before version/parent early return.
+        if(putFormation) { putFormation.textContent='Formation｜資料未提供'; putFormation.style.color='#a1a1aa'; }
+        if(putFormationDetail) putFormationDetail.textContent='AskΔ --｜BidΔ --｜SDΔ --｜formation≠支撐成立';
+        if(callFormation) { callFormation.textContent='Formation｜資料未提供'; callFormation.style.color='#a1a1aa'; }
+        if(callFormationDetail) callFormationDetail.textContent='AskΔ --｜BidΔ --｜SDΔ --｜formation≠壓力成立';
       };
       reset();
       const acceptedVersions=['R1.2-RTD-CUMAVG-SR','R1.2.1-RTD-CUMAVG-SR',
