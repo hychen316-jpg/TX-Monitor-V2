@@ -6850,16 +6850,21 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       if(putRaw) putRaw.textContent='原始最高排名 '+(ps===null?'--':'P'+fmt0(ps))+'｜賣買差 '+fmt(q.best_put_sell_dominance,3,true);
       if(callRaw) callRaw.textContent='原始最高排名 '+(cs===null?'--':'C'+fmt0(cs))+'｜賣買差 '+fmt(q.best_call_sell_dominance,3,true);
       const r6=q.seller_positive_r6;
+      const ofiVersion=String(q.version||'R1.2.x').split('-')[0];
       if(r6 && typeof r6==='object') {
-        const schemaOK=st==='OBSERVED' && r6.selection_policy==='SELLDOM_POSITIVE_FRESH_CONTINUOUS_EXCEL_PROXY'
+        // Schema validity and frame freshness are separate propositions.
+        // A freshness gate must never be presented as a schema/format error.
+        const schemaOK=r6.selection_policy==='SELLDOM_POSITIVE_FRESH_CONTINUOUS_EXCEL_PROXY'
           && r6.publisher_atomicity_proven===false && r6.authority===0
           && r6.put && typeof r6.put==='object' && r6.call && typeof r6.call==='object';
+        const frameObserved=st==='OBSERVED';
+        const freshnessUnproven=st==='OBSERVED_VALUE_FRESHNESS_UNPROVEN';
         const geometryOK=String(r6.mapping_provenance_state)==='PARITY_WINDOW_PROVEN';
         const renderR6Side=(cp,v,name,level,avg,dom,delta,writer)=>{
           const sd=num(v&&v.sell_dominance),ask=num(v&&v.ask_avg),bid=num(v&&v.bid_avg);
           const strike=num(v&&v.strike),mapped=num(v&&v.mapped_futures);
           const coherent=sd!==null && ask!==null && bid!==null && sd>0 && Math.abs(sd-(ask-bid))<0.00001;
-          const qualified=schemaOK && v.state==='POSITIVE_COMPARABLE_EXCEL_SNAPSHOT'
+          const qualified=schemaOK && frameObserved && v.state==='POSITIVE_COMPARABLE_EXCEL_SNAPSHOT'
             && v.counter_state==='CONTINUOUS' && strike!==null && mapped!==null && coherent;
           if(qualified) {
             name.textContent=(cp==='put'?'P':'C')+fmt0(strike)+'｜賣方正差觀察';
@@ -6873,8 +6878,25 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
             const d30=num(v.delta_30s),d60=num(v.delta_60s);
             delta.textContent='Δ30 '+fmt(d30,2,true)+trend(d30)+'｜Δ60 '+fmt(d60,2,true)+trend(d60);
             if(writer)writer.textContent='R6 Excel 正差觀測 '+fmt(v.consecutive_excel_frames,0)+' 幀｜非莊家持倉證據';
-          }else{
-            name.textContent=schemaOK?'當幀無可比較正差候選':'R6 資料狀態或格式待核對';
+          } else if(!schemaOK) {
+            name.textContent='R6 格式待核對';
+            name.style.color='#fb7185';
+            level.textContent='R6 schema 欄位不完整／版本不相容｜不得當成市場訊號';
+            avg.textContent='賣均 --｜買均 --';
+            dom.textContent='賣買差 --｜格式未通過核對';dom.style.color='#fb7185';
+            delta.textContent='Δ30/60 --｜格式錯誤時不得沿用舊值';
+            if(writer)writer.textContent='R6 schema invalid｜持倉未知';
+          } else if(freshnessUnproven) {
+            name.textContent='資料新鮮度未證｜暫停 R6 比較';
+            name.style.color='#ffca6c';
+            level.textContent='RTD 累計值未證明仍新鮮｜不可由停滯推斷莊家撤退';
+            avg.textContent='賣均 --｜買均 --';
+            dom.textContent='賣買差 --｜Freshness gate 未通過';dom.style.color='#ffca6c';
+            delta.textContent='Δ30/60 --｜本幀不作正差比較';
+            if(writer)writer.textContent='正差觀察 '+fmt(v&&v.observed_positive_count,0)
+              +' 合約｜可比較 '+fmt(v&&v.comparable_positive_count,0)+' 合約｜Freshness 未證';
+          } else {
+            name.textContent=frameObserved?'當幀無可比較正差候選':'R6 資料狀態待證';
             name.style.color='#a1a1aa';
             level.textContent=v&&v.state==='POSITIVE_SEEN_QUALITY_UNPROVEN'?'有正差但 Counter／新鮮度未證'
               :v&&v.state==='NO_POSITIVE_OBSERVED_IN_CURRENT_SCOPE'?'當幀未見正差｜非莊家退出證明'
@@ -6889,12 +6911,15 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         };
         const qp=renderR6Side('put',r6.put,putCandidate,putLevel,putAvg,putDom,putDelta,putWriter);
         const qc=renderR6Side('call',r6.call,callCandidate,callLevel,callAvg,callDom,callDelta,callWriter);
-        state.textContent=st!=='OBSERVED'?'R6｜資料狀態待證':(qp||qc)
-          ?(geometryOK?'R6｜正差觀察・Mapping 時間已證':'R6｜賣方正差已觀測・期指座標未證')
-          :'R6｜正差候選待證';
-        state.style.color=(qp||qc)&&geometryOK?'#34d399':'#ffca6c';
-        if(versionLabel)versionLabel.textContent='R1.2.3 / R6';
-        panel.style.borderLeftColor=(qp||qc)&&geometryOK?'#64d2ff':'#636366';
+        state.textContent=!schemaOK?'R6｜格式待核對'
+          :freshnessUnproven?'R6｜資料新鮮度未證・暫停比較'
+          :st!=='OBSERVED'?'R6｜資料狀態待證'
+          :(qp||qc)
+            ?(geometryOK?'R6｜正差觀察・Mapping 時間已證':'R6｜賣方正差已觀測・期指座標未證')
+            :'R6｜正差候選待證';
+        state.style.color=!schemaOK?'#fb7185':((qp||qc)&&geometryOK?'#34d399':'#ffca6c');
+        if(versionLabel)versionLabel.textContent=ofiVersion+' / R6';
+        panel.style.borderLeftColor=!schemaOK?'#fb7185':((qp||qc)&&geometryOK?'#64d2ff':'#636366');
       }
 
       // R6.3 lifecycle overlay: preserve last valid seller-layout identity through
@@ -6957,10 +6982,10 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         };
         const lp=renderLife63Side('put',life63.put,r6&&r6.put,putCandidate,putLevel,putAvg,putDom,putDelta,putWriter);
         const lc=renderLife63Side('call',life63.call,r6&&r6.call,callCandidate,callLevel,callAvg,callDom,callDelta,callWriter);
+        if(versionLabel)versionLabel.textContent=ofiVersion+' / R6.3';
         if(lp||lc) {
           state.textContent='R6.3｜賣方布局生命週期觀察';
           state.style.color='#64d2ff';
-          if(versionLabel)versionLabel.textContent='R1.2.3 / R6.3';
           panel.style.borderLeftColor='#64d2ff';
         }
       }
@@ -6989,20 +7014,47 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           const s=String(v.state||'UNKNOWN');
           const strike=num(v.strike),sd=num(v.sell_dominance);
           const da=num(v.delta_ask_avg),db=num(v.delta_bid_avg),ds=num(v.delta_sell_dominance);
+          const counterState=String(v.counter_state||'UNKNOWN').toUpperCase();
+          const freshnessBlocked=v.fresh===false || counterState.includes('FRESHNESS_UNPROVEN');
+          const comparisonGap=counterState.includes('COMPARISON_GAP') || counterState.includes('COUNTER_REGRESSION');
+          const baselineReady=v.baseline_ready===true;
+          const prefix=strike!==null?(cp==='put'?'P':'C')+fmt0(strike)+'｜':'Formation｜';
+          const proofText=cp==='put'?'formation≠支撐成立':'formation≠壓力成立';
+          if(freshnessBlocked) {
+            main.textContent=prefix+'資料新鮮度未證｜Formation 暫不判定';
+            main.style.color='#ffca6c';
+            detail.textContent='AskΔ --｜BidΔ --｜SDΔ --｜SD '+fmt(sd,3,true)
+              +'｜Freshness gate 未通過｜'+proofText+'｜authority=0';
+            return false;
+          }
+          if(comparisonGap) {
+            main.textContent=prefix+'比較斷層｜Formation 暫不判定';
+            main.style.color='#ffca6c';
+            detail.textContent='AskΔ --｜BidΔ --｜SDΔ --｜SD '+fmt(sd,3,true)
+              +'｜Counter 回修／比較斷層｜'+proofText+'｜authority=0';
+            return false;
+          }
+          if(!baselineReady) {
+            main.textContent=prefix+'比較基準建立中｜Formation 暫不判定';
+            main.style.color='#a1a1aa';
+            detail.textContent='AskΔ --｜BidΔ --｜SDΔ --｜SD '+fmt(sd,3,true)
+              +'｜Baseline 未完成｜'+proofText+'｜authority=0';
+            return false;
+          }
           const forming=(s==='ACTIVE_SELLER_FORMING'||s==='NEAR_BALANCE'||s==='SELLER_DOMINANT');
           const passive=(s==='PASSIVE_RELATIVE_IMPROVEMENT');
           const weakening=(s==='FORMATION_WEAKENING'||s==='FORMATION_ABORTED');
           const sideColor=cp==='put'?'#ff453a':'#30d158';
-          main.textContent=(strike!==null?(cp==='put'?'P':'C')+fmt0(strike)+'｜':'Formation｜')+formLabel(s);
+          main.textContent=prefix+formLabel(s);
           main.style.color=forming?sideColor:(passive?'#ffca6c':(weakening?'#ff9f0a':'#a1a1aa'));
           detail.textContent='AskΔ '+fmt(da,3,true)+'｜BidΔ '+fmt(db,3,true)+'｜SDΔ '+fmt(ds,3,true)
-            +'｜SD '+fmt(sd,3,true)+'｜'+(cp==='put'?'formation≠支撐成立':'formation≠壓力成立')+'｜authority=0';
+            +'｜SD '+fmt(sd,3,true)+'｜'+proofText+'｜authority=0';
           return forming || passive;
         };
         const fp=renderFormation('put',form64&&form64.put,putFormation,putFormationDetail);
         const fc=renderFormation('call',form64&&form64.call,callFormation,callFormationDetail);
-        if(form64 && typeof form64==='object' && form64.authority===0 && (fp||fc)) {
-          if(versionLabel) versionLabel.textContent='R1.2.4 / R6.4F';
+        if(form64 && typeof form64==='object' && form64.authority===0) {
+          if(versionLabel) versionLabel.textContent=ofiVersion+' / R6.4F';
         }
       }
       const probe=String(q.rtd_probe_status||'UNKNOWN').toUpperCase();
