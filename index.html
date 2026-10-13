@@ -1,3 +1,4 @@
+<!-- Z31_OFISR_R64F_SELLER_FORMATION_UI_20261013 | exact-contract Ask/Bid/SD formation observation | R6.2 gate unchanged | authority=0 -->
 <!-- Z31_OFISR_R121_RESPFREEZE_LAYOUT2_20261008 | mobile freeze OFF default / desktop ON + toggle | core row full 12/12 width | authority=0 -->
 <!-- Z31_OFISR_R12_CUMAVG_UI_20261008 | symmetric lower-Put support + upper-Call resistance | sniper visible card removed | authority=0 -->
 <!-- Z31_OFISR_R12_UI2_20261008 | OP Force moved under P9 | OP main values same 15px as P9 | data ids unchanged -->
@@ -2845,24 +2846,28 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
                     <span id="ofi-sr-state" style="font-size:8px;color:#a1a1aa;">未提供</span>
                 </div>
                 <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:3px;">
-                    <div id="ofi-sr-put-box" style="padding:4px;border-radius:5px;border:1px solid rgba(52,211,153,.25);background:rgba(52,211,153,.035);">
-                        <div style="font-size:9px;font-weight:900;color:#34d399;">🛡 下方 Put｜賣方優勢觀察</div>
+                    <div id="ofi-sr-put-box" style="padding:4px;border-radius:5px;border:1px solid rgba(255,69,58,.28);background:rgba(255,69,58,.035);">
+                        <div style="font-size:9px;font-weight:900;color:#ff453a;">🛡 下方 Put｜支撐／賣方優勢觀察</div>
                         <div id="ofi-sr-put-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
                         <div id="ofi-sr-put-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
                         <div id="ofi-sr-put-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">賣均 --｜買均 --</div>
                         <div id="ofi-sr-put-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">累委均賣買差 --｜證據不足</div>
                         <div id="ofi-sr-put-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
                         <div id="ofi-sr-put-writer" style="font-size:8px;color:#9ca3af;line-height:1.2;">同合約連續觀測 --｜未證明持倉</div>
+                        <div id="ofi-sr-put-formation" style="font-size:10px;font-weight:950;color:#a1a1aa;margin-top:2px;">Formation｜等待資料</div>
+                        <div id="ofi-sr-put-formation-detail" style="font-size:8px;color:#808998;line-height:1.25;">AskΔ --｜BidΔ --｜SDΔ --｜formation≠支撐成立</div>
                        <div id="ofi-sr-put-raw" style="font-size:8px;color:#808998;">原始最高排名 --｜診斷用</div>
                     </div>
-                    <div id="ofi-sr-call-box" style="padding:4px;border-radius:5px;border:1px solid rgba(251,113,133,.25);background:rgba(251,113,133,.035);">
-                        <div style="font-size:9px;font-weight:900;color:#fb7185;">🧱 上方 Call｜賣方優勢觀察</div>
+                    <div id="ofi-sr-call-box" style="padding:4px;border-radius:5px;border:1px solid rgba(48,209,88,.28);background:rgba(48,209,88,.035);">
+                        <div style="font-size:9px;font-weight:900;color:#30d158;">🧱 上方 Call｜壓力／賣方優勢觀察</div>
                         <div id="ofi-sr-call-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
                         <div id="ofi-sr-call-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
                         <div id="ofi-sr-call-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">賣均 --｜買均 --</div>
                         <div id="ofi-sr-call-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">累委均賣買差 --｜證據不足</div>
                         <div id="ofi-sr-call-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
                         <div id="ofi-sr-call-writer" style="font-size:8px;color:#9ca3af;line-height:1.2;">同合約連續觀測 --｜未證明持倉</div>
+                        <div id="ofi-sr-call-formation" style="font-size:10px;font-weight:950;color:#a1a1aa;margin-top:2px;">Formation｜等待資料</div>
+                        <div id="ofi-sr-call-formation-detail" style="font-size:8px;color:#808998;line-height:1.25;">AskΔ --｜BidΔ --｜SDΔ --｜formation≠壓力成立</div>
                        <div id="ofi-sr-call-raw" style="font-size:8px;color:#808998;">原始最高排名 --｜診斷用</div>
                     </div>
                 </div>
@@ -6651,6 +6656,10 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       const callWriter = document.getElementById('ofi-sr-call-writer');
       const putRaw = document.getElementById('ofi-sr-put-raw');
       const callRaw = document.getElementById('ofi-sr-call-raw');
+      const putFormation = document.getElementById('ofi-sr-put-formation');
+      const putFormationDetail = document.getElementById('ofi-sr-put-formation-detail');
+      const callFormation = document.getElementById('ofi-sr-call-formation');
+      const callFormationDetail = document.getElementById('ofi-sr-call-formation-detail');
       if (!panel || !state || !putCandidate || !callCandidate || !coverage || !source || !proof) return;
 
       const num = v => {
@@ -6854,7 +6863,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
             && v.counter_state==='CONTINUOUS' && strike!==null && mapped!==null && coherent;
           if(qualified) {
             name.textContent=(cp==='put'?'P':'C')+fmt0(strike)+'｜賣方正差觀察';
-            name.style.color=geometryOK?(cp==='put'?'#34d399':'#fb7185'):'#ffca6c';
+            name.style.color=geometryOK?(cp==='put'?'#ff453a':'#30d158'):'#ffca6c';
             // Options quote evidence and futures coordinate as-of evidence are independent.
             // Without PARITY_WINDOW_PROVEN, do not publish the mapped point as an accepted level.
             level.textContent=geometryOK
@@ -6921,7 +6930,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           const prev=num(v.previous_strike), pending=num(v.pending_relocation_strike);
           const tag=lifeLabel(st63);
           name.textContent=(cp==='put'?'P':'C')+fmt0(strike)+'｜賣方布局觀察';
-          name.style.color=active?(cp==='put'?'#34d399':'#fb7185'):'#ffca6c';
+          name.style.color=active?(cp==='put'?'#ff453a':'#30d158'):'#ffca6c';
           if(st63==='RELOCATED_CURRENT' && prev!==null) {
             level.textContent='由 '+(cp==='put'?'P':'C')+fmt0(prev)+' 搬移至 '+(cp==='put'?'P':'C')+fmt0(strike)+'｜'+tag;
           } else if(st63==='RELOCATION_CANDIDATE_PENDING_CONFIRMATION' && pending!==null) {
@@ -6955,6 +6964,47 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           panel.style.borderLeftColor='#64d2ff';
         }
       }
+      // R6.4F Seller Formation: observation-only precursor plane.
+      // No economic threshold. It decomposes exact-contract frame-to-frame Ask/Bid/SD changes.
+      // R6.2 SellDominance>0 remains unchanged and is the only positive-seller gate.
+      const form64=q.seller_formation_r64f;
+      if(putFormation && putFormationDetail && callFormation && callFormationDetail) {
+        const formLabel=(s)=>({
+          NO_BUILD:'未見賣方形成',
+          PASSIVE_RELATIVE_IMPROVEMENT:'相對改善｜偏被動',
+          ACTIVE_SELLER_FORMING:'賣方形成中 ↑',
+          NEAR_BALANCE:'接近平衡',
+          SELLER_DOMINANT:'賣方已占優｜交由 R6.2 確認',
+          FORMATION_WEAKENING:'形成弱化 ↓',
+          FORMATION_ABORTED:'形成中止',
+          NO_SCOPE_COVERAGE:'無角色範圍',
+          FORMATION_JSON_ERROR:'Formation 資料異常'
+        }[String(s||'')] || String(s||'UNKNOWN').replaceAll('_',' '));
+        const renderFormation=(cp,v,main,detail)=>{
+          if(!v || typeof v!=='object') {
+            main.textContent='Formation｜資料未提供'; main.style.color='#a1a1aa';
+            detail.textContent='舊 BAS 相容模式｜不影響 R6.2/R6.3';
+            return false;
+          }
+          const s=String(v.state||'UNKNOWN');
+          const strike=num(v.strike),sd=num(v.sell_dominance);
+          const da=num(v.delta_ask_avg),db=num(v.delta_bid_avg),ds=num(v.delta_sell_dominance);
+          const forming=(s==='ACTIVE_SELLER_FORMING'||s==='NEAR_BALANCE'||s==='SELLER_DOMINANT');
+          const passive=(s==='PASSIVE_RELATIVE_IMPROVEMENT');
+          const weakening=(s==='FORMATION_WEAKENING'||s==='FORMATION_ABORTED');
+          const sideColor=cp==='put'?'#ff453a':'#30d158';
+          main.textContent=(strike!==null?(cp==='put'?'P':'C')+fmt0(strike)+'｜':'Formation｜')+formLabel(s);
+          main.style.color=forming?sideColor:(passive?'#ffca6c':(weakening?'#ff9f0a':'#a1a1aa'));
+          detail.textContent='AskΔ '+fmt(da,3,true)+'｜BidΔ '+fmt(db,3,true)+'｜SDΔ '+fmt(ds,3,true)
+            +'｜SD '+fmt(sd,3,true)+'｜'+(cp==='put'?'formation≠支撐成立':'formation≠壓力成立')+'｜authority=0';
+          return forming || passive;
+        };
+        const fp=renderFormation('put',form64&&form64.put,putFormation,putFormationDetail);
+        const fc=renderFormation('call',form64&&form64.call,callFormation,callFormationDetail);
+        if(form64 && typeof form64==='object' && form64.authority===0 && (fp||fc)) {
+          if(versionLabel) versionLabel.textContent='R1.2.4 / R6.4F';
+        }
+      }
       const probe=String(q.rtd_probe_status||'UNKNOWN').toUpperCase();
       const probeText=probe==='RTD_CUMULATIVE_FIELDS_OBSERVED'?'四欄正常':(probe==='PROBE_PENDING'?'探針等待':probe.replaceAll('_',' '));
       coverage.textContent='Put有效 '+fmt0(q.valid_put_contracts)+'/21｜Call有效 '+fmt0(q.valid_call_contracts)+'/21｜下方 '+fmt0(q.lower_put_contracts)+'｜上方 '+fmt0(q.upper_call_contracts)+'｜RTD '+probeText;
@@ -6980,6 +7030,10 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         for(const el of [putAvg,callAvg])el.textContent='賣均 --｜買均 --';
         for(const el of [putDom,callDom]){el.textContent='賣買差 --｜不得沿用舊值';el.style.color='#fb7185';}
         for(const el of [putDelta,callDelta])el.textContent='Δ30/60 --｜計算異常';
+        if(putFormation){putFormation.textContent='Formation｜計算異常';putFormation.style.color='#fb7185';}
+        if(callFormation){callFormation.textContent='Formation｜計算異常';callFormation.style.color='#fb7185';}
+        if(putFormationDetail)putFormationDetail.textContent='來源計算錯誤｜不得沿用舊 Formation';
+        if(callFormationDetail)callFormationDetail.textContent='來源計算錯誤｜不得沿用舊 Formation';
       }
     }
 
