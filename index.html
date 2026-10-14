@@ -8324,32 +8324,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     /* Keep existing low-frequency support and recovery state in the lower auxiliary group. */
     const v10SideRail = el('div', 'v10-side-rail req-level-4-block');
 
-    const z3Block = el('section', 'v10-side-block z3-early-block');
-    z3Block.innerHTML = `
-      <div class="z3-early-head"><div id="z3-lifecycle-ui-title" class="z3-early-title">Z3.1 主力經濟布局 / Formal Authority</div><span id="z3-authority-badge" class="z3-shadow-badge">FORMAL --</span></div>
-      <div id="z3-main-read" class="z3-main-read">等待 Z3.1 Formal 資料</div>
-      <div id="z3-formal-read" class="z3-formal-read">Direction / Trigger / ICUA / G11：等待資料</div>
-      <div id="z3-opportunity-read" class="z3-opportunity-read">Opportunity｜等待 LFZ / ICUA / Continuation</div>
-      <div id="z3-a20-handoff-read" class="z3-a20-handoff-read">Opportunity Cycle｜IDLE｜Economic Authority｜IDLE</div>
-      <div id="z3-pdr-diagnostic" class="z3-pdr-diagnostic" hidden aria-live="polite"></div>
-      <div class="z3-pipeline">
-        <div id="z3-step-layout" class="z3-step"><span>① Opportunity / LFZ</span><strong id="z3-layout-text">--</strong></div>
-        <div id="z3-step-pc" class="z3-step"><span>② PC 有效</span><strong id="z3-pc-text">--</strong></div>
-        <div id="z3-step-launch" class="z3-step"><span>③ PC + FMF Launch</span><strong id="z3-launch-text">--</strong></div>
-        <div id="z3-step-trigger" class="z3-step"><span id="z3-trigger-label">④ Economic Trigger</span><strong id="z3-trigger-text">--</strong></div>
-      </div>
-      <div id="z3-sub-read" class="z3-sub-read">LFZ / NSCW-NSPW / Inventory：等待資料</div>
-      <div id="z3-root-audit" class="z3-root-audit">
-        <div class="z3-root-head"><span id="z3-root-audit-title" class="z3-root-title">LIVE_RELAYOUT Root-Liveness + Bilateral Conflict｜版本待識別</span><span id="z3-root-status" class="z3-root-status">IDLE</span></div>
-        <div class="z3-root-grid">
-          <div class="z3-root-item"><span>Frozen baseline</span><strong id="z3-root-baseline">--</strong></div>
-          <div class="z3-root-item"><span>Current root / displacement</span><strong id="z3-root-current">--</strong></div>
-          <div class="z3-root-item"><span>Frozen universe</span><strong id="z3-root-universe">--</strong></div>
-        </div>
-        <div id="z3-root-reason" class="z3-root-reason">等待 LIVE_RELAYOUT root；Root 訊息由既有 Firebase payload 提供。</div>
-      </div>
-      <div id="z3-terminal-read" class="z3-terminal-read" hidden></div>`;
-    auxiliaryCard.appendChild(z3Block);
     const baoZBlock = el('section', 'v10-side-block lfz-baoz-block');
     baoZBlock.innerHTML = `
       <div class="lfz-baoz-head">
@@ -8387,7 +8361,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         <thead><tr><th>標註</th><th>履約價</th><th>期指價</th></tr></thead>
         <tbody id="lfz-baoz-body"><tr><td colspan="3" class="lfz-baoz-empty">等待資料</td></tr></tbody>
       </table>`;
-    auxiliaryCard.insertBefore(baoZBlock, z3Block);
+    auxiliaryCard.appendChild(baoZBlock);
     updateLFZBaoZUI(window.__Z2LFZBaoZCache || null);
     if (!window.__Z2LFZBaoZFreshTimer) {
       window.__Z2LFZBaoZFreshTimer = setInterval(() => updateLFZBaoZUI(window.__Z2LFZBaoZCache || null), 15000);
