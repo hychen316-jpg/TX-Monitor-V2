@@ -1,3 +1,5 @@
+<!-- Z31_LFZ_CENTER_SELLER_STRENGTH_E2E_RC1_20261014 | BAS CSP CSC weights -> Firebase valid-aware -> HTML | authority=0 -->
+<!-- Z31_LFZ_CENTER_SELLER_STRENGTH_UI_R01_20261014 | CSP/CSC/M unchanged | FULL_LAYOUT totals or ATM dir_sell as available | missing=UNKNOWN | no new listener/authority -->
 <!-- Z31_OFISR_R64F_SELLER_FORMATION_UI_20261013 | exact-contract Ask/Bid/SD formation observation | R6.2 gate unchanged | authority=0 -->
 <!-- Z31_OFISR_R121_RESPFREEZE_LAYOUT2_20261008 | mobile freeze OFF default / desktop ON + toggle | core row full 12/12 width | authority=0 -->
 <!-- Z31_OFISR_R12_CUMAVG_UI_20261008 | symmetric lower-Put support + upper-Call resistance | sniper visible card removed | authority=0 -->
@@ -2399,6 +2401,25 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     font-size: 9px;
   }
 }
+
+
+/* LFZ center seller strength: observation only; red=Put-support, green=Call-resistance. */
+#v2-live-page .lfz-strength-box { margin-top:6px; padding:7px 8px; border:1px solid #353539; border-left:3px solid #64d2ff; border-radius:5px; background:rgba(100,210,255,.035); }
+#v2-live-page .lfz-strength-head { display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap; }
+#v2-live-page .lfz-strength-title { font-size:11px; font-weight:900; color:#f2f2f7; }
+#v2-live-page .lfz-strength-kind { font-size:9px; font-weight:800; color:#64d2ff; }
+#v2-live-page .lfz-strength-values { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:5px; }
+#v2-live-page .lfz-strength-side { display:flex; justify-content:space-between; gap:6px; font-size:11px; font-weight:900; }
+#v2-live-page .lfz-strength-side.put { color:#ff453a; }
+#v2-live-page .lfz-strength-side.call { color:#30d158; }
+#v2-live-page .lfz-strength-bar { height:12px; margin-top:4px; display:flex; border-radius:4px; overflow:hidden; border:1px solid #48484a; background:#242426; }
+#v2-live-page .lfz-strength-put { background:#ff453a; width:0; transition:width .2s ease; }
+#v2-live-page .lfz-strength-call { background:#30d158; width:0; transition:width .2s ease; }
+#v2-live-page .lfz-strength-read { margin-top:5px; font-size:11px; font-weight:900; color:#ffd60a; }
+#v2-live-page .lfz-strength-note { margin-top:3px; font-size:9px; line-height:1.3; color:#9a9aa0; overflow-wrap:anywhere; }
+#v2-live-page .lfz-strength-box.is-wait .lfz-strength-read { color:#8e8e93; }
+#v2-live-page .lfz-strength-box.is-stale .lfz-strength-read { color:#ff9f0a; }
+@media (max-width:620px) { #v2-live-page .lfz-strength-head { align-items:flex-start; flex-direction:column; } }
 
 </style>
 </head>
@@ -6264,6 +6285,41 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       }
     }
 
+
+    // LFZ CSP/CSC/M are centers (prices), never volumes.  M is a midpoint.
+    // Strength is computed only from explicit like-for-like upstream evidence.
+    // No substitution of position geometry, last-known result or unknown as zero.
+    function computeLFZCenterSellerStrength(live, valid, fresh) {
+      if (!valid) return {state:'missing', reason:'LFZ Live 尚未提供有效資料'};
+      if (!fresh) return {state:'stale', reason:'LFZ Live 資料逾時，強度不沿用舊數值'};
+      const readNum = (v) => {
+        if (v === null || v === undefined || String(v).trim() === '') return NaN;
+        const x = Number(v); return Number.isFinite(x) ? x : NaN;
+      };
+      // Future publisher contract: same source timestamp, expiry/series/scope;
+      // two explicit NONNEGATIVE sums of sell premium, not CSP/CSC centers.
+      const scope = String(live.seller_strength_scope || '').trim().toUpperCase();
+      const put = readNum(live.sell_put_premium_total);
+      const call = readNum(live.sell_call_premium_total);
+      if (scope === 'CSP_CSC_NEAR_10' && Number(live.seller_strength_valid) === 1 && put >= 0 && call >= 0 && put + call > 0) {
+        const share = put / (put + call);
+        return {state:'ready',kind:'CSP_CSC_NEAR_10',kindText:'兩側各10檔賣方權利金比較',putShare:share,callShare:1-share,
+          detail:`賣 Put ${put.toLocaleString('en-US')}｜賣 Call ${call.toLocaleString('en-US')}（來源原單位）`,
+          note:'依原 LFZ CSP／CSC 各側最近10檔計算的累積賣方權利金；非市場全履約價、非確認開倉／持倉，也非正式方向。'};
+      }
+      // Existing LFZ research formula is ATM-only:
+      // dir_sell=(ATM Put sell premium-ATM Call sell premium)/(sum).
+      // It is NOT full-layout CSP vs CSC seller inventory strength.
+      const ds = readNum(live.dir_sell);
+      if (Number(live.dir_sell_valid) === 1 && ds >= -1 && ds <= 1) {
+        const share = (ds+1)/2;
+        return {state:'ready',kind:'ATM_PROXY',kindText:'價平 ATM 賣方局部比較',putShare:share,callShare:1-share,
+          detail:`ATM 賣方差比 ${ds>=0?'+':''}${ds.toFixed(3)}`,
+          note:'此為 LFZ dir_sell 的價平權利金比例，不能代表 CSP／CSC 全履約價力量或真正主力持倉。'};
+      }
+      return {state:'missing',reason:'Firebase 目前未提供可同口徑比較的賣方強度；不可由 CSP／CSC／M 價位推算'};
+    }
+
     function updateLFZBaoZUI(payload) {
       const body = document.getElementById('lfz-baoz-body');
       const meta = document.getElementById('lfz-baoz-meta');
@@ -6408,6 +6464,37 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         }
         if (sub) sub.textContent = desc;
       });
+
+
+      // Side strength: compare only matching seller-premium evidence, if supplied.
+      const strength = computeLFZCenterSellerStrength(live,liveValid,liveFresh);
+      const strengthBox = document.getElementById('lfz-center-strength');
+      const strengthKind = document.getElementById('lfz-strength-kind');
+      const strengthPut = document.getElementById('lfz-strength-put-value');
+      const strengthCall = document.getElementById('lfz-strength-call-value');
+      const strengthPutBar = document.getElementById('lfz-strength-put');
+      const strengthCallBar = document.getElementById('lfz-strength-call');
+      const strengthRead = document.getElementById('lfz-strength-read');
+      const strengthNote = document.getElementById('lfz-strength-note');
+      if (strengthBox && strengthKind && strengthPut && strengthCall && strengthPutBar && strengthCallBar && strengthRead && strengthNote) {
+        const good = strength.state === 'ready';
+        strengthBox.className = 'lfz-strength-box' + (good?'':(strength.state==='stale'?' is-stale':' is-wait'));
+        strengthKind.textContent = good ? strength.kindText : '強度資料 UNKNOWN';
+        strengthPut.textContent = good ? `${(strength.putShare*100).toFixed(1)}%` : '--';
+        strengthCall.textContent = good ? `${(strength.callShare*100).toFixed(1)}%` : '--';
+        strengthPutBar.style.width = good ? `${(strength.putShare*100).toFixed(2)}%` : '0%';
+        strengthCallBar.style.width = good ? `${(strength.callShare*100).toFixed(2)}%` : '0%';
+        if (good) {
+          const imbalance = strength.putShare-strength.callShare;
+          strengthRead.textContent = Math.abs(imbalance)<0.02 ? '兩側大致均衡（僅賣方權利金）'
+            : imbalance>0 ? `賣 Put 較強（相差 ${(imbalance*100).toFixed(1)} 個百分點）`
+              : `賣 Call 較強（相差 ${(-imbalance*100).toFixed(1)} 個百分點）`;
+          strengthNote.textContent = `${strength.detail}｜${strength.note}`;
+        } else {
+          strengthRead.textContent = '強弱未確認';
+          strengthNote.textContent = `${strength.reason}｜Publisher ${String(data.build || 'UNKNOWN')}｜Scope ${String(live.seller_strength_scope || 'NOT_PUBLISHED')}`;
+        }
+      }
 
       const longStrikes = Number.isFinite(deltas.nscw?.strikes) ? deltas.nscw.strikes : NaN;
       const shortStrikes = Number.isFinite(deltas.nspw?.strikes) ? -deltas.nspw.strikes : NaN;
@@ -8352,6 +8439,16 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
             <div class="lfz-center-card"><div class="lfz-center-name">CSP</div><div id="lfz-center-csp" class="lfz-center-value">--</div><div id="lfz-center-csp-fut" class="lfz-center-futures">期指 --</div><div id="lfz-center-csp-sub" class="lfz-center-sub">賣 Put 重心</div></div>
             <div class="lfz-center-card"><div class="lfz-center-name">CSC</div><div id="lfz-center-csc" class="lfz-center-value">--</div><div id="lfz-center-csc-fut" class="lfz-center-futures">期指 --</div><div id="lfz-center-csc-sub" class="lfz-center-sub">賣 Call 重心</div></div>
             <div class="lfz-center-card"><div class="lfz-center-name">M</div><div id="lfz-center-m" class="lfz-center-value">--</div><div id="lfz-center-m-fut" class="lfz-center-futures">期指 --</div><div id="lfz-center-m-sub" class="lfz-center-sub">布局中心</div></div>
+          </div>
+          <div id="lfz-center-strength" class="lfz-strength-box is-wait" aria-label="布局中心兩側賣方權利金強弱，僅供觀察">
+            <div class="lfz-strength-head"><span class="lfz-strength-title">兩側賣方強度｜CSP 支撐 vs CSC 壓力</span><span id="lfz-strength-kind" class="lfz-strength-kind">強度資料 UNKNOWN</span></div>
+            <div class="lfz-strength-values">
+              <div class="lfz-strength-side put"><span>賣 Put｜CSP 支撐</span><strong id="lfz-strength-put-value">--</strong></div>
+              <div class="lfz-strength-side call"><span>賣 Call｜CSC 壓力</span><strong id="lfz-strength-call-value">--</strong></div>
+            </div>
+            <div class="lfz-strength-bar" aria-hidden="true"><span id="lfz-strength-put" class="lfz-strength-put"></span><span id="lfz-strength-call" class="lfz-strength-call"></span></div>
+            <div id="lfz-strength-read" class="lfz-strength-read">強弱未確認</div>
+            <div id="lfz-strength-note" class="lfz-strength-note">需同口徑賣方權利金來源；M 僅為 CSP / CSC 中點，沒有獨立強度。</div>
           </div>
         </div>
 
