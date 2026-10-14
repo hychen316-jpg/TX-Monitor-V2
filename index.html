@@ -2860,41 +2860,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
                   <div id="op-force-detail" style="font-size:8px;color:#808998;margin-top:2px;">獨立研究資料｜等待資料</div>
                 </div>
             </div>
-            <!-- Z31 OFI-SR R5 UI: current winner is NOT same-contract writer inventory. authority=0 -->
-            <div class="p9-container" id="ofi-sr-r12" style="flex:2.45; flex-direction:column; padding:4px 5px; margin-top:0; background:rgba(100,210,255,0.025); border:1px solid rgba(100,210,255,0.28); border-left:4px solid #636366;">
-                <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:5px;">
-                    <div class="p9-label" style="font-size:10px;color:#64d2ff;font-weight:950;">🧭 OFI-SR｜累委均賣買差（賣－買）・佈局觀察 <span id="ofi-sr-version">R1.2.x</span></div>
-                    <span id="ofi-sr-state" style="font-size:8px;color:#a1a1aa;">未提供</span>
-                </div>
-                <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:3px;">
-                    <div id="ofi-sr-put-box" style="padding:4px;border-radius:5px;border:1px solid rgba(255,69,58,.28);background:rgba(255,69,58,.035);">
-                        <div style="font-size:9px;font-weight:900;color:#ff453a;">🛡 下方 Put｜支撐／賣方優勢觀察</div>
-                        <div id="ofi-sr-put-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
-                        <div id="ofi-sr-put-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
-                        <div id="ofi-sr-put-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">賣均 --｜買均 --</div>
-                        <div id="ofi-sr-put-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">累委均賣買差 --｜證據不足</div>
-                        <div id="ofi-sr-put-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
-                        <div id="ofi-sr-put-writer" style="font-size:8px;color:#9ca3af;line-height:1.2;">同合約連續觀測 --｜未證明持倉</div>
-                        <div id="ofi-sr-put-formation" style="font-size:10px;font-weight:950;color:#a1a1aa;margin-top:2px;">Formation｜等待資料</div>
-                        <div id="ofi-sr-put-formation-detail" style="font-size:8px;color:#808998;line-height:1.25;">AskΔ --｜BidΔ --｜SDΔ --｜formation≠支撐成立</div>
-                       <div id="ofi-sr-put-raw" style="font-size:8px;color:#808998;">原始最高排名 --｜診斷用</div>
-                    </div>
-                    <div id="ofi-sr-call-box" style="padding:4px;border-radius:5px;border:1px solid rgba(48,209,88,.28);background:rgba(48,209,88,.035);">
-                        <div style="font-size:9px;font-weight:900;color:#30d158;">🧱 上方 Call｜壓力／賣方優勢觀察</div>
-                        <div id="ofi-sr-call-candidate" style="font-size:14px;font-weight:950;color:#d1d5db;margin-top:1px;">等待資料</div>
-                        <div id="ofi-sr-call-level" style="font-size:8px;color:#64d2ff;line-height:1.2;">距現價 --｜候選狀態 --</div>
-                        <div id="ofi-sr-call-avg" style="font-size:9px;font-weight:850;color:#d1d5db;margin-top:2px;">賣均 --｜買均 --</div>
-                        <div id="ofi-sr-call-dom" style="font-size:11px;font-weight:950;color:#9ca3af;">累委均賣買差 --｜證據不足</div>
-                        <div id="ofi-sr-call-delta" style="font-size:8px;color:#a1a1aa;">Δ30 --｜Δ60 --</div>
-                        <div id="ofi-sr-call-writer" style="font-size:8px;color:#9ca3af;line-height:1.2;">同合約連續觀測 --｜未證明持倉</div>
-                        <div id="ofi-sr-call-formation" style="font-size:10px;font-weight:950;color:#a1a1aa;margin-top:2px;">Formation｜等待資料</div>
-                        <div id="ofi-sr-call-formation-detail" style="font-size:8px;color:#808998;line-height:1.25;">AskΔ --｜BidΔ --｜SDΔ --｜formation≠壓力成立</div>
-                       <div id="ofi-sr-call-raw" style="font-size:8px;color:#808998;">原始最高排名 --｜診斷用</div>
-                    </div>
-                </div>
-                <div id="ofi-sr-coverage" style="font-size:8px;color:#808998;margin-top:3px;">Put有效 --/21｜Call有效 --/21｜下方 --｜上方 --｜RTD --</div>
-                <div id="ofi-sr-source" style="font-size:8px;color:#808998;line-height:1.2;">來源 money.excel｜期指 --｜Mapping --</div>
-                <div id="ofi-sr-proof" style="font-size:8px;color:#ffca6c;margin-top:1px;">委託優勢≠持倉/支撐｜期指跌破≠佈局失敗｜authority=0</div>
+            <!-- Synchronized copy of the existing Live layout center and seller strength. -->
+            <div class="p9-container" id="lfz-center-mirror" style="flex:2.45; flex-direction:column; padding:4px 5px; margin-top:0; background:rgba(100,210,255,0.025); border:1px solid rgba(100,210,255,0.28); border-left:4px solid #636366;">
+                <div class="p9-label" style="font-size:10px;color:#ffd60a;">等待布局中心與兩側賣方強度</div>
             </div>
             <div class="p9-container r7-container" style="flex:1; flex-direction:column; padding:2px 2px; margin-top:0; background:rgba(255,255,255,0.05); border:1px solid #333;">
                 <div class="p9-label" style="font-size:9px;">🛡️ 累積買賣差動態 (R7)</div>
@@ -8459,6 +8427,19 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         <tbody id="lfz-baoz-body"><tr><td colspan="3" class="lfz-baoz-empty">等待資料</td></tr></tbody>
       </table>`;
     auxiliaryCard.appendChild(baoZBlock);
+    const layoutMirror = document.getElementById('lfz-center-mirror');
+    const centerPanel = baoZBlock.querySelector('.lfz-center-panel');
+    if (layoutMirror && centerPanel) {
+      const syncLayoutMirror = function () {
+        const copy = centerPanel.cloneNode(true);
+        copy.querySelectorAll('[id]').forEach(node => { node.id = 'mirror-' + node.id; });
+        layoutMirror.replaceChildren(copy);
+      };
+      syncLayoutMirror();
+      new MutationObserver(syncLayoutMirror).observe(centerPanel, {
+        childList: true, subtree: true, characterData: true, attributes: true
+      });
+    }
     updateLFZBaoZUI(window.__Z2LFZBaoZCache || null);
     if (!window.__Z2LFZBaoZFreshTimer) {
       window.__Z2LFZBaoZFreshTimer = setInterval(() => updateLFZBaoZUI(window.__Z2LFZBaoZCache || null), 15000);
@@ -10079,10 +10060,19 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     min-width: 0 !important;
     width: 100% !important;
   }
-  #v2-live-page .v2-force-card #ofi-sr-r12 {
+  #v2-live-page .v2-force-card #lfz-center-mirror {
     min-width: 0 !important;
     width: 100% !important;
   }
+  #v2-live-page #lfz-center-mirror .lfz-center-panel {
+    width: 100%;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+    text-align: left;
+  }
+  #v2-live-page #lfz-center-mirror .lfz-center-head { flex-wrap: wrap; }
+  #v2-live-page #lfz-center-mirror .lfz-center-note { text-align: left; }
   #v2-live-page .v2-force-card .r7-container {
     min-width: 0 !important;
     width: 100% !important;
@@ -10106,20 +10096,17 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) !important;
       grid-template-areas:
         "p9 r7"
-        "ofi ofi" !important;
+        "layout layout" !important;
       gap: 4px !important;
     }
     #v2-live-page .v2-force-card #battle-card > .req-level-2-flex > .p9-container:first-child {
       grid-area: p9 !important;
     }
-    #v2-live-page .v2-force-card #ofi-sr-r12 {
-      grid-area: ofi !important;
+    #v2-live-page .v2-force-card #lfz-center-mirror {
+      grid-area: layout !important;
     }
     #v2-live-page .v2-force-card .r7-container {
       grid-area: r7 !important;
-    }
-    #v2-live-page #ofi-sr-r12 > div:nth-child(2) {
-      grid-template-columns: minmax(0, 1fr) !important;
     }
   }
 </style>
