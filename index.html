@@ -7325,9 +7325,14 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         value.textContent='--'; value.style.color='#9ca3af';
       }
       breakdown.textContent=(eligible||observedFallback)?('Call '+show(q.op_call_force)+'｜Put '+show(q.op_put_force)):'Call --｜Put --';
-      const obs=Number(q.op_force_observed_contracts), exp=Number(q.op_force_expected_contracts), un=Number(q.op_force_unclassified_lots);
-      detail.textContent=(st==='SCOPE_CHANGED_FAIL_CLOSED'?'目前Scope｜非完整當盤｜':'')+'Tick '+(Number.isFinite(Number(q.op_force_tick_count))?Number(q.op_force_tick_count).toLocaleString('en-US'):'--')+
-        '｜合約 '+(Number.isFinite(obs)?obs:'--')+'/'+(Number.isFinite(exp)?exp:'--')+'｜未判定 '+(Number.isFinite(un)?un.toLocaleString('en-US'):'--')+'口';
+      // Distinct accepted Tick contract codes are NOT subscription ACK coverage.
+      // Missing/null are UNKNOWN, not numeric zero.
+      const finiteField = x => (x === null || x === undefined || x === '') ? NaN : Number(x);
+      const obs=finiteField(q.op_force_observed_contracts), exp=finiteField(q.op_force_expected_contracts);
+      const un=finiteField(q.op_force_unclassified_lots), ticks=finiteField(q.op_force_tick_count);
+      detail.textContent=(st==='SCOPE_CHANGED_FAIL_CLOSED'?'目前Scope｜非完整當盤｜':'')+'Tick '+(Number.isFinite(ticks)?ticks.toLocaleString('en-US'):'--')+
+        '｜已觀察Tick合約 '+(Number.isFinite(obs)?obs:'--')+'/'+(Number.isFinite(exp)?exp:'--')+
+        '｜未分類 '+(Number.isFinite(un)?un.toLocaleString('en-US'):'--')+'口';
     }
 
 
