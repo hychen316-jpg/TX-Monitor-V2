@@ -47,7 +47,7 @@
 <!-- MINI_TSMC_INLINE_UI_v0.1.1_20260823 | existing monitor_realtime listener | P56->C1 near-month night | P53->C2 near-month day | decimal x100 percent | C1-C4 matched value font size | no new card -->
 <!-- Z2_ACTIVE_DEFENSE_INLINE_UI_v0.1_20260824 | existing Z2 LIVE execution decision | mdi_locked_execution_defense -> mdi_locked_defense fallback | no new card/listener/authority change -->
 <!-- Z2_POSITION_SUMMARY_INLINE_UI_v0.1_20260824 | existing Z2 LIVE card | cost + active defense + tracked T1/T2 | no new card/listener/authority change -->
-<!-- Z2_LIVE_WATCH_COMPACT_UI_v0.1_20261015 | presentation-only | watching summary plus expandable parameters | no decision or data-source change -->
+<!-- Z2_LIVE_WATCH_COMPACT_UI_v0.2_20261015 | presentation-only | watching summary plus expandable parameters; restores non-watch display | no decision or data-source change -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -8395,7 +8395,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 
       const updateCompactAdvice = function() {
         const raw = String(v10RawAdvice.textContent || '').trim();
-        const isWatching = raw.includes('觀望');
         let compact = '';
         let m = raw.match(/^主力佈局完成｜ICUA (LONG|SHORT)/);
         if (m) compact = `ICUA ${m[1]}｜佈局完成・等待發動`;
@@ -8410,7 +8409,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           const first = raw.split(/[|｜]/)[0].trim();
           compact = first || '等待完整訊號';
         }
-        if (isWatching && !compact.includes('觀望')) compact = `觀望｜${compact}`;
+        // Only the displayed decision controls the compact state; a later
+        // diagnostic mention of "觀望" must not keep a live decision collapsed.
+        const isWatching = compact.includes('觀望');
         compactAdvice.textContent = compact;
         v10ActionBand.classList.toggle('is-watching', isWatching);
         if (isWatching !== lastWaitState) {
