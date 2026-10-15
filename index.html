@@ -47,6 +47,7 @@
 <!-- MINI_TSMC_INLINE_UI_v0.1.1_20260823 | existing monitor_realtime listener | P56->C1 near-month night | P53->C2 near-month day | decimal x100 percent | C1-C4 matched value font size | no new card -->
 <!-- Z2_ACTIVE_DEFENSE_INLINE_UI_v0.1_20260824 | existing Z2 LIVE execution decision | mdi_locked_execution_defense -> mdi_locked_defense fallback | no new card/listener/authority change -->
 <!-- Z2_POSITION_SUMMARY_INLINE_UI_v0.1_20260824 | existing Z2 LIVE card | cost + active defense + tracked T1/T2 | no new card/listener/authority change -->
+<!-- Z2_LIVE_WATCH_COMPACT_UI_v0.1_20261015 | presentation-only | watching summary plus expandable parameters | no decision or data-source change -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -2096,6 +2097,26 @@
 #v2-live-page .ocf-tech-toggle > summary::-webkit-details-marker { display:none; }
 #v2-live-page .ocf-tech-toggle > summary::after { content:' ▾'; color:#64d2ff; }
 #v2-live-page .ocf-tech-toggle[open] > summary::after { content:' ▴'; }
+#v2-live-page .ocf-wait-details { margin-top: 2px; }
+#v2-live-page .ocf-wait-details > summary { display: none; }
+#v2-live-page .ocf-wait-details.is-wait > summary {
+  display: list-item;
+  cursor: pointer;
+  color: #d2b45f;
+  font-size: 10px;
+  font-weight: 850;
+  user-select: none;
+}
+#v2-live-page .ocf-wait-details.is-wait > summary::after { content:' ▾'; color:#64d2ff; }
+#v2-live-page .ocf-wait-details.is-wait[open] > summary::after { content:' ▴'; }
+#v2-live-page .ocf-wait-details.is-wait .ocf-tech-toggle > summary { display: none; }
+#v2-live-page .ocf-wait-details.is-wait .ocf-tech-toggle { border-top: 0; padding-top: 0; }
+#v2-live-page .ocf-action-band.is-watching .v10-action-compact {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
 #v2-live-page .ocf-tech-toggle .ocf-action-text {
   margin-top: 4px;
   font-size: 10px !important;
@@ -8348,6 +8369,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if (v10ActionBand && v10RawAdvice) {
       const compactAdvice = el('div', 'v10-action-compact', 'ocf-bk-advice-compact');
       compactAdvice.textContent = '等待完整訊號';
+      compactAdvice.setAttribute('aria-live', 'polite');
       v10ActionBand.insertBefore(compactAdvice, v10RawAdvice);
 
       const techToggle = document.createElement('details');
@@ -8357,10 +8379,23 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       techToggle.appendChild(techSummary);
       techToggle.appendChild(v10RawAdvice);
       if (v10CrossDiag) techToggle.appendChild(v10CrossDiag);
-      v10ActionBand.appendChild(techToggle);
+
+      const waitDetails = document.createElement('details');
+      waitDetails.className = 'ocf-wait-details';
+      waitDetails.open = true;
+      const waitSummary = document.createElement('summary');
+      waitSummary.textContent = '展開觀望詳細參數';
+      waitDetails.appendChild(waitSummary);
+      if (v10ActionContext) waitDetails.appendChild(v10ActionContext);
+      waitDetails.appendChild(techToggle);
+      v10ActionBand.appendChild(waitDetails);
+
+      let lastWaitState = false;
+      let priorTechOpen = false;
 
       const updateCompactAdvice = function() {
         const raw = String(v10RawAdvice.textContent || '').trim();
+        const isWatching = raw.includes('觀望');
         let compact = '';
         let m = raw.match(/^主力佈局完成｜ICUA (LONG|SHORT)/);
         if (m) compact = `ICUA ${m[1]}｜佈局完成・等待發動`;
@@ -8372,10 +8407,24 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         m = !compact ? raw.match(/^ICUA REACQ｜(LONG|SHORT)/) : null;
         if (m) compact = `ICUA ${m[1]}｜REACQ 二次發動`;
         if (!compact) {
-          const first = raw.split('|')[0].trim();
+          const first = raw.split(/[|｜]/)[0].trim();
           compact = first || '等待完整訊號';
         }
+        if (isWatching && !compact.includes('觀望')) compact = `觀望｜${compact}`;
         compactAdvice.textContent = compact;
+        v10ActionBand.classList.toggle('is-watching', isWatching);
+        if (isWatching !== lastWaitState) {
+          if (isWatching) {
+            priorTechOpen = techToggle.open;
+            techToggle.open = true;
+            waitDetails.open = false;
+          } else {
+            waitDetails.open = true;
+            techToggle.open = priorTechOpen;
+          }
+          lastWaitState = isWatching;
+        }
+        waitDetails.classList.toggle('is-wait', isWatching);
       };
       updateCompactAdvice();
       new MutationObserver(updateCompactAdvice).observe(v10RawAdvice, {childList:true, subtree:true, characterData:true});
