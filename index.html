@@ -10167,7 +10167,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 </style>
 
 
-<!-- BAOZ_Z31_INTEGRATION_1_0_0_BEGIN -->
+<!-- BAOZ_Z31_INTEGRATION_1_0_1_BEGIN -->
 <style id="baoz-z31-style">
 
     #baoz-system-panel{--bz-bg:#080a0d;--bz-surface:#15181d;--bz-raised:#1e232b;--bz-ink:#eef1f7;--bz-muted:#a7afbc;--bz-line:#343c49;--bz-accent:#75d3ff;--bz-up:#ff707b;--bz-down:#52d9a0;--bz-attn:#f3cd7c;--bz-blue:#8ab8ff;--bz-radius:7px;color-scheme:dark;background:var(--bz-bg);color:var(--bz-ink);font:400 13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei",sans-serif;padding:12px;min-width:0}
@@ -10345,11 +10345,11 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 
 </template>
 <script id="baoz-z31-integration">
-/* BaoZ Z31 integration 1.0.0, 20261022. Own namespace, auth and one subscription group. */
+/* BaoZ Z31 integration 1.0.1, 20261022. Firebase wire collection normalization. */
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.0.0-20261022';
+  const BUILD='BaoZ-Z31-UI-1.0.1-20261022';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10398,16 +10398,41 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     };
     listen(NODE,data=>{
       if(!data){s.problem='Firebase 尚無 BaoZ 近月資料';freshness();return;}
-      if(!valid(data)){s.problem='雲端 BaoZ 資料格式不符';freshness();return;}
-      s.problem='';s.payload=data;render();
+      const normalized=normalize(data);
+      if(!valid(normalized)){s.problem='雲端 BaoZ 必要資料欄位不完整';freshness();return;}
+      s.problem='';s.payload=normalized;render();
     });
     listen('.info/connected',v=>{s.connected=v===true;freshness();});
     listen('.info/serverTimeOffset',v=>{s.offset=typeof v==='number'&&Number.isFinite(v)?v:0;freshness();});
   }
+  function collection(value,optional) {
+    // RTDB stores an empty array as no node, and sparse collections may be numeric-key objects.
+    if(value==null)return optional?[]:value;
+    if(Array.isArray(value))return value.filter(x=>x!=null);
+    if(typeof value==='object'){
+      const keys=Object.keys(value);
+      if(keys.every(k=>/^(0|[1-9]\d*)$/.test(k)&&Number(k)<=100000))return keys.sort((a,b)=>Number(a)-Number(b)).map(k=>value[k]).filter(x=>x!=null);
+    }
+    return value; // Keep invalid types invalid; never convert arbitrary objects into accepted data.
+  }
+  function normalize(p) {
+    if(!p||typeof p!=='object'||!p.view||typeof p.view!=='object')return p;
+    const v={...p.view},out={...p,view:v};
+    out.analysis_rows=collection(p.analysis_rows,false);
+    if(Array.isArray(out.analysis_rows))out.analysis_rows=out.analysis_rows.map(r=>r&&typeof r==='object'?{...r,cells:collection(r.cells,false)}:r);
+    out.recent_logs=collection(p.recent_logs,true);
+    if(Array.isArray(out.recent_logs))out.recent_logs=out.recent_logs.map(r=>r&&typeof r==='object'?{...r,lines:collection(r.lines,true)}:r);
+    ['levels','nine_steps','plan'].forEach(k=>{v[k]=collection(v[k],k==='levels'&&v.adapter_status!=='SUPPORTED');});
+    ['timeline','positions','adapter_errors'].forEach(k=>{v[k]=collection(v[k],true);});
+    if(v.carry&&typeof v.carry==='object'){
+      v.carry={...v.carry,long_gates:collection(v.carry.long_gates,false),short_gates:collection(v.carry.short_gates,false),rows:collection(v.carry.rows,true)};
+    }
+    return out;
+  }
   function valid(p) {
     if(!(p&&p.schema_version==='baoz-near-live.v1'&&p.role==='NEAR'&&p.source&&Number.isFinite(p.source.generated_at_ms)&&p.market&&p.diagnostics&&Array.isArray(p.analysis_rows)&&typeof p.analysis_text==='string'&&p.view))return false;
     const v=p.view;
-    return ['levels','nine_steps','timeline','plan','positions','adapter_errors'].every(k=>Array.isArray(v[k]))&&['long','short','data_check','warning','multi_day','session_direction','conclusion','carry','targets'].every(k=>v[k]&&typeof v[k]==='object')&&v.targets.upper&&v.targets.lower&&Array.isArray(v.carry.long_gates)&&Array.isArray(v.carry.short_gates);
+    return p.analysis_rows.length>0&&['levels','nine_steps','timeline','plan','positions','adapter_errors'].every(k=>Array.isArray(v[k]))&&(v.adapter_status!=='SUPPORTED'||v.levels.length>0)&&v.nine_steps.length>0&&v.plan.length>0&&['long','short','data_check','warning','multi_day','session_direction','conclusion','carry','targets'].every(k=>v[k]&&typeof v[k]==='object')&&v.targets.upper&&v.targets.lower&&Array.isArray(v.carry.long_gates)&&Array.isArray(v.carry.short_gates);
   }
   function freshness() {
     if(!panel)return;
@@ -10490,7 +10515,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       text('bz-raw-text','尚無來源資料');freshness();return;
     }
     const v=p.view,m=p.market||{};
-    text('bz-contract',p.source.contract);text('bz-session',p.source.session==='NIGHT'?'夜盤':p.source.session==='DAY'?'日盤':'盤別未提供');text('bz-version',p.source.version);
+    text('bz-contract',p.source.contract);text('bz-session',p.source.session==='NIGHT'?'夜盤':p.source.session==='DAY'?'日盤':'盤別未提供');text('bz-version',p.source.version+' · UI 1.0.1');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     text('bz-long-status',v.long.status);text('bz-long-reason',v.long.reason);text('bz-short-status',v.short.status);text('bz-short-reason',v.short.reason);
     const quality=/資料[：:]([^｜]+)/.exec(v.source_quality||'');
@@ -10552,6 +10577,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 })();
 
 </script>
-<!-- BAOZ_Z31_INTEGRATION_1_0_0_END -->
+<!-- BAOZ_Z31_INTEGRATION_1_0_1_END -->
 </body>
 </html>
