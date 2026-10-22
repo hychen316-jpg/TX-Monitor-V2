@@ -10166,5 +10166,392 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
   }
 </style>
 
+
+<!-- BAOZ_Z31_INTEGRATION_1_0_0_BEGIN -->
+<style id="baoz-z31-style">
+
+    #baoz-system-panel{--bz-bg:#080a0d;--bz-surface:#15181d;--bz-raised:#1e232b;--bz-ink:#eef1f7;--bz-muted:#a7afbc;--bz-line:#343c49;--bz-accent:#75d3ff;--bz-up:#ff707b;--bz-down:#52d9a0;--bz-attn:#f3cd7c;--bz-blue:#8ab8ff;--bz-radius:7px;color-scheme:dark;background:var(--bz-bg);color:var(--bz-ink);font:400 13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei",sans-serif;padding:12px;min-width:0}
+    #baoz-system-panel *{box-sizing:border-box}
+    #baoz-system-panel [hidden]{display:none!important}
+    #baoz-system-panel button{font:inherit;color:inherit;cursor:pointer}
+    #baoz-system-panel h2,#baoz-system-panel h3,#baoz-system-panel p{margin:0}
+    #baoz-system-panel h2{font-size:18px;font-weight:500;letter-spacing:.025em}
+    #baoz-system-panel h3{font-size:13px;font-weight:500}
+    #baoz-system-panel .bz-muted{color:var(--bz-muted)}
+    #baoz-system-panel .bz-small{font-size:11px}
+    #baoz-system-panel .bz-num{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+    #baoz-system-panel .bz-bull{color:var(--bz-up)}
+    #baoz-system-panel .bz-bear{color:var(--bz-down)}
+    #baoz-system-panel .bz-warn{color:var(--bz-attn)}
+    #baoz-system-panel .bz-accent{color:var(--bz-accent)}
+    #baoz-system-panel .bz-line{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+    #baoz-system-panel .bz-between{justify-content:space-between}
+    #baoz-system-panel .bz-topline{padding:0 96px 9px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    #baoz-system-panel .bz-topline strong{font-weight:500;letter-spacing:.08em}
+    #baoz-system-panel .bz-topnav{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--bz-line);padding-bottom:6px;margin-bottom:7px}
+    #baoz-system-panel .bz-topnav span{padding:4px 9px;color:var(--bz-muted);font-size:11px}
+    #baoz-system-panel .bz-topnav .bz-here{color:var(--bz-accent);background:var(--bz-raised);border-radius:4px}
+    #baoz-system-panel .bz-freeze{margin-left:auto!important;color:var(--bz-accent)!important}
+    #baoz-system-panel .bz-existing{border:1px solid var(--bz-line);background:var(--bz-surface);border-radius:var(--bz-radius);padding:7px}
+    #baoz-system-panel .bz-market{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:5px 8px;margin-bottom:6px}
+    #baoz-system-panel .bz-market strong{font-weight:500}
+    #baoz-system-panel .bz-core-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:6px}
+    #baoz-system-panel .bz-core-head{font-size:11px;color:var(--bz-muted);display:flex;justify-content:space-between;gap:5px;margin-bottom:4px}
+    #baoz-system-panel .bz-c-matrix{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+    #baoz-system-panel .bz-c-matrix div{background:var(--bz-raised);padding:3px 6px;display:flex;justify-content:space-between;gap:5px;font-size:11px}
+    #baoz-system-panel .bz-force{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:4px}
+    #baoz-system-panel .bz-force div{background:var(--bz-raised);padding:4px 7px;min-width:0}
+    #baoz-system-panel .bz-force span{display:block;font-size:11px;color:var(--bz-muted)}
+    #baoz-system-panel .bz-force b{font-weight:500}
+    #baoz-system-panel .bz-op{font-size:11px;color:var(--bz-muted);padding-top:4px}
+    #baoz-system-panel .bz-system-tabs{display:flex;align-items:center;gap:5px;padding:10px 0 8px;flex-wrap:wrap}
+    #baoz-system-panel .bz-system-tabs button{background:var(--bz-surface);border:1px solid var(--bz-line);border-radius:5px;padding:6px 17px;font-weight:500}
+    #baoz-system-panel .bz-system-tabs button[aria-selected="true"]{color:var(--bz-bg);background:var(--bz-accent);border-color:var(--bz-accent)}
+    #baoz-system-panel .bz-system-tabs .bz-subnote{margin-left:auto;font-size:11px;color:var(--bz-muted)}
+    #baoz-system-panel .bz-source{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;border-top:1px solid var(--bz-line);border-bottom:1px solid var(--bz-line);padding:7px 0}
+    #baoz-system-panel .bz-tag{display:inline-flex;align-items:center;padding:2px 6px;font-size:11px;border-radius:4px;background:var(--bz-raised);color:var(--bz-muted);white-space:nowrap}
+    #baoz-system-panel .bz-tag-warn{color:var(--bz-attn);background:color-mix(in srgb,var(--bz-attn) 12%,var(--bz-surface))}
+    #baoz-system-panel .bz-signal{display:grid;grid-template-columns:minmax(0,1.35fr) repeat(2,minmax(0,1fr));gap:12px;background:var(--bz-surface);border-left:3px solid var(--bz-attn);border-radius:0 var(--bz-radius) var(--bz-radius) 0;padding:13px 14px;margin:9px 0}
+    #baoz-system-panel .bz-command{font-size:23px;letter-spacing:.08em;font-weight:500;margin:2px 0 3px}
+    #baoz-system-panel .bz-reason{border-left:1px solid var(--bz-line);padding-left:12px;min-width:0}
+    #baoz-system-panel .bz-reason-title{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px}
+    #baoz-system-panel .bz-note{padding:5px 0 8px;color:var(--bz-attn);font-size:11px}
+    #baoz-system-panel .bz-metrics{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) repeat(2,minmax(0,1.1fr));gap:8px;padding-bottom:10px}
+    #baoz-system-panel .bz-metric{padding:8px 10px;background:var(--bz-surface);border-radius:var(--bz-radius);min-width:0}
+    #baoz-system-panel .bz-value{display:block;font-size:21px;font-weight:500;margin-top:1px}
+    #baoz-system-panel .bz-price{font-size:27px}
+    #baoz-system-panel .bz-layout{display:grid;grid-template-columns:minmax(0,1.52fr) minmax(0,1fr);gap:10px;align-items:start}
+    #baoz-system-panel .bz-panel{background:var(--bz-surface);border:1px solid var(--bz-line);border-radius:var(--bz-radius);min-width:0;overflow:hidden}
+    #baoz-system-panel .bz-panel-head{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:9px 10px;border-bottom:1px solid var(--bz-line);flex-wrap:wrap}
+    #baoz-system-panel .bz-pair{display:flex;gap:2px}
+    #baoz-system-panel .bz-pair button{background:transparent;border:0;padding:3px 6px;border-radius:3px;font-size:11px;color:var(--bz-muted)}
+    #baoz-system-panel .bz-pair button[aria-pressed="true"]{background:var(--bz-raised);color:var(--bz-ink)}
+    #baoz-system-panel table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+    #baoz-system-panel th{text-align:left;font-weight:400;color:var(--bz-muted);font-size:11px;padding:7px 9px;border-bottom:1px solid var(--bz-line)}
+    #baoz-system-panel td{padding:7px 9px;border-bottom:1px solid var(--bz-line);vertical-align:middle;overflow-wrap:anywhere}
+    #baoz-system-panel tbody tr:last-child td{border-bottom:0}
+    #baoz-system-panel .bz-level-price{width:34%}
+    #baoz-system-panel .bz-level-dist{width:17%;text-align:right}
+    #baoz-system-panel .bz-level-meaning{width:49%}
+    #baoz-system-panel .bz-level-btn{display:block;text-align:left;background:transparent;border:0;padding:0;font:inherit;color:inherit;max-width:100%;white-space:normal}
+    #baoz-system-panel .bz-level-row.bz-current{background:color-mix(in srgb,var(--bz-accent) 12%,var(--bz-surface))}
+    #baoz-system-panel .bz-level-row.bz-current td{font-weight:500;color:var(--bz-accent)}
+    #baoz-system-panel .bz-level-row.bz-selected td:first-child{box-shadow:inset 3px 0 var(--bz-accent)}
+    #baoz-system-panel .bz-level-detail{background:var(--bz-raised);padding:8px 10px;font-size:11px;color:var(--bz-muted);min-height:45px}
+    #baoz-system-panel .bz-right{display:grid;gap:10px;min-width:0}
+    #baoz-system-panel .bz-targets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:9px 0}
+    #baoz-system-panel .bz-target{padding:0 11px;min-width:0}
+    #baoz-system-panel .bz-target+ .bz-target{border-left:1px solid var(--bz-line)}
+    #baoz-system-panel .bz-target strong{display:block;font-size:23px;font-weight:500;color:var(--bz-accent)}
+    #baoz-system-panel .bz-target-diff{display:flex;justify-content:space-between;font-size:11px;gap:3px;padding-top:4px;flex-wrap:wrap}
+    #baoz-system-panel .bz-footnote{font-size:11px;color:var(--bz-muted);padding:0 10px 9px}
+    #baoz-system-panel .bz-scenarios{display:grid;gap:0;padding:3px 10px}
+    #baoz-system-panel .bz-scenario{display:grid;grid-template-columns:84px 1fr;gap:7px;padding:7px 0;border-bottom:1px solid var(--bz-line);font-size:12px}
+    #baoz-system-panel .bz-scenario:last-child{border:0}
+    #baoz-system-panel .bz-gates{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:9px 10px}
+    #baoz-system-panel .bz-gate{display:flex;gap:4px;align-items:center;justify-content:center;background:var(--bz-raised);border-radius:4px;padding:4px;font-size:11px}
+    #baoz-system-panel .bz-disclosures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px;align-items:start}
+    #baoz-system-panel details{border:1px solid var(--bz-line);border-radius:var(--bz-radius);background:var(--bz-surface);min-width:0}
+    #baoz-system-panel summary{padding:8px 10px;cursor:pointer;font-size:12px}
+    #baoz-system-panel details[open] summary{border-bottom:1px solid var(--bz-line)}
+    #baoz-system-panel .bz-detail-body{padding:9px 10px;overflow-wrap:anywhere;font-size:12px}
+    #baoz-system-panel .bz-detail-item{padding:7px 0;border-bottom:1px solid var(--bz-line)}
+    #baoz-system-panel .bz-detail-item:last-child{border:0}
+    #baoz-system-panel .bz-detail-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px}
+    #baoz-system-panel .bz-raw{margin-top:7px}
+    #baoz-system-panel .bz-raw table{table-layout:auto}
+    #baoz-system-panel .bz-raw td{font-size:11px;white-space:pre-wrap;vertical-align:top}
+    #baoz-system-panel .bz-raw td:first-child{color:var(--bz-muted);width:30px}
+    #baoz-system-panel .bz-raw td:nth-child(2){width:110px}
+    #baoz-system-panel .bz-fallback{padding:14px;background:var(--bz-raised);margin:10px 0;border-left:3px solid var(--bz-attn)}
+    #baoz-system-panel .bz-original-panels{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:10px}
+    #baoz-system-panel .bz-z31-box{padding:18px 14px;min-height:170px;background:var(--bz-surface);border:1px solid var(--bz-line);border-radius:var(--bz-radius)}
+    #baoz-system-panel .bz-z31-box p{margin-top:12px;color:var(--bz-muted)}
+    #baoz-system-panel .bz-final-meta{font-size:11px;color:var(--bz-muted);padding:10px 0 0}
+    #baoz-system-panel.bz-compact .bz-signal{padding:10px 12px;margin:7px 0}
+    #baoz-system-panel.bz-compact td{padding-top:5px;padding-bottom:5px}
+    #baoz-system-panel.bz-compact .bz-metric{padding:6px 9px}
+    #baoz-system-panel.bz-expired .bz-signal{border-left-color:var(--bz-up)}
+    #baoz-system-panel.bz-expired .bz-semantic{opacity:.7}
+    #baoz-system-panel.bz-expired #bz-command{color:var(--bz-attn)}
+    @media(max-width:800px){#baoz-system-panel .bz-layout{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}#baoz-system-panel .bz-metrics{gap:5px}#baoz-system-panel .bz-signal{gap:8px;padding:10px}#baoz-system-panel .bz-reason{padding-left:8px}#baoz-system-panel .bz-value{font-size:19px}#baoz-system-panel .bz-price{font-size:24px}#baoz-system-panel .bz-level-price{width:35%}#baoz-system-panel .bz-level-dist{width:18%}#baoz-system-panel .bz-level-meaning{width:47%}#baoz-system-panel td{padding-left:7px;padding-right:7px}}
+    @media(max-width:640px){#baoz-system-panel{padding:9px}#baoz-system-panel .bz-core-grid{grid-template-columns:1fr}#baoz-system-panel .bz-c-matrix{grid-template-columns:repeat(4,minmax(0,1fr))}#baoz-system-panel .bz-signal{grid-template-columns:1fr 1fr}#baoz-system-panel .bz-signal>div:first-child{grid-column:1/-1}#baoz-system-panel .bz-reason{padding-left:0;border:0}#baoz-system-panel .bz-metrics{grid-template-columns:1fr 1fr}#baoz-system-panel .bz-layout{grid-template-columns:1fr}#baoz-system-panel .bz-right{grid-template-columns:1fr}#baoz-system-panel .bz-disclosures{grid-template-columns:1fr}#baoz-system-panel .bz-system-tabs .bz-subnote{width:100%;margin-left:0}#baoz-system-panel .bz-topline{padding-right:0}#baoz-system-panel .bz-original-panels{grid-template-columns:1fr}#baoz-system-panel .bz-raw td:nth-child(2){width:auto}}
+    @media(max-width:380px){#baoz-system-panel .bz-c-matrix{grid-template-columns:repeat(2,minmax(0,1fr))}#baoz-system-panel .bz-force{grid-template-columns:1fr 1fr}#baoz-system-panel .bz-force>div:nth-child(2){grid-column:1/-1;grid-row:2}#baoz-system-panel .bz-targets{grid-template-columns:1fr;gap:10px}#baoz-system-panel .bz-target+.bz-target{border-left:0;border-top:1px solid var(--bz-line);padding-top:8px}#baoz-system-panel .bz-gates{grid-template-columns:1fr 1fr}}
+    @media(pointer:coarse){#baoz-system-panel button,#baoz-system-panel summary{min-height:44px}#baoz-system-panel .bz-level-btn{width:100%}}
+  
+#baoz-system-workspace{width:100%;min-width:0}
+#baoz-system-workspace>[hidden]{display:none!important}
+#z31-system-panel{display:flex;flex-direction:column;gap:5px;width:100%;min-width:0}
+#z31-system-panel>.v10-adverse-footer{width:100%;box-sizing:border-box;margin-top:6px;flex:none}
+.baoz-system-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:5px 0}
+.baoz-system-tab{appearance:none;border:1px solid #3a3a3c;border-radius:5px;padding:6px 18px;background:#1c1c1e;color:#ddd;font-size:12px;font-weight:700;cursor:pointer}
+.baoz-system-tab[aria-selected="true"]{background:#64d2ff;color:#071017;border-color:#64d2ff}
+.baoz-system-note{margin-left:auto;font-size:10px;color:#999}
+#baoz-system-panel{padding:8px;background:#080a0d;border-radius:7px}
+#baoz-system-panel.bz-compact .bz-signal{padding:10px 12px}
+#baoz-system-panel .bz-retry{background:#1e232b;border:1px solid #343c49;border-radius:4px;color:#eee;padding:3px 7px;font-size:11px}
+#baoz-system-panel .bz-source-text{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;tab-size:2;max-width:100%;font:400 12px/1.7 "Microsoft JhengHei",sans-serif;color:var(--bz-ink);margin:0}
+#baoz-system-panel .bz-carry-label{font-size:11px;color:var(--bz-muted);padding:6px 10px 0}
+#baoz-system-panel .bz-positions{margin-bottom:10px}
+#baoz-system-panel .bz-recent-log{margin-top:7px}
+#baoz-system-panel .bz-recent-log pre{padding:8px}
+#baoz-system-panel.bz-expired .bz-semantic{opacity:.7}
+#baoz-system-panel .bz-scenarios .bz-detail-item{font-size:12px;padding:7px 0}
+@media(pointer:coarse){.baoz-system-tab{min-height:44px}}
+
+</style>
+<template id="baoz-panel-template">
+<section id="baoz-system-panel" role="tabpanel" aria-labelledby="baoz-tab-baoz" hidden>
+  <div class="bz-source"><div class="bz-line"><strong>BaoZ 近月</strong><span id="bz-contract" class="bz-num">待資料</span><span id="bz-session" class="bz-tag">—</span><span id="bz-version" class="bz-small bz-muted">—</span></div><div class="bz-line bz-small"><span id="bz-source-time">來源：待資料</span><span id="bz-freshness" class="bz-tag">待資料</span><button type="button" id="bz-retry" class="bz-retry" hidden>重試連線</button></div></div>
+  <div class="bz-signal" aria-live="polite">
+    <div><span id="bz-command-eyebrow" class="bz-small bz-muted">來源執行判斷</span><div id="bz-command" class="bz-command">等待資料</div><p id="bz-command-context" class="bz-small bz-muted">等待近月即時分析</p></div>
+    <div class="bz-reason"><div class="bz-reason-title"><span class="bz-bull">做多</span><span id="bz-long-status" class="bz-tag">未提供</span></div><p id="bz-long-reason" class="bz-small">—</p></div>
+    <div class="bz-reason"><div class="bz-reason-title"><span class="bz-bear">做空</span><span id="bz-short-status" class="bz-tag">未提供</span></div><p id="bz-short-reason" class="bz-small">—</p></div>
+  </div>
+  <p id="bz-data-note" class="bz-note">等待 Firebase BaoZ 近月資料。</p>
+  <div id="bz-fallback" class="bz-fallback" hidden>來源格式尚未適配。請檢視下方完整原文；價位分類與操作狀態暫不推斷。</div>
+  <div id="bz-semantic" class="bz-semantic" hidden>
+    <div class="bz-metrics">
+      <div class="bz-metric"><span class="bz-small bz-muted">BaoZ 來源期貨</span><span id="bz-futures" class="bz-value bz-price bz-num">—</span><span id="bz-price-foot" class="bz-small bz-muted">—</span></div>
+      <div class="bz-metric"><span class="bz-small bz-muted">合成期貨</span><span id="bz-synthetic" class="bz-value bz-num">—</span><span class="bz-small bz-muted">換算差 <span id="bz-basis" class="bz-num">—</span></span></div>
+      <div class="bz-metric"><span id="bz-multi-label" class="bz-small bz-muted">多日方向</span><span id="bz-multi-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">期貨分界 <span id="bz-multi-boundary" class="bz-num">—</span></span></div>
+      <div class="bz-metric"><span id="bz-session-label" class="bz-small bz-muted">本盤方向</span><span id="bz-session-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">期貨分界 <span id="bz-session-boundary" class="bz-num">—</span></span></div>
+    </div>
+    <section id="bz-positions" class="bz-panel bz-positions" hidden><div class="bz-panel-head"><h3>部位追蹤</h3><span class="bz-small bz-muted">BaoZ 規則紀錄</span></div><div id="bz-position-body" class="bz-detail-body"></div></section>
+    <div class="bz-layout">
+      <section class="bz-panel" aria-label="關鍵期貨價位">
+        <div class="bz-panel-head"><h3>關鍵價位 <span class="bz-small bz-muted">· 期貨座標</span></h3><div class="bz-pair"><button type="button" id="bz-levels-near" aria-pressed="true">近價重點</button><button type="button" id="bz-levels-all" aria-pressed="false">全部價位</button></div></div>
+        <table><thead><tr><th class="bz-level-price">期貨價位</th><th class="bz-level-dist">距現價</th><th class="bz-level-meaning">用途／狀態</th></tr></thead><tbody id="bz-level-body"></tbody></table>
+        <div id="bz-level-detail" class="bz-level-detail" aria-live="polite">選取價位查看來源。</div>
+      </section>
+      <div class="bz-right">
+        <section class="bz-panel" aria-label="本盤必來點觀察目標"><div class="bz-panel-head"><h3>本盤必來點</h3><span class="bz-small bz-muted">觀察目標 · 不判方向</span></div><div id="bz-target-body" class="bz-targets"></div><p class="bz-footnote">「本盤尚差」相對本盤高低，與距現價分開。</p></section>
+        <section class="bz-panel" aria-label="來源情境"><div class="bz-panel-head"><h3>條件變化與風險</h3><span class="bz-small bz-muted">來源情境</span></div><div id="bz-scenarios" class="bz-scenarios"></div><p class="bz-footnote">情境文字須配合上方做多／做空資格。</p></section>
+        <section class="bz-panel" aria-label="留倉判斷快照"><div class="bz-panel-head"><h3 id="bz-carry-decision">留倉：未提供</h3><span class="bz-small bz-muted">來源四關</span></div><div class="bz-carry-label">留多</div><div id="bz-long-gates" class="bz-gates"></div><div class="bz-carry-label">留空（來源參考）</div><div id="bz-short-gates" class="bz-gates"></div><p id="bz-carry-detail" class="bz-footnote">—</p></section>
+      </div>
+    </div>
+  </div>
+  <div class="bz-disclosures">
+    <details><summary>九步驟與資料診斷</summary><div id="bz-steps" class="bz-detail-body"></div></details>
+    <details><summary>三檔對照與警示</summary><div id="bz-comparison" class="bz-detail-body"></div></details>
+    <details><summary>盤後／隔天計畫</summary><div id="bz-next-plan" class="bz-detail-body"></div></details>
+    <details><summary id="bz-timeline-summary">最近時間軸</summary><div id="bz-timeline" class="bz-detail-body"></div></details>
+    <details><summary>必來點研究統計</summary><div id="bz-research" class="bz-detail-body"></div></details>
+    <details><summary>規則追蹤與來源診斷</summary><div id="bz-diagnostics" class="bz-detail-body"></div></details>
+  </div>
+  <details id="bz-raw" class="bz-raw"><summary id="bz-raw-summary">完整「即時分析」原文</summary><div class="bz-detail-body"><pre id="bz-raw-text" class="bz-source-text"></pre></div></details>
+  <p id="bz-final-meta" class="bz-final-meta">上方固定區使用 Z3.1 資料；BaoZ 為獨立來源與時間。</p>
+</section>
+
+</template>
+<script id="baoz-z31-integration">
+/* BaoZ Z31 integration 1.0.0, 20261022. Own namespace, auth and one subscription group. */
+(() => {
+  'use strict';
+  if (window.__BaoZIntegration) return;
+  const BUILD='BaoZ-Z31-UI-1.0.0-20261022';
+  const NODE='baoz_realtime/near';
+  const KEY='z31.live.systemView.v1';
+  const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
+  let panel=null,workspace=null,timer=null,watcher=null;
+  const $=id=>panel&&panel.querySelector('#'+id);
+  const text=(id,value)=>{const e=$(id);if(e)e.textContent=value==null||value===''?'未提供':String(value);};
+  const num=v=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('en-US',{maximumFractionDigits:2}):'未提供';
+  const sign=v=>typeof v==='number'&&Number.isFinite(v)?(v>0?'+':'')+num(v):'未提供';
+  const el=(tag,cls,value)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(value!=null)n.textContent=String(value);return n;};
+  const taipei=ms=>Number.isFinite(ms)?new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(ms)):'未提供';
+  function allowed() {
+    try{return typeof auth!=='undefined'&&typeof isDashboardOwner==='function'&&isDashboardOwner(auth.currentUser)&&auth.currentUser.emailVerified===true&&document.getElementById('dashboard').classList.contains('unlocked')&&document.getElementById('dashboard').classList.contains('lvl4');}
+    catch(_){return false;}
+  }
+  function select(system,remember) {
+    if(!s.mounted)return;
+    s.selected=system==='baoz'?'baoz':'z31';
+    document.getElementById('baoz-tab-z31').setAttribute('aria-selected',String(s.selected==='z31'));
+    document.getElementById('baoz-tab-baoz').setAttribute('aria-selected',String(s.selected==='baoz'));
+    document.getElementById('z31-system-panel').hidden=s.selected!=='z31';
+    panel.hidden=s.selected!=='baoz';
+    if(remember){try{localStorage.setItem(KEY,s.selected);}catch(_){}}
+    requestAnimationFrame(()=>{
+      window.dispatchEvent(new Event('resize'));
+      if(s.selected==='z31'&&typeof Chart!=='undefined'&&Chart.instances){Object.values(Chart.instances).forEach(c=>{try{c.resize();}catch(_){}});}
+    });
+  }
+  function detach(clear) {
+    s.generation++;
+    s.refs.forEach(([ref,event,fn])=>{try{ref.off(event,fn);}catch(_){}});
+    s.refs=[];s.connected=null;s.offset=0;
+    if(clear){s.payload=null;s.problem='';if(panel)render();}
+  }
+  function reconcile() {
+    const ok=allowed();
+    if(!ok){if(s.allowed||s.refs.length||s.payload){detach(true);}s.allowed=false;freshness();return;}
+    s.allowed=true;
+    if(s.refs.length)return;
+    if(typeof db==='undefined'||!db||typeof db.ref!=='function'){s.problem='Firebase 尚未就緒';freshness();return;}
+    const generation=++s.generation;
+    const listen=(path,fn)=>{
+      const ref=db.ref(path);
+      const value=sn=>{if(generation===s.generation&&allowed())fn(sn.val());};
+      const cancel=err=>{if(generation!==s.generation)return;s.problem=err&&err.code==='PERMISSION_DENIED'?'BaoZ 讀取權限不足':'BaoZ 讀取失敗';freshness();console.warn('BaoZ listener unavailable',err&&err.code?err.code:'READ_ERROR');};
+      s.refs.push([ref,'value',value]);ref.on('value',value,cancel);
+    };
+    listen(NODE,data=>{
+      if(!data){s.problem='Firebase 尚無 BaoZ 近月資料';freshness();return;}
+      if(!valid(data)){s.problem='雲端 BaoZ 資料格式不符';freshness();return;}
+      s.problem='';s.payload=data;render();
+    });
+    listen('.info/connected',v=>{s.connected=v===true;freshness();});
+    listen('.info/serverTimeOffset',v=>{s.offset=typeof v==='number'&&Number.isFinite(v)?v:0;freshness();});
+  }
+  function valid(p) {
+    if(!(p&&p.schema_version==='baoz-near-live.v1'&&p.role==='NEAR'&&p.source&&Number.isFinite(p.source.generated_at_ms)&&p.market&&p.diagnostics&&Array.isArray(p.analysis_rows)&&typeof p.analysis_text==='string'&&p.view))return false;
+    const v=p.view;
+    return ['levels','nine_steps','timeline','plan','positions','adapter_errors'].every(k=>Array.isArray(v[k]))&&['long','short','data_check','warning','multi_day','session_direction','conclusion','carry','targets'].every(k=>v[k]&&typeof v[k]==='object')&&v.targets.upper&&v.targets.lower&&Array.isArray(v.carry.long_gates)&&Array.isArray(v.carry.short_gates);
+  }
+  function freshness() {
+    if(!panel)return;
+    const p=s.payload;
+    let label='待資料',command='等待資料',context='等待近月即時分析',bad=true,unknown=false;
+    const age=p?Math.max(0,(Date.now()+s.offset-p.source.generated_at_ms)/1000):null;
+    const future=p&&(p.source.generated_at_ms>Date.now()+s.offset+30000);
+    const cycle=p?Math.max(1,Number(p.source.expected_interval_s)||60):60;
+    const warn=Math.max(2*cycle,90),expire=Math.max(3*cycle,180);
+    if(!allowed()){label='需原有核可與 Level 4 權限';context='請使用原有帳號登入並核可';}
+    else if(s.problem){label=s.problem;context='保留最後成功內容；目前無法確認更新';}
+    else if(s.connected===false){label='連線中斷';context='保留最後成功快照，等待網頁重新連線';}
+    else if(p){
+      unknown=p.view.adapter_status!=='SUPPORTED';
+      if(future){label='來源時鐘異常';context='來源時間超前，請核對電腦時鐘';}
+      else if(unknown){label='格式待適配';command='格式待適配';context='停止語意推斷；完整來源原文仍可查看';}
+      else if(age>=expire){label='來源逾時 '+Math.floor(age)+' 秒';command='等待新資料';context='以下為最後成功快照，數值可能過時';}
+      else if(age>=warn){label='來源延遲 '+Math.floor(age)+' 秒';command='來源延遲';context='最後來源判斷：'+p.view.command;}
+      else if(s.connected!==true){label='等待連線確認';context='已保留快照，等待 Firebase 連線確認';}
+      else if(/停止|失效|錯誤|不完整|不可用|不合格/.test(p.view.data_check.status||'')){label='來源資料待確認';command='確認來源資料';context='來源檢核：'+p.view.data_check.status+'｜最後判斷：'+p.view.command;}
+      else{label='來源 '+Math.floor(age)+' 秒前';command=p.view.command;context=p.view.command_text;bad=p.view.inconsistent===true;}
+    }
+    text('bz-freshness',label);text('bz-command',command);text('bz-command-context',context);
+    panel.classList.toggle('bz-expired',bad);
+    $('bz-freshness').classList.toggle('bz-tag-warn',bad);
+    $('bz-command-eyebrow').textContent=bad?'資料狀態／最後快照':'來源執行判斷';
+    $('bz-semantic').hidden=!p||unknown;
+    $('bz-fallback').hidden=!unknown;
+    $('bz-retry').hidden=!s.problem||!allowed();
+    if(p){text('bz-price-foot',(bad?'最後快照 · ':'')+'本盤高 '+num(p.market.session_high)+'／低 '+num(p.market.session_low));}
+    if(unknown){$('bz-raw').open=true;}
+  }
+  function item(container,row) {
+    if(!row)return;
+    const wrap=el('div','bz-detail-item');
+    const head=el('div','bz-detail-label');head.append(el('span','',row.label||row.time||''),el('span','bz-muted',row.status||''));
+    wrap.append(head,el('div','bz-muted',[row.text,row.extra].filter(Boolean).join('｜')));container.appendChild(wrap);
+  }
+  function items(id,rows) {const container=$(id);container.replaceChildren();(rows||[]).forEach(r=>item(container,r));}
+  function levelName(r) {
+    const names={current:'現價',multi_boundary:'多日分界',session_boundary:'本盤分界',target_upper:'必來點上緣',target_lower:'必來點下緣',session_high:'本盤高',session_low:'本盤低'};
+    if(names[r.kind])return names[r.kind];
+    const cp=/Call|Put/.exec(r.source||'');
+    return [r.kind==='session_cost'?'即時':'多日',cp?cp[0]:'',r.band?r.band+'層':'成本層',r.broken||''].filter(Boolean).join(' · ');
+  }
+  function levels() {
+    const body=$('bz-level-body');body.replaceChildren();
+    const all=s.payload?s.payload.view.levels:[];
+    const shown=all.filter(r=>s.all||r.focus);
+    if(!shown.some(r=>r.row===s.level))s.level=shown.find(r=>r.kind==='session_boundary')?.row||shown[0]?.row||null;
+    shown.forEach(r=>{
+      const tr=el('tr','bz-level-row');tr.classList.toggle('bz-current',r.kind==='current');tr.classList.toggle('bz-selected',s.level===r.row);
+      const a=el('td','bz-level-price'),btn=el('button','bz-level-btn bz-num',r.price_text.replace(/\d{4,}/g,n=>num(Number(n))));btn.type='button';btn.setAttribute('aria-pressed',String(s.level===r.row));btn.setAttribute('aria-label',r.price_text+'，查看來源');btn.addEventListener('click',()=>{s.level=r.row;levels();});a.appendChild(btn);
+      const b=el('td','bz-level-dist bz-num',r.distance_text||'—');
+      const c=el('td','bz-level-meaning',levelName(r));if(r.broken)c.classList.add('bz-warn');
+      tr.append(a,b,c);body.appendChild(tr);
+    });
+    $('bz-levels-near').setAttribute('aria-pressed',String(!s.all));$('bz-levels-all').setAttribute('aria-pressed',String(s.all));
+    const r=all.find(r=>r.row===s.level);text('bz-level-detail',r?'來源：'+r.source+'｜'+r.meaning:'來源尚未提供價位表');
+  }
+  function gates(id,rows) {
+    const box=$(id);box.replaceChildren();
+    (rows||[]).forEach(r=>{const e=el('span','bz-gate');e.append(el('span','',r.label),el('span',r.state==='FAIL'?'bz-warn':'',r.state==='PASS'?'✓':r.state==='FAIL'?'×':'？'));box.appendChild(e);});
+  }
+  function targets() {
+    const box=$('bz-target-body');box.replaceChildren();
+    for(const [key,label] of [['upper','上緣'],['lower','下緣']]){
+      const t=s.payload.view.targets[key];const e=el('div','bz-target');const head=el('div','bz-line bz-between');head.append(el('span','bz-small',label),el('span','bz-tag',t.state));e.append(head,el('strong','bz-num',num(t.price)));
+      for(const [l,v] of [['距現價',sign(t.current_distance)],['本盤尚差',num(t.session_gap)]]){const line=el('div','bz-target-diff');line.append(el('span','bz-muted',l),el('span','bz-num',v+(v==='未提供'?'':' 點')));e.appendChild(line);}box.appendChild(e);
+    }
+  }
+  function render() {
+    if(!panel)return;
+    const p=s.payload;
+    if(!p){
+      ['bz-contract','bz-version','bz-source-time','bz-long-status','bz-short-status','bz-long-reason','bz-short-reason','bz-data-note'].forEach(id=>text(id,'待資料'));
+      ['bz-steps','bz-comparison','bz-next-plan','bz-timeline','bz-research','bz-diagnostics','bz-level-body','bz-target-body','bz-position-body'].forEach(id=>$(id).replaceChildren());
+      ['bz-futures','bz-synthetic','bz-basis','bz-multi-distance','bz-multi-boundary','bz-session-distance','bz-session-boundary','bz-carry-detail','bz-level-detail'].forEach(id=>text(id,'未提供'));
+      $('bz-long-gates').replaceChildren();$('bz-short-gates').replaceChildren();text('bz-carry-decision','留倉：未提供');
+      text('bz-raw-text','尚無來源資料');freshness();return;
+    }
+    const v=p.view,m=p.market||{};
+    text('bz-contract',p.source.contract);text('bz-session',p.source.session==='NIGHT'?'夜盤':p.source.session==='DAY'?'日盤':'盤別未提供');text('bz-version',p.source.version);
+    text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
+    text('bz-long-status',v.long.status);text('bz-long-reason',v.long.reason);text('bz-short-status',v.short.status);text('bz-short-reason',v.short.reason);
+    const quality=/資料[：:]([^｜]+)/.exec(v.source_quality||'');
+    text('bz-data-note',[(quality?'來源資料：'+quality[1]:''),'資料檢核：'+v.data_check.status,v.warning.text,v.inconsistent?'來源指令與做單狀態不一致，請看原文':''].filter(Boolean).join('｜'));
+    text('bz-futures',num(m.futures));text('bz-synthetic',num(m.synthetic));text('bz-basis',sign(m.basis));
+    text('bz-multi-label','多日方向 · '+String(v.multi_day.label||'未提供').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''));text('bz-multi-distance',sign(m.dist_a));text('bz-multi-boundary',num(v.multi_day.futures_boundary));
+    text('bz-session-label','本盤方向 · '+String(v.session_direction.label||'未提供').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''));text('bz-session-distance',sign(m.dist_b));text('bz-session-boundary',num(v.session_direction.futures_boundary));
+    [['bz-multi-distance',m.dist_a],['bz-session-distance',m.dist_b]].forEach(([id,n])=>{$(id).classList.toggle('bz-bull',n>0);$(id).classList.toggle('bz-bear',n<0);});
+    levels();targets();
+    const scenes=$('bz-scenarios');scenes.replaceChildren();
+    // Preserve source scenarios verbatim: no browser-generated trade conditions.
+    (v.conclusion.text||'').split('｜').filter(t=>/情境|站回|跌破|留多距離/.test(t)).forEach(t=>item(scenes,{label:'情境',text:t}));
+    if(!scenes.childElementCount)item(scenes,v.conclusion);
+    item(scenes,{label:'波動',status:v.nine_steps.find(x=>x.row===19)?.status,text:v.nine_steps.find(x=>x.row===19)?.text});
+    text('bz-carry-decision','留倉：'+(v.carry.decision||'未提供'));gates('bz-long-gates',v.carry.long_gates);gates('bz-short-gates',v.carry.short_gates);
+    text('bz-carry-detail',[v.carry.basis,v.carry.detail].filter(Boolean).join('｜'));
+    items('bz-steps',v.nine_steps);items('bz-comparison',[v.comparison,v.warning]);items('bz-next-plan',v.plan);items('bz-timeline',v.timeline);
+    text('bz-timeline-summary','最近時間軸 · '+v.timeline.length+' 筆');items('bz-research',[v.research]);$('bz-research').appendChild(el('p','bz-small bz-warn','來源目標碰觸統計，並非交易獲利率。'));
+    items('bz-diagnostics',[v.tracking,{label:'OI 資料',text:p.diagnostics.oi_status},{label:'最後錯誤（時間未知）',text:p.diagnostics.last_error||'來源未提供錯誤'}]);
+    (p.recent_logs||[]).forEach(log=>{const d=el('details','bz-recent-log');d.appendChild(el('summary','',log.label));const pre=el('pre','bz-source-text',log.lines.join('\n'));d.appendChild(pre);$('bz-diagnostics').appendChild(d);});
+    $('bz-positions').hidden=!v.positions.length;items('bz-position-body',v.positions.map(x=>({label:x.side==='LONG'?'多方':'空方',status:x.status,text:x.description})));
+    text('bz-raw-summary','完整「即時分析」原文 · '+p.analysis_rows.length+' 個非空列');text('bz-raw-text',p.analysis_text);
+    const received=typeof p.uploaded_at_ms==='number'?taipei(p.uploaded_at_ms):'未提供';
+    text('bz-final-meta','來源 '+p.source.workbook+'｜上傳 '+received+'（台北）｜上方固定區使用 Z3.1 資料，BaoZ 以自身來源時間為準。');
+    if(v.adapter_status!=='SUPPORTED')text('bz-fallback','來源格式待適配：'+v.adapter_errors.join('；')+'。以下完整原文仍可查看。');
+    freshness();
+  }
+  function mount() {
+    if(s.mounted)return true;
+    const stack=document.querySelector('#v2-live-page .v2-live-stack'),core=stack&&stack.querySelector(':scope > .v2-core-grid');
+    if(!stack||!core||!stack.querySelector(':scope > .v2-intel-grid'))return false;
+    const template=document.getElementById('baoz-panel-template');if(!template)return false;
+    panel=template.content.firstElementChild.cloneNode(true);
+    workspace=el('div','','');workspace.id='baoz-system-workspace';
+    const tabs=el('div','baoz-system-tabs');tabs.id='baoz-system-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','下方分析系統');
+    const z31=el('section','','');z31.id='z31-system-panel';z31.setAttribute('role','tabpanel');z31.setAttribute('aria-labelledby','baoz-tab-z31');
+    for(const [value,label] of [['z31','Z3.1'],['baoz','BaoZ 近月']]){const b=el('button','baoz-system-tab',label);b.id='baoz-tab-'+value;b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-controls',value==='z31'?'z31-system-panel':'baoz-system-panel');b.addEventListener('click',()=>select(value,true));tabs.appendChild(b);}
+    tabs.appendChild(el('span','baoz-system-note','上方固定區共用'));
+    const children=Array.from(stack.children),index=children.indexOf(core);
+    children.slice(index+1).forEach(node=>z31.appendChild(node));
+    workspace.append(tabs,z31,panel);stack.appendChild(workspace);s.mounted=true;
+    try{s.selected=localStorage.getItem(KEY)==='baoz'?'baoz':'z31';}catch(_){}
+    $('bz-levels-near').addEventListener('click',()=>{s.all=false;levels();});$('bz-levels-all').addEventListener('click',()=>{s.all=true;levels();});
+    $('bz-retry').addEventListener('click',()=>{detach(false);s.problem='';reconcile();});
+    watcher=new MutationObserver(reconcile);watcher.observe(document.getElementById('dashboard'),{attributes:true,attributeFilter:['class']});
+    if(typeof auth!=='undefined'&&typeof auth.onAuthStateChanged==='function')auth.onAuthStateChanged(()=>{detach(true);reconcile();});
+    select(s.selected,false);render();reconcile();timer=setInterval(freshness,2000);
+    return true;
+  }
+  function init() {
+    if(mount())return;
+    const pending=new MutationObserver(()=>{if(mount())pending.disconnect();});pending.observe(document.getElementById('dashboard')||document.body,{childList:true,subtree:true});
+    setTimeout(()=>pending.disconnect(),10000);
+  }
+  window.__BaoZIntegration=Object.freeze({build:BUILD,node:NODE});
+  window.addEventListener('pagehide',()=>{detach(false);if(timer)clearInterval(timer);if(watcher)watcher.disconnect();});
+  window.addEventListener('pageshow',event=>{if(event.persisted&&s.mounted){if(watcher)watcher.observe(document.getElementById('dashboard'),{attributes:true,attributeFilter:['class']});if(timer)clearInterval(timer);timer=setInterval(freshness,2000);reconcile();}});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+
+</script>
+<!-- BAOZ_Z31_INTEGRATION_1_0_0_END -->
 </body>
 </html>
