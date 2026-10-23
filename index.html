@@ -10462,7 +10462,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.4.0-20261023';
+  const BUILD='BaoZ-Z31-UI-1.4.1-20261023';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10810,7 +10810,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.0');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.1');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -11869,10 +11869,10 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
 })();
 </script>
 <!-- Z31_PRO_UI_1_3_0_END -->
-<!-- Z31_BAOZ_AI_UI_1_4_0_BEGIN -->
-<style id="z31-baoz-ai-ui-1-4-0">
-/* ===== BaoZ UI 1.4.0（20261023）：AI 即時分析卡（讀 Firebase baoz_realtime/near_ai，由電腦上的 BaoZ AI 程式寫入）
-   只顯示；影子計畫，不下單。 ===== */
+<!-- Z31_BAOZ_AI_UI_1_4_1_BEGIN -->
+<style id="z31-baoz-ai-ui-1-4-1">
+/* ===== BaoZ UI 1.4.1（20261023）：AI 即時分析卡（讀 Firebase baoz_realtime/near_ai，由電腦上的 BaoZ AI 程式寫入）
+   只顯示；影子計畫，不下單。1.4.1：卡片下方加「最近一次試跑」 ===== */
 #baoz-system-panel .bz-ai {
   margin: 9px 0;
   background: var(--bz-surface);
@@ -11905,9 +11905,21 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai-foot { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--bz-line); font-size: 12px; color: var(--bz-muted); display: grid; gap: 2px; }
 #baoz-system-panel .bz-ai-foot b { color: var(--bz-ink); font-weight: 600; }
 #baoz-system-panel .bz-ai-empty { font-size: 13px; color: var(--bz-muted); margin-top: 6px; }
+#baoz-system-panel .bz-ai-trial { margin-top: 10px; padding: 8px 10px; border: 1px dashed var(--bz-line); border-radius: var(--bz-radius); font-size: 13px; }
+#baoz-system-panel .bz-ai-trial-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-trial-head b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-ai-trial-main { margin-top: 4px; color: var(--bz-ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+#baoz-system-panel .bz-ai-trial-main b { font-weight: 700; }
+#baoz-system-panel .bz-ai-trial-main b.up { color: var(--bz-up); }
+#baoz-system-panel .bz-ai-trial-main b.down { color: var(--bz-down); }
+#baoz-system-panel .bz-ai-trial ul { margin: 4px 0 0; padding-left: 18px; color: var(--bz-ink); }
+#baoz-system-panel .bz-ai-trial .ok { color: var(--bz-accent); margin-top: 4px; }
+#baoz-system-panel .bz-ai-trial .ng { color: var(--bz-attn); margin-top: 4px; }
+#baoz-system-panel .bz-ai-trial-sim { margin-top: 4px; color: var(--bz-muted); font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-ai-trial-note { margin-top: 4px; font-size: 11px; color: var(--bz-muted); }
 </style>
 <script>
-/* BaoZ UI 1.4.0：AI 即時分析卡（只讀 Firebase，不寫） */
+/* BaoZ UI 1.4.1：AI 即時分析卡＋最近一次試跑（只讀 Firebase，不寫） */
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near_ai';
@@ -11959,6 +11971,38 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     var head = panel.querySelector('.bz-head');
     if (head) panel.insertBefore(c, head); else panel.appendChild(c);
     return c;
+  }
+
+  /* 最近一次試跑（電腦上執行 Try_BaoZ_AI_Once.cmd 的結果；只顯示，不會變成上面的計畫）；超過 24 小時不顯示 */
+  function trialHtml(t) {
+    if (!t || !t.at_ms || !(Date.now() - Number(t.at_ms) < 24 * 3600 * 1000)) return '';
+    var MODEL = { 'claude-sonnet-5-5': 'Sonnet 5.5', 'claude-haiku-5-5': 'Haiku 5.5', 'claude-opus-5-5': 'Opus 5.5' };
+    var h = '<div class="bz-ai-trial" id="bz-ai-trial"><div class="bz-ai-trial-head"><span class="bz-ai-tag">試跑</span><b>最近一次試跑 ' + esc(t.time || '') + '</b>' +
+            '<span>' + esc(t.mode || '') + '</span><span>' + esc((MODEL[t.model] || t.model || '') + '｜US$' + Number(t.cost || 0).toFixed(3)) + '</span></div>';
+    if (t.error) return h + '<div class="ng">試跑失敗：' + esc(t.error) + '</div></div>';
+    var side = t.side === 'long' ? 'long' : (t.side === 'short' ? 'short' : '');
+    var main = '<b class="' + (side === 'long' ? 'up' : (side === 'short' ? 'down' : '')) + '">' + esc(t.decision || '—') + '</b>';
+    if (side) {
+      var how = { pullback: side === 'long' ? '回測後反彈 ' : '反彈後回落 ', breakout: side === 'long' ? '突破 ' : '跌破 ', at_market: '現價' }[t.entry_type] || '';
+      var parts = [t.entry_type === 'at_market' ? '現價進場' : '進場 ' + fmt(t.zone_low) + '–' + fmt(t.zone_high) + '（' + how + (t.confirm_points || 0) + ' 點）',
+                   '停損 ' + fmt(t.stop), '目標 ' + fmt(t.target1) + (n(t.target2) ? '／' + fmt(t.target2) : '')];
+      var inval = [];
+      if (n(t.invalidate_below)) inval.push('跌破 ' + fmt(t.invalidate_below));
+      if (n(t.invalidate_above)) inval.push('漲過 ' + fmt(t.invalidate_above));
+      if (inval.length) parts.push('失效 ' + inval.join('、'));
+      main += '｜' + esc(parts.join('｜'));
+    }
+    main += '｜' + esc('信心 ' + (t.confidence != null ? t.confidence : '—') + '｜和規則：' + (t.agree_with_rule || '—') + (t.price ? '｜當時現價 ' + fmt(t.price) : ''));
+    h += '<div class="bz-ai-trial-main">' + main + '</div>';
+    if (t.summary) h += '<div class="bz-ai-trial-main">' + esc(t.summary) + '</div>';
+    if (t.key_factors && t.key_factors.length) h += '<ul>' + t.key_factors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+    if (t.risk) h += '<div class="ng">風險：' + esc(t.risk) + '</div>';
+    h += '<div class="' + (t.ok ? 'ok' : 'ng') + '">程式檢查：' + esc(t.check || '') + '</div>';
+    if (t.sim) {
+      var ev = (t.sim.events || []).map(function (e) { return esc(e[0] + ' ' + e[1] + '：' + e[2]); });
+      h += '<div class="bz-ai-trial-sim">回放之後的走勢（用每分鐘紀錄模擬，不是實盤）：<br>' + ev.concat([esc(t.sim.end || '')]).join('<br>') + '</div>';
+    }
+    return h + '<div class="bz-ai-trial-note">試跑只顯示在這裡，不會變成上面的計畫；不是投資建議。</div></div>';
   }
 
   function render() {
@@ -12035,6 +12079,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
         : (active && side ? (p.decision || '') + ' ' + fmt(p.zone_low) + '–' + fmt(p.zone_high) : (PSTATE[p.state] || p.decision || ''));
       view = { chip: stale ? '沒有更新' : chipTxt, tone: warn ? 'warn' : (active && side ? (side === 'long' ? 'up' : 'down') : 'off') };
     }
+    html += trialHtml(d.trial);
     var foot = [];
     if (d.last_l1) foot.push('<span>最近判讀 <b>' + esc(d.last_l1.time) + '</b> ' + esc(d.last_l1.reason || '') + '：' + esc(d.last_l1.note || '') + '</span>');
     if (d.events && d.events.length) foot.push('<span>' + d.events.slice(0, 3).map(function (e) { return esc(e.time.slice(-5) + ' ' + e.kind + '：' + e.text); }).join('<br>') + '</span>');
@@ -12057,6 +12102,6 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   else start();
 })();
 </script>
-<!-- Z31_BAOZ_AI_UI_1_4_0_END -->
+<!-- Z31_BAOZ_AI_UI_1_4_1_END -->
 </body>
 </html>
