@@ -8598,7 +8598,21 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const z31MarketSlot = liveStack.querySelector('.v2-market-slot');
     const z31FreezeButton = nav.querySelector('#z31-freeze-toggle');
     const Z31_STICKY_BREAKPOINT = 900;
-    let z31StickyBucket = window.innerWidth <= Z31_STICKY_BREAKPOINT ? 'mobile' : 'desktop';
+    /* UI 1.2.0：直立的桌面螢幕（滑鼠操作、高比寬長）寬度 ≤ 900 也算桌面，凍結預設 ON，和橫的桌面一樣 */
+    function z31StickyBucketNow() {
+      if (window.Z31UI && typeof window.Z31UI.isPortraitDesk === 'function' && window.Z31UI.isPortraitDesk()) return 'desktop';
+      return window.innerWidth <= Z31_STICKY_BREAKPOINT ? 'mobile' : 'desktop';
+    }
+    /* UI 1.2.0：字級用 CSS zoom 放大 #dashboard；getBoundingClientRect 是畫面上的大小，CSS 變數用在放大後的版面裡，要除回去 */
+    function z31CssZoom() {
+      let z = (typeof livePage.currentCSSZoom === 'number') ? livePage.currentCSSZoom : NaN;
+      if (!(z > 0)) {
+        const h = nav.offsetHeight;
+        z = h > 0 ? nav.getBoundingClientRect().height / h : 1;
+      }
+      return (z > 0 && isFinite(z)) ? z : 1;
+    }
+    let z31StickyBucket = z31StickyBucketNow();
 
     function z31StickyPreferenceKey(bucket) {
       return 'z31_sticky_freeze_' + bucket + '_v2';
@@ -8642,12 +8656,16 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         livePage.style.removeProperty('--z31-sticky-market-height');
         return;
       }
-      const navH = Math.ceil(nav.getBoundingClientRect().height);
-      const marketH = z31MarketSlot ? Math.ceil(z31MarketSlot.getBoundingClientRect().height) : 0;
-      const coreH = Math.ceil(coreGrid.getBoundingClientRect().height);
+      const zf = z31CssZoom();
+      const navV = nav.getBoundingClientRect().height;
+      const marketV = z31MarketSlot ? z31MarketSlot.getBoundingClientRect().height : 0;
+      const coreV = coreGrid.getBoundingClientRect().height;
+      const navH = Math.ceil(navV / zf);
+      const marketH = Math.ceil(marketV / zf);
       livePage.style.setProperty('--z31-sticky-nav-height', navH + 'px');
       livePage.style.setProperty('--z31-sticky-market-height', marketH + 'px');
-      const enoughViewport = navH + marketH + coreH + 120 <= window.innerHeight;
+      /* 畫面上的高度和視窗高度比（字級 100% 時和原本完全一樣） */
+      const enoughViewport = Math.ceil(navV) + Math.ceil(marketV) + Math.ceil(coreV) + 120 <= window.innerHeight;
       livePage.classList.toggle('z31-sticky-core-overflow', !enoughViewport);
     }
 
@@ -8659,7 +8677,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     }
 
     function z31HandleViewportChange() {
-      const nextBucket = window.innerWidth <= Z31_STICKY_BREAKPOINT ? 'mobile' : 'desktop';
+      const nextBucket = z31StickyBucketNow();
       if (nextBucket !== z31StickyBucket) {
         z31StickyBucket = nextBucket;
         z31ApplyStickyPreference(z31ReadStickyPreference(), false);
@@ -10444,7 +10462,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.1.0-20261023';
+  const BUILD='BaoZ-Z31-UI-1.2.0-20261023';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10792,7 +10810,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.1.1');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.2.0');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -10859,5 +10877,248 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 
 </script>
 <!-- BAOZ_Z31_INTEGRATION_1_1_0_END -->
+<!-- Z31_PORTRAIT_UI_1_2_0_BEGIN -->
+<style id="z31-portrait-ui-1-2-0">
+/* ===== Z31／BaoZ UI 1.2.0（20261023）：直立螢幕版面＋字級
+   只改顯示：資料來源、Firebase、計算、凍結的範圍（導覽列＋期貨列＋C1～C4／P9 列）都沒有改。
+   字級＝對 #dashboard 用 CSS zoom；100% 時不加任何 zoom，和 UI 1.1.1 一樣。 ===== */
+html.z31-zoomed #dashboard { zoom: var(--z31-ui-zoom, 1); }
+
+/* 導覽列：三個分頁、字級、凍結 */
+@media not all and (pointer: coarse) {
+  html.z31-has-scale .v2-dashboard-nav { grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto !important; }
+}
+/* 右上角「登出」會蓋住凍結鈕：導覽列右邊讓出登出的寬度（只有真的會重疊時才讓） */
+html.z31-logout-gap .v2-dashboard-nav { padding-right: var(--z31-logout-gap, 44px) !important; }
+.z31-ui-scale {
+  color-scheme: dark;
+  border: 1px solid #3a3a3c;
+  background-color: #1c1c1e;
+  color: #d1d1d6;
+  border-radius: 6px;
+  min-height: 28px;
+  padding: 2px 4px;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  max-width: 128px;
+}
+.z31-ui-scale:focus-visible { outline: 2px solid #64d2ff; outline-offset: 1px; }
+html.z31-zoomed .z31-ui-scale { color: #64d2ff; border-color: rgba(100,210,255,.72); background-color: rgba(100,210,255,.10); }
+.z31-ui-scale option { background: #1c1c1e; color: #f2f2f7; }
+.z31-ui-scale option:disabled { color: #636366; }
+@media (pointer: coarse) { .z31-ui-scale { display: none !important; } }
+
+/* 直立螢幕（滑鼠操作、高比寬長）：C1～C4 四格排成一列，P9 × LFZ布局 × R7 用整列寬度，R7 不再被切掉。
+   兩張卡仍然都在凍結區裡（和原本一樣在 Z3.1／BaoZ 分頁上方）。 */
+html.z31-portrait #v2-live-page .v2-c1c4-card,
+html.z31-portrait #v2-live-page .v2-force-card {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+html.z31-portrait #v2-live-page .v2-c1c4-card .chip-grid {
+  grid-template-columns: minmax(0, .93fr) minmax(0, .55fr) minmax(0, .93fr) minmax(0, .55fr) !important;
+}
+html.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 56px !important; padding: 3px 4px !important; }
+html.z31-portrait #v2-live-page .v2-c1c4-card .chip-card .box-header { margin-bottom: 3px !important; }
+html.z31-portrait #v2-live-page .v2-c1c4-card .chip-card .chip-tag { margin-top: 3px !important; }
+</style>
+<script>
+/* Z31／BaoZ UI 1.2.0：直立螢幕＋字級（只改顯示） */
+(function () {
+  'use strict';
+  var VER = 'Z31-UI-1.2.0-20261023';
+  var root = document.documentElement;
+  var OPTIONS = ['auto', '0.9', '1', '1.1', '1.2', '1.3', '1.4', '1.5'];
+  var MIN_LAYOUT_W = 760;   /* 放大後版面至少要有的寬度（CSS px）；再窄，P9 × LFZ布局 × R7 會被切掉 */
+  var AUTO_LAYOUT_W = 900;  /* 直立螢幕「自動」：放大到版面寬度約 900（1080 寬＝120%、1440 寬＝150%） */
+  var current = 1, selectEl = null, logoutEl = null;
+
+  function finePointer() {
+    try { return window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { return false; }
+  }
+  /* 直立的桌面螢幕：滑鼠操作、視窗高 ≥ 寬 × 1.2、寬 ≥ 600、高 ≥ 900（手機、平板不算） */
+  function isPortraitDesk() {
+    var w = window.innerWidth, h = window.innerHeight;
+    return finePointer() && w >= 600 && h >= 900 && h >= w * 1.2;
+  }
+  function kind() { return isPortraitDesk() ? 'portrait' : 'landscape'; }
+  function prefKey(k) { return 'z31_ui_scale_' + k + '_v1'; }
+  function readPref(k) {
+    try { var v = window.localStorage.getItem(prefKey(k)); if (v && OPTIONS.indexOf(v) >= 0) return v; } catch (e) {}
+    return 'auto';
+  }
+  function writePref(k, v) { try { window.localStorage.setItem(prefKey(k), v); } catch (e) {} }
+  function step(x) { return Math.floor(x * 20 + 1e-9) / 20; }
+  function autoZoom(k) { return k === 'portrait' ? Math.max(1, Math.min(1.5, step(window.innerWidth / AUTO_LAYOUT_W))) : 1; }
+  function zoomCap() { return Math.max(1, step(window.innerWidth / MIN_LAYOUT_W)); }
+  function pct(z) { return Math.round(z * 100) + '%'; }
+
+  /* ── Chart.js（歷史時間軸的圖表）──
+     1) 放大後 Chart.js 拿到的滑鼠座標是畫面上的位置，要除以字級才對得到資料點（不修會指到右邊別的點）
+     2) 畫布解析度跟著字級調高，放大後不會糊
+     圖表的資料、設定都不動 */
+  var chartDprDefault, lastChartDpr = 0;
+  function chartScale(chart) {
+    try {
+      var r = chart.canvas.getBoundingClientRect(), w = chart.width;
+      if (r.width > 0 && w > 0) { var f = r.width / w; if (Math.abs(f - 1) > 0.01) return f; }
+    } catch (e) {}
+    return 1;
+  }
+  var chartZoomFix = {
+    id: 'z31ZoomEventFix',
+    beforeEvent: function (chart, args) {
+      var e = args && args.event;
+      if (!e || typeof e.x !== 'number' || typeof e.y !== 'number' || e.__z31Scaled) return;
+      var f = chartScale(chart);
+      e.__z31Scaled = true;            /* Chart.js 重播同一個事件時不要再除一次 */
+      if (f === 1) return;
+      e.x = e.x / f; e.y = e.y / f;
+      try { args.inChartArea = chart.isPointInArea(e); } catch (er) {}
+    }
+  };
+  try { if (window.Chart && typeof window.Chart.register === 'function') window.Chart.register(chartZoomFix); } catch (e) {}
+  /* 3) chart.resize() 不帶尺寸時，Chart.js 用外框的 getBoundingClientRect（放大後的畫面大小）當版面大小，圖會變大、超出外框。
+        字級不是 100% 時，改用外框的版面大小（clientWidth／clientHeight 扣 padding）；100% 時完全照原本 */
+  try {
+    var CP = window.Chart && window.Chart.prototype, origResize = CP && CP.resize;
+    if (typeof origResize === 'function' && !CP.__z31ResizeWrapped) {
+      CP.resize = function (width, height) {
+        if (width === undefined && height === undefined && Math.abs(current - 1) > 0.001 && this.canvas) {
+          var box = this.canvas.parentNode;
+          if (box && box.nodeType === 1) {
+            var cs = window.getComputedStyle(box);
+            var w = box.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+            var h = box.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+            if (w > 0 && h > 0) return origResize.call(this, w, h);
+          }
+        }
+        return origResize.apply(this, arguments);
+      };
+      CP.__z31ResizeWrapped = true;
+    }
+  } catch (e) {}
+
+  function chartList() {
+    var list = [];
+    try { if (typeof chartPrice !== 'undefined' && chartPrice) list.push(chartPrice); } catch (e) {}
+    try { if (typeof chartChip !== 'undefined' && chartChip) list.push(chartChip); } catch (e) {}
+    try { if (typeof chartP6 !== 'undefined' && chartP6) list.push(chartP6); } catch (e) {}
+    try { if (typeof chartWall !== 'undefined' && chartWall) list.push(chartWall); } catch (e) {}
+    try { if (typeof chartHeat !== 'undefined' && chartHeat) list.push(chartHeat); } catch (e) {}
+    try { if (typeof chartSkew !== 'undefined' && chartSkew) list.push(chartSkew); } catch (e) {}
+    try { if (typeof chartSniper !== 'undefined' && chartSniper) list.push(chartSniper); } catch (e) {}
+    return list;
+  }
+  function syncCharts(z) {
+    var C = window.Chart;
+    if (!C || !C.defaults) return;
+    if (chartDprDefault === undefined) chartDprDefault = C.defaults.devicePixelRatio;
+    var plain = Math.abs(z - 1) < 0.001, dpr = (window.devicePixelRatio || 1) * z;
+    if (!plain && Math.abs(dpr - lastChartDpr) < 0.001) return;
+    if (plain && lastChartDpr === 0) return;            /* 一直是 100%：完全不碰圖表 */
+    lastChartDpr = plain ? 0 : dpr;
+    try { C.defaults.devicePixelRatio = plain ? chartDprDefault : dpr; } catch (e) {}  /* 之後才建立的圖表 */
+    chartList().forEach(function (c) {
+      if (!c.options) return;
+      try {
+        if (plain) delete c.options.devicePixelRatio; else c.options.devicePixelRatio = dpr;
+        c.resize();
+      } catch (e) {}
+    });
+  }
+
+  function fixLogoutGap() {
+    if (!logoutEl) logoutEl = document.getElementById('logout-btn');
+    var nav = document.getElementById('v2-dashboard-nav');
+    if (!logoutEl || !nav) return;
+    var shown = window.getComputedStyle(logoutEl).display !== 'none';
+    var gap = 0;
+    if (shown) {
+      /* 導覽列原本右邊沒有 padding：右緣超過登出鈕左緣，就讓出（登出鈕不在 #dashboard 裡，不受字級影響） */
+      var lr = logoutEl.getBoundingClientRect(), nr = nav.getBoundingClientRect();
+      var z = current > 0 ? current : 1;
+      if (lr.width > 0 && nr.width > 0 && nr.right > lr.left - 4) gap = Math.ceil((nr.right - lr.left + 6) / z);
+    }
+    if (gap > 0) { root.style.setProperty('--z31-logout-gap', gap + 'px'); root.classList.add('z31-logout-gap'); }
+    else { root.classList.remove('z31-logout-gap'); root.style.removeProperty('--z31-logout-gap'); }
+  }
+
+  function label(k, pref, autoZ, z) {
+    if (!selectEl) return;
+    var c = zoomCap();
+    for (var i = 0; i < selectEl.options.length; i++) {
+      var o = selectEl.options[i], v = o.value;
+      if (v === 'auto') { o.textContent = 'Aa 自動 ' + pct(autoZ); o.disabled = false; continue; }
+      var n = parseFloat(v), over = n > c + 1e-9;
+      o.disabled = over && v !== pref;
+      o.textContent = 'Aa ' + pct(n) + (over ? (v === pref ? '→' + pct(z) : '（視窗太窄）') : '');
+    }
+    selectEl.value = pref;
+    selectEl.title = '字級（只改顯示大小）：目前 ' + pct(z) + '；' + (k === 'portrait' ? '直立螢幕' : '一般螢幕') +
+      '各自記住。這個視窗寬度最多 ' + pct(c) + '。';
+  }
+
+  function apply() {
+    var k = kind();
+    root.classList.toggle('z31-portrait', k === 'portrait');
+    var pref = readPref(k), autoZ = autoZoom(k);
+    var want = pref === 'auto' ? autoZ : parseFloat(pref);
+    if (!(want > 0)) want = 1;
+    var z = finePointer() ? Math.min(want, zoomCap()) : 1;
+    z = Math.round(z * 100) / 100;
+    var changed = Math.abs(z - current) > 0.001;
+    current = z;
+    if (Math.abs(z - 1) < 0.001) { root.classList.remove('z31-zoomed'); root.style.removeProperty('--z31-ui-zoom'); }
+    else { root.style.setProperty('--z31-ui-zoom', String(z)); root.classList.add('z31-zoomed'); }
+    label(k, pref, autoZ, z);
+    fixLogoutGap();
+    syncCharts(z);
+    if (changed) {
+      /* 讓原本的凍結程式（z31HandleViewportChange）馬上重算上方三列的位置 */
+      window.setTimeout(function () { try { window.dispatchEvent(new Event('resize')); } catch (e) {} fixLogoutGap(); }, 0);
+    }
+  }
+
+  function mountControl() {
+    if (selectEl && selectEl.isConnected) return true;
+    var nav = document.getElementById('v2-dashboard-nav');
+    if (!nav) return false;
+    var sel = document.createElement('select');
+    sel.id = 'z31-ui-scale';
+    sel.className = 'z31-ui-scale';
+    sel.setAttribute('aria-label', '字級');
+    OPTIONS.forEach(function (v) { var o = document.createElement('option'); o.value = v; sel.appendChild(o); });
+    sel.addEventListener('change', function () { writePref(kind(), sel.value); apply(); });
+    var freeze = nav.querySelector('#z31-freeze-toggle');
+    nav.insertBefore(sel, freeze || null);
+    root.classList.add('z31-has-scale');
+    selectEl = sel;
+    apply();
+    return true;
+  }
+
+  window.Z31UI = Object.freeze({ version: VER, isPortraitDesk: isPortraitDesk, zoom: function () { return current; }, apply: apply });
+
+  var resizeTimer = 0;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) return;
+    resizeTimer = window.setTimeout(function () { resizeTimer = 0; apply(); }, 60);
+  }, { passive: true });
+
+  function start() {
+    apply();
+    if (mountControl()) return;
+    var tries = 0, t = window.setInterval(function () { tries++; if (mountControl() || tries > 100) window.clearInterval(t); }, 100);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+  /* 登入／登出時登出鈕會出現或消失 */
+  window.setInterval(fixLogoutGap, 1500);
+})();
+</script>
+<!-- Z31_PORTRAIT_UI_1_2_0_END -->
 </body>
 </html>
