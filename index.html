@@ -10462,7 +10462,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.2.0-20261023';
+  const BUILD='BaoZ-Z31-UI-1.3.0-20261023';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10810,7 +10810,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.2.0');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.3.0');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -10951,7 +10951,12 @@ html.z31-portrait #v2-live-page .v2-c1c4-card .chip-card .chip-tag { margin-top:
   }
   function writePref(k, v) { try { window.localStorage.setItem(prefKey(k), v); } catch (e) {} }
   function step(x) { return Math.floor(x * 20 + 1e-9) / 20; }
-  function autoZoom(k) { return k === 'portrait' ? Math.max(1, Math.min(1.5, step(window.innerWidth / AUTO_LAYOUT_W))) : 1; }
+  var LANDSCAPE_FIT_W = 1600;  /* UI 1.3.0 專業版面：一般螢幕「自動」＝把 1600 寬的版面放大到視窗寬（1920＝120%、2560＝150%）；原版版面仍是 100% */
+  function autoZoom(k) {
+    if (k === 'portrait') return Math.max(1, Math.min(1.5, step(window.innerWidth / AUTO_LAYOUT_W)));
+    if (root.classList.contains('z31-pro')) return Math.max(1, Math.min(1.5, step(window.innerWidth / LANDSCAPE_FIT_W)));
+    return 1;
+  }
   function zoomCap() { return Math.max(1, step(window.innerWidth / MIN_LAYOUT_W)); }
   function pct(z) { return Math.round(z * 100) + '%'; }
 
@@ -10983,10 +10988,12 @@ html.z31-portrait #v2-live-page .v2-c1c4-card .chip-card .chip-tag { margin-top:
   /* 3) chart.resize() 不帶尺寸時，Chart.js 用外框的 getBoundingClientRect（放大後的畫面大小）當版面大小，圖會變大、超出外框。
         字級不是 100% 時，改用外框的版面大小（clientWidth／clientHeight 扣 padding）；100% 時完全照原本 */
   try {
-    var CP = window.Chart && window.Chart.prototype, origResize = CP && CP.resize;
+    var CP = window.Chart && window.Chart.prototype;
+    var RZ = CP && typeof CP._resize === 'function' ? '_resize' : 'resize';   /* UI 1.3.0：包內部的 _resize，所有路徑都會經過 */
+    var origResize = CP && CP[RZ];
     if (typeof origResize === 'function' && !CP.__z31ResizeWrapped) {
-      CP.resize = function (width, height) {
-        if (width === undefined && height === undefined && Math.abs(current - 1) > 0.001 && this.canvas) {
+      CP[RZ] = function (width, height) {
+        if ((width === undefined || height === undefined) && Math.abs(current - 1) > 0.001 && this.canvas) {
           var box = this.canvas.parentNode;
           if (box && box.nodeType === 1) {
             var cs = window.getComputedStyle(box);
@@ -11093,7 +11100,7 @@ html.z31-portrait #v2-live-page .v2-c1c4-card .chip-card .chip-tag { margin-top:
     OPTIONS.forEach(function (v) { var o = document.createElement('option'); o.value = v; sel.appendChild(o); });
     sel.addEventListener('change', function () { writePref(kind(), sel.value); apply(); });
     var freeze = nav.querySelector('#z31-freeze-toggle');
-    nav.insertBefore(sel, freeze || null);
+    (freeze && freeze.parentNode ? freeze.parentNode : nav).insertBefore(sel, freeze || null);
     root.classList.add('z31-has-scale');
     selectEl = sel;
     apply();
@@ -11120,5 +11127,742 @@ html.z31-portrait #v2-live-page .v2-c1c4-card .chip-card .chip-tag { margin-top:
 })();
 </script>
 <!-- Z31_PORTRAIT_UI_1_2_0_END -->
+<!-- Z31_PRO_UI_1_3_0_BEGIN -->
+<style id="z31-pro-ui-1-3-0">
+/* ===== Z31／BaoZ UI 1.3.0（20261023）：專業監看版
+   只改顯示：資料來源、Firebase、計算、元素 ID、凍結的範圍都沒有改。
+   html.z31-pro＝專業版面（預設）；導覽列「版面」可以切回原版（html 沒有 z31-pro，就和 UI 1.2.0 一樣）。
+   寬度分級用 #dashboard 的版面寬度（已扣字級）：z31-w-xl ≥ 1500、z31-w-lg ≥ 1180、z31-w-md ≥ 760、z31-w-sm。 ===== */
+html.z31-pro {
+  --pro-bg: #06080b;
+  --pro-panel: #0d1116;
+  --pro-panel-2: #11161d;
+  --pro-raise: #161c24;
+  --pro-line: #1c232c;
+  --pro-line-2: #27303b;
+  --pro-text: #e8ecf1;
+  --pro-text-2: #b9c2cd;
+  --pro-muted: #8691a0;
+  --pro-dim: #5e6875;
+  --pro-accent: #4cc2ff;
+  --pro-up: #ff4d4f;
+  --pro-down: #22c55e;
+  --pro-warn: #f5b301;
+  --pro-font: "Segoe UI", "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", system-ui, sans-serif;
+  --pro-num: "Bahnschrift", "Segoe UI", "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans CJK TC", sans-serif;
+  background: var(--pro-bg);
+}
+html.z31-pro body {
+  background: var(--pro-bg);
+  color: var(--pro-text);
+  font-family: var(--pro-font);
+  font-variant-numeric: tabular-nums;
+  padding: 6px 8px;
+  -webkit-font-smoothing: antialiased;
+}
+html.z31-pro .dashboard-container { max-width: none !important; gap: 6px !important; }
+html.z31-pro #dashboard .big-val,
+html.z31-pro #dashboard .p9-val,
+html.z31-pro #dashboard .ocf-command-value,
+html.z31-pro #dashboard .ocf-defense-zone,
+html.z31-pro #dashboard .mme-kpi-value,
+html.z31-pro #dashboard .lfz-center-value,
+html.z31-pro #dashboard .lfz-center-futures,
+html.z31-pro #dashboard #oi-dn-price,
+html.z31-pro #dashboard .v2-market-metrics span[id] {
+  font-family: var(--pro-num) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0 !important;
+}
+
+/* ---------- 卡片 ---------- */
+html.z31-pro #dashboard .v2-section-card,
+html.z31-pro #dashboard .v2-market-slot > .box {
+  background: var(--pro-panel) !important;
+  border: 1px solid var(--pro-line) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+html.z31-pro #dashboard .v2-card-title {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  min-width: 0;
+  color: var(--pro-text-2) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em;
+  line-height: 1.3 !important;
+  margin-bottom: 4px !important;
+}
+html.z31-pro #dashboard .v2-card-title > span { white-space: nowrap; }
+html.z31-pro #dashboard .v2-card-title small {
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+  color: var(--pro-dim) !important;
+  font-weight: 500 !important;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 導覽列：分頁｜決策摘要｜字級・版面・凍結 ---------- */
+html.z31-pro .v2-dashboard-nav {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  grid-template-areas: "tabs sum ctrls" !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 5px 0 6px !important;
+  background: rgba(6, 8, 11, .95) !important;
+  border-bottom: 1px solid var(--pro-line-2) !important;
+}
+html.z31-pro.z31-logout-gap .v2-dashboard-nav { padding-right: var(--z31-logout-gap, 44px) !important; }
+html.z31-pro:not(.z31-w-xl) .v2-dashboard-nav {
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  grid-template-areas: "tabs ctrls" "sum sum" !important;
+  row-gap: 5px !important;
+}
+.z31-pro-tabs, .z31-pro-ctrls { display: contents; }
+#z31-pro-summary { display: none; }
+/* 原版版面：導覽列和 1.2.0 一樣是一排格子，多一個「版面」鈕 */
+@media not all and (pointer: coarse) {
+  html:not(.z31-pro).z31-has-scale .v2-dashboard-nav { grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto auto !important; }
+}
+@media (pointer: coarse) {
+  html:not(.z31-pro) .v2-dashboard-nav { grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto !important; }
+}
+html.z31-pro .z31-pro-tabs { display: flex; grid-area: tabs; gap: 4px; }
+html.z31-pro .z31-pro-ctrls { display: flex; grid-area: ctrls; gap: 6px; justify-content: flex-end; align-items: center; }
+html.z31-pro #z31-pro-summary { display: flex; grid-area: sum; gap: 6px; min-width: 0; overflow: hidden; }
+html.z31-pro .v2-dashboard-nav .v2-tab-btn {
+  min-height: 30px !important;
+  padding: 0 14px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--pro-line-2) !important;
+  background: var(--pro-panel) !important;
+  color: var(--pro-muted) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+  box-shadow: none !important;
+}
+html.z31-pro .v2-dashboard-nav .v2-tab-btn:hover { color: var(--pro-text) !important; border-color: #3a4552 !important; }
+html.z31-pro .v2-dashboard-nav .v2-tab-btn.active {
+  color: #fff !important;
+  background: #0f2536 !important;
+  border-color: #2b6f9c !important;
+  box-shadow: inset 0 -2px 0 var(--pro-accent) !important;
+}
+html.z31-pro .z31-freeze-toggle,
+html.z31-pro .z31-ui-scale,
+html.z31-pro .z31-skin-toggle {
+  min-height: 30px !important;
+  font-size: 11px !important;
+  border-radius: 6px !important;
+}
+.z31-skin-toggle {               /* 原版版面時和凍結鈕同樣大小 */
+  appearance: none;
+  border: 1px solid #3a3a3c;
+  background: #1c1c1e;
+  color: #d1d1d6;
+  border-radius: 6px;
+  min-height: 28px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+}
+html.z31-pro .z31-skin-toggle, html.z31-pro .z31-freeze-toggle.is-off { background: var(--pro-panel) !important; border-color: var(--pro-line-2) !important; color: var(--pro-text-2) !important; }
+@media (pointer: coarse) { .z31-skin-toggle { display: none !important; } }   /* 手機、平板固定用原版版面 */
+
+/* 決策摘要（從頁面上已有的欄位抄過來，每秒更新；點一下跳到那一區） */
+.z31-pro-chip {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--pro-line-2);
+  border-radius: 6px;
+  background: var(--pro-panel);
+  color: var(--pro-text);
+  font: 600 12px/1 var(--pro-font);
+  white-space: nowrap;
+  cursor: pointer;
+  flex: 0 1 auto;
+}
+.z31-pro-chip:hover { border-color: #3a4552; background: var(--pro-raise); }
+.z31-pro-chip:focus-visible { outline: 2px solid var(--pro-accent); outline-offset: 1px; }
+.z31-pro-chip > b { flex: none; color: var(--pro-muted); font-weight: 700; font-size: 11px; letter-spacing: .04em; }
+.z31-pro-chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.z31-pro-chip > i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--pro-dim); }
+.z31-pro-chip.tone-up { border-color: rgba(255, 77, 79, .55); background: rgba(255, 77, 79, .09); }
+.z31-pro-chip.tone-up > span { color: #ff7a7b; }
+.z31-pro-chip.tone-up > i { background: var(--pro-up); }
+.z31-pro-chip.tone-down { border-color: rgba(34, 197, 94, .55); background: rgba(34, 197, 94, .09); }
+.z31-pro-chip.tone-down > span { color: #4ade80; }
+.z31-pro-chip.tone-down > i { background: var(--pro-down); }
+.z31-pro-chip.tone-warn { border-color: rgba(245, 179, 1, .5); background: rgba(245, 179, 1, .08); }
+.z31-pro-chip.tone-warn > span { color: #fbc84a; }
+.z31-pro-chip.tone-warn > i { background: var(--pro-warn); }
+.z31-pro-chip.tone-ok > i { background: var(--pro-accent); }
+.z31-pro-chip.tone-off > span { color: var(--pro-muted); }
+.z31-pro-chip.is-data { margin-left: auto; font-weight: 500; }
+.z31-pro-chip.is-data > span { color: var(--pro-text-2); }
+html.z31-pro:not(.z31-w-xl) .z31-pro-chip.is-data { margin-left: auto; }
+html.z31-pro.z31-w-sm .v2-dashboard-nav { grid-template-columns: minmax(0, 1fr) !important; grid-template-areas: "tabs" "ctrls" "sum" !important; }
+html.z31-pro.z31-w-sm .z31-pro-ctrls { justify-content: flex-start; flex-wrap: wrap; }
+html.z31-pro.z31-w-sm .z31-pro-tabs .v2-tab-btn { flex: 1 1 0; padding: 0 6px !important; }
+html.z31-pro.z31-w-sm #v2-live-page .v2-market-compact-grid { grid-template-columns: minmax(0, 1fr) !important; grid-template-areas: "price" "neutral" "metrics" !important; }
+html.z31-pro.z31-w-sm #v2-live-page .v2-market-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+html.z31-pro:not(.z31-w-lg) #z31-pro-summary { flex-wrap: wrap; }
+html.z31-pro:not(.z31-w-lg) .z31-pro-chip { flex: 1 1 auto; }
+
+/* ---------- 期貨列 ---------- */
+html.z31-pro #v2-live-page .v2-market-slot { background: var(--pro-bg) !important; padding-bottom: 0 !important; box-shadow: 0 6px 0 0 var(--pro-bg) !important; }
+html.z31-pro #v2-live-page .v2-market-slot > .box { padding: 6px 10px !important; }
+html.z31-pro #v2-live-page .v2-market-compact-grid {
+  display: grid !important;
+  grid-template-columns: minmax(200px, 1.05fr) minmax(0, 2.4fr) minmax(330px, 1.55fr) !important;
+  grid-template-areas: "price metrics neutral" !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+  min-height: 0 !important;
+}
+html.z31-pro:not(.z31-w-lg) #v2-live-page .v2-market-compact-grid {
+  grid-template-columns: minmax(170px, 1fr) minmax(0, 2fr) !important;
+  grid-template-areas: "price neutral" "metrics metrics" !important;
+}
+html.z31-pro #v2-live-page .v2-market-price { grid-area: price !important; min-width: 0; display: flex !important; flex-direction: column !important; justify-content: center !important; gap: 2px; padding: 0 !important; border: 0 !important; background: none !important; }
+html.z31-pro #v2-live-page .v2-market-price .box-header { margin: 0 !important; align-items: baseline !important; gap: 8px; color: var(--pro-muted) !important; }
+html.z31-pro #v2-live-page .v2-market-price .box-header > span:first-child { font-size: 12px !important; font-weight: 700; color: var(--pro-text-2); letter-spacing: .04em; }
+html.z31-pro #v2-live-page .v2-market-price .box-header > span + span { font-size: 11px !important; margin-left: 0 !important; color: var(--pro-muted) !important; }
+html.z31-pro #v2-live-page .v2-market-price .box-header #price-next { font-size: 12px !important; color: var(--pro-text-2) !important; font-family: var(--pro-num); }
+html.z31-pro #v2-live-page #price { font-size: 34px !important; font-weight: 600 !important; line-height: 1.05 !important; margin: 0 !important; color: #fff !important; }
+html.z31-pro #v2-live-page #update-time { font-size: 11px !important; color: var(--pro-muted) !important; margin: 0 !important; }
+
+html.z31-pro #v2-live-page .v2-market-metrics {
+  grid-area: metrics !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  align-items: stretch !important;
+}
+html.z31-pro #v2-live-page .v2-market-metrics > .v2-market-vwap-row,
+html.z31-pro #v2-live-page .v2-market-metrics > .v2-market-spread-row { display: contents !important; }
+html.z31-pro #v2-live-page .v2-market-vwap-row > div,
+html.z31-pro #v2-live-page .v2-market-spread-row > div {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 5px 10px !important;
+  border: 1px solid var(--pro-line) !important;
+  border-radius: 6px !important;
+  background: var(--pro-panel-2) !important;
+  font-size: 0 !important;           /* 藏掉原本的 🌞／🌙／「：」文字，改用下面的標籤 */
+  line-height: 1 !important;
+  text-align: left !important;
+}
+html.z31-pro #v2-live-page .v2-market-vwap-row > div::before,
+html.z31-pro #v2-live-page .v2-market-spread-row > div::before {
+  font: 600 11px/1.1 var(--pro-font);
+  color: var(--pro-muted);
+  letter-spacing: .03em;
+}
+html.z31-pro #v2-live-page .v2-market-vwap-row > div:nth-child(1)::before { content: "日盤均價"; }
+html.z31-pro #v2-live-page .v2-market-vwap-row > div:nth-child(2)::before { content: "夜盤均價"; }
+html.z31-pro #v2-live-page .v2-market-vwap-row > div:nth-child(3)::before { content: "跨盤均價"; }
+html.z31-pro #v2-live-page .v2-market-spread-row > div:nth-child(1)::before { content: "期現差"; }
+html.z31-pro #v2-live-page .v2-market-spread-row > div:nth-child(2)::before { content: "跨月差"; }
+html.z31-pro #v2-live-page .v2-market-metrics span[id] { font-size: 19px !important; font-weight: 600 !important; line-height: 1.1 !important; color: var(--pro-text); }
+
+html.z31-pro #v2-live-page .v2-market-neutral {
+  grid-area: neutral !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  align-content: center !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+  row-gap: 4px !important;
+  min-width: 0 !important;
+  padding: 5px 10px !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(212, 175, 55, .35) !important;
+  background: rgba(212, 175, 55, .05) !important;
+  box-shadow: none !important;
+}
+html.z31-pro #v2-live-page .v2-market-neutral > div:first-child { border-bottom: 0 !important; padding: 0 !important; gap: 8px; }
+html.z31-pro #v2-live-page .v2-market-neutral > div:first-child > span:first-child { font-size: 11px !important; color: #d9b44a !important; }
+html.z31-pro #v2-live-page #oi-dn-price { font-size: 20px !important; text-shadow: none !important; }
+html.z31-pro #v2-live-page #oi-iv-val { display: contents !important; }
+html.z31-pro #v2-live-page #oi-iv-val > div { margin: 0 !important; min-width: 0; }
+html.z31-pro #v2-live-page #oi-iv-val > div > div { min-width: 0; }
+html.z31-pro #v2-live-page #oi-iv-val span { white-space: nowrap; }
+
+/* ---------- C1～C4／P9 列 ---------- */
+html.z31-pro #v2-live-page .v2-core-grid { gap: 6px !important; background: var(--pro-bg) !important; padding-top: 0 !important; }
+html.z31-pro #v2-live-page .v2-core-grid > .v2-section-card { padding: 6px 8px !important; }
+html.z31-pro #v2-live-page .v2-core-grid > .v2-section-card > .v2-card-title { margin: 0 0 4px !important; line-height: 1.25 !important; }
+html.z31-pro #v2-live-page .v2-core-grid > .v2-section-card > .v2-card-title small { font-size: 10px !important; }
+html.z31-pro #v2-live-page #core-c1c4-summary,
+html.z31-pro #v2-live-page #p9-r7-resonance { display: none !important; }   /* 和上面的數字重複 */
+
+html.z31-pro #v2-live-page .v2-c1c4-card .chip-grid { gap: 4px !important; }
+html.z31-pro #v2-live-page .v2-c1c4-card .chip-card {
+  display: grid !important;
+  grid-template-rows: auto auto auto;
+  align-content: center !important;
+  justify-items: center !important;
+  row-gap: 3px !important;
+  min-height: 0 !important;
+  padding: 6px 4px !important;
+  border: 1px solid var(--pro-line) !important;
+  border-radius: 6px !important;
+  background: var(--pro-panel-2) !important;
+}
+html.z31-pro #v2-live-page .v2-c1c4-card .chip-card .box-header {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: var(--pro-muted) !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+  letter-spacing: .06em !important;
+}
+html.z31-pro #v2-live-page .v2-c1c4-card .chip-card .big-val { font-size: 22px !important; font-weight: 600 !important; line-height: 1.05 !important; margin: 0 !important; }
+html.z31-pro #v2-live-page .v2-c1c4-card .chip-value-inline { gap: 8px !important; align-items: baseline !important; flex-wrap: wrap; justify-content: center !important; }
+html.z31-pro #v2-live-page .v2-c1c4-card .mini-tsmc-inline { font-size: 13px !important; font-weight: 600 !important; line-height: 1.1 !important; color: var(--pro-text-2); }
+html.z31-pro #v2-live-page .v2-c1c4-card .chip-card .chip-tag { font-size: 11px !important; line-height: 1.2 !important; padding: 1px 7px !important; border-radius: 4px !important; margin: 0 !important; }
+
+html.z31-pro #v2-live-page .v2-force-card #battle-card { padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; }
+html.z31-pro #v2-live-page .v2-force-card #battle-card > .box-header { display: none !important; }   /* 和卡片標題重複 */
+html.z31-pro #v2-live-page .v2-force-card #battle-card > .req-level-2-flex { gap: 6px !important; }
+html.z31-pro #v2-live-page .v2-force-card .p9-container {
+  border: 1px solid var(--pro-line) !important;
+  border-radius: 6px !important;
+  background: var(--pro-panel-2) !important;
+  padding: 6px 8px !important;
+  box-shadow: none !important;
+}
+html.z31-pro #v2-live-page .v2-force-card .p9-label { font-size: 11px !important; color: var(--pro-muted) !important; font-weight: 700 !important; }
+html.z31-pro #v2-live-page .v2-force-card .p9-val { font-size: 24px !important; font-weight: 600 !important; text-shadow: none !important; }
+html.z31-pro:not(.z31-w-xl) #v2-live-page .v2-force-card .p9-val { font-size: 20px !important; }
+html.z31-pro #v2-live-page .v2-force-card .p9-container > div:has(> #p9-val) { flex-wrap: wrap !important; justify-content: center !important; row-gap: 2px; max-width: 100%; }
+html.z31-pro #v2-live-page .v2-force-card #op-force-value,
+html.z31-pro #v2-live-page .v2-force-card #op-force-breakdown { font-size: 15px !important; }
+html.z31-pro #v2-live-page .v2-force-card #p9-slope-label,
+html.z31-pro #v2-live-page .v2-force-card #p9-thresholds-display,
+html.z31-pro #v2-live-page .v2-force-card #op-force-detail,
+html.z31-pro #v2-live-page .v2-force-card .r7-inline-meta,
+html.z31-pro #v2-live-page .v2-force-card #r7-delta-display,
+html.z31-pro #v2-live-page .v2-force-card #r7-thresholds-display { font-size: 10px !important; }
+html.z31-pro #v2-live-page .v2-force-card #p9-thresholds-display span,
+html.z31-pro #v2-live-page .v2-force-card .r7-inline-meta span { font-size: 10px !important; }
+html.z31-pro #v2-live-page .v2-force-card #force-amount-display { font-size: 11px !important; }
+html.z31-pro #v2-live-page .v2-force-card #force-amount-val { font-size: 15px !important; }
+/* 布局中心（只改上方凍結區那一份；下方研究區的那一份照原樣） */
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-panel { padding: 0 !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-head { margin-bottom: 4px !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-title { font-size: 13px !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-note { display: none !important; }   /* 固定的說明文字（LFZ 映射僅供觀察），收起來省一行 */
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-grid { gap: 4px !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-card {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "name sub" "val fut";
+  align-items: baseline;
+  column-gap: 8px;
+  row-gap: 2px;
+  padding: 5px 8px !important;
+  min-height: 0 !important;
+  border-color: var(--pro-line) !important;
+  background: rgba(255,255,255,.015) !important;
+}
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-card > .lfz-center-name { grid-area: name; margin: 0 !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-card > .lfz-center-sub { grid-area: sub; text-align: right; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-card > .lfz-center-value { grid-area: val; margin: 0 !important; line-height: 1.15 !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-card > .lfz-center-futures { grid-area: fut; text-align: right; margin: 0 !important; line-height: 1.15 !important; white-space: nowrap; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-name { font-size: 11px !important; color: var(--pro-muted) !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-value { font-size: 18px !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-futures { font-size: 13px !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-center-sub { font-size: 10px !important; color: var(--pro-dim) !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-strength-box {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "head head" "vals vals" "bar bar" "read note";
+  column-gap: 10px;
+  row-gap: 4px;
+  align-items: center;
+  margin-top: 4px !important;
+  padding: 6px 8px !important;
+}
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-strength-box > .lfz-strength-head { grid-area: head; margin: 0 !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-strength-box > .lfz-strength-values { grid-area: vals; margin: 0 !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-strength-box > .lfz-strength-bar { grid-area: bar; margin: 0 !important; height: 8px !important; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-strength-box > .lfz-strength-read { grid-area: read; margin: 0 !important; font-size: 12px !important; white-space: nowrap; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-strength-box > .lfz-strength-note { grid-area: note; margin: 0 !important; text-align: right; }
+html.z31-pro #v2-live-page #lfz-center-mirror .lfz-strength-note { font-size: 10px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- 分析系統分頁（Z3.1／BaoZ） ---------- */
+html.z31-pro #baoz-system-tabs { padding: 8px 0 6px !important; gap: 4px !important; border-bottom: 1px solid var(--pro-line); margin-bottom: 6px; }
+html.z31-pro #baoz-system-tabs::before { content: "分析系統"; font: 700 12px/1 var(--pro-font); color: var(--pro-muted); letter-spacing: .06em; margin-right: 8px; }
+html.z31-pro .baoz-system-tab {
+  min-height: 30px;
+  padding: 0 18px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--pro-line-2) !important;
+  background: var(--pro-panel) !important;
+  color: var(--pro-muted) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+html.z31-pro .baoz-system-tab[aria-selected="true"] { background: #0f2536 !important; color: #fff !important; border-color: #2b6f9c !important; box-shadow: inset 0 -2px 0 var(--pro-accent) !important; }
+html.z31-pro .baoz-system-note { font-size: 11px !important; color: var(--pro-dim) !important; }
+
+/* ---------- Z3.1：OCF 決策區 ---------- */
+html.z31-pro #v2-live-page .v2-ocf-card { padding: 8px 10px !important; }
+html.z31-pro #v2-live-page .v2-ocf-card > .v2-card-title { font-size: 13px !important; }
+html.z31-pro #ocf-battle-panel { display: grid !important; grid-template-columns: minmax(0, 1fr); gap: 6px !important; }
+html.z31-pro #ocf-battle-panel > * { margin: 0 !important; min-width: 0; }
+html.z31-pro #ocf-battle-panel > .ocf-battle-header { grid-area: head; }
+html.z31-pro #ocf-battle-panel > .ocf-action-band { grid-area: action; }
+html.z31-pro #ocf-battle-panel > .ocf-command-grid { grid-area: command; }
+html.z31-pro #ocf-battle-panel > #mme-live-band { grid-area: mme; }
+html.z31-pro #ocf-battle-panel > #ocf-exec-detail-toggle { grid-area: exec; }
+html.z31-pro #ocf-battle-panel > .ocf-defense-grid { grid-area: defense; }
+html.z31-pro #ocf-battle-panel > #ocf-defense-balance { grid-area: balance; }
+html.z31-pro #ocf-battle-panel {
+  grid-template-areas: "head" "action" "command" "mme" "exec" "defense" "balance" !important;
+}
+html.z31-pro.z31-w-lg #ocf-battle-panel {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  grid-template-areas:
+    "head    head"
+    "action  mme"
+    "command mme"
+    "defense mme"
+    "balance mme"
+    "exec    mme" !important;
+  grid-template-rows: auto auto auto auto auto 1fr;
+  align-items: start !important;
+}
+html.z31-pro.z31-w-xl #ocf-battle-panel { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr) !important; }
+html.z31-pro.z31-w-lg #ocf-battle-panel > #mme-live-band { align-self: stretch; }
+html.z31-pro .ocf-battle-header { align-items: center !important; }
+html.z31-pro .ocf-battle-header > div:first-child { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex-wrap: wrap; }
+html.z31-pro .ocf-battle-kicker { font-size: 11px !important; }
+html.z31-pro .ocf-battle-title { font-size: 13px !important; color: var(--pro-text) !important; }
+html.z31-pro .ocf-model-badge { font-size: 11px !important; padding: 3px 8px !important; border-radius: 5px !important; }
+
+/* Z2 LIVE 執行決策：這一頁最重要的一句話 */
+html.z31-pro #ocf-action-band {
+  padding: 8px 12px !important;
+  border: 1px solid var(--pro-line-2) !important;
+  border-left: 4px solid var(--pro-warn) !important;
+  border-radius: 8px !important;
+  background: var(--pro-panel-2) !important;
+  box-shadow: none !important;
+}
+html.z31-pro #ocf-action-band.action-bull { border-left-color: var(--pro-up) !important; background: linear-gradient(90deg, rgba(255,77,79,.10), var(--pro-panel-2) 60%) !important; }
+html.z31-pro #ocf-action-band.action-bear { border-left-color: var(--pro-down) !important; background: linear-gradient(90deg, rgba(34,197,94,.10), var(--pro-panel-2) 60%) !important; }
+html.z31-pro #ocf-action-band .ocf-action-label { font-size: 11px !important; color: var(--pro-muted) !important; letter-spacing: .06em; font-weight: 700 !important; }
+html.z31-pro #ocf-action-band .v10-action-compact { font-size: 20px !important; font-weight: 700 !important; line-height: 1.3 !important; margin: 3px 0 2px !important; }
+html.z31-pro #ocf-action-band .ocf-action-context { font-size: 12px !important; color: var(--pro-text-2) !important; line-height: 1.45 !important; }
+html.z31-pro #ocf-action-band .ocf-tech-toggle > summary { font-size: 11px !important; color: var(--pro-dim) !important; }
+
+html.z31-pro .ocf-command-grid { gap: 6px !important; }
+html.z31-pro .ocf-command-item {
+  padding: 7px 10px !important;
+  border: 1px solid var(--pro-line) !important;
+  border-radius: 6px !important;
+  background: var(--pro-panel-2) !important;
+}
+html.z31-pro .ocf-command-label { font-size: 11px !important; color: var(--pro-muted) !important; }
+html.z31-pro .ocf-command-value { font-size: 18px !important; line-height: 1.3 !important; }
+html.z31-pro .ocf-command-item.direction .ocf-command-value { font-size: 20px !important; }
+html.z31-pro .ocf-command-sub { font-size: 11px !important; color: var(--pro-muted) !important; }
+
+html.z31-pro .ocf-defense-grid { gap: 6px !important; }
+html.z31-pro .ocf-defense-card { padding: 8px 10px !important; border-radius: 8px !important; background: var(--pro-panel-2) !important; border-color: var(--pro-line) !important; }
+html.z31-pro .ocf-defense-card.support { border-left: 3px solid rgba(255, 77, 79, .75) !important; }
+html.z31-pro .ocf-defense-card.resistance { border-left: 3px solid rgba(34, 197, 94, .75) !important; }
+html.z31-pro .ocf-defense-name { font-size: 12px !important; font-weight: 700 !important; }
+html.z31-pro .ocf-defense-state { font-size: 11px !important; }
+html.z31-pro .ocf-defense-main-label { font-size: 11px !important; color: var(--pro-muted) !important; }
+html.z31-pro .ocf-defense-zone { font-size: 18px !important; }
+html.z31-pro .ocf-defense-main-row { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) !important; }
+html.z31-pro:not(.z31-w-xl) .ocf-defense-zone { font-size: 16px !important; }
+html.z31-pro .ocf-defense-detail, html.z31-pro .ocf-defense-action { font-size: 11px !important; line-height: 1.4 !important; }
+html.z31-pro .ocf-defense-stat { font-size: 11px !important; color: var(--pro-muted) !important; }
+html.z31-pro .ocf-defense-stat strong { font-size: 12px !important; color: var(--pro-text) !important; }
+html.z31-pro #ocf-defense-balance { padding: 6px 10px !important; border-radius: 8px !important; background: var(--pro-panel-2) !important; border-color: var(--pro-line) !important; }
+html.z31-pro .ocf-defense-balance-label, html.z31-pro .ocf-d2n-evidence { font-size: 10px !important; }
+html.z31-pro .ocf-defense-balance-text { font-size: 12px !important; }
+html.z31-pro .ocf-defense-balance-stats, html.z31-pro .ocf-defense-balance-stats span { font-size: 10px !important; }
+html.z31-pro .ocf-defense-balance-stats strong { font-size: 12px !important; }
+html.z31-pro #ocf-exec-detail-toggle { border-radius: 8px !important; background: var(--pro-panel-2) !important; border-color: var(--pro-line) !important; }
+html.z31-pro .ocf-exec-detail-heading { font-size: 11px !important; color: var(--pro-muted) !important; }
+html.z31-pro .ocf-exec-summary-chip { font-size: 10px !important; padding: 2px 6px !important; }
+html.z31-pro .ocf-exec-summary-chip b { font-size: 10px !important; }
+html.z31-pro .ocf-exec-summary-chip strong { font-size: 10px !important; }
+
+/* MME */
+html.z31-pro #mme-live-band { padding: 8px 10px !important; border-radius: 8px !important; background: var(--pro-panel-2) !important; border-color: var(--pro-line) !important; }
+html.z31-pro #mme-live-band .mme-title { font-size: 11px !important; color: var(--pro-dim) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.z31-pro #mme-live-band .mme-transport { font-size: 10px !important; }
+html.z31-pro #mme-live-band .mme-primary { font-size: 20px !important; }
+html.z31-pro #mme-live-band .mme-kpi-label { font-size: 10px !important; }
+html.z31-pro #mme-live-band .mme-kpi-value { font-size: 16px !important; }
+html.z31-pro #mme-live-band .mme-day-read-cell, html.z31-pro #mme-live-band .mme-challenge-live, html.z31-pro #mme-live-band .mme-score-read, html.z31-pro #mme-live-band .mme-quick-wrap, html.z31-pro #mme-live-band .mme-quick-card { border-color: var(--pro-line) !important; }
+html.z31-pro #mme-live-band .mme-day-read-label { font-size: 10px !important; color: var(--pro-muted) !important; }
+html.z31-pro #mme-live-band .mme-day-read-value { font-size: 13px !important; }
+html.z31-pro #mme-live-band .mme-day-read-meta { font-size: 10px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.z31-pro #mme-live-band .mme-score-grade { font-size: 13px !important; }
+html.z31-pro #mme-live-band .mme-score-action { font-size: 11px !important; }
+html.z31-pro #mme-live-band .mme-score-labels, html.z31-pro #mme-live-band .mme-score-labels span { font-size: 9px !important; }
+html.z31-pro #mme-live-band .mme-score-legend { font-size: 10px !important; }
+html.z31-pro #mme-live-band .mme-quick-title strong { font-size: 11px !important; }
+html.z31-pro #mme-live-band .mme-quick-title span { font-size: 10px !important; }
+html.z31-pro #mme-live-band .mme-quick-card .step { font-size: 10px !important; }
+html.z31-pro #mme-live-band .mme-quick-card strong { font-size: 13px !important; }
+html.z31-pro #mme-live-band .mme-quick-card small { font-size: 10px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.z31-pro #mme-live-band .mme-quick-summary { font-size: 11px !important; }
+html.z31-pro #mme-live-band .mme-detail-summary { font-size: 12px !important; gap: 10px; }
+html.z31-pro #mme-live-band .mme-detail-summary > span { white-space: nowrap; flex: none; }
+html.z31-pro #mme-live-band .mme-detail-summary small { font-size: 10px !important; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.z31-pro.z31-w-lg #mme-live-band .mme-quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+html.z31-pro.z31-w-xl #mme-live-band .mme-quick-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+
+/* 研究區、底部狀態列：降一階 */
+html.z31-pro #v2-live-page .v2-aux-card > .v2-card-title { font-size: 12px !important; color: var(--pro-muted) !important; }
+html.z31-pro #v2-live-page .v10-side-block { border-color: var(--pro-line) !important; }
+html.z31-pro #v2-live-page .lfz-baoz-meta, html.z31-pro #v2-live-page .lfz-fixed-table-label { font-size: 10px !important; }
+html.z31-pro #v2-live-page .v10-adverse-footer { border-radius: 8px !important; background: var(--pro-panel) !important; border-color: var(--pro-line) !important; padding: 6px 10px !important; }
+html.z31-pro #v2-live-page .ocf-adverse-label, html.z31-pro #v2-live-page .ocf-hmf-label { font-size: 10px !important; color: var(--pro-dim) !important; }
+html.z31-pro #v2-live-page .ocf-adverse-status, html.z31-pro #v2-live-page .ocf-hmf-status { font-size: 12px !important; }
+html.z31-pro #v2-live-page .ocf-adverse-detail, html.z31-pro #v2-live-page .ocf-hmf-detail { font-size: 10px !important; color: var(--pro-muted) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- BaoZ 近月 ---------- */
+html.z31-pro #baoz-system-panel {
+  --bz-bg: var(--pro-panel);
+  background: var(--pro-panel) !important;
+  border: 1px solid var(--pro-line);
+  border-radius: 8px !important;
+  font-family: var(--pro-font) !important;
+}
+html.z31-pro #baoz-system-panel .bz-panel,
+html.z31-pro #baoz-system-panel .bz-metric,
+html.z31-pro #baoz-system-panel .bz-side,
+html.z31-pro #baoz-system-panel .bz-cmd,
+html.z31-pro #baoz-system-panel details { border-color: var(--pro-line) !important; }
+html.z31-pro #baoz-system-panel .bz-num, html.z31-pro #baoz-system-panel .bz-value { font-family: var(--pro-num) !important; }
+
+/* ---------- 歷史時間軸、完整資訊 ---------- */
+html.z31-pro #v2-history-page .v2-history-item,
+html.z31-pro #v2-detail-page .box,
+html.z31-pro #v2-detail-page .alpha-box,
+html.z31-pro #v2-detail-page .strategy-card { background: var(--pro-panel) !important; border: 1px solid var(--pro-line) !important; border-radius: 8px !important; box-shadow: none !important; }
+html.z31-pro #v2-history-page .split-chart-box { background: var(--pro-panel-2) !important; border-color: var(--pro-line) !important; }
+html.z31-pro #v2-history-page .section-title { font-size: 12px !important; color: var(--pro-text-2) !important; }
+html.z31-pro .v2-page-note { font-size: 11px !important; color: var(--pro-dim) !important; border-color: var(--pro-line) !important; }
+
+/* ---------- 直立螢幕（沿用 1.2.0 的排法，配合新外觀） ---------- */
+html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0 !important; }
+</style>
+<script>
+/* Z31／BaoZ UI 1.3.0：專業監看版（只改顯示） */
+(function () {
+  'use strict';
+  var VER = 'Z31-UI-1.3.0-20261023';
+  var root = document.documentElement;
+  var SKIN_KEY = 'z31_ui_skin_v1';
+  var skinBtn = null, summaryEl = null, chips = {};
+
+  function coarse() { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } }
+  /* 專業版面是給桌面螢幕（滑鼠）用的；手機、平板一律原版 */
+  function readSkin() {
+    if (coarse()) return 'classic';
+    try { return window.localStorage.getItem(SKIN_KEY) === 'classic' ? 'classic' : 'pro'; } catch (e) { return 'pro'; }
+  }
+  function writeSkin(v) { try { window.localStorage.setItem(SKIN_KEY, v); } catch (e) {} }
+  function $(id) { return document.getElementById(id); }
+  function txt(id) { var e = $(id); return e ? String(e.textContent || '').replace(/\s+/g, ' ').trim() : ''; }
+
+  /* 寬度分級：用 #dashboard 的版面寬度（CSS zoom 之後的實際版面），不是視窗寬度 */
+  function widthClass() {
+    var d = $('dashboard');
+    var w = d && d.clientWidth ? d.clientWidth : window.innerWidth;
+    var cls = w >= 1500 ? ['z31-w-xl', 'z31-w-lg', 'z31-w-md'] : w >= 1180 ? ['z31-w-lg', 'z31-w-md'] : w >= 760 ? ['z31-w-md'] : ['z31-w-sm'];
+    ['z31-w-xl', 'z31-w-lg', 'z31-w-md', 'z31-w-sm'].forEach(function (c) { root.classList.toggle(c, cls.indexOf(c) >= 0); });
+  }
+
+  function applySkin(v, user) {
+    root.classList.toggle('z31-pro', v === 'pro');
+    if (skinBtn) {
+      skinBtn.textContent = v === 'pro' ? '版面：專業' : '版面：原版';
+      skinBtn.setAttribute('aria-pressed', v === 'pro' ? 'true' : 'false');
+      skinBtn.title = '切換專業版面／原版版面（只改顯示，資料不變）';
+    }
+    widthClass();
+    if (user) {
+      writeSkin(v);
+      /* 字級「自動」在兩種版面不同；凍結位置要重算 */
+      if (window.Z31UI && typeof window.Z31UI.apply === 'function') window.Z31UI.apply();
+      window.setTimeout(function () { try { window.dispatchEvent(new Event('resize')); } catch (e) {} }, 0);
+    }
+  }
+
+  /* ---------- 決策摘要 ---------- */
+  var CHIP_DEFS = [
+    { k: 'z2', label: 'Z2', go: 'z31', target: 'ocf-action-band', title: 'Z2 LIVE 執行決策',
+      read: function () {
+        var band = $('ocf-action-band'), c = band ? band.className : '';
+        return { text: txt('ocf-bk-advice-compact') || txt('ocf-bk-advice') || '--',
+                 tone: /action-bull/.test(c) ? 'up' : /action-bear/.test(c) ? 'down' : /action-wait/.test(c) ? 'warn' : 'off' };
+      } },
+    { k: 'dir', label: '方向', go: 'z31', target: 'ocf-live-direction', title: 'Z2 結構方向（不等於執行許可）',
+      read: function () {
+        var e = $('ocf-live-direction'), c = e ? e.className : '';
+        return { text: txt('ocf-live-direction') || '--',
+                 tone: /tone-bull/.test(c) ? 'up' : /tone-bear/.test(c) ? 'down' : /tone-wait/.test(c) ? 'warn' : 'off' };
+      } },
+    { k: 'mme', label: 'MME', go: 'z31', target: 'mme-live-band', title: 'MME 主力多空心態',
+      read: function () {
+        var band = $('mme-live-band'), g = $('mme-score-grade');
+        var c = (band ? band.className.replace(/mme-live-band/g, '') : '') + ' ' + (g ? g.className : '');
+        var s = txt('mme-session-score');
+        var t = txt('mme-primary') || '--';
+        if (s && s !== '--') t += '　' + s;
+        return { text: t, tone: /mme-risk|mme-danger|warning/.test(c) ? 'warn' : /mme-bull|long/.test(c) ? 'up' : /mme-bear|short/.test(c) ? 'down' : 'off' };
+      } },
+    { k: 'baoz', label: 'BaoZ', go: 'baoz', target: 'baoz-system-panel', title: 'BaoZ 近月：即時指令＋做多／做空狀態',
+      read: function () {
+        var cmd = txt('bz-command'), L = txt('bz-long-status'), S = txt('bz-short-status');
+        var lc = ($('bz-long-status') || {}).className || '', sc = ($('bz-short-status') || {}).className || '';
+        var t = (cmd && cmd !== '待資料' ? cmd + '｜' : '') + '多 ' + (L || '--') + '・空 ' + (S || '--');
+        var tone = /bz-p-long/.test(lc) && !/bz-p-short/.test(sc) ? 'up' : /bz-p-short/.test(sc) && !/bz-p-long/.test(lc) ? 'down' : 'off';
+        return { text: t, tone: tone };
+      } },
+    { k: 'data', label: '資料', go: null, target: null, title: 'Z3.1 更新時間／BaoZ 資料狀態', cls: 'is-data',
+      read: function () {
+        var u = txt('update-time').replace(/^Update:\s*/i, '');
+        var f = txt('bz-freshness');
+        var warn = /中斷|過期|延遲|停止|待資料/.test(f);
+        return { text: 'Z3.1 ' + (u || '--') + '　BaoZ ' + (f || '--'), tone: warn ? 'warn' : 'ok' };
+      } }
+  ];
+
+  function goTo(def) {
+    if (!def || !def.go) return;
+    var tab = $(def.go === 'baoz' ? 'baoz-tab-baoz' : 'baoz-tab-z31');
+    if (tab && tab.getAttribute('aria-selected') !== 'true') tab.click();
+    var live = document.querySelector('.v2-tab-btn[data-page="v2-live-page"]');
+    if (live && !live.classList.contains('active')) live.click();
+    window.setTimeout(function () {
+      var t = $(def.target);
+      if (!t) return;
+      /* 跳到凍結區下方：用畫面座標算，扣掉凍結區的高度 */
+      var core = document.querySelector('#v2-live-page .v2-core-grid');
+      var frozen = 0;
+      if (!document.body.classList.contains('z31-sticky-off') && core) frozen = core.getBoundingClientRect().bottom;
+      var y = window.scrollY + t.getBoundingClientRect().top - Math.max(0, frozen) - 8;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    }, 80);
+  }
+
+  function updateSummary() {
+    if (!summaryEl || !root.classList.contains('z31-pro')) return;
+    CHIP_DEFS.forEach(function (d) {
+      var c = chips[d.k];
+      if (!c) return;
+      var r = d.read();
+      if (c._t !== r.text) { c._t = r.text; c._span.textContent = r.text; c.title = d.title + '：' + r.text; }
+      var cls = 'z31-pro-chip tone-' + r.tone + (d.cls ? ' ' + d.cls : '');
+      if (c.className !== cls) c.className = cls;
+    });
+  }
+
+  function mountNav() {
+    var nav = $('v2-dashboard-nav');
+    if (!nav) return false;
+    if (nav.__z31Pro) return true;
+    var freeze = $('z31-freeze-toggle');
+    var tabs = document.createElement('div');
+    tabs.className = 'z31-pro-tabs';
+    Array.prototype.slice.call(nav.querySelectorAll(':scope > .v2-tab-btn')).forEach(function (b) { tabs.appendChild(b); });
+    summaryEl = document.createElement('div');
+    summaryEl.id = 'z31-pro-summary';
+    summaryEl.setAttribute('aria-label', '決策摘要');
+    CHIP_DEFS.forEach(function (d) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'z31-pro-chip tone-off' + (d.cls ? ' ' + d.cls : '');
+      var i = document.createElement('i'), lb = document.createElement('b'), sp = document.createElement('span');
+      lb.textContent = d.label; sp.textContent = '--';
+      b.append(i, lb, sp);
+      b._span = sp;
+      if (d.go) b.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); goTo(d); });
+      else b.tabIndex = -1;
+      chips[d.k] = b;
+      summaryEl.appendChild(b);
+    });
+    var ctrls = document.createElement('div');
+    ctrls.className = 'z31-pro-ctrls';
+    skinBtn = document.createElement('button');
+    skinBtn.type = 'button';
+    skinBtn.id = 'z31-skin-toggle';
+    skinBtn.className = 'z31-skin-toggle';
+    skinBtn.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      applySkin(root.classList.contains('z31-pro') ? 'classic' : 'pro', true);
+    });
+    var scale = $('z31-ui-scale');
+    if (scale) ctrls.appendChild(scale);
+    ctrls.appendChild(skinBtn);
+    if (freeze) ctrls.appendChild(freeze);
+    nav.insertBefore(tabs, nav.firstChild);
+    nav.insertBefore(summaryEl, tabs.nextSibling);
+    nav.appendChild(ctrls);
+    nav.__z31Pro = true;
+    applySkin(readSkin(), false);
+    updateSummary();
+    return true;
+  }
+
+  window.Z31Pro = Object.freeze({ version: VER, skin: function () { return root.classList.contains('z31-pro') ? 'pro' : 'classic'; } });
+
+  /* 外觀在第一次畫面前就套上，避免閃一下原版 */
+  applySkin(readSkin(), false);
+
+  function start() {
+    widthClass();
+    if (!mountNav()) {
+      var tries = 0, t = window.setInterval(function () { tries++; if (mountNav() || tries > 100) window.clearInterval(t); }, 100);
+    }
+    var d = $('dashboard');
+    if (d && typeof ResizeObserver !== 'undefined') new ResizeObserver(widthClass).observe(d);
+    window.addEventListener('resize', widthClass, { passive: true });
+    window.setInterval(updateSummary, 1000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_PRO_UI_1_3_0_END -->
 </body>
 </html>
