@@ -10462,7 +10462,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.3.0-20261023';
+  const BUILD='BaoZ-Z31-UI-1.4.0-20261023';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10810,7 +10810,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.3.0');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.0');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -11220,7 +11220,7 @@ html.z31-pro .v2-dashboard-nav {
   border-bottom: 1px solid var(--pro-line-2) !important;
 }
 html.z31-pro.z31-logout-gap .v2-dashboard-nav { padding-right: var(--z31-logout-gap, 44px) !important; }
-html.z31-pro:not(.z31-w-xl) .v2-dashboard-nav {
+html.z31-pro:not(.z31-w-xxl) .v2-dashboard-nav {
   grid-template-columns: auto minmax(0, 1fr) !important;
   grid-template-areas: "tabs ctrls" "sum sum" !important;
   row-gap: 5px !important;
@@ -11316,7 +11316,7 @@ html.z31-pro .z31-skin-toggle, html.z31-pro .z31-freeze-toggle.is-off { backgrou
 .z31-pro-chip.tone-off > span { color: var(--pro-muted); }
 .z31-pro-chip.is-data { margin-left: auto; font-weight: 500; }
 .z31-pro-chip.is-data > span { color: var(--pro-text-2); }
-html.z31-pro:not(.z31-w-xl) .z31-pro-chip.is-data { margin-left: auto; }
+html.z31-pro:not(.z31-w-xxl) .z31-pro-chip.is-data { margin-left: auto; }
 html.z31-pro.z31-w-sm .v2-dashboard-nav { grid-template-columns: minmax(0, 1fr) !important; grid-template-areas: "tabs" "ctrls" "sum" !important; }
 html.z31-pro.z31-w-sm .z31-pro-ctrls { justify-content: flex-start; flex-wrap: wrap; }
 html.z31-pro.z31-w-sm .z31-pro-tabs .v2-tab-btn { flex: 1 1 0; padding: 0 6px !important; }
@@ -11707,8 +11707,8 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
   function widthClass() {
     var d = $('dashboard');
     var w = d && d.clientWidth ? d.clientWidth : window.innerWidth;
-    var cls = w >= 1500 ? ['z31-w-xl', 'z31-w-lg', 'z31-w-md'] : w >= 1180 ? ['z31-w-lg', 'z31-w-md'] : w >= 760 ? ['z31-w-md'] : ['z31-w-sm'];
-    ['z31-w-xl', 'z31-w-lg', 'z31-w-md', 'z31-w-sm'].forEach(function (c) { root.classList.toggle(c, cls.indexOf(c) >= 0); });
+    var cls = w >= 2000 ? ['z31-w-xxl', 'z31-w-xl', 'z31-w-lg', 'z31-w-md'] : w >= 1500 ? ['z31-w-xl', 'z31-w-lg', 'z31-w-md'] : w >= 1180 ? ['z31-w-lg', 'z31-w-md'] : w >= 760 ? ['z31-w-md'] : ['z31-w-sm'];
+    ['z31-w-xxl', 'z31-w-xl', 'z31-w-lg', 'z31-w-md', 'z31-w-sm'].forEach(function (c) { root.classList.toggle(c, cls.indexOf(c) >= 0); });
   }
 
   function applySkin(v, user) {
@@ -11757,6 +11757,11 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
         var t = (cmd && cmd !== '待資料' ? cmd + '｜' : '') + '多 ' + (L || '--') + '・空 ' + (S || '--');
         var tone = /bz-p-long/.test(lc) && !/bz-p-short/.test(sc) ? 'up' : /bz-p-short/.test(sc) && !/bz-p-long/.test(lc) ? 'down' : 'off';
         return { text: t, tone: tone };
+      } },
+    { k: 'ai', label: 'AI', go: 'baoz', target: 'bz-ai-card', title: 'AI 即時分析（影子，不下單）',
+      read: function () {
+        var a = window.__BaoZAIView;
+        return a ? { text: a.chip || '—', tone: a.tone || 'off' } : { text: '未啟動', tone: 'off' };
       } },
     { k: 'data', label: '資料', go: null, target: null, title: 'Z3.1 更新時間／BaoZ 資料狀態', cls: 'is-data',
       read: function () {
@@ -11864,5 +11869,194 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
 })();
 </script>
 <!-- Z31_PRO_UI_1_3_0_END -->
+<!-- Z31_BAOZ_AI_UI_1_4_0_BEGIN -->
+<style id="z31-baoz-ai-ui-1-4-0">
+/* ===== BaoZ UI 1.4.0（20261023）：AI 即時分析卡（讀 Firebase baoz_realtime/near_ai，由電腦上的 BaoZ AI 程式寫入）
+   只顯示；影子計畫，不下單。 ===== */
+#baoz-system-panel .bz-ai {
+  margin: 9px 0;
+  background: var(--bz-surface);
+  border: 1px solid var(--bz-line);
+  border-left: 4px solid var(--bz-muted);
+  border-radius: 0 var(--bz-radius) var(--bz-radius) 0;
+  padding: 10px 14px;
+}
+#baoz-system-panel .bz-ai.ai-long { border-left-color: var(--bz-up); }
+#baoz-system-panel .bz-ai.ai-short { border-left-color: var(--bz-down); }
+#baoz-system-panel .bz-ai.ai-warn { border-left-color: var(--bz-attn); }
+#baoz-system-panel .bz-ai-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+#baoz-system-panel .bz-ai-title { font-weight: 700; font-size: 14px; color: var(--bz-ink); }
+#baoz-system-panel .bz-ai-tag { font-size: 11px; color: var(--bz-muted); border: 1px solid var(--bz-line); border-radius: 4px; padding: 0 6px; }
+#baoz-system-panel .bz-ai-meta { margin-left: auto; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 8px 16px; margin-top: 8px; }
+@media (max-width: 800px) { #baoz-system-panel .bz-ai-body { grid-template-columns: 1fr; } }
+html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-columns: 1fr; }
+#baoz-system-panel .bz-ai-decision { font-size: 24px; font-weight: 600; letter-spacing: .04em; line-height: 1.25; }
+#baoz-system-panel .bz-ai.ai-long .bz-ai-decision { color: var(--bz-up); }
+#baoz-system-panel .bz-ai.ai-short .bz-ai-decision { color: var(--bz-down); }
+#baoz-system-panel .bz-ai.ai-warn .bz-ai-decision { color: var(--bz-attn); }
+#baoz-system-panel .bz-ai-summary { font-size: 14px; color: var(--bz-ink); margin-top: 2px; }
+#baoz-system-panel .bz-ai-state { font-size: 13px; color: var(--bz-accent); margin-top: 4px; }
+#baoz-system-panel .bz-ai-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; align-content: start; font-size: 13px; }
+#baoz-system-panel .bz-ai-grid dt { color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-grid dd { margin: 0; color: var(--bz-ink); font-variant-numeric: tabular-nums; min-width: 0; overflow-wrap: anywhere; }
+#baoz-system-panel .bz-ai-factors { margin: 8px 0 0; padding-left: 18px; font-size: 13px; color: var(--bz-ink); }
+#baoz-system-panel .bz-ai-risk { font-size: 13px; color: var(--bz-attn); margin-top: 4px; }
+#baoz-system-panel .bz-ai-foot { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--bz-line); font-size: 12px; color: var(--bz-muted); display: grid; gap: 2px; }
+#baoz-system-panel .bz-ai-foot b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-ai-empty { font-size: 13px; color: var(--bz-muted); margin-top: 6px; }
+</style>
+<script>
+/* BaoZ UI 1.4.0：AI 即時分析卡（只讀 Firebase，不寫） */
+(function () {
+  'use strict';
+  var NODE = 'baoz_realtime/near_ai';
+  var st = { ref: null, fn: null, data: null, problem: '', allowed: false };
+  window.__BaoZAIView = null;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function n(v) { var x = Number(v); return Number.isFinite(x) && x !== 0 ? x : null; }
+  function fmt(v) { var x = n(v); return x == null ? '—' : x.toLocaleString('en-US'); }
+  function hm(iso) { var m = /T(\d\d:\d\d)/.exec(String(iso || '')); return m ? m[1] : ''; }
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function detach() {
+    if (st.ref && st.fn) { try { st.ref.off('value', st.fn); } catch (e) {} }
+    st.ref = null; st.fn = null;
+  }
+  function reconcile() {
+    if (!allowed()) { if (st.ref) detach(); st.allowed = false; st.data = null; render(); return; }
+    st.allowed = true;
+    if (st.ref) return;
+    if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
+    st.ref = db.ref(NODE);
+    st.fn = function (sn) { st.data = sn.val(); st.problem = ''; render(); };
+    st.ref.on('value', st.fn, function (err) {
+      st.problem = err && err.code === 'PERMISSION_DENIED' ? 'AI 節點沒有讀取權限（Firebase 規則要允許 baoz_realtime/near_ai）' : 'AI 資料讀取失敗';
+      detach(); render();
+    });
+  }
+
+  var STATUS = { RUNNING: '運作中', DRY_RUN: '模擬', IDLE: '待命', PAUSED: '時段關閉', STALE: '資料延遲', BUDGET: '預算用完',
+                 DISABLED: '已關閉', WAITING: '等待資料', STARTING: '啟動中', STOPPED: '已停止' };
+  var PSTATE = { WAIT: '等待觸發', ARMED: '已進區，等確認', IN: '影子持有', DONE: '已出場', INVALID: '失效', REJECTED: '不採用', NONE: '不做' };
+
+  function card() {
+    var panel = $('baoz-system-panel');
+    if (!panel) return null;
+    var c = $('bz-ai-card');
+    if (c) return c;
+    c = document.createElement('section');
+    c.id = 'bz-ai-card';
+    c.className = 'bz-ai';
+    c.setAttribute('aria-label', 'AI 即時分析');
+    var head = panel.querySelector('.bz-head');
+    if (head) panel.insertBefore(c, head); else panel.appendChild(c);
+    return c;
+  }
+
+  function render() {
+    var c = card();
+    var d = st.data;
+    var view = { chip: '未啟動', tone: 'off' };
+    if (!c) { window.__BaoZAIView = view; return; }
+    if (!st.allowed) { c.hidden = true; window.__BaoZAIView = null; return; }
+    c.hidden = false;
+    var cls = 'bz-ai';
+    var html = '<div class="bz-ai-head"><span class="bz-ai-title">AI 即時分析</span><span class="bz-ai-tag">影子・不下單</span>';
+    if (st.problem || !d) {
+      html += '</div><div class="bz-ai-empty">' + esc(st.problem || '電腦上的 BaoZ AI 程式還沒有啟動（或還沒有寫入資料）。') + '</div>';
+      c.className = cls + (st.problem ? ' ai-warn' : '');
+      c.innerHTML = html;
+      window.__BaoZAIView = { chip: st.problem ? '讀取失敗' : '未啟動', tone: st.problem ? 'warn' : 'off' };
+      return;
+    }
+    var age = Date.now() - Number(d.updated_at_ms || 0);
+    var stale = !(age < 3 * 60 * 1000);
+    var u = d.usage || {}, cfg = d.config || {}, p = d.plan || null;
+    var MODEL = { 'claude-sonnet-5-5': 'Sonnet 5.5', 'claude-haiku-5-5': 'Haiku 5.5', 'claude-opus-5-5': 'Opus 5.5' };
+    var model = p && p.model ? (MODEL[p.model] || p.model) : '';
+    var meta = [];
+    if (model) meta.push(model);
+    if (d.data_time) meta.push('資料 ' + String(d.data_time).slice(11, 16));
+    meta.push('今天 US$' + Number(u.cost_usd || 0).toFixed(2) + '／' + Number(u.budget_usd || 0).toFixed(2));
+    meta.push('L1 ' + (u.calls_l1 || 0) + '・L2 ' + (u.calls_l2 || 0));
+    html += '<span class="bz-pill">' + esc(stale ? '沒有更新' : (STATUS[d.status] || d.status || '')) + '</span>' +
+            '<span class="bz-ai-meta">' + esc(meta.join('｜')) + '</span></div>';
+    var warn = stale || ['STALE', 'BUDGET', 'STOPPED'].indexOf(d.status) >= 0 || !!d.last_error;
+    var notice = stale ? 'AI 程式沒有在更新（最後 ' + new Date(Number(d.updated_at_ms || 0)).toLocaleTimeString('zh-TW', { hour12: false }) + '），以下是最後的內容'
+      : (d.status !== 'RUNNING' && d.status !== 'DRY_RUN' ? (d.status_text || '') : '');
+    if (!p) {
+      html += '<div class="bz-ai-empty">' + esc(notice || '還沒有 AI 計畫（等固定時點、價格靠近關鍵價位或規則改變時才會分析）。') + '</div>';
+      view = { chip: stale ? '沒有更新' : (STATUS[d.status] || '待命'), tone: warn ? 'warn' : 'off' };
+    } else {
+      var side = p.side === 'long' ? 'long' : (p.side === 'short' ? 'short' : '');
+      var active = ['WAIT', 'ARMED', 'IN'].indexOf(p.state) >= 0;
+      if (side && active) cls += side === 'long' ? ' ai-long' : ' ai-short';
+      var title = p.state === 'IN' ? (side === 'long' ? '影子持有多單' : '影子持有空單') : (p.decision || '—');
+      if (p.state === 'DONE') title = '已出場';
+      if (p.state === 'REJECTED') title = '計畫不採用';
+      html += '<div class="bz-ai-body"><div class="bz-ai-main"><div class="bz-ai-decision">' + esc(title) + '</div>' +
+              '<div class="bz-ai-summary">' + esc(p.summary || '') + '</div>' +
+              '<div class="bz-ai-state">' + esc((PSTATE[p.state] || p.state || '') + (p.state_text ? '｜' + p.state_text : '')) + '</div></div>';
+      if (side) {
+        var how = { pullback: side === 'long' ? '回測後反彈 ' : '反彈後回落 ', breakout: side === 'long' ? '突破 ' : '跌破 ', at_market: '現價' }[p.entry_type] || '';
+        var entryTxt = p.entry_type === 'at_market' ? '現價進場' : fmt(p.zone_low) + '–' + fmt(p.zone_high) + '｜' + how + (p.confirm_points || 0) + ' 點';
+        /* 進場價：已進場用實際價；已進區用確認價；還沒進區不知道（進場那一刻程式會檢查停損 ≤ 上限、報酬風險比 ≥ 1.5） */
+        var ref = n(p.fill_price) || (p.state === 'ARMED' && n(p.extreme) ? (side === 'long' ? p.extreme + (p.confirm_points || 0) : p.extreme - (p.confirm_points || 0)) : null);
+        var risk = ref && n(p.stop) ? Math.abs(ref - p.stop) : null;
+        var rew = ref && n(p.target1) ? Math.abs(p.target1 - ref) : null;
+        var inval = [];
+        if (n(p.invalidate_below)) inval.push('跌破 ' + fmt(p.invalidate_below));
+        if (n(p.invalidate_above)) inval.push('漲過 ' + fmt(p.invalidate_above));
+        if (p.valid_until) inval.push(hm(p.valid_until) + ' 前');
+        html += '<dl class="bz-ai-grid">' +
+          '<dt>進場</dt><dd>' + esc(p.fill_price ? fmt(p.fill_price) + '（' + hm(p.fill_time) + ' 影子進場）' : entryTxt) + '</dd>' +
+          '<dt>停損</dt><dd>' + esc(fmt(p.stop) + (risk ? '（' + risk + ' 點）' : '（進場時確認不超過上限）')) + '</dd>' +
+          '<dt>目標</dt><dd>' + esc(fmt(p.target1) + (n(p.target2) ? '／' + fmt(p.target2) : '') + (rew && risk ? '（' + rew + ' 點，' + (rew / risk).toFixed(1) + ' 倍）' : '')) + '</dd>' +
+          '<dt>失效</dt><dd>' + esc(inval.join('｜') || '—') + '</dd>' +
+          '<dt>信心</dt><dd>' + esc((p.confidence != null ? p.confidence : '—') + '｜和規則：' + (p.agree_with_rule || '—')) + '</dd>' +
+          '<dt>產生</dt><dd>' + esc(hm(p.created_at) + '｜' + (p.reason || '')) + '</dd></dl>';
+      } else {
+        html += '<dl class="bz-ai-grid"><dt>產生</dt><dd>' + esc(hm(p.created_at) + '｜' + (p.reason || '')) + '</dd>' +
+                '<dt>規則</dt><dd>' + esc('做多 ' + ((d.rule || {}).long || '—') + '・做空 ' + ((d.rule || {}).short || '—')) + '</dd></dl>';
+      }
+      html += '</div>';
+      if (p.key_factors && p.key_factors.length) html += '<ul class="bz-ai-factors">' + p.key_factors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+      if (p.risk) html += '<div class="bz-ai-risk">風險：' + esc(p.risk) + '</div>';
+      if (notice) html += '<div class="bz-ai-risk">' + esc(notice) + '</div>';
+      var chipTxt = p.state === 'IN' ? (side === 'long' ? '持有多單' : '持有空單') + (p.fill_price ? ' ' + fmt(p.fill_price) : '')
+        : (active && side ? (p.decision || '') + ' ' + fmt(p.zone_low) + '–' + fmt(p.zone_high) : (PSTATE[p.state] || p.decision || ''));
+      view = { chip: stale ? '沒有更新' : chipTxt, tone: warn ? 'warn' : (active && side ? (side === 'long' ? 'up' : 'down') : 'off') };
+    }
+    var foot = [];
+    if (d.last_l1) foot.push('<span>最近判讀 <b>' + esc(d.last_l1.time) + '</b> ' + esc(d.last_l1.reason || '') + '：' + esc(d.last_l1.note || '') + '</span>');
+    if (d.events && d.events.length) foot.push('<span>' + d.events.slice(0, 3).map(function (e) { return esc(e.time.slice(-5) + ' ' + e.kind + '：' + e.text); }).join('<br>') + '</span>');
+    if (d.last_error) foot.push('<span>錯誤：' + esc(d.last_error) + '</span>');
+    foot.push('<span>' + esc('日盤 AI ' + (cfg.day ? '開 ' + (cfg.day_time || '') : '關') + '｜夜盤 AI ' + (cfg.night ? '開 ' + (cfg.night_time || '') : '關') + (d.dry_run ? '｜模擬' : '')) + '</span>');
+    html += '<div class="bz-ai-foot">' + foot.join('') + '</div>';
+    c.className = cls + (warn ? ' ai-warn' : '');
+    c.innerHTML = html;
+    window.__BaoZAIView = view;
+  }
+
+  function start() {
+    reconcile();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(reconcile).observe(d, { attributes: true, attributeFilter: ['class'] });
+    try { if (typeof auth !== 'undefined' && auth && typeof auth.onAuthStateChanged === 'function') auth.onAuthStateChanged(function () { detach(); reconcile(); }); } catch (e) {}
+    window.setInterval(function () { reconcile(); render(); }, 5000);   /* 面板晚建立、或判斷「沒有更新」 */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_AI_UI_1_4_0_END -->
 </body>
 </html>
