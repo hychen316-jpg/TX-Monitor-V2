@@ -10300,7 +10300,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 @media(pointer:coarse){.baoz-system-tab{min-height:44px}}
 
 
-/* ===== BaoZ UI 1.1.0（20261023）：持有部位卡、狀態橫幅、多空狀態卡、方向量尺、三檔對照、價位表標記 ===== */
+/* ===== BaoZ UI 1.1.1（20261023，V1.2.21：跌破／突破的暴Z表層＝壓力／支撐，算進最近壓力／支撐）；1.1.0：持有部位卡、狀態橫幅、多空狀態卡、方向量尺、三檔對照、價位表標記 ===== */
 #baoz-system-panel{--bz-res:#ff9f6b;--bz-sup:#6fd3ff;--bz-tgt:#c49bff;--bz-good:#52d9a0}
 #baoz-system-panel .bz-fresh-ok{color:var(--bz-good);background:color-mix(in srgb,var(--bz-good) 12%,var(--bz-surface))}
 #baoz-system-panel .bz-banner{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;margin:8px 0 0;border-radius:var(--bz-radius);font-size:13px;line-height:1.45;background:color-mix(in srgb,var(--bz-attn) 14%,var(--bz-surface));border:1px solid color-mix(in srgb,var(--bz-attn) 50%,transparent);color:var(--bz-attn)}
@@ -10718,6 +10718,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
   }
   function role(r) {
     const t=(r.meaning||'')+' '+(r.source||'');
+    if(r.broken&&/＝壓力/.test(r.meaning||''))return ['bz-r-res','跌破＝壓力'];          // V1.2.21：被穿過的暴Z表層角色互換
+    if(r.broken&&/＝支撐/.test(r.meaning||''))return ['bz-r-sup','突破＝支撐'];
     if(r.broken)return ['bz-r-brk','已'+(/突破/.test(r.broken)?'突破':'跌破')];
     if(/kdiv/i.test(r.source||'')||/分界/.test(r.kind))return ['bz-r-div','分界'];
     if(/必來點/.test(t))return ['bz-r-tgt','目標'];
@@ -10733,8 +10735,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     let shown=all.filter(r=>s.all||r.focus).map(r=>({...r,tags:[]}));
     // 最近的壓力（上方）和支撐（下方）
     if(f!=null){
-      const res=shown.filter(r=>r.low>f&&!r.broken&&/壓力/.test(r.meaning||'')).sort((a,b)=>a.low-b.low)[0];
-      const sup=shown.filter(r=>r.high<f&&!r.broken&&/支撐/.test(r.meaning||'')).sort((a,b)=>b.high-a.high)[0];
+      const res=shown.filter(r=>r.low>f&&(!r.broken||/＝壓力/.test(r.meaning||''))&&/壓力/.test(r.meaning||'')).sort((a,b)=>a.low-b.low)[0];
+      const sup=shown.filter(r=>r.high<f&&(!r.broken||/＝支撐/.test(r.meaning||''))&&/支撐/.test(r.meaning||'')).sort((a,b)=>b.high-a.high)[0];
       if(res)res.tags.push(['bz-r-near','最近壓力']);if(sup)sup.tags.push(['bz-r-near','最近支撐']);
     }
     // 持有部位的進場／停損／目標：落在既有價位上就加標籤，否則插一列
@@ -10790,7 +10792,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.1.0');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.1.1');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
