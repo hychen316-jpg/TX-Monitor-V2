@@ -10462,7 +10462,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.4.2-20261024';
+  const BUILD='BaoZ-Z31-UI-1.4.3-20261024';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10810,7 +10810,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.2');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.3');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -11869,10 +11869,11 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
 })();
 </script>
 <!-- Z31_PRO_UI_1_3_0_END -->
-<!-- Z31_BAOZ_AI_UI_1_4_2_BEGIN -->
-<style id="z31-baoz-ai-ui-1-4-2">
+<!-- Z31_BAOZ_AI_UI_1_4_3_BEGIN -->
+<style id="z31-baoz-ai-ui-1-4-3">
 /* ===== BaoZ UI 1.4.1（20261023）：AI 即時分析卡（讀 Firebase baoz_realtime/near_ai，由電腦上的 BaoZ AI 程式寫入）
-   只顯示；影子計畫，不下單。1.4.1：卡片下方加「最近一次試跑」；1.4.2：進場寫出確認價位（殺多點／嘎空點）、結算日 ===== */
+   只顯示；影子計畫，不下單。1.4.1：卡片下方加「最近一次試跑」；1.4.2：進場寫出確認價位（殺多點／嘎空點）、結算日；
+   1.4.3：一句話「現在要做什麼」＋現價／進場／停損／目標四個數字（距離幾點），一看就懂 ===== */
 #baoz-system-panel .bz-ai {
   margin: 9px 0;
   background: var(--bz-surface);
@@ -11905,6 +11906,18 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai-foot { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--bz-line); font-size: 12px; color: var(--bz-muted); display: grid; gap: 2px; }
 #baoz-system-panel .bz-ai-foot b { color: var(--bz-ink); font-weight: 600; }
 #baoz-system-panel .bz-ai-empty { font-size: 13px; color: var(--bz-muted); margin-top: 6px; }
+#baoz-system-panel .bz-ai-headline { margin-top: 8px; font-size: 22px; font-weight: 700; line-height: 1.3; color: var(--bz-ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+#baoz-system-panel .bz-ai-headline.up, #baoz-system-panel .bz-ai-headline.win { color: var(--bz-up); }
+#baoz-system-panel .bz-ai-headline.down, #baoz-system-panel .bz-ai-headline.loss { color: var(--bz-down); }
+#baoz-system-panel .bz-ai-headline .ago { font-size: 13px; font-weight: 400; color: var(--bz-muted); margin-left: 8px; }
+#baoz-system-panel .bz-ai-why { font-size: 13px; color: var(--bz-muted); margin-top: 2px; }
+#baoz-system-panel .bz-ai-nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
+#baoz-system-panel .bz-ai-num { border: 1px solid var(--bz-line); border-radius: var(--bz-radius); padding: 6px 10px; min-width: 0; }
+#baoz-system-panel .bz-ai-num .k { display: block; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-num b { display: block; font-size: 18px; font-weight: 600; color: var(--bz-ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+#baoz-system-panel .bz-ai-num small { display: block; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-num.stop b { color: var(--bz-attn); }
+#baoz-system-panel .bz-ai-more { margin-top: 8px; font-size: 12px; color: var(--bz-muted); }
 #baoz-system-panel .bz-ai-trial { margin-top: 10px; padding: 8px 10px; border: 1px dashed var(--bz-line); border-radius: var(--bz-radius); font-size: 13px; }
 #baoz-system-panel .bz-ai-trial-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12px; color: var(--bz-muted); }
 #baoz-system-panel .bz-ai-trial-head b { color: var(--bz-ink); font-weight: 600; }
@@ -11919,7 +11932,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai-trial-note { margin-top: 4px; font-size: 11px; color: var(--bz-muted); }
 </style>
 <script>
-/* BaoZ UI 1.4.2：AI 即時分析卡＋最近一次試跑（只讀 Firebase，不寫） */
+/* BaoZ UI 1.4.3：AI 即時分析卡＋最近一次試跑（只讀 Firebase，不寫） */
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near_ai';
@@ -12007,6 +12020,81 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     return h + '<div class="bz-ai-trial-note">試跑只顯示在這裡，不會變成上面的計畫；不是投資建議。</div></div>';
   }
 
+  /* ---------- 1.4.3：把計畫變成一句話＋四個數字 ---------- */
+  function signed(v) { v = Math.round(Number(v) || 0); return (v > 0 ? '+' : (v < 0 ? '−' : '±')) + Math.abs(v).toLocaleString('en-US'); }
+  function fin(v) { var x = Number(v); return Number.isFinite(x) ? x : null; }
+  var RULE = { '同意': '和 Argon 規則同方向', '不同意': '和 Argon 規則相反', '規則沒有訊號': 'Argon 規則目前沒有訊號' };
+  function describe(p, q, px) {
+    var L = p.side === 'long', dir = L ? '做多' : '做空';
+    var cf = Number(p.confirm_points) || 0, cl = n(p.confirm_level), zl = Number(p.zone_low), zh = Number(p.zone_high), sp = Number(p.stop);
+    var t1 = n(p.target1), t2 = n(p.target2);
+    var o = { head: '', tone: '', nums: [], chip: '', chipTone: 'off', active: false };
+    function tgt(entry) {
+      if (!t1) return ['—', ''];
+      var r = Math.abs(entry - sp), w = L ? t1 - entry : entry - t1;
+      return [fmt(t1) + (t2 ? '／' + fmt(t2) : ''), signed(w) + ' 點' + (r ? '（' + (w / r).toFixed(1) + ' 倍停損）' : '')];
+    }
+    if (p.state === 'IN' && q) {
+      var lots = Number(q.lots) || 1, open = Number(q.open_lots) || 1, ent = Number(q.entry);
+      var fl = px ? ((L ? px - ent : ent - px) * open + Number(q.realized || 0)) / lots : null;
+      var tg = q.t1_done ? n(q.target2) : n(q.target1);
+      o.head = '持有' + (L ? '多單 ' : '空單 ') + fmt(ent) + (fl != null ? '，浮動 ' + signed(fl) + ' 點' : '');
+      o.tone = fl == null ? (L ? 'up' : 'down') : (fl >= 0 ? 'win' : 'loss');
+      if (px) o.nums.push(['現價', fmt(px), '', '']);
+      o.nums.push(['停損', fmt(q.stop), px ? '還有 ' + Math.round(L ? px - q.stop : q.stop - px) + ' 點' : '', 'stop']);
+      if (tg) o.nums.push([q.t1_done ? '第二目標' : '目標', fmt(tg), px ? '還差 ' + Math.round(Math.abs(tg - px)) + ' 點' : '', '']);
+      if (q.t1_done) o.note = '第一目標已出一半，剩下一口停損移到成本 ' + fmt(q.stop);
+      o.chip = (L ? '多單 ' : '空單 ') + (fl != null ? signed(fl) : fmt(ent)); o.chipTone = L ? 'up' : 'down'; o.active = true;
+      return o;
+    }
+    if (p.state === 'WAIT' || p.state === 'ARMED') {
+      o.active = true; o.tone = L ? 'up' : 'down'; o.chipTone = o.tone;
+      var trig = null, lo, hi;
+      if (p.entry_type === 'breakout') {
+        trig = L ? Math.max(zh + cf, cl || -Infinity) : Math.min(zl - cf, cl || Infinity);
+        o.head = '等' + (L ? '漲過 ' : '跌破 ') + fmt(trig) + ' 就' + dir;
+        lo = hi = trig;
+      } else if (p.entry_type === 'pullback' && p.state === 'ARMED' && n(p.extreme)) {
+        trig = L ? Math.max(p.extreme + cf, cl || -Infinity) : Math.min(p.extreme - cf, cl || Infinity);
+        o.head = '已' + (L ? '回測到 ' : '反彈到 ') + fmt(p.extreme) + '，' + (L ? '站上 ' : '跌破 ') + fmt(trig) + ' 就' + dir;
+        lo = hi = trig;
+      } else if (p.entry_type === 'pullback') {
+        o.head = '等' + (L ? '回測到 ' : '反彈到 ') + fmt(zl) + '–' + fmt(zh) + '，' +
+                 (cl ? '再' + (L ? '站上 ' : '跌破 ') + fmt(cl) : (L ? '從低點反彈 ' : '從高點回落 ') + cf + ' 點') + ' 就' + dir;
+        if (L) { hi = Math.max(zh + cf, cl || -Infinity); lo = cl ? Math.max(sp + 1 + cf, cl) : hi; }
+        else { lo = Math.min(zl - cf, cl || Infinity); hi = cl ? Math.min(sp - 1 - cf, cl) : lo; }
+        if (lo > hi) { var x = lo; lo = hi; hi = x; }
+      } else {
+        o.head = '現價就' + dir; lo = hi = px || 0;
+      }
+      if (px) {
+        if (p.entry_type === 'pullback' && p.state === 'WAIT') {
+          var g = L ? px - zh : zl - px;
+          o.nums.push(['現價', fmt(px), g > 0 ? (L ? '要先回測 ' : '要先反彈 ') + Math.round(g) + ' 點' : '已在進場區附近', '']);
+        } else if (trig != null) {
+          var g2 = L ? trig - px : px - trig;
+          o.nums.push(['現價', fmt(px), g2 > 0 ? '還差 ' + Math.round(g2) + ' 點' : '已到觸發價', '']);
+        } else o.nums.push(['現價', fmt(px), '', '']);
+      }
+      var worst = L ? hi : lo, best = L ? lo : hi;
+      o.nums.push(['進場', lo === hi ? fmt(lo) : fmt(lo) + '–' + fmt(hi), lo === hi ? '' : '看' + (L ? '回測' : '反彈') + '多深', '']);
+      var rw = Math.round(Math.abs(worst - sp)), rb = Math.round(Math.abs(best - sp));
+      o.nums.push(['停損', fmt(sp), (rb !== rw ? Math.min(rb, rw) + '–' + Math.max(rb, rw) : rw) + ' 點', 'stop']);
+      var tt = tgt(worst);
+      o.nums.push(['目標', tt[0], tt[1], '']);
+      o.chip = (p.state === 'ARMED' ? '已進區 ' : '等') + (trig != null ? (L ? '漲過 ' : '跌破 ') + fmt(trig) : (L ? '回測 ' : '反彈 ') + fmt(zl) + '–' + fmt(zh)) + (L ? ' 多' : ' 空');
+      return o;
+    }
+    var MAP = { DONE: '已出場', INVALID: '計畫取消', REJECTED: 'AI 給的計畫不合規則，不採用', NONE: '不做' };
+    o.head = MAP[p.state] || (p.decision || '—');
+    var pnl = fin(p.pnl_points);
+    if (p.state === 'DONE' && pnl != null) { o.head += ' ' + signed(pnl) + ' 點'; o.tone = pnl >= 0 ? 'win' : 'loss'; }
+    if (p.state === 'INVALID' || p.state === 'REJECTED' || p.state === 'DONE') o.why = String(p.state_text || '').replace(/^(已出場|AI 計畫不合規則)：/, '');
+    if (px) o.nums.push(['現價', fmt(px), '', '']);
+    o.chip = p.state === 'DONE' && pnl != null ? '已出場 ' + signed(pnl) : (MAP[p.state] === MAP.REJECTED ? '不採用' : (MAP[p.state] || p.decision || ''));
+    return o;
+  }
+
   function render() {
     var c = card();
     var d = st.data;
@@ -12032,7 +12120,6 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     if (model) meta.push(model);
     if (d.data_time) meta.push('資料 ' + String(d.data_time).slice(11, 16));
     meta.push('今天 US$' + Number(u.cost_usd || 0).toFixed(2) + '／' + Number(u.budget_usd || 0).toFixed(2));
-    meta.push('L1 ' + (u.calls_l1 || 0) + '・L2 ' + (u.calls_l2 || 0));
     html += '<span class="bz-pill">' + esc(stale ? '沒有更新' : (STATUS[d.status] || d.status || '')) + '</span>' +
             '<span class="bz-ai-meta">' + esc(meta.join('｜')) + '</span></div>';
     var warn = stale || ['STALE', 'BUDGET', 'STOPPED'].indexOf(d.status) >= 0 || !!d.last_error;
@@ -12042,50 +12129,36 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       html += '<div class="bz-ai-empty">' + esc(notice || '還沒有 AI 計畫（等固定時點、價格靠近關鍵價位或規則改變時才會分析）。') + '</div>';
       view = { chip: stale ? '沒有更新' : (STATUS[d.status] || '待命'), tone: warn ? 'warn' : 'off' };
     } else {
-      var side = p.side === 'long' ? 'long' : (p.side === 'short' ? 'short' : '');
-      var active = ['WAIT', 'ARMED', 'IN'].indexOf(p.state) >= 0;
-      if (side && active) cls += side === 'long' ? ' ai-long' : ' ai-short';
-      var title = p.state === 'IN' ? (side === 'long' ? '影子持有多單' : '影子持有空單') : (p.decision || '—');
-      if (p.state === 'DONE') title = '已出場';
-      if (p.state === 'REJECTED') title = '計畫不採用';
-      html += '<div class="bz-ai-body"><div class="bz-ai-main"><div class="bz-ai-decision">' + esc(title) + '</div>' +
-              '<div class="bz-ai-summary">' + esc(p.summary || '') + '</div>' +
-              '<div class="bz-ai-state">' + esc((PSTATE[p.state] || p.state || '') + (p.state_text ? '｜' + p.state_text : '')) + '</div></div>';
-      if (side) {
-        var how = { pullback: side === 'long' ? '回測後反彈 ' : '反彈後回落 ', breakout: side === 'long' ? '突破 ' : '跌破 ', at_market: '現價' }[p.entry_type] || '';
-        var entryTxt = p.entry_type === 'at_market' ? '現價進場' : fmt(p.zone_low) + '–' + fmt(p.zone_high) + '｜' + how + (p.confirm_points || 0) + ' 點' + capTxt(p, side);
-        /* 進場價：已進場用實際價；已進區用確認價；還沒進區不知道（進場那一刻程式會檢查停損 ≤ 上限、報酬風險比 ≥ 1.5） */
-        var ref = n(p.fill_price) || (p.state === 'ARMED' && n(p.extreme) ? (side === 'long' ? p.extreme + (p.confirm_points || 0) : p.extreme - (p.confirm_points || 0)) : null);
-        var risk = ref && n(p.stop) ? Math.abs(ref - p.stop) : null;
-        var rew = ref && n(p.target1) ? Math.abs(p.target1 - ref) : null;
-        var inval = [];
-        if (n(p.invalidate_below)) inval.push('跌破 ' + fmt(p.invalidate_below));
-        if (n(p.invalidate_above)) inval.push('漲過 ' + fmt(p.invalidate_above));
-        if (p.valid_until) inval.push(hm(p.valid_until) + ' 前');
-        html += '<dl class="bz-ai-grid">' +
-          '<dt>進場</dt><dd>' + esc(p.fill_price ? fmt(p.fill_price) + '（' + hm(p.fill_time) + ' 影子進場）' : entryTxt) + '</dd>' +
-          '<dt>停損</dt><dd>' + esc(fmt(p.stop) + (risk ? '（' + risk + ' 點）' : '（進場時確認不超過上限）')) + '</dd>' +
-          '<dt>目標</dt><dd>' + esc(fmt(p.target1) + (n(p.target2) ? '／' + fmt(p.target2) : '') + (rew && risk ? '（' + rew + ' 點，' + (rew / risk).toFixed(1) + ' 倍）' : '')) + '</dd>' +
-          '<dt>失效</dt><dd>' + esc(inval.join('｜') || '—') + '</dd>' +
-          '<dt>信心</dt><dd>' + esc((p.confidence != null ? p.confidence : '—') + '｜和規則：' + (p.agree_with_rule || '—')) + '</dd>' +
-          '<dt>產生</dt><dd>' + esc(hm(p.created_at) + '｜' + (p.reason || '')) + '</dd></dl>';
-      } else {
-        html += '<dl class="bz-ai-grid"><dt>產生</dt><dd>' + esc(hm(p.created_at) + '｜' + (p.reason || '')) + '</dd>' +
-                '<dt>規則</dt><dd>' + esc('做多 ' + ((d.rule || {}).long || '—') + '・做空 ' + ((d.rule || {}).short || '—')) + '</dd></dl>';
+      var o = describe(p, d.position || null, n(d.price));
+      if (o.active) cls += p.side === 'long' ? ' ai-long' : ' ai-short';
+      html += '<div class="bz-ai-headline' + (o.tone ? ' ' + o.tone : '') + '">' + esc(o.head) +
+              (p.created_at ? '<span class="ago">' + esc(hm(p.created_at) + ' ' + (p.reason || '')) + '</span>' : '') + '</div>';
+      if (p.summary) html += '<div class="bz-ai-summary">' + esc(p.summary) + '</div>';
+      if (o.why) html += '<div class="bz-ai-why">' + esc(o.why) + '</div>';
+      if (o.note) html += '<div class="bz-ai-why">' + esc(o.note) + '</div>';
+      if (o.nums.length) html += '<div class="bz-ai-nums">' + o.nums.map(function (x) {
+        return '<div class="bz-ai-num' + (x[3] ? ' ' + x[3] : '') + '"><span class="k">' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>' + (x[2] ? '<small>' + esc(x[2]) + '</small>' : '') + '</div>';
+      }).join('') + '</div>';
+      if (o.active) {
+        var more = [];
+        if (p.valid_until && p.state !== 'IN') more.push('計畫有效到 ' + hm(p.valid_until));
+        if (n(p.invalidate_below) && p.state !== 'IN') more.push('還沒進場就先跌到 ' + fmt(p.invalidate_below) + '：不追');
+        if (n(p.invalidate_above) && p.state !== 'IN') more.push('還沒進場就先漲到 ' + fmt(p.invalidate_above) + '：不追');
+        if (p.confidence != null) more.push('AI 信心 ' + p.confidence + '／100');
+        if (p.agree_with_rule) more.push(RULE[p.agree_with_rule] || p.agree_with_rule);
+        html += '<div class="bz-ai-more">' + esc(more.join('｜')) + '</div>';
       }
-      html += '</div>';
       if (p.key_factors && p.key_factors.length) html += '<ul class="bz-ai-factors">' + p.key_factors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
       if (p.risk) html += '<div class="bz-ai-risk">風險：' + esc(p.risk) + '</div>';
       if (notice) html += '<div class="bz-ai-risk">' + esc(notice) + '</div>';
-      var chipTxt = p.state === 'IN' ? (side === 'long' ? '持有多單' : '持有空單') + (p.fill_price ? ' ' + fmt(p.fill_price) : '')
-        : (active && side ? (p.decision || '') + ' ' + fmt(p.zone_low) + '–' + fmt(p.zone_high) : (PSTATE[p.state] || p.decision || ''));
-      view = { chip: stale ? '沒有更新' : chipTxt, tone: warn ? 'warn' : (active && side ? (side === 'long' ? 'up' : 'down') : 'off') };
+      view = { chip: stale ? '沒有更新' : o.chip, tone: warn ? 'warn' : o.chipTone };
     }
     html += trialHtml(d.trial);
     var foot = [];
     if (d.last_l1) foot.push('<span>最近判讀 <b>' + esc(d.last_l1.time) + '</b> ' + esc(d.last_l1.reason || '') + '：' + esc(d.last_l1.note || '') + '</span>');
     if (d.events && d.events.length) foot.push('<span>' + d.events.slice(0, 3).map(function (e) { return esc(e.time.slice(-5) + ' ' + e.kind + '：' + e.text); }).join('<br>') + '</span>');
     if (d.last_error) foot.push('<span>錯誤：' + esc(d.last_error) + '</span>');
+    foot.push('<span>' + esc('今天 AI 快速判讀 ' + (u.calls_l1 || 0) + ' 次・完整規劃 ' + (u.calls_l2 || 0) + ' 次' + (u.calls_trial ? '・試跑 ' + u.calls_trial + ' 次' : '')) + '</span>');
     var exp = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d.expiry || ''));
     foot.push('<span>' + esc('日盤 AI ' + (cfg.day ? '開 ' + (cfg.day_time || '') : '關') + '｜夜盤 AI ' + (cfg.night ? '開 ' + (cfg.night_time || '') : '關') +
       (exp ? '｜結算日 ' + exp[2] + '/' + exp[3] + '（日盤不做單）' : '') + (d.dry_run ? '｜模擬' : '')) + '</span>');
@@ -12106,6 +12179,6 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   else start();
 })();
 </script>
-<!-- Z31_BAOZ_AI_UI_1_4_2_END -->
+<!-- Z31_BAOZ_AI_UI_1_4_3_END -->
 </body>
 </html>
