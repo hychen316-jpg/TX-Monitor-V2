@@ -10462,7 +10462,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.4.1-20261023';
+  const BUILD='BaoZ-Z31-UI-1.4.2-20261024';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10810,7 +10810,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.1');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.2');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -11869,10 +11869,10 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
 })();
 </script>
 <!-- Z31_PRO_UI_1_3_0_END -->
-<!-- Z31_BAOZ_AI_UI_1_4_1_BEGIN -->
-<style id="z31-baoz-ai-ui-1-4-1">
+<!-- Z31_BAOZ_AI_UI_1_4_2_BEGIN -->
+<style id="z31-baoz-ai-ui-1-4-2">
 /* ===== BaoZ UI 1.4.1（20261023）：AI 即時分析卡（讀 Firebase baoz_realtime/near_ai，由電腦上的 BaoZ AI 程式寫入）
-   只顯示；影子計畫，不下單。1.4.1：卡片下方加「最近一次試跑」 ===== */
+   只顯示；影子計畫，不下單。1.4.1：卡片下方加「最近一次試跑」；1.4.2：進場寫出確認價位（殺多點／嘎空點）、結算日 ===== */
 #baoz-system-panel .bz-ai {
   margin: 9px 0;
   background: var(--bz-surface);
@@ -11919,7 +11919,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai-trial-note { margin-top: 4px; font-size: 11px; color: var(--bz-muted); }
 </style>
 <script>
-/* BaoZ UI 1.4.1：AI 即時分析卡＋最近一次試跑（只讀 Firebase，不寫） */
+/* BaoZ UI 1.4.2：AI 即時分析卡＋最近一次試跑（只讀 Firebase，不寫） */
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near_ai';
@@ -11974,6 +11974,8 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   }
 
   /* 最近一次試跑（電腦上執行 Try_BaoZ_AI_Once.cmd 的結果；只顯示，不會變成上面的計畫）；超過 24 小時不顯示 */
+  /* 確認價位（殺多點：還要跌破分界−20；嘎空點：還要站上分界＋20） */
+  function capTxt(o, side) { return n(o.confirm_level) ? '，而且' + (side === 'long' ? '站上 ' : '跌破 ') + fmt(o.confirm_level) : ''; }
   function trialHtml(t) {
     if (!t || !t.at_ms || !(Date.now() - Number(t.at_ms) < 24 * 3600 * 1000)) return '';
     var MODEL = { 'claude-sonnet-5-5': 'Sonnet 5.5', 'claude-haiku-5-5': 'Haiku 5.5', 'claude-opus-5-5': 'Opus 5.5' };
@@ -11984,7 +11986,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     var main = '<b class="' + (side === 'long' ? 'up' : (side === 'short' ? 'down' : '')) + '">' + esc(t.decision || '—') + '</b>';
     if (side) {
       var how = { pullback: side === 'long' ? '回測後反彈 ' : '反彈後回落 ', breakout: side === 'long' ? '突破 ' : '跌破 ', at_market: '現價' }[t.entry_type] || '';
-      var parts = [t.entry_type === 'at_market' ? '現價進場' : '進場 ' + fmt(t.zone_low) + '–' + fmt(t.zone_high) + '（' + how + (t.confirm_points || 0) + ' 點）',
+      var parts = [t.entry_type === 'at_market' ? '現價進場' : '進場 ' + fmt(t.zone_low) + '–' + fmt(t.zone_high) + '（' + how + (t.confirm_points || 0) + ' 點' + capTxt(t, side) + '）',
                    '停損 ' + fmt(t.stop), '目標 ' + fmt(t.target1) + (n(t.target2) ? '／' + fmt(t.target2) : '')];
       var inval = [];
       if (n(t.invalidate_below)) inval.push('跌破 ' + fmt(t.invalidate_below));
@@ -12051,7 +12053,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
               '<div class="bz-ai-state">' + esc((PSTATE[p.state] || p.state || '') + (p.state_text ? '｜' + p.state_text : '')) + '</div></div>';
       if (side) {
         var how = { pullback: side === 'long' ? '回測後反彈 ' : '反彈後回落 ', breakout: side === 'long' ? '突破 ' : '跌破 ', at_market: '現價' }[p.entry_type] || '';
-        var entryTxt = p.entry_type === 'at_market' ? '現價進場' : fmt(p.zone_low) + '–' + fmt(p.zone_high) + '｜' + how + (p.confirm_points || 0) + ' 點';
+        var entryTxt = p.entry_type === 'at_market' ? '現價進場' : fmt(p.zone_low) + '–' + fmt(p.zone_high) + '｜' + how + (p.confirm_points || 0) + ' 點' + capTxt(p, side);
         /* 進場價：已進場用實際價；已進區用確認價；還沒進區不知道（進場那一刻程式會檢查停損 ≤ 上限、報酬風險比 ≥ 1.5） */
         var ref = n(p.fill_price) || (p.state === 'ARMED' && n(p.extreme) ? (side === 'long' ? p.extreme + (p.confirm_points || 0) : p.extreme - (p.confirm_points || 0)) : null);
         var risk = ref && n(p.stop) ? Math.abs(ref - p.stop) : null;
@@ -12084,7 +12086,9 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     if (d.last_l1) foot.push('<span>最近判讀 <b>' + esc(d.last_l1.time) + '</b> ' + esc(d.last_l1.reason || '') + '：' + esc(d.last_l1.note || '') + '</span>');
     if (d.events && d.events.length) foot.push('<span>' + d.events.slice(0, 3).map(function (e) { return esc(e.time.slice(-5) + ' ' + e.kind + '：' + e.text); }).join('<br>') + '</span>');
     if (d.last_error) foot.push('<span>錯誤：' + esc(d.last_error) + '</span>');
-    foot.push('<span>' + esc('日盤 AI ' + (cfg.day ? '開 ' + (cfg.day_time || '') : '關') + '｜夜盤 AI ' + (cfg.night ? '開 ' + (cfg.night_time || '') : '關') + (d.dry_run ? '｜模擬' : '')) + '</span>');
+    var exp = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d.expiry || ''));
+    foot.push('<span>' + esc('日盤 AI ' + (cfg.day ? '開 ' + (cfg.day_time || '') : '關') + '｜夜盤 AI ' + (cfg.night ? '開 ' + (cfg.night_time || '') : '關') +
+      (exp ? '｜結算日 ' + exp[2] + '/' + exp[3] + '（日盤不做單）' : '') + (d.dry_run ? '｜模擬' : '')) + '</span>');
     html += '<div class="bz-ai-foot">' + foot.join('') + '</div>';
     c.className = cls + (warn ? ' ai-warn' : '');
     c.innerHTML = html;
@@ -12102,6 +12106,6 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   else start();
 })();
 </script>
-<!-- Z31_BAOZ_AI_UI_1_4_1_END -->
+<!-- Z31_BAOZ_AI_UI_1_4_2_END -->
 </body>
 </html>
