@@ -10462,7 +10462,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.4.4-20261024';
+  const BUILD='BaoZ-Z31-UI-1.4.5-20261024';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10810,7 +10810,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.4');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.5');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -11869,12 +11869,13 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
 })();
 </script>
 <!-- Z31_PRO_UI_1_3_0_END -->
-<!-- Z31_BAOZ_AI_UI_1_4_4_BEGIN -->
-<style id="z31-baoz-ai-ui-1-4-4">
+<!-- Z31_BAOZ_AI_UI_1_4_5_BEGIN -->
+<style id="z31-baoz-ai-ui-1-4-5">
 /* ===== BaoZ UI 1.4.1（20261023）：AI 即時分析卡（讀 Firebase baoz_realtime/near_ai，由電腦上的 BaoZ AI 程式寫入）
    只顯示；影子計畫，不下單。1.4.1：卡片下方加「最近一次試跑」；1.4.2：進場寫出確認價位（殺多點／嘎空點）、結算日；
    1.4.3：一句話「現在要做什麼」＋現價／進場／停損／目標四個數字（距離幾點），一看就懂；
-   1.4.4：合約、計畫是幾分鐘前產生的、AI 自評把握（不是勝率）、快照跳過觸發價等確認、用看到的價進場的說明 ===== */
+   1.4.4：合約、計畫是幾分鐘前產生的、AI 自評把握（不是勝率）、快照跳過觸發價等確認、用看到的價進場的說明；
+   1.4.5：殺多點／嘎空點型態標記（BaoZ AI V0.1.11：正在測試的成本區、最近的型態和之後的走勢；只顯示，不下單） ===== */
 #baoz-system-panel .bz-ai {
   margin: 9px 0;
   background: var(--bz-surface);
@@ -11931,9 +11932,20 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai-trial .ng { color: var(--bz-attn); margin-top: 4px; }
 #baoz-system-panel .bz-ai-trial-sim { margin-top: 4px; color: var(--bz-muted); font-variant-numeric: tabular-nums; }
 #baoz-system-panel .bz-ai-trial-note { margin-top: 4px; font-size: 11px; color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-pat { margin-top: 10px; padding: 8px 10px; border: 1px solid var(--bz-line); border-radius: var(--bz-radius); font-size: 13px; }
+#baoz-system-panel .bz-ai-pat-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-pat-head b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-ai-pat-watch { margin-top: 4px; color: var(--bz-accent); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-ai-pat ul { margin: 4px 0 0; padding-left: 18px; color: var(--bz-ink); }
+#baoz-system-panel .bz-ai-pat li { margin-top: 3px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-ai-pat li b.up { color: var(--bz-up); }
+#baoz-system-panel .bz-ai-pat li b.down { color: var(--bz-down); }
+#baoz-system-panel .bz-ai-pat li small { color: var(--bz-muted); font-size: 12px; }
+#baoz-system-panel .bz-ai-pat .none { margin-top: 4px; color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-pat .ng { margin-top: 4px; color: var(--bz-attn); }
 </style>
 <script>
-/* BaoZ UI 1.4.4：AI 即時分析卡＋最近一次試跑（只讀 Firebase，不寫） */
+/* BaoZ UI 1.4.5：AI 即時分析卡＋型態標記＋最近一次試跑（只讀 Firebase，不寫） */
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near_ai';
@@ -12023,6 +12035,24 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       h += '<div class="bz-ai-trial-sim">回放之後的走勢（用每分鐘紀錄模擬，不是實盤）：<br>' + ev.concat([esc(t.sim.end || '')]).join('<br>') + '</div>';
     }
     return h + '<div class="bz-ai-trial-note">試跑只顯示在這裡，不會變成上面的計畫；不是投資建議。</div></div>';
+  }
+
+  /* ---------- 1.4.5：殺多點／嘎空點型態標記（BaoZ AI V0.1.11 送 patterns、pattern_watch；舊版沒有就不顯示） ---------- */
+  function patHtml(d) {
+    var w = Array.isArray(d.pattern_watch) ? d.pattern_watch : [], ps = Array.isArray(d.patterns) ? d.patterns : [];
+    if (!Array.isArray(d.patterns) && !Array.isArray(d.pattern_watch)) return '';
+    var h = '<div class="bz-ai-pat" id="bz-ai-pat"><div class="bz-ai-pat-head"><span class="bz-ai-tag">型態</span><b>殺多點／嘎空點型態</b>' +
+            '<span>只顯示、不下單（碰到成本區 → 回落／反彈 30 點並回到區外）</span></div>';
+    w.forEach(function (x) { h += '<div class="bz-ai-pat-watch">' + esc(x) + '</div>'; });
+    if (ps.length) {
+      h += '<ul>' + ps.map(function (p) {
+        var tone = p.side === 'long' ? 'up' : (p.side === 'short' ? 'down' : '');
+        return '<li><b class="' + tone + '">' + esc(String(p.time || '') + ' ' + (p.label || '')) + '</b> ' + esc(p.text || '') +
+               (p.out ? '<br><small>' + esc(p.out) + '</small>' : '') + '</li>';
+      }).join('') + '</ul>';
+    } else if (!w.length) h += '<div class="none">今天還沒有型態。</div>';
+    if (d.research && d.research.error) h += '<div class="ng">' + esc(d.research.error) + '</div>';
+    return h + '</div>';
   }
 
   /* ---------- 1.4.3：把計畫變成一句話＋四個數字 ---------- */
@@ -12166,6 +12196,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       if (notice) html += '<div class="bz-ai-risk">' + esc(notice) + '</div>';
       view = { chip: stale ? '沒有更新' : o.chip, tone: warn ? 'warn' : o.chipTone };
     }
+    html += patHtml(d);
     html += trialHtml(d.trial);
     var foot = [];
     if (d.last_l1) foot.push('<span>最近判讀 <b>' + esc(d.last_l1.time) + '</b> ' + esc(d.last_l1.reason || '') + '：' + esc(d.last_l1.note || '') + '</span>');
@@ -12192,6 +12223,6 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   else start();
 })();
 </script>
-<!-- Z31_BAOZ_AI_UI_1_4_4_END -->
+<!-- Z31_BAOZ_AI_UI_1_4_5_END -->
 </body>
 </html>
