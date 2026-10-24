@@ -10462,7 +10462,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.4.3-20261024';
+  const BUILD='BaoZ-Z31-UI-1.4.4-20261024';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10810,7 +10810,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.3');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.4');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -11869,11 +11869,12 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
 })();
 </script>
 <!-- Z31_PRO_UI_1_3_0_END -->
-<!-- Z31_BAOZ_AI_UI_1_4_3_BEGIN -->
-<style id="z31-baoz-ai-ui-1-4-3">
+<!-- Z31_BAOZ_AI_UI_1_4_4_BEGIN -->
+<style id="z31-baoz-ai-ui-1-4-4">
 /* ===== BaoZ UI 1.4.1（20261023）：AI 即時分析卡（讀 Firebase baoz_realtime/near_ai，由電腦上的 BaoZ AI 程式寫入）
    只顯示；影子計畫，不下單。1.4.1：卡片下方加「最近一次試跑」；1.4.2：進場寫出確認價位（殺多點／嘎空點）、結算日；
-   1.4.3：一句話「現在要做什麼」＋現價／進場／停損／目標四個數字（距離幾點），一看就懂 ===== */
+   1.4.3：一句話「現在要做什麼」＋現價／進場／停損／目標四個數字（距離幾點），一看就懂；
+   1.4.4：合約、計畫是幾分鐘前產生的、AI 自評把握（不是勝率）、快照跳過觸發價等確認、用看到的價進場的說明 ===== */
 #baoz-system-panel .bz-ai {
   margin: 9px 0;
   background: var(--bz-surface);
@@ -11932,7 +11933,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai-trial-note { margin-top: 4px; font-size: 11px; color: var(--bz-muted); }
 </style>
 <script>
-/* BaoZ UI 1.4.3：AI 即時分析卡＋最近一次試跑（只讀 Firebase，不寫） */
+/* BaoZ UI 1.4.4：AI 即時分析卡＋最近一次試跑（只讀 Firebase，不寫） */
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near_ai';
@@ -11944,6 +11945,10 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   function n(v) { var x = Number(v); return Number.isFinite(x) && x !== 0 ? x : null; }
   function fmt(v) { var x = n(v); return x == null ? '—' : x.toLocaleString('en-US'); }
   function hm(iso) { var m = /T(\d\d:\d\d)/.exec(String(iso || '')); return m ? m[1] : ''; }
+  function ago(iso) {   /* 幾分鐘前（6 小時內才寫） */
+    var t = Date.parse(String(iso || '')), m = Math.floor((Date.now() - t) / 60000);
+    return Number.isFinite(m) && m >= 0 && m < 360 ? (m < 1 ? '剛剛' : m + ' 分鐘前') : '';
+  }
   function allowed() {
     try {
       var d = $('dashboard');
@@ -12007,7 +12012,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       if (inval.length) parts.push('失效 ' + inval.join('、'));
       main += '｜' + esc(parts.join('｜'));
     }
-    main += '｜' + esc('信心 ' + (t.confidence != null ? t.confidence : '—') + '｜和規則：' + (t.agree_with_rule || '—') + (t.price ? '｜當時現價 ' + fmt(t.price) : ''));
+    main += '｜' + esc('AI 自評 ' + (t.confidence != null ? t.confidence : '—') + '｜和規則：' + (t.agree_with_rule || '—') + (t.price ? '｜當時現價 ' + fmt(t.price) : ''));
     h += '<div class="bz-ai-trial-main">' + main + '</div>';
     if (t.summary) h += '<div class="bz-ai-trial-main">' + esc(t.summary) + '</div>';
     if (t.key_factors && t.key_factors.length) h += '<ul>' + t.key_factors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
@@ -12043,7 +12048,10 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       if (px) o.nums.push(['現價', fmt(px), '', '']);
       o.nums.push(['停損', fmt(q.stop), px ? '還有 ' + Math.round(L ? px - q.stop : q.stop - px) + ' 點' : '', 'stop']);
       if (tg) o.nums.push([q.t1_done ? '第二目標' : '目標', fmt(tg), px ? '還差 ' + Math.round(Math.abs(tg - px)) + ' 點' : '', '']);
-      if (q.t1_done) o.note = '第一目標已出一半，剩下一口停損移到成本 ' + fmt(q.stop);
+      var notes = [];
+      if (n(q.trigger) && Number(q.trigger) !== ent) notes.push('觸發價 ' + fmt(q.trigger) + '，' + (q.fill_from || '') + '看到 ' + fmt(ent) + '，用看到的價記進場');
+      if (q.t1_done) notes.push('第一目標已出一半，剩下一口停損移到成本 ' + fmt(q.stop));
+      if (notes.length) o.note = notes.join('；');
       o.chip = (L ? '多單 ' : '空單 ') + (fl != null ? signed(fl) : fmt(ent)); o.chipTone = L ? 'up' : 'down'; o.active = true;
       return o;
     }
@@ -12082,6 +12090,10 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       o.nums.push(['停損', fmt(sp), (rb !== rw ? Math.min(rb, rw) + '–' + Math.max(rb, rw) : rw) + ' 點', 'stop']);
       var tt = tgt(worst);
       o.nums.push(['目標', tt[0], tt[1], '']);
+      if (n(p.gap_px)) {   /* 快照已經越過觸發價，但照快照價進場停損太大：等每分鐘紀錄（K 棒）確認 */
+        if (trig != null) o.head = (L ? '已漲過 ' : '已跌破 ') + fmt(trig) + '，等每分鐘紀錄確認進場價';
+        o.note = '快照看到 ' + fmt(p.gap_px) + '，照這個價進場停損太大；每分鐘紀錄有在 ' + (trig != null ? fmt(trig) : '觸發價') + ' 附近成交才算進場，沒有就取消';
+      }
       o.chip = (p.state === 'ARMED' ? '已進區 ' : '等') + (trig != null ? (L ? '漲過 ' : '跌破 ') + fmt(trig) : (L ? '回測 ' : '反彈 ') + fmt(zl) + '–' + fmt(zh)) + (L ? ' 多' : ' 空');
       return o;
     }
@@ -12118,6 +12130,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     var model = p && p.model ? (MODEL[p.model] || p.model) : '';
     var meta = [];
     if (model) meta.push(model);
+    if (d.contract) meta.push(String(d.contract));
     if (d.data_time) meta.push('資料 ' + String(d.data_time).slice(11, 16));
     meta.push('今天 US$' + Number(u.cost_usd || 0).toFixed(2) + '／' + Number(u.budget_usd || 0).toFixed(2));
     html += '<span class="bz-pill">' + esc(stale ? '沒有更新' : (STATUS[d.status] || d.status || '')) + '</span>' +
@@ -12132,7 +12145,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       var o = describe(p, d.position || null, n(d.price));
       if (o.active) cls += p.side === 'long' ? ' ai-long' : ' ai-short';
       html += '<div class="bz-ai-headline' + (o.tone ? ' ' + o.tone : '') + '">' + esc(o.head) +
-              (p.created_at ? '<span class="ago">' + esc(hm(p.created_at) + ' ' + (p.reason || '')) + '</span>' : '') + '</div>';
+              (p.created_at ? '<span class="ago">' + esc(hm(p.created_at) + (ago(p.created_at) ? '（' + ago(p.created_at) + '）' : '') + ' ' + (p.reason || '')) + '</span>' : '') + '</div>';
       if (p.summary) html += '<div class="bz-ai-summary">' + esc(p.summary) + '</div>';
       if (o.why) html += '<div class="bz-ai-why">' + esc(o.why) + '</div>';
       if (o.note) html += '<div class="bz-ai-why">' + esc(o.note) + '</div>';
@@ -12144,7 +12157,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
         if (p.valid_until && p.state !== 'IN') more.push('計畫有效到 ' + hm(p.valid_until));
         if (n(p.invalidate_below) && p.state !== 'IN') more.push('還沒進場就先跌到 ' + fmt(p.invalidate_below) + '：不追');
         if (n(p.invalidate_above) && p.state !== 'IN') more.push('還沒進場就先漲到 ' + fmt(p.invalidate_above) + '：不追');
-        if (p.confidence != null) more.push('AI 信心 ' + p.confidence + '／100');
+        if (p.confidence != null) more.push('AI 自評把握 ' + p.confidence + '／100（不是勝率）');
         if (p.agree_with_rule) more.push(RULE[p.agree_with_rule] || p.agree_with_rule);
         html += '<div class="bz-ai-more">' + esc(more.join('｜')) + '</div>';
       }
@@ -12179,6 +12192,6 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   else start();
 })();
 </script>
-<!-- Z31_BAOZ_AI_UI_1_4_3_END -->
+<!-- Z31_BAOZ_AI_UI_1_4_4_END -->
 </body>
 </html>
