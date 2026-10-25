@@ -26,6 +26,7 @@
 <!-- Z22_RC2H_A6_BIGWAVE_HOLD_UI_v0.1_20260926 | presentation/build-recognition only | A6 RC2 TP200 FORMAL + Big-Wave HOLD/OBS semantics | no Firebase/listener/schema/order-authority change -->
 <!-- Z22_RC2F_BIGWAVE_HYST_RC1_UI_v0.1_20260926 | historical A5 companion capability retained | no Firebase/listener/schema/order-authority change -->
 <!-- Z22_RC2E_D2E_ECONFRESH_UI_COMPAT_v0.1_20260924 | presentation/build-recognition only | RC2E inherits RC2A UnifiedRisk/ATM/Runner UI capability | D2E/EconFresh labels | no Firebase/listener/schema/order-authority change -->
+<!-- MME_R07_1_CONFIDENCE_GRADE_UI_v0.2_20261025 | adds wsr_confidence_grade A/B (10:30 flow agreement; never changes the read) | based on index_z31_MME_R07_WSR_20261025.html -->
 <!-- MME_R07_WHOLE_SESSION_READ_UI_v0.1_20261025 | presentation-only | reuses monitor_realtime/mme listener | R07 wsr_* fields: morning drive -> 10:10 prelim -> 10:30 main read | challenged never flips | Authority 0/0 | based on index_z31.html 2026-10-25 -->
 <!-- FIREBASE_DOWNLOAD_OPTIMIZED_PHASE1_RC1_20260923 | transport-only | realtime top-level delta cache | MME/Alpha reuse parent delta | History/Radar unchanged | no Z2/MME/order/UI semantic change -->
 <!-- MME_PREUS_POSTUS_FORECAST_UI_v0.2_RC2_ZH1_20260920 | Runtime RC2 companion | Chinese operator-facing PREOPEN/U30/U45/U60/U75 Reference | Firebase observability-only nested preus_postus_forecast | NightSegment v0.1.4 SF1 retained | Z2/Entry/Order authority 0/0/0 -->
@@ -8779,6 +8780,11 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #v2-live-page .mme-wsr-live.is-missing { border-color:#3a3a3c; opacity:.75; }
 #v2-live-page .mme-wsr-live.is-challenged { box-shadow:inset 0 -2px 0 rgba(255,159,10,.75); }
 #v2-live-page .mme-wsr-live .mme-wsr-flag { color:#ffb340; }
+#v2-live-page .mme-wsr-live .mme-wsr-grade { display:block; margin-top:3px; font-size:12px; font-weight:800; color:#aeaeb2; white-space:normal; overflow-wrap:anywhere; }
+#v2-live-page .mme-wsr-live .mme-wsr-grade b { display:inline-block; margin-right:6px; padding:0 7px; border-radius:9px; font-size:12px; line-height:18px; color:#1c1c1e; background:#8e8e93; }
+#v2-live-page .mme-wsr-live .mme-wsr-grade.is-a b { background:#ffd60a; }
+#v2-live-page .mme-wsr-live .mme-wsr-grade.is-a { color:#ffe066; }
+#v2-live-page .mme-wsr-live .mme-wsr-grade.is-b b { background:#636366; color:#f2f2f7; }
 @media (max-width: 760px) {
   #v2-live-page .mme-day-read-dual { grid-template-columns:1fr; }
 }
@@ -9253,7 +9259,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     band.appendChild(dualRead);
     // R07 Day Whole-Session Read: the morning drive (first Sticky lock) is only trusted until the 10:10-10:30 pivot.
     const wsrLive=make('div','mme-wsr-live is-missing','mme-wsr-live');
-    wsrLive.innerHTML='<span class="mme-day-read-label">R07 整盤判讀｜早盤推動 → 10:10 初判 → 10:30 正式｜RESEARCH・非入場訊號</span><strong class="mme-wsr-value" id="mme-wsr-value">等待 R07 MME</strong><small class="mme-day-read-meta" id="mme-wsr-drive">--</small><small class="mme-day-read-meta" id="mme-wsr-anchor">Authority 0 / Entry 0</small>';
+    wsrLive.innerHTML='<span class="mme-day-read-label">R07.1 整盤判讀｜早盤推動 → 10:10 初判 → 10:30 正式＋A/B 信心等級｜RESEARCH・非入場訊號</span><strong class="mme-wsr-value" id="mme-wsr-value">等待 R07 MME</strong><small class="mme-wsr-grade" id="mme-wsr-grade">信心等級｜10:30 正式判讀後顯示</small><small class="mme-day-read-meta" id="mme-wsr-drive">--</small><small class="mme-day-read-meta" id="mme-wsr-anchor">Authority 0 / Entry 0</small>';
     band.appendChild(wsrLive);
     const challengeLive=make('div','mme-challenge-live','mme-challenge-live');
     challengeLive.innerHTML='<span class="mme-day-read-label">LIVE CHALLENGE STATUS｜RESEARCH SHADOW</span><strong class="mme-day-read-value" id="mme-challenge-live-value">等待60M受挑戰語境</strong><small class="mme-day-read-meta" id="mme-challenge-live-meta">Authority 0 / Entry 0｜不改60M Frozen Read</small>';
@@ -9390,6 +9396,24 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const st=String((data&&data.wsr_whole_session_state)||'').toUpperCase();
     return /^(PRELIM_READ|MAIN_READ|MAIN_READ_CHALLENGED|FAILED_DRIVE_EARLY)$/.test(st) && (Number(data.wsr_whole_session_direction)||0)!==0;
   }
+  // R07.1: A = at least 3 of 6 flow fields frozen at 10:30 agree with the read (backtest 21 days 81%, avg +217); B = the rest (37 days 59%, +69).
+  function wsrGrade(data){ const g=String((data&&data.wsr_confidence_grade)||'').toUpperCase(); return (g==='A'||g==='B')?g:''; }
+  function wsrGradeTag(data){ const g=wsrGrade(data); return g?('｜'+g+'級'):''; }
+  function renderWsrGrade(data, show){
+    const el=document.getElementById('mme-wsr-grade');
+    if(!el) return;
+    el.className='mme-wsr-grade';
+    const g=String((data&&data.wsr_confidence_grade)||'').toUpperCase();
+    if(!show || !data || !('wsr_confidence_grade' in data)){ el.textContent=data&&data.wsr_build&&!('wsr_confidence_grade' in data)?'信心等級｜需 R07.1 MME（目前為 R07）':'信心等級｜10:30 正式判讀後顯示'; return; }
+    if(g==='A'||g==='B'){
+      el.classList.add(g==='A'?'is-a':'is-b');
+      el.innerHTML='<b>'+g+' 級</b>'+(g==='A'?'流向同向（回測 21 天 81%・平均 +217）':'流向未同向（回測 37 天 59%・平均 +69）')+'｜'+String(data.wsr_flow_time||'10:30')+' 流向 '+(Number(data.wsr_flow_agree_count)||0)+'/'+(Number(data.wsr_flow_field_count)||0)+' 同向｜只是信心，不改方向';
+    } else if(g==='NA'){
+      el.textContent='信心等級｜流向資料不足（'+(Number(data.wsr_flow_field_count)||0)+'/6 欄位）';
+    } else {
+      el.textContent='信心等級｜10:30 正式判讀後顯示';
+    }
+  }
   function renderWholeSessionRead(data, nightActive){
     const box=document.getElementById('mme-wsr-live');
     const val=document.getElementById('mme-wsr-value');
@@ -9419,7 +9443,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       color=d; box.classList.add(d>0?'is-bull':(d<0?'is-bear':'is-pending'));
       if(challenged){ text+='｜⚠ 已被反向推 '+fmt(data.wsr_whole_session_adverse_points,0)+' 點（不翻向）'; box.classList.add('is-challenged'); }
     }
+    if(/^MAIN_READ/.test(st)) text+=wsrGradeTag(data);
     val.textContent=text; setMmeDirClass(val,color,false);
+    renderWsrGrade(data, /^MAIN_READ/.test(st));
     let dt=driveDir ? ('早盤推動 '+wsrDirLabel(driveDir)+' @'+String(data.wsr_morning_drive_lock_time||'')+' '+fmt(data.wsr_morning_drive_lock_price,0)+'｜'+(driveValid?'10:30前有效':'已過10:30・不代表整盤')+'｜最大順勢 '+signed(data.wsr_drive_mfe_points,0)+'｜目前 '+signed(data.wsr_drive_current_points,0)) : '早盤推動｜等待第一次 Sticky 鎖定';
     if((Number(data.wsr_failed_drive_fired)||0)===1) dt+='｜推動失敗 '+String(data.wsr_failed_drive_time||'')+' '+fmt(data.wsr_failed_drive_price,0)+'（衝≥100後回到鎖定價）';
     const mat=String(data.wsr_drive_maturity_state||'');
@@ -9431,7 +9457,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const sc=Number(data.sc_center), sp=Number(data.sp_center);
     if(sc>1000&&sp>1000) parts.push('SC/SP中線 '+fmt((sc+sp)/2,0));
     const prelim=data.wsr_prelim_time ? ('10:10初判 '+wsrDirLabel(data.wsr_prelim_direction)) : '10:10初判 未到';
-    anchor.textContent='錨點 '+parts.join(' / ')+'｜'+prelim+(data.wsr_whole_session_votes?'｜投票 '+data.wsr_whole_session_votes:'')+(/^MAIN_READ/.test(st)?'｜讀判後最大逆向 '+fmt(data.wsr_whole_session_adverse_points,0):'')+'｜回測10:30判讀 39/58（樣本內）｜Authority 0 / Entry 0';
+    anchor.textContent='錨點 '+parts.join(' / ')+'｜'+prelim+(data.wsr_whole_session_votes?'｜投票 '+data.wsr_whole_session_votes:'')+(/^MAIN_READ/.test(st)?'｜讀判後最大逆向 '+fmt(data.wsr_whole_session_adverse_points,0):'')+'｜回測10:30判讀 39/58、A級 17/21（樣本內）｜Authority 0 / Entry 0';
   }
 
   function render(data){
@@ -9506,7 +9532,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 
     const titleEl=document.getElementById('mme-title');
     if(titleEl){
-      titleEl.textContent='MME 主力多空心態｜'+(data.wsr_build?'R07 整盤判讀 + ':'')+(backendV052?'v0.5.2 + CashOpen0900 SPA Gate RC1 UI + Whole-Day Mindset + Mature60M + RoleMaturity/Early30 + ChallengeLifecycle':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.4 SF1 U75 Price Acceptance + DayPositioning v0.1.4・Firebase｜紅多綠空';
+      titleEl.textContent='MME 主力多空心態｜'+(data.wsr_build?(('wsr_confidence_grade' in data)?'R07.1 整盤判讀＋信心等級 + ':'R07 整盤判讀 + '):'')+(backendV052?'v0.5.2 + CashOpen0900 SPA Gate RC1 UI + Whole-Day Mindset + Mature60M + RoleMaturity/Early30 + ChallengeLifecycle':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.4 SF1 U75 Price Acceptance + DayPositioning v0.1.4・Firebase｜紅多綠空';
     }
 
     band.className='mme-live-band '+(anySessionWarning?'mme-risk':(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state)));
@@ -9521,7 +9547,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       const wd=Number(data.wsr_whole_session_direction)||0;
       const wdrive=Number(data.wsr_morning_drive_direction)||0;
       if(wsrHasRead(data)){
-        primaryEl.textContent=((Number(data.wsr_whole_session_challenged)||0)===1?'⚠ ':'')+'整盤'+wsrDirLabel(wd)+'｜R07 '+(data.wsr_whole_session_state_zh||wst);
+        primaryEl.textContent=((Number(data.wsr_whole_session_challenged)||0)===1?'⚠ ':'')+'整盤'+wsrDirLabel(wd)+'｜R07 '+(data.wsr_whole_session_state_zh||wst)+(/^MAIN_READ/.test(wst)?wsrGradeTag(data):'');
         setMmeDirClass(primaryEl,wd,false);
         band.className='mme-live-band '+(wd>0?'mme-bull':'mme-bear');
       } else if(wst==='NO_READ'){
@@ -9863,7 +9889,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     }
     if(!nightActive && wsrHasRead(data)){
       const wd=Number(data.wsr_whole_session_direction)||0;
-      mindText=((Number(data.wsr_whole_session_challenged)||0)===1?'⚠ ':'')+'R07整盤'+wsrDirLabel(wd)+'｜'+(data.wsr_whole_session_state_zh||'');
+      mindText=((Number(data.wsr_whole_session_challenged)||0)===1?'⚠ ':'')+'R07整盤'+wsrDirLabel(wd)+'｜'+(data.wsr_whole_session_state_zh||'')+(/^MAIN_READ/.test(String(data.wsr_whole_session_state||'').toUpperCase())?wsrGradeTag(data):'');
       mindKind=wd>0?'q-bull':'q-bear';
     }
     qset('mme-q-mind',mindText,mindKind);
@@ -9913,7 +9939,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         : ('一句話：'+wholeDayMindsetText+'｜'+(dayMatureReached?'60M '+matureStatusText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M成熟確認'))+'｜Role '+(roleText||'--')+(roleApplied?'【降級】':'')+(challengeActive?'｜LIVE '+challengeText:'')+(warningText?'｜⚠ '+warningText:'')+'｜即時 '+execText+'｜'+phaseText+'｜'+forecastText);
     }
 
-    if(qsum && !nightActive && wsrHasRead(data)) qsum.textContent='一句話：R07整盤'+wsrDirLabel(data.wsr_whole_session_direction)+'（'+(data.wsr_whole_session_state_zh||'')+'）｜R06底色 '+qsum.textContent.replace(/^一句話：/,'');
+    if(qsum && !nightActive && wsrHasRead(data)) qsum.textContent='一句話：R07整盤'+wsrDirLabel(data.wsr_whole_session_direction)+'（'+(data.wsr_whole_session_state_zh||'')+(wsrGrade(data)?'・'+wsrGrade(data)+'級':'')+'）｜R06底色 '+qsum.textContent.replace(/^一句話：/,'');
     const sScoreDetail=document.getElementById('mme-session-score-detail');
     if(sScoreDetail){ sScoreDetail.textContent=signed(sessionScore,1); setMmeDirClass(sScoreDetail,sessionScore,sessionWarn); }
     const sRecent=document.getElementById('mme-session-recent');
