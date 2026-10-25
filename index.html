@@ -26,7 +26,6 @@
 <!-- Z22_RC2H_A6_BIGWAVE_HOLD_UI_v0.1_20260926 | presentation/build-recognition only | A6 RC2 TP200 FORMAL + Big-Wave HOLD/OBS semantics | no Firebase/listener/schema/order-authority change -->
 <!-- Z22_RC2F_BIGWAVE_HYST_RC1_UI_v0.1_20260926 | historical A5 companion capability retained | no Firebase/listener/schema/order-authority change -->
 <!-- Z22_RC2E_D2E_ECONFRESH_UI_COMPAT_v0.1_20260924 | presentation/build-recognition only | RC2E inherits RC2A UnifiedRisk/ATM/Runner UI capability | D2E/EconFresh labels | no Firebase/listener/schema/order-authority change -->
-<!-- MME_R07_2_NIGHT_PREUS_READ_UI_v0.1_20261025 | presentation-only | reuses monitor_realtime/mme listener | R07.2 nwr_* fields: 19:00 price vs same-day Day close (>=100 pt) held to 05:00, A/B grade, +/-150 first touch | night only; Day display unchanged | Authority 0/0 | based on index_z31_MME_R07_1_GRADE_20261025.html -->
 <!-- MME_R07_1_CONFIDENCE_GRADE_UI_v0.2_20261025 | adds wsr_confidence_grade A/B (10:30 flow agreement; never changes the read) | based on index_z31_MME_R07_WSR_20261025.html -->
 <!-- MME_R07_WHOLE_SESSION_READ_UI_v0.1_20261025 | presentation-only | reuses monitor_realtime/mme listener | R07 wsr_* fields: morning drive -> 10:10 prelim -> 10:30 main read | challenged never flips | Authority 0/0 | based on index_z31.html 2026-10-25 -->
 <!-- FIREBASE_DOWNLOAD_OPTIMIZED_PHASE1_RC1_20260923 | transport-only | realtime top-level delta cache | MME/Alpha reuse parent delta | History/Radar unchanged | no Z2/MME/order/UI semantic change -->
@@ -8786,9 +8785,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #v2-live-page .mme-wsr-live .mme-wsr-grade.is-a b { background:#ffd60a; }
 #v2-live-page .mme-wsr-live .mme-wsr-grade.is-a { color:#ffe066; }
 #v2-live-page .mme-wsr-live .mme-wsr-grade.is-b b { background:#636366; color:#f2f2f7; }
-#v2-live-page .mme-nwr-live .mme-nwr-target, html.z31-pro #mme-live-band .mme-nwr-live .mme-nwr-target { color:#c7c7cc; font-weight:800; white-space:normal !important; overflow:visible !important; }
-#v2-live-page .mme-nwr-live .mme-nwr-target.is-hit { color:#ffd60a; }
-#v2-live-page .mme-nwr-live .mme-nwr-target.is-adverse { color:#ffb340; }
 @media (max-width: 760px) {
   #v2-live-page .mme-day-read-dual { grid-template-columns:1fr; }
 }
@@ -9265,10 +9261,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const wsrLive=make('div','mme-wsr-live is-missing','mme-wsr-live');
     wsrLive.innerHTML='<span class="mme-day-read-label">R07.1 整盤判讀｜早盤推動 → 10:10 初判 → 10:30 正式＋A/B 信心等級｜RESEARCH・非入場訊號</span><strong class="mme-wsr-value" id="mme-wsr-value">等待 R07 MME</strong><small class="mme-wsr-grade" id="mme-wsr-grade">信心等級｜10:30 正式判讀後顯示</small><small class="mme-day-read-meta" id="mme-wsr-drive">--</small><small class="mme-day-read-meta" id="mme-wsr-anchor">Authority 0 / Entry 0</small>';
     band.appendChild(wsrLive);
-    // R07.2 Night Whole-Session Read: 19:00 price vs the same-day Day close, held to 05:00; never flips.
-    const nwrLive=make('div','mme-wsr-live mme-nwr-live is-hidden','mme-nwr-live');
-    nwrLive.innerHTML='<span class="mme-day-read-label">R07.2 夜盤整夜判讀｜15:00–19:00 累積 → 19:00 價格 vs 同日日盤收盤（≥100 點表態）→ 抱到 05:00＋A/B 信心等級｜RESEARCH・非入場訊號</span><strong class="mme-wsr-value" id="mme-nwr-value">等待 R07.2 MME</strong><small class="mme-wsr-grade" id="mme-nwr-grade">信心等級｜19:00 表態後顯示</small><small class="mme-day-read-meta mme-nwr-target" id="mme-nwr-target">±150｜19:00 表態後開始記錄</small><small class="mme-day-read-meta" id="mme-nwr-anchor">Authority 0 / Entry 0</small>';
-    band.appendChild(nwrLive);
     const challengeLive=make('div','mme-challenge-live','mme-challenge-live');
     challengeLive.innerHTML='<span class="mme-day-read-label">LIVE CHALLENGE STATUS｜RESEARCH SHADOW</span><strong class="mme-day-read-value" id="mme-challenge-live-value">等待60M受挑戰語境</strong><small class="mme-day-read-meta" id="mme-challenge-live-meta">Authority 0 / Entry 0｜不改60M Frozen Read</small>';
     band.appendChild(challengeLive);
@@ -9468,102 +9460,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     anchor.textContent='錨點 '+parts.join(' / ')+'｜'+prelim+(data.wsr_whole_session_votes?'｜投票 '+data.wsr_whole_session_votes:'')+(/^MAIN_READ/.test(st)?'｜讀判後最大逆向 '+fmt(data.wsr_whole_session_adverse_points,0):'')+'｜回測10:30判讀 39/58、A級 17/21（樣本內）｜Authority 0 / Entry 0';
   }
 
-  // ---- R07.2 Night Whole-Session Read (presentation-only; nwr_* fields on the same monitor_realtime/mme node) ----
-  // Night session date = the calendar date the night started (00:00-11:59 belongs to the previous date).
-  function nwrSessionDateOf(ts){
-    const m=String(ts||'').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2})/);
-    if(!m) return '';
-    if(Number(m[4])>=12) return m[1]+'-'+m[2]+'-'+m[3];
-    return new Date(Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3])-1)).toISOString().slice(0,10);
-  }
-  // Firebase PATCH keeps old keys, so after a rollback to R07.1 stale nwr_* would linger: require tonight's session date.
-  function nwrLive(data){
-    const ph=String((data&&data.nwr_phase)||'').toUpperCase();
-    return !!(data&&data.nwr_build) && (ph==='BEFORE_READ'||ph==='AFTER_READ') && String(data.nwr_session_date||'')===nwrSessionDateOf(data.timestamp);
-  }
-  function nwrHasRead(data){
-    return nwrLive(data) && /^READ/.test(String(data.nwr_state||'').toUpperCase()) && (Number(data.nwr_direction)||0)!==0;
-  }
-  function nwrGrade(data){ const g=String((data&&data.nwr_confidence_grade)||'').toUpperCase(); return (g==='A'||g==='B')?g:''; }
-  function nwrGradeTag(data){ const g=nwrGrade(data); return g?('｜'+g+'級'):''; }
-  function nwrFlowText(signs){
-    return String(signs||'').split(';').filter(Boolean).map(function(p){
-      const i=p.indexOf('='); const v=Number(p.slice(i+1))||0;
-      return p.slice(0,i)+(v>0?'+':(v<0?'−':'0'));
-    }).join(' ');
-  }
-  function renderNightWholeSessionRead(data, nightActive){
-    const box=document.getElementById('mme-nwr-live');
-    const val=document.getElementById('mme-nwr-value');
-    const grade=document.getElementById('mme-nwr-grade');
-    const target=document.getElementById('mme-nwr-target');
-    const anchor=document.getElementById('mme-nwr-anchor');
-    if(!box||!val||!grade||!target||!anchor) return;
-    box.className='mme-wsr-live mme-nwr-live';
-    grade.className='mme-wsr-grade';
-    target.className='mme-day-read-meta mme-nwr-target';
-    const ph=String((data&&data.nwr_phase)||'').toUpperCase();
-    if(!(nightActive || ph==='BEFORE_READ' || ph==='AFTER_READ')){ box.classList.add('is-hidden'); return; }
-    if(!data || !String(data.nwr_build||'')){
-      box.classList.add('is-missing'); val.textContent='等待 R07.2 MME（目前資料沒有夜盤整夜判讀欄位）'; setMmeDirClass(val,0,false);
-      grade.textContent='信心等級｜需 R07.2 MME'; target.textContent='±150｜需 R07.2 MME';
-      anchor.textContent='MME 需為 R07.2（Z2-MME-v0.5.2-R07.2-…）才會送出 nwr_* 欄位｜Authority 0 / Entry 0'; return;
-    }
-    if(!nwrLive(data)){
-      box.classList.add('is-missing'); val.textContent='R07.2 夜盤欄位不是今晚的資料'; setMmeDirClass(val,0,false);
-      grade.textContent='信心等級｜--'; target.textContent='±150｜--';
-      anchor.textContent='nwr_session_date '+(data.nwr_session_date||'--')+' ≠ 今晚 '+(nwrSessionDateOf(data.timestamp)||'--')+'｜可能已退回 R07.1，或 MME 還沒換到夜盤檔｜Authority 0 / Entry 0'; return;
-    }
-    const st=String(data.nwr_state||'').toUpperCase();
-    const d=Number(data.nwr_direction)||0;
-    const dc=Number(data.nwr_day_close)||0;
-    const isRead=/^READ/.test(st) && d!==0;
-    let text, color=0;
-    if(st==='WAITING'){
-      text='19:00 前累積中｜目前距日盤收盤 '+(dc?signed(data.nwr_current_gap_points,0)+' 點':'--')+'（19:00 時 ≥100 點才表態）';
-      box.classList.add('is-pending');
-    } else if(st==='NO_READ'){
-      text='今晚不表態｜'+String(data.nwr_read_time||'19:00')+' 距日盤收盤 '+signed(data.nwr_read_gap_points,0)+' 點（不到 100）｜雙向等待';
-    } else if(isRead){
-      text='整夜'+wsrDirLabel(d)+'｜19:00 判讀 '+String(data.nwr_read_time||'')+' @ '+fmt(data.nwr_read_price,0)+'｜距日盤收盤 '+signed(data.nwr_read_gap_points,0)+' 點'+nwrGradeTag(data);
-      color=d; box.classList.add(d>0?'is-bull':'is-bear');
-      if((Number(data.nwr_challenged)||0)===1){ text+='｜⚠ 已被反向推 '+fmt(data.nwr_adverse_points,0)+' 點（不翻向）'; box.classList.add('is-challenged'); }
-    } else {
-      text=data.nwr_state_zh||st||'--'; box.classList.add('is-missing');
-    }
-    val.textContent=text; setMmeDirClass(val,color,false);
-    const g=String(data.nwr_confidence_grade||'').toUpperCase();
-    const nf=Number(data.nwr_flow_field_count)||0;
-    if(isRead && (g==='A'||g==='B')){
-      grade.classList.add(g==='A'?'is-a':'is-b');
-      grade.innerHTML='<b>'+g+' 級</b>'+(g==='A'?'流向同向（回測 +150 先到 14/18、抱到收盤 15/18）':'流向未同向（回測 +150 先到 8/11、抱到收盤 7/11）')+'｜19:00 流向 '+(Number(data.nwr_flow_agree_count)||0)+'/'+nf+' 同向｜只是信心，不改方向';
-    } else if(isRead && g==='NA'){
-      grade.textContent='信心等級｜流向資料不足（'+nf+'/6 欄位）';
-    } else {
-      grade.textContent=st==='WAITING'?'信心等級｜19:00 表態後顯示':'信心等級｜今晚不表態，不評等級';
-    }
-    const tp=Number(data.nwr_target_points)||150;
-    if(isRead){
-      const rp=Number(data.nwr_read_price)||0;
-      const ft=String(data.nwr_first_touch||'').toUpperCase();
-      let tt='+'+fmt(tp,0)+' 目標 '+fmt(rp+d*tp,0)+'｜−'+fmt(tp,0)+' 在 '+fmt(rp-d*tp,0);
-      if(ft==='TARGET'){ tt+='｜✓ +'+fmt(tp,0)+' 先到 '+String(data.nwr_first_touch_time||data.nwr_target_hit_time||''); target.classList.add('is-hit'); }
-      else if(ft==='ADVERSE'){
-        tt+='｜−'+fmt(tp,0)+' 先到 '+String(data.nwr_first_touch_time||'')+'（判讀不翻向）';
-        if(data.nwr_target_hit_time) tt+='｜+'+fmt(tp,0)+' 後來也到了 '+String(data.nwr_target_hit_time);
-        target.classList.add('is-adverse');
-      } else tt+='｜兩邊都還沒到';
-      tt+='｜目前 '+signed(data.nwr_read_current_points,0)+' 點';
-      target.textContent=tt;
-    } else {
-      target.textContent='±'+fmt(tp,0)+'｜'+(st==='WAITING'?'19:00 表態後開始記錄 +150／−150 哪邊先到':'今晚沒有表態，不記錄');
-    }
-    const parts=['同日日盤收盤 '+(dc?fmt(dc,0):'--')+(data.nwr_day_close_source_zh?'（'+data.nwr_day_close_source_zh+'）':'')];
-    if(st!=='WAITING' && data.nwr_flow_signs) parts.push('19:00 流向 '+nwrFlowText(data.nwr_flow_signs));
-    parts.push('美股開盤後不另外表態（21:30 後卡片是原夜盤預測）');
-    anchor.textContent=parts.join('｜')+'｜回測 +150 先到 22/29、7 月舊格式 3/11｜Authority 0 / Entry 0';
-  }
-
   function render(data){
     if(!data) return;
     mmeLastData=data;
@@ -9636,7 +9532,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 
     const titleEl=document.getElementById('mme-title');
     if(titleEl){
-      titleEl.textContent='MME 主力多空心態｜'+(data.nwr_build?'R07.2 夜盤19:00判讀 + ':'')+(data.wsr_build?(('wsr_confidence_grade' in data)?'R07.1 整盤判讀＋信心等級 + ':'R07 整盤判讀 + '):'')+(backendV052?'v0.5.2 + CashOpen0900 SPA Gate RC1 UI + Whole-Day Mindset + Mature60M + RoleMaturity/Early30 + ChallengeLifecycle':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.4 SF1 U75 Price Acceptance + DayPositioning v0.1.4・Firebase｜紅多綠空';
+      titleEl.textContent='MME 主力多空心態｜'+(data.wsr_build?(('wsr_confidence_grade' in data)?'R07.1 整盤判讀＋信心等級 + ':'R07 整盤判讀 + '):'')+(backendV052?'v0.5.2 + CashOpen0900 SPA Gate RC1 UI + Whole-Day Mindset + Mature60M + RoleMaturity/Early30 + ChallengeLifecycle':'v0.5.1 / Legacy Read')+' + NightSegment v0.1.4 SF1 U75 Price Acceptance + DayPositioning v0.1.4・Firebase｜紅多綠空';
     }
 
     band.className='mme-live-band '+(anySessionWarning?'mme-risk':(hasSession?sessionBandClass(data):stateClass(data.primary_state || data.regime_state)));
@@ -9660,22 +9556,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       } else {
         primaryEl.textContent=(wdrive?'早盤推動'+wsrDirLabel(wdrive):stickyText)+'｜整盤未定・10:10初判'+(warningText?'｜⚠ '+warningText:'');
         setMmeDirClass(primaryEl,wdrive,sessionWarn);
-      }
-    }
-    // R07.2: at night the hero states the 19:00 whole-night read; before 19:00 the night is only accumulating.
-    if(nwrLive(data)){
-      const nst=String(data.nwr_state||'').toUpperCase();
-      const nd=Number(data.nwr_direction)||0;
-      if(nwrHasRead(data)){
-        primaryEl.textContent=((Number(data.nwr_challenged)||0)===1?'⚠ ':'')+'整夜'+wsrDirLabel(nd)+'｜R07.2 19:00 判讀'+nwrGradeTag(data)+(String(data.nwr_first_touch||'').toUpperCase()==='TARGET'?'｜+150 已到':'');
-        setMmeDirClass(primaryEl,nd,false);
-        band.className='mme-live-band '+(nd>0?'mme-bull':'mme-bear');
-      } else if(nst==='NO_READ'){
-        primaryEl.textContent='整夜不表態｜R07.2 19:00 距日盤收盤不到 100 點';
-        setMmeDirClass(primaryEl,0,false);
-      } else if(nst==='WAITING'){
-        primaryEl.textContent='夜盤累積中｜R07.2 19:00 判讀・目前距日盤收盤 '+signed(data.nwr_current_gap_points,0);
-        setMmeDirClass(primaryEl,0,false);
       }
     }
     const scoreEl=document.getElementById('mme-session-score');
@@ -9812,7 +9692,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     }
 
     renderWholeSessionRead(data, nightActive);
-    renderNightWholeSessionRead(data, nightActive);
 
     const challengeBox=document.getElementById('mme-challenge-live');
     const challengeValue=document.getElementById('mme-challenge-live-value');
@@ -10013,13 +9892,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       mindText=((Number(data.wsr_whole_session_challenged)||0)===1?'⚠ ':'')+'R07整盤'+wsrDirLabel(wd)+'｜'+(data.wsr_whole_session_state_zh||'')+(/^MAIN_READ/.test(String(data.wsr_whole_session_state||'').toUpperCase())?wsrGradeTag(data):'');
       mindKind=wd>0?'q-bull':'q-bear';
     }
-    if(nightActive && nwrHasRead(data)){
-      const nd=Number(data.nwr_direction)||0;
-      mindText=((Number(data.nwr_challenged)||0)===1?'⚠ ':'')+'R07.2整夜'+wsrDirLabel(nd)+'｜19:00 判讀'+nwrGradeTag(data);
-      mindKind=nd>0?'q-bull':'q-bear';
-    } else if(nightActive && nwrLive(data) && String(data.nwr_state||'').toUpperCase()==='NO_READ'){
-      mindText='R07.2整夜不表態｜'+mindText;
-    }
     qset('mme-q-mind',mindText,mindKind);
 
     const execText=zh(data.execution_state);
@@ -10049,7 +9921,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       : (hasSession
           ? (wholeDayMindsetText+'｜'+(dayMatureReached?'60M '+matureStatusText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M成熟確認'))+'｜Role '+(roleText||'--')+(challengeActive?'｜LIVE '+challengeText:''))
           : ('Fast Bias '+signed(biasN,0)+'｜v0.4 fallback'));
-    if(mindMeta && nightActive && nwrHasRead(data)) mindMeta.textContent='R07.2 '+String(data.nwr_read_time||'')+' @ '+fmt(data.nwr_read_price,0)+' 距日盤收 '+signed(data.nwr_read_gap_points,0)+'｜'+mindMeta.textContent;
     if(mindMeta && !nightActive && wsrHasRead(data)) mindMeta.textContent='R07 '+String(data.wsr_whole_session_read_time||'')+' '+(data.wsr_whole_session_source_zh||'')+'｜R06 '+mindMeta.textContent;
     const execMeta=document.getElementById('mme-q-exec-meta');
     if(execMeta) execMeta.textContent='Exec '+signed(execN,0)+'｜看是否發動';
@@ -10068,8 +9939,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         : ('一句話：'+wholeDayMindsetText+'｜'+(dayMatureReached?'60M '+matureStatusText:(dayEarlyState==='EARLY_CONFIRMED'?'Early30 '+dayEarlyText:'等待60M成熟確認'))+'｜Role '+(roleText||'--')+(roleApplied?'【降級】':'')+(challengeActive?'｜LIVE '+challengeText:'')+(warningText?'｜⚠ '+warningText:'')+'｜即時 '+execText+'｜'+phaseText+'｜'+forecastText);
     }
 
-    if(qsum && nightActive && nwrHasRead(data)) qsum.textContent='一句話：R07.2整夜'+wsrDirLabel(data.nwr_direction)+'（19:00 判讀'+(nwrGrade(data)?'・'+nwrGrade(data)+'級':'')+(String(data.nwr_first_touch||'').toUpperCase()==='TARGET'?'・+150 已到':'')+'）｜'+qsum.textContent.replace(/^一句話：/,'');
-    else if(qsum && nightActive && nwrLive(data) && String(data.nwr_state||'').toUpperCase()==='NO_READ') qsum.textContent='一句話：R07.2整夜不表態（19:00 距日盤收盤 '+signed(data.nwr_read_gap_points,0)+' 點）｜'+qsum.textContent.replace(/^一句話：/,'');
     if(qsum && !nightActive && wsrHasRead(data)) qsum.textContent='一句話：R07整盤'+wsrDirLabel(data.wsr_whole_session_direction)+'（'+(data.wsr_whole_session_state_zh||'')+(wsrGrade(data)?'・'+wsrGrade(data)+'級':'')+'）｜R06底色 '+qsum.textContent.replace(/^一句話：/,'');
     const sScoreDetail=document.getElementById('mme-session-score-detail');
     if(sScoreDetail){ sScoreDetail.textContent=signed(sessionScore,1); setMmeDirClass(sScoreDetail,sessionScore,sessionWarn); }
@@ -10204,7 +10073,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     let breach='Trigger內';
     if(bs>0) breach='嘎空外 '+dur(bs); else if(ss>0) breach='殺多外 '+dur(ss);
     document.getElementById('mme-breach').textContent=breach;
-    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.day_early_mainforce_build?'｜'+data.day_early_mainforce_build:'')+(data.day_role_maturity_build?'｜'+data.day_role_maturity_build:'')+(data.day_challenge_lifecycle_build?'｜'+data.day_challenge_lifecycle_build:'')+(data.whole_day_reversal_watch_build?'｜'+data.whole_day_reversal_watch_build:'')+(data.wsr_build?'｜'+data.wsr_build:'')+(data.nwr_build?'｜'+data.nwr_build:'')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜UI CashOpen0900 + Forecast v0.2 FirebaseOBS RC2 + NightPA v0.1.4 SF1｜'+(data.timestamp||'--');
+    document.getElementById('mme-build').textContent=(data.build||'MME')+(data.day_early_mainforce_build?'｜'+data.day_early_mainforce_build:'')+(data.day_role_maturity_build?'｜'+data.day_role_maturity_build:'')+(data.day_challenge_lifecycle_build?'｜'+data.day_challenge_lifecycle_build:'')+(data.whole_day_reversal_watch_build?'｜'+data.whole_day_reversal_watch_build:'')+(data.wsr_build?'｜'+data.wsr_build:'')+(nightActive&&data.night_segment_build?'｜'+data.night_segment_build:'')+(data.positioning_shadow_build?'｜'+data.positioning_shadow_build:'')+(data.positioning_lifecycle_build?'｜'+data.positioning_lifecycle_build:'')+'｜UI CashOpen0900 + Forecast v0.2 FirebaseOBS RC2 + NightPA v0.1.4 SF1｜'+(data.timestamp||'--');
     if(data.last_event) renderEvent(data.last_event);
     updateFreshness();
   }
