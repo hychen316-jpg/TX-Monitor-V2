@@ -12160,10 +12160,11 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     var w = Array.isArray(d.pattern_watch) ? d.pattern_watch : [], ps = Array.isArray(d.patterns) ? d.patterns : [];
     if (!Array.isArray(d.patterns) && !Array.isArray(d.pattern_watch)) return '';
     var h = '<div class="bz-ai-pat" id="bz-ai-pat"><div class="bz-ai-pat-head"><span class="bz-ai-tag">型態</span><b>殺多點／嘎空點型態</b>' +
-            '<span>只顯示、不下單（碰到成本區 → 回落／反彈 30 點並回到區外）</span></div>';
+            '<span>只顯示、不下單（碰到成本區 → 回落／反彈 30 點並回到區外）</span>' +
+            (ps.length > 3 ? '<span class="bz-ai-pat-n">共 ' + ps.length + ' 筆・可捲動</span>' : '') + '</div>';
     w.forEach(function (x) { h += '<div class="bz-ai-pat-watch">' + esc(x) + '</div>'; });
     if (ps.length) {
-      h += '<ul>' + ps.map(function (p) {
+      h += '<ul class="bz-ai-scroll" data-scroll="pat">' + ps.map(function (p) {
         var tone = p.side === 'long' ? 'up' : (p.side === 'short' ? 'down' : '');
         return '<li><b class="' + tone + '">' + esc(String(p.time || '') + ' ' + (p.label || '')) + '</b> ' + esc(p.text || '') +
                (p.out ? '<br><small>' + esc(p.out) + '</small>' : '') + '</li>';
@@ -12318,7 +12319,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     html += trialHtml(d.trial);
     var foot = [];
     if (d.last_l1) foot.push('<span>最近判讀 <b>' + esc(d.last_l1.time) + '</b> ' + esc(d.last_l1.reason || '') + '：' + esc(d.last_l1.note || '') + '</span>');
-    if (d.events && d.events.length) foot.push('<span>' + d.events.slice(0, 3).map(function (e) { return esc(e.time.slice(-5) + ' ' + e.kind + '：' + e.text); }).join('<br>') + '</span>');
+    if (d.events && d.events.length) foot.push('<span class="bz-ai-log bz-ai-scroll" data-scroll="log">' + d.events.slice(0, 3).map(function (e) { return esc(e.time.slice(-5) + ' ' + e.kind + '：' + e.text); }).join('<br>') + '</span>');
     if (d.last_error) foot.push('<span>錯誤：' + esc(d.last_error) + '</span>');
     foot.push('<span>' + esc('今天 AI 快速判讀 ' + (u.calls_l1 || 0) + ' 次・完整規劃 ' + (u.calls_l2 || 0) + ' 次' + (u.calls_trial ? '・試跑 ' + u.calls_trial + ' 次' : '')) + '</span>');
     var exp = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d.expiry || ''));
@@ -12326,7 +12327,11 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       (exp ? '｜結算日 ' + exp[2] + '/' + exp[3] + '（日盤不做單）' : '') + (d.dry_run ? '｜模擬' : '')) + '</span>');
     html += '<div class="bz-ai-foot">' + foot.join('') + '</div>';
     c.className = cls + (warn ? ' ai-warn' : '');
+    /* 1.4.7：重畫前記住卷軸位置，重畫後放回去（停在最上面＝看最新的，就繼續停在最上面） */
+    var keep = {};
+    Array.prototype.forEach.call(c.querySelectorAll('[data-scroll]'), function (e) { keep[e.getAttribute('data-scroll')] = e.scrollTop; });
     c.innerHTML = html;
+    Array.prototype.forEach.call(c.querySelectorAll('[data-scroll]'), function (e) { var v = keep[e.getAttribute('data-scroll')]; if (v) e.scrollTop = v; });
     window.__BaoZAIView = view;
   }
 
@@ -12381,5 +12386,25 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 }
 </style>
 <!-- Z31_BAOZ_WIDE_UI_1_4_6_END -->
+<!-- Z31_BAOZ_AI_SCROLL_UI_1_4_7_BEGIN -->
+<style id="z31-baoz-ai-scroll-ui-1-4-7">
+/* ===== BaoZ UI 1.4.7（20261027）：AI 即時分析卡裡會一直累積的訊息改成固定高度＋卷軸，下面的資料不會被一直往下壓
+   「型態」清單（今天的殺多點／嘎空點，越來越多）最多約 4 筆高；最近事件（最新 3 筆，可能很長）最多約 4 行高。
+   最新的在最上面；重畫時保留卷軸位置。寬螢幕、直立螢幕、原版版面都一樣。只改顯示。 ===== */
+#baoz-system-panel .bz-ai-scroll {
+  max-height: 10.5em;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #3a4552 transparent;
+}
+#baoz-system-panel .bz-ai-pat ul.bz-ai-scroll { padding-right: 6px; border-top: 1px dashed var(--bz-line); padding-top: 2px; }
+#baoz-system-panel .bz-ai-log.bz-ai-scroll { display: block; max-height: 6.4em; padding-right: 6px; }
+#baoz-system-panel .bz-ai-scroll::-webkit-scrollbar { width: 6px; }
+#baoz-system-panel .bz-ai-scroll::-webkit-scrollbar-thumb { background: #3a4552; border-radius: 3px; }
+#baoz-system-panel .bz-ai-scroll::-webkit-scrollbar-track { background: transparent; }
+#baoz-system-panel .bz-ai-pat-n { margin-left: auto; font-size: 11px; color: var(--bz-muted); }
+</style>
+<!-- Z31_BAOZ_AI_SCROLL_UI_1_4_7_END -->
 </body>
 </html>
