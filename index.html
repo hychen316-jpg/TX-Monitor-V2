@@ -12417,5 +12417,36 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai.ai-short .bz-ai-headline.loss { color: var(--bz-down); }
 </style>
 <!-- Z31_BAOZ_AI_SIDE_COLOR_UI_1_4_8_END -->
+<!-- Z31_BAOZ_PORTRAIT_SPLIT_UI_1_4_9_BEGIN -->
+<style id="z31-baoz-portrait-split-ui-1-4-9">
+/* ===== BaoZ UI 1.4.9（20261027）：直立螢幕也把 BaoZ 近月分左右兩欄，一個畫面就看得到完整的關鍵價位
+   左欄：來源列、橫幅、AI 卡、即時指令／做多做空、方向數字、三檔對照、折疊區、原文；
+   右欄：關鍵價位表＋本盤必來點＋條件變化與風險＋留倉判斷（和 1.4.6 寬螢幕同一種分法）。
+   條件：專業版面（html.z31-pro）＋直立螢幕（z31-portrait）＋版面寬 ≥ 760（z31-w-md）。
+   寬螢幕走 1.4.6（它只在「不是直立螢幕」時生效），這段只在直立螢幕生效，兩邊互不影響；原版版面、窄視窗維持一長條。
+   只改顯示：DOM、資料、Firebase、計算都沒有改（純 CSS）。 ===== */
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: repeat(14, auto) 1fr;
+  column-gap: 10px;
+  row-gap: 0;
+  align-items: start;
+}
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel > * { grid-column: 1; min-width: 0; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel > #bz-semantic:not([hidden]) { display: contents; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-semantic > * { grid-column: 1; min-width: 0; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-semantic > .bz-layout {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  grid-template-columns: minmax(0, 1fr);
+  align-self: start;
+}
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-layout .bz-right { grid-template-columns: minmax(0, 1fr); }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel.bz-expired #bz-semantic > * { opacity: .7; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-source { margin-bottom: 2px; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-disclosures { margin-top: 0; }
+</style>
+<!-- Z31_BAOZ_PORTRAIT_SPLIT_UI_1_4_9_END -->
 </body>
 </html>
