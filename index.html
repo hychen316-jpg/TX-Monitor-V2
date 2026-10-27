@@ -12342,5 +12342,44 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 })();
 </script>
 <!-- Z31_BAOZ_AI_UI_1_4_5_END -->
+<!-- Z31_BAOZ_WIDE_UI_1_4_6_BEGIN -->
+<style id="z31-baoz-wide-ui-1-4-6">
+/* ===== BaoZ UI 1.4.6（20261027）：專業版面＋寬螢幕時，BaoZ 近月改左右兩欄，不用往下捲
+   只改顯示：DOM、資料、Firebase、計算都沒有改（純 CSS）。
+   條件：專業版面（html.z31-pro）、不是直立螢幕（沒有 z31-portrait）、橫向視窗、版面寬 ≥ 1180（z31-w-lg）。
+   直立螢幕、原版版面、窄視窗：和 1.4.5 一樣維持一長條。
+   左欄：來源列、橫幅、AI 卡、即時指令／持有部位／做多做空、方向數字、三檔對照、折疊區、原文。
+   右欄：關鍵價位表＋本盤必來點＋條件變化與風險＋留倉判斷（整塊 .bz-layout）。
+   右欄跨過左欄全部列，最後一列 1fr 吸收高度差，左欄各卡之間不會被撐開。 ===== */
+@media (orientation: landscape) {
+  html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel:not([hidden]) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: repeat(14, auto) 1fr;
+    column-gap: 12px;
+    row-gap: 0;
+    align-items: start;
+  }
+  html.z31-pro.z31-w-xxl:not(.z31-portrait) #baoz-system-panel:not([hidden]) {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+  html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel > * { grid-column: 1; min-width: 0; }
+  /* 方向數字、三檔對照留在左欄；價位表那一塊拉到右欄 */
+  html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel > #bz-semantic:not([hidden]) { display: contents; }
+  html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel #bz-semantic > * { grid-column: 1; min-width: 0; }
+  html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel #bz-semantic > .bz-layout {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+    align-self: start;
+  }
+  html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel .bz-layout .bz-right { grid-template-columns: minmax(0, 1fr); }
+  /* 原本 opacity 加在 #bz-semantic；改成 contents 之後要加在裡面每一塊 */
+  html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel.bz-expired #bz-semantic > * { opacity: .7; }
+  html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel .bz-source { margin-bottom: 2px; }
+  html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel .bz-disclosures { margin-top: 0; }
+}
+</style>
+<!-- Z31_BAOZ_WIDE_UI_1_4_6_END -->
 </body>
 </html>
