@@ -12406,5 +12406,16 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai-pat-n { margin-left: auto; font-size: 11px; color: var(--bz-muted); }
 </style>
 <!-- Z31_BAOZ_AI_SCROLL_UI_1_4_7_END -->
+<!-- Z31_BAOZ_AI_SIDE_COLOR_UI_1_4_8_BEGIN -->
+<style id="z31-baoz-ai-side-color-ui-1-4-8">
+/* ===== BaoZ UI 1.4.8（20261027）：AI 即時分析卡「影子持有」時，標題顏色照多空（台灣慣用：多單紅、空單綠）
+   1.4.7 以前持有中的標題照浮動盈虧變色（賺紅、賠綠），空單賺錢時會變紅色。等待／已進區本來就照多空，不變；
+   已出場的「+N 點／−N 點」照盈虧上色，也不變。只改顯示（純 CSS），資料、Firebase、計算都沒有改。 ===== */
+#baoz-system-panel .bz-ai.ai-long .bz-ai-headline.win,
+#baoz-system-panel .bz-ai.ai-long .bz-ai-headline.loss { color: var(--bz-up); }
+#baoz-system-panel .bz-ai.ai-short .bz-ai-headline.win,
+#baoz-system-panel .bz-ai.ai-short .bz-ai-headline.loss { color: var(--bz-down); }
+</style>
+<!-- Z31_BAOZ_AI_SIDE_COLOR_UI_1_4_8_END -->
 </body>
 </html>
