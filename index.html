@@ -12448,5 +12448,21 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-source { margin-bottom
 html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-disclosures { margin-top: 0; }
 </style>
 <!-- Z31_BAOZ_PORTRAIT_SPLIT_UI_1_4_9_END -->
+<!-- Z31_BAOZ_PORTRAIT_GAUGE_UI_1_4_10_BEGIN -->
+<style id="z31-baoz-portrait-gauge-ui-1-4-10">
+/* ===== BaoZ UI 1.4.10（20261027）：直立螢幕分兩欄後，「多日方向」量尺下面的刻度字太長（−800（偏空）／0／+800（偏多）），
+   在窄格子裡會折行、0 和 +800 黏在一起。直立兩欄時改顯示短字「−800 空／0／+800 多」，「今天方向」中間的「±20 內＝貼近」改成「±20 貼近」，一行放得下。
+   只在 1.4.9 的直立兩欄生效；寬螢幕、原版版面不變。刻度字是程式固定的三個字串，這裡只換顯示（純 CSS）。 ===== */
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-multi-gauge .bz-gauge-cap { white-space: nowrap; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-multi-gauge .bz-gauge-cap > span { font-size: 0; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-multi-gauge .bz-gauge-cap > span::before { font-size: 10px; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-multi-gauge .bz-gauge-cap > span:nth-child(1)::before { content: "−800 空"; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-multi-gauge .bz-gauge-cap > span:nth-child(2)::before { content: "0"; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-multi-gauge .bz-gauge-cap > span:nth-child(3)::before { content: "+800 多"; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gauge-cap { white-space: nowrap; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gauge-cap > span:nth-child(2) { font-size: 0; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gauge-cap > span:nth-child(2)::before { font-size: 10px; content: "±20 貼近"; }
+</style>
+<!-- Z31_BAOZ_PORTRAIT_GAUGE_UI_1_4_10_END -->
 </body>
 </html>
