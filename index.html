@@ -12475,7 +12475,14 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
       第二行（只有持倉時）：停損｜+N 移保本（未移／已移）｜第一目標（已到）｜最大浮盈｜跌破／站上哪個價會問 AI｜幾點日內／夜盤平倉。
    3. 最近事件：不列「計畫跟著分界移動」，改成一行「已跟著分界移動 N 次，累計 ±X」；其他事件照樣最多 3 筆。
    4.「最近判讀」改叫「快速判讀（Haiku）」；這次快速判讀要完整規劃但被擋時，後面加「｜要重做但冷卻中」這類說明。
-   沒有 watch（V0.1.25 以前的資料）：AI 卡和 1.4.10 一模一樣。其他面板的位置、大小都不動。 ===== */
+   沒有 watch（V0.1.25 以前的資料）：AI 卡和 1.4.10 一模一樣。其他面板的位置、大小都不動。
+   1.4.12（20261028，BaoZ AI V0.1.28）：
+   5. 狀態膠囊：NOSIDE →「兩邊都不能做」（不是警示；說明照樣在提醒那一行，例「兩邊都不能做（做多這一盤已用掉；做空逆勢，多日 +142），等條件改變，程式照常盯盤」）。
+   6. 第一行最前面：兩邊都不能做時寫「兩邊都不能做（幾點起）：等 跌到多日分界 +20（…）以下、空方確認、換盤」；
+      開盤暖身、不能進場的時段寫「開盤暖身：…先不叫 AI」「結算平均時段 13:00–13:30 不進場：只叫定時檢查和手動」。
+   7. 標題右邊的小字：有月預算（usage.budget）時，「今天 US$x／1.50」換成「本月 US$x／45・這盤額度 US$y（已用 z%）」；
+      這盤額度用到 80% 以上、L2 降級、本月用完時，第一行最後加一段說明（例「L2 已降為 Haiku（這盤額度用完）」）。
+   V0.1.27 以前的資料（沒有 noside、mute、budget）：和 1.4.11 一模一樣。 ===== */
 #baoz-system-panel .bz-ai-watch { margin-top: 8px; display: grid; gap: 2px; font-size: 12px; color: var(--bz-muted); }
 #baoz-system-panel .bz-ai-watch > div { min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 #baoz-system-panel .bz-ai-watch .p { display: inline-block; max-width: 100%; }
@@ -12483,12 +12490,12 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
 #baoz-system-panel .bz-ai-watch .blk, #baoz-system-panel .bz-ai-foot .bz-ai-blk { color: var(--bz-attn); }
 </style>
 <script>
-/* BaoZ UI 1.4.11：AI 卡補上 watch（只讀 Firebase，不寫；只改顯示） */
+/* BaoZ UI 1.4.11：AI 卡補上 watch（只讀 Firebase，不寫；只改顯示）；1.4.12：兩邊都不能做、暫停叫 AI、月預算 */
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near_ai';
   var FOLLOW = '計畫跟著分界移動';
-  var LABEL = { L2_FULL: 'L2 已滿', STUCK: 'AI 卡住' };
+  var LABEL = { L2_FULL: 'L2 已滿', STUCK: 'AI 卡住', NOSIDE: '兩邊都不能做' };
   var WHY = { '冷卻': '要重做但冷卻中', '沒變化': '要重做但和上次比沒變化', '上限': '要重做但本小時已滿', '預算': '要重做但預算不足' };
   var s = { ref: null, fn: null, data: null, card: null, mo: null, failAt: 0 };
 
@@ -12529,8 +12536,12 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
   }
 
   /* 第一行：AI 排程；第二行：持倉看守 */
-  function watchHtml(w) {
+  function watchHtml(w, d) {
     var a = [], l2 = w.l2 && typeof w.l2 === 'object' ? w.l2 : null;
+    /* 1.4.12：為什麼現在不叫 AI（兩邊都不能做＋恢復條件；開盤暖身、不能進場的時段） */
+    var ns = w.noside && typeof w.noside === 'object' ? w.noside : null;
+    if (ns && (ns.recover || ns.text)) a.push(part('兩邊都不能做' + (ns.since ? '（' + esc(ns.since) + ' 起）' : '') + (ns.recover ? '：等 <b>' + esc(ns.recover) + '</b>' : ''), '', ns.text));
+    else if (w.mute) a.push(part(esc(w.mute)));
     if (l2 && l2.time) a.push(part('上次完整規劃 <b>' + esc(l2.time) + '</b>' + (l2.result ? '（' + esc(l2.result) + '）' : ''), '', l2.reason));
     if (isNum(w.l2_hour)) a.push(part((l2 ? '本小時 ' : '完整規劃本小時 ') + '<b>' + Number(w.l2_hour) + (isNum(w.l2_cap) ? '/' + Number(w.l2_cap) : ' 次') + '</b>' +
                                       (w.l2_full_until ? '（到 ' + esc(w.l2_full_until) + '）' : '')));
@@ -12540,6 +12551,8 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     if (bk && bk.why) a.push(part(esc((bk.time ? bk.time + ' ' : '') + why(bk.why)), 'blk', bk.reason));
     if (w.pending_until) a.push(part('保留到 <b>' + esc(w.pending_until) + '</b>'));
     if (Number(w.pending_l1) > 0) a.push(part('快速判讀排隊 <b>' + Number(w.pending_l1) + '</b> 個'));
+    var bud = budgetOf(d);
+    if (bud && bud.note) a.push(part(esc(bud.note), 'blk', bud.line));
     var b = [], q = w.pos && typeof w.pos === 'object' ? w.pos : null;
     if (q) {
       var L = q.side === 'long';
@@ -12557,6 +12570,12 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     if (a.length) h += '<div class="bz-ai-watch-plan">' + join(a) + '</div>';
     if (b.length) h += '<div class="bz-ai-watch-pos">' + join(b) + '</div>';
     return h;
+  }
+
+  /* 1.4.12：V0.1.28 的月預算（usage.budget）；沒有＝V0.1.27 以前，照舊 */
+  function budgetOf(d) {
+    var u = d && d.usage && typeof d.usage === 'object' ? d.usage : null;
+    return u && u.budget && typeof u.budget === 'object' && u.budget.line ? u.budget : null;
   }
 
   /* 最近事件：和 1.4.5 一樣的格式，只是不列「計畫跟著分界移動」，改一行總數 */
@@ -12585,16 +12604,22 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     var pill = c.querySelector('.bz-ai-head .bz-pill');
     if (!pill) return;                       /* 還沒有資料／讀取失敗：1.4.5 的畫面不動 */
     /* 1. 狀態膠囊（看 1.4.5 畫出來的字，和它用的資料一定一致） */
-    var txt = pill.textContent, code = LABEL[txt] ? txt : (txt === LABEL.STUCK ? 'STUCK' : (txt === LABEL.L2_FULL ? 'L2_FULL' : ''));
+    var txt = pill.textContent, code = LABEL[txt] ? txt : (txt === LABEL.STUCK ? 'STUCK' : (txt === LABEL.L2_FULL ? 'L2_FULL' : (txt === LABEL.NOSIDE ? 'NOSIDE' : '')));
     if (LABEL[txt]) pill.textContent = LABEL[txt];
     if (code === 'STUCK' && !c.classList.contains('ai-warn')) c.classList.add('ai-warn');
     if (code) patchView(c, code, !c.querySelector('.bz-ai-headline'));
 
     var d = s.data, old = c.querySelector('.bz-ai-watch');
+    /* 7.（1.4.12）標題右邊的小字：今天的花費換成本月／這盤額度 */
+    var bud = budgetOf(d), mt = c.querySelector('.bz-ai-head .bz-ai-meta');
+    if (bud && mt) {
+      var mtx = mt.textContent, m2 = mtx.replace(/今天 US\$[0-9.]+／[0-9.]+/, String(bud.line));
+      if (m2 !== mtx) mt.textContent = m2;
+    }
     if (!hasWatch(d)) { if (old) old.remove(); return; }   /* 沒有 watch：和 1.4.10 一樣 */
 
     /* 2. 計畫下面兩行（放在型態／試跑／下方小字之前） */
-    var h = watchHtml(d.watch);
+    var h = watchHtml(d.watch, d);
     var ref = c.querySelector(':scope > #bz-ai-pat') || c.querySelector(':scope > #bz-ai-trial') || c.querySelector(':scope > .bz-ai-foot');
     if (!h) { if (old) old.remove(); }
     else if (!old || old.__z1411 !== h || old.nextElementSibling !== ref) {
@@ -12658,6 +12683,6 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
   else start();
 })();
 </script>
-<!-- Z31_BAOZ_AI_WATCH_UI_1_4_11_END -->
+<!-- Z31_BAOZ_AI_WATCH_UI_1_4_11_END（1.4.12：V0.1.28 兩邊都不能做、暫停叫 AI、月預算） -->
 </body>
 </html>
