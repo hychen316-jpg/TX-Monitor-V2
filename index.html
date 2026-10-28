@@ -12464,5 +12464,200 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
 html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gauge-cap > span:nth-child(2)::before { font-size: 10px; content: "±20 貼近"; }
 </style>
 <!-- Z31_BAOZ_PORTRAIT_GAUGE_UI_1_4_10_END -->
+<!-- Z31_BAOZ_AI_WATCH_UI_1_4_11_BEGIN -->
+<style id="z31-baoz-ai-watch-ui-1-4-11">
+/* ===== BaoZ UI 1.4.11（20261028）：AI 即時分析卡顯示 BaoZ AI V0.1.26 的「AI 在等什麼」（watch）
+   只改顯示：不寫 Firebase、不改任何計算、不改 1.4.5 以前的程式；只在同一個節點 baoz_realtime/near_ai 多掛一個「唯讀」監聽
+   （用頁面原本的 firebase／db），等 1.4.5 把 AI 卡畫好之後再補上下面幾件事（MutationObserver）：
+   1. 狀態膠囊：L2_FULL →「L2 已滿」（不是警示）；STUCK →「AI 卡住」（和資料延遲一樣，卡片左邊變警示色）。狀態說明原本就在提醒那一行，不重複。
+   2. 計畫下面加兩行（字和「計畫有效到…」那行一樣大）：
+      第一行：上次完整規劃（結果）｜本小時 N/上限（滿了寫到幾點）｜冷卻到｜下次定時｜幾點要重做但被擋（冷卻／沒變化／上限／預算）｜保留到；
+      第二行（只有持倉時）：停損｜+N 移保本（未移／已移）｜第一目標（已到）｜最大浮盈｜跌破／站上哪個價會問 AI｜幾點日內／夜盤平倉。
+   3. 最近事件：不列「計畫跟著分界移動」，改成一行「已跟著分界移動 N 次，累計 ±X」；其他事件照樣最多 3 筆。
+   4.「最近判讀」改叫「快速判讀（Haiku）」；這次快速判讀要完整規劃但被擋時，後面加「｜要重做但冷卻中」這類說明。
+   沒有 watch（V0.1.25 以前的資料）：AI 卡和 1.4.10 一模一樣。其他面板的位置、大小都不動。 ===== */
+#baoz-system-panel .bz-ai-watch { margin-top: 8px; display: grid; gap: 2px; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-watch > div { min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-ai-watch .p { display: inline-block; max-width: 100%; }
+#baoz-system-panel .bz-ai-watch b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-ai-watch .blk, #baoz-system-panel .bz-ai-foot .bz-ai-blk { color: var(--bz-attn); }
+</style>
+<script>
+/* BaoZ UI 1.4.11：AI 卡補上 watch（只讀 Firebase，不寫；只改顯示） */
+(function () {
+  'use strict';
+  var NODE = 'baoz_realtime/near_ai';
+  var FOLLOW = '計畫跟著分界移動';
+  var LABEL = { L2_FULL: 'L2 已滿', STUCK: 'AI 卡住' };
+  var WHY = { '冷卻': '要重做但冷卻中', '沒變化': '要重做但和上次比沒變化', '上限': '要重做但本小時已滿', '預算': '要重做但預算不足' };
+  var s = { ref: null, fn: null, data: null, card: null, mo: null, failAt: 0 };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function isNum(v) { return v !== null && v !== '' && typeof v !== 'boolean' && Number.isFinite(Number(v)); }
+  function price(v) { var x = Number(v); return v != null && Number.isFinite(x) && x > 0 ? String(Math.round(x)) : ''; }
+  function signed(v) { v = Math.round(Number(v) || 0); return (v > 0 ? '+' : (v < 0 ? '−' : '±')) + Math.abs(v); }
+  function why(w) { return WHY[w] || ('要重做但被擋（' + w + '）'); }
+  function hasWatch(d) { return !!(d && d.watch && typeof d.watch === 'object'); }
+
+  /* 和 1.4.5 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才讀 */
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function detach() {
+    if (s.ref && s.fn) { try { s.ref.off('value', s.fn); } catch (e) {} }
+    s.ref = null; s.fn = null;
+  }
+  function reconcile() {
+    if (!allowed()) { if (s.ref) detach(); if (s.data) { s.data = null; patch(); } return; }
+    if (s.ref || Date.now() - s.failAt < 60000) return;
+    if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
+    s.ref = db.ref(NODE);
+    s.fn = function (sn) { s.data = sn && typeof sn.val === 'function' ? sn.val() : null; patch(); };
+    s.ref.on('value', s.fn, function () { s.failAt = Date.now(); detach(); });   /* 讀取失敗的說明 1.4.5 已經會顯示 */
+  }
+
+  function part(html, cls, title) {
+    return '<span class="p"' + (title ? ' title="' + esc(title) + '"' : '') + '>' + (cls ? '<span class="' + cls + '">' + html + '</span>' : html) + '</span>';
+  }
+  function join(parts) {   /* 「｜」放在前一段後面，折行時一段不會被拆開 */
+    return parts.map(function (x, i) { return i < parts.length - 1 ? x.replace(/<\/span>$/, '｜</span>') : x; }).join('');
+  }
+
+  /* 第一行：AI 排程；第二行：持倉看守 */
+  function watchHtml(w) {
+    var a = [], l2 = w.l2 && typeof w.l2 === 'object' ? w.l2 : null;
+    if (l2 && l2.time) a.push(part('上次完整規劃 <b>' + esc(l2.time) + '</b>' + (l2.result ? '（' + esc(l2.result) + '）' : ''), '', l2.reason));
+    if (isNum(w.l2_hour)) a.push(part((l2 ? '本小時 ' : '完整規劃本小時 ') + '<b>' + Number(w.l2_hour) + (isNum(w.l2_cap) ? '/' + Number(w.l2_cap) : ' 次') + '</b>' +
+                                      (w.l2_full_until ? '（到 ' + esc(w.l2_full_until) + '）' : '')));
+    if (w.cooldown_until) a.push(part('冷卻到 <b>' + esc(w.cooldown_until) + '</b>'));
+    if (w.next_check) a.push(part('下次定時 <b>' + esc(w.next_check) + '</b>'));
+    var bk = w.blocked && typeof w.blocked === 'object' ? w.blocked : null;
+    if (bk && bk.why) a.push(part(esc((bk.time ? bk.time + ' ' : '') + why(bk.why)), 'blk', bk.reason));
+    if (w.pending_until) a.push(part('保留到 <b>' + esc(w.pending_until) + '</b>'));
+    if (Number(w.pending_l1) > 0) a.push(part('快速判讀排隊 <b>' + Number(w.pending_l1) + '</b> 個'));
+    var b = [], q = w.pos && typeof w.pos === 'object' ? w.pos : null;
+    if (q) {
+      var L = q.side === 'long';
+      if (q.be_done) b.push(part('已移保本' + (price(q.stop) ? '（停損 <b>' + price(q.stop) + '</b>）' : '')));
+      else {
+        if (price(q.stop)) b.push(part('停損 <b>' + price(q.stop) + '</b>'));
+        if (price(q.be_price)) b.push(part((isNum(q.be_pts) && Number(q.be_pts) > 0 ? '+' + Math.round(Number(q.be_pts)) + ' ' : '') + '移保本 <b>' + price(q.be_price) + '</b>（未移）'));
+      }
+      if (price(q.t1)) b.push(part('第一目標 <b>' + price(q.t1) + '</b>' + (q.t1_done ? '（已到）' : '')));
+      if (isNum(q.mfe)) b.push(part('最大浮盈 <b>' + Math.round(Number(q.mfe)) + '</b>'));
+      if (price(q.ask_price)) b.push(part(esc(q.ask_text || (L ? '跌破' : '站上')) + ' <b>' + price(q.ask_price) + '</b> 會問 AI'));
+      if (q.exit_at) b.push(part('<b>' + esc(q.exit_at) + '</b> ' + esc(q.exit_kind || '') + '平倉'));
+    }
+    var h = '';
+    if (a.length) h += '<div class="bz-ai-watch-plan">' + join(a) + '</div>';
+    if (b.length) h += '<div class="bz-ai-watch-pos">' + join(b) + '</div>';
+    return h;
+  }
+
+  /* 最近事件：和 1.4.5 一樣的格式，只是不列「計畫跟著分界移動」，改一行總數 */
+  function logHtml(d) {
+    var ev = Array.isArray(d.events) ? d.events : [], p = d.plan && typeof d.plan === 'object' ? d.plan : null;
+    var rows = [];
+    if (p && Number(p.div_n) > 0) rows.push(esc('已跟著分界移動 ' + Math.round(Number(p.div_n)) + ' 次，累計 ' + signed(p.div_shift)));
+    ev.filter(function (e) { return e && e.kind !== FOLLOW; }).slice(0, 3).forEach(function (e) {
+      rows.push(esc(String(e.time || '').slice(-5) + ' ' + e.kind + '：' + e.text));
+    });
+    return rows.join('<br>');
+  }
+
+  function patchView(c, code, plain) {
+    var v = window.__BaoZAIView;
+    if (!v || v.__z1411) return;
+    v.__z1411 = true;
+    if (plain && v.chip === '待命' && LABEL[code]) v.chip = LABEL[code];   /* 沒有計畫時，1.4.5 找不到這兩個狀態會寫「待命」 */
+    if (code === 'STUCK') v.tone = 'warn';
+  }
+
+  function patch() {
+    var c = $('bz-ai-card');
+    watchCard(c);
+    if (!c || c.hidden) return;
+    var pill = c.querySelector('.bz-ai-head .bz-pill');
+    if (!pill) return;                       /* 還沒有資料／讀取失敗：1.4.5 的畫面不動 */
+    /* 1. 狀態膠囊（看 1.4.5 畫出來的字，和它用的資料一定一致） */
+    var txt = pill.textContent, code = LABEL[txt] ? txt : (txt === LABEL.STUCK ? 'STUCK' : (txt === LABEL.L2_FULL ? 'L2_FULL' : ''));
+    if (LABEL[txt]) pill.textContent = LABEL[txt];
+    if (code === 'STUCK' && !c.classList.contains('ai-warn')) c.classList.add('ai-warn');
+    if (code) patchView(c, code, !c.querySelector('.bz-ai-headline'));
+
+    var d = s.data, old = c.querySelector('.bz-ai-watch');
+    if (!hasWatch(d)) { if (old) old.remove(); return; }   /* 沒有 watch：和 1.4.10 一樣 */
+
+    /* 2. 計畫下面兩行（放在型態／試跑／下方小字之前） */
+    var h = watchHtml(d.watch);
+    var ref = c.querySelector(':scope > #bz-ai-pat') || c.querySelector(':scope > #bz-ai-trial') || c.querySelector(':scope > .bz-ai-foot');
+    if (!h) { if (old) old.remove(); }
+    else if (!old || old.__z1411 !== h || old.nextElementSibling !== ref) {
+      if (old) old.remove();
+      var box = document.createElement('div');
+      box.className = 'bz-ai-watch';
+      box.innerHTML = h;
+      box.__z1411 = h;
+      if (ref) c.insertBefore(box, ref); else c.appendChild(box);
+    }
+
+    var foot = c.querySelector(':scope > .bz-ai-foot');
+    if (!foot) return;
+    /* 4. 快速判讀 */
+    var l1 = d.last_l1 && typeof d.last_l1 === 'object' ? d.last_l1 : null;
+    var l1s = foot.querySelector(':scope > span[data-z1411="l1"]');
+    if (!l1s) {
+      var first = foot.firstElementChild;
+      if (first && first.tagName === 'SPAN' && !first.className && /^最近判讀 /.test(first.textContent)) { l1s = first; l1s.setAttribute('data-z1411', 'l1'); }
+    }
+    if (l1 && l1s) {
+      var lh = '快速判讀（Haiku） <b>' + esc(l1.time) + '</b> ' + esc(l1.reason || '') + '：' + esc(l1.note || '') +
+               (l1.blocked ? '｜<span class="bz-ai-blk">' + esc(why(l1.blocked)) + '</span>' : '');
+      if (l1s.__z1411 !== lh) { l1s.innerHTML = lh; l1s.__z1411 = lh; }
+    }
+    /* 3. 最近事件 */
+    var log = foot.querySelector(':scope > .bz-ai-log'), gh = logHtml(d);
+    if (!gh) { if (log) log.remove(); return; }
+    if (!log) {
+      log = document.createElement('span');
+      log.className = 'bz-ai-log bz-ai-scroll';
+      log.setAttribute('data-scroll', 'log');
+      foot.insertBefore(log, l1s ? l1s.nextSibling : foot.firstChild);
+    }
+    if (log.__z1411 !== gh) {
+      var keep = log.scrollTop;
+      log.innerHTML = gh;
+      log.__z1411 = gh;
+      if (keep) log.scrollTop = keep;
+    }
+  }
+
+  /* 1.4.5 每次重畫 AI 卡（資料變了、每 5 秒）之後馬上補上；自己改的不再觸發 */
+  function watchCard(c) {
+    if (!c || c === s.card || typeof MutationObserver === 'undefined') return;
+    if (s.mo) s.mo.disconnect();
+    s.card = c;
+    s.mo = new MutationObserver(function () { patch(); if (s.mo) s.mo.takeRecords(); });
+    s.mo.observe(c, { childList: true });
+  }
+
+  function start() {
+    reconcile();
+    patch();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(reconcile).observe(d, { attributes: true, attributeFilter: ['class'] });
+    try { if (typeof auth !== 'undefined' && auth && typeof auth.onAuthStateChanged === 'function') auth.onAuthStateChanged(function () { detach(); s.failAt = 0; reconcile(); }); } catch (e) {}
+    window.setInterval(function () { reconcile(); var c = $('bz-ai-card'); if (c && c !== s.card) patch(); }, 500);   /* AI 卡晚建立 */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_AI_WATCH_UI_1_4_11_END -->
 </body>
 </html>
