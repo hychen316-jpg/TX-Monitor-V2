@@ -10941,7 +10941,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.14');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.16');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -12021,6 +12021,12 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
 #baoz-system-panel .bz-ai-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 #baoz-system-panel .bz-ai-title { font-weight: 700; font-size: 14px; color: var(--bz-ink); }
 #baoz-system-panel .bz-ai-tag { font-size: 11px; color: var(--bz-muted); border: 1px solid var(--bz-line); border-radius: 4px; padding: 0 6px; }
+/* 1.4.15：L0／L1／L2 標示 */
+#baoz-system-panel .bz-lv { display: inline-block; font-size: 11px; font-weight: 700; line-height: 15px; letter-spacing: .02em; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; margin-right: 6px; vertical-align: middle; position: relative; top: -1px; font-variant-numeric: normal; cursor: help; }
+#baoz-system-panel .bz-lv0 { color: var(--bz-muted); }
+#baoz-system-panel .bz-lv1 { color: var(--bz-accent); }
+#baoz-system-panel .bz-lv2 { color: #c9a7ff; }
+#baoz-system-panel .bz-ai-headline .bz-lv { font-size: 12px; line-height: 17px; top: -3px; }
 #baoz-system-panel .bz-ai-meta { margin-left: auto; font-size: 12px; color: var(--bz-muted); }
 #baoz-system-panel .bz-ai-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 8px 16px; margin-top: 8px; }
 @media (max-width: 800px) { #baoz-system-panel .bz-ai-body { grid-template-columns: 1fr; } }
@@ -12088,6 +12094,28 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   function n(v) { var x = Number(v); return Number.isFinite(x) && x !== 0 ? x : null; }
   function fmt(v) { var x = n(v); return x == null ? '—' : x.toLocaleString('en-US'); }
   function hm(iso) { var m = /T(\d\d:\d\d)/.exec(String(iso || '')); return m ? m[1] : ''; }
+  /* 1.4.15（20261029）：L0／L1／L2 標示，看得出是誰給的訊息。L0＝本機程式（照規則和計畫追蹤，不花錢）；
+     L1＝快速判讀（Haiku）；L2＝完整規劃（Sonnet）：計畫、試跑、AI 判讀類事件都是 L2 */
+  var LV = { L0: '本機程式（照規則和 AI 的計畫追蹤，不花錢）', L1: '快速判讀', L2: '完整規劃' };
+  var AI_EV = ['新計畫', '計畫更新', '留倉'];
+  /* 1.4.16：程式檢查 AI 回覆後做的決定算 L0（計畫不合規則、確認那一次失敗、回覆回來時已經出場、不能留倉） */
+  var L0_EV = ['計畫不採用', 'AI 回覆不採用', 'AI 回覆不用處理', '不留倉'];
+  function lvTag(lv, model, title) {
+    return '<span class="bz-lv bz-lv' + lv.slice(1) + '" title="' + esc(title || (lv + ' ' + LV[lv] + (model ? '（' + model + '）' : ''))) + '">' + lv + '</span>';
+  }
+  function evLv(kind) { var k = String(kind || '').replace(/^對照：/, ''); return L0_EV.indexOf(k) < 0 && (/^AI /.test(k) || AI_EV.indexOf(k) >= 0) ? 'L2' : 'L0'; }
+  function evTag(kind) {
+    var k = String(kind || '').replace(/^對照：/, '');
+    return lvTag(evLv(k), '', L0_EV.indexOf(k) >= 0 ? 'L0 本機程式：檢查 AI 回覆之後的決定（後面引的是 AI 原本的話）' : '');
+  }
+  /* 1.4.16：一句話後面由程式接上的說明（日內單／留倉單、13:15 後成交、多日方向已確認）標 L0 */
+  var PROG_NOTE = /^(日內單：|留倉單(：|$)|\d{1,2}:\d{2} (留倉檢查|留倉|後成交的話)：|Argon 不留空|(多方|空方|多空都)已確認（緩衝 \d+）$)/;
+  function sumHtml(s) {
+    var a = String(s).split('｜'), i = a.length;
+    while (i > 0 && PROG_NOTE.test(a[i - 1])) i--;
+    if (i === a.length) return esc(s);
+    return (i ? esc(a.slice(0, i).join('｜')) + '｜' : '') + lvTag('L0', '', 'L0 本機程式接上的說明，不是 AI 寫的') + esc(a.slice(i).join('｜'));
+  }
   function ago(iso) {   /* 幾分鐘前（6 小時內才寫） */
     var t = Date.parse(String(iso || '')), m = Math.floor((Date.now() - t) / 60000);
     return Number.isFinite(m) && m >= 0 && m < 360 ? (m < 1 ? '剛剛' : m + ' 分鐘前') : '';
@@ -12140,7 +12168,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   function trialHtml(t) {
     if (!t || !t.at_ms || !(Date.now() - Number(t.at_ms) < 24 * 3600 * 1000)) return '';
     var MODEL = { 'claude-sonnet-5-5': 'Sonnet 5.5', 'claude-haiku-5-5': 'Haiku 5.5', 'claude-opus-5-5': 'Opus 5.5' };
-    var h = '<div class="bz-ai-trial" id="bz-ai-trial"><div class="bz-ai-trial-head"><span class="bz-ai-tag">試跑</span><b>最近一次試跑 ' + esc(t.time || '') + '</b>' +
+    var h = '<div class="bz-ai-trial" id="bz-ai-trial"><div class="bz-ai-trial-head">' + lvTag('L2', MODEL[t.model] || t.model) + '<span class="bz-ai-tag">試跑</span><b>最近一次試跑 ' + esc(t.time || '') + '</b>' +
             '<span>' + esc(t.mode || '') + '</span><span>' + esc((MODEL[t.model] || t.model || '') + '｜US$' + Number(t.cost || 0).toFixed(3)) + '</span></div>';
     if (t.error) return h + '<div class="ng">試跑失敗：' + esc(t.error) + '</div></div>';
     var side = t.side === 'long' ? 'long' : (t.side === 'short' ? 'short' : '');
@@ -12160,7 +12188,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     if (t.summary) h += '<div class="bz-ai-trial-main">' + esc(t.summary) + '</div>';
     if (t.key_factors && t.key_factors.length) h += '<ul>' + t.key_factors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
     if (t.risk) h += '<div class="ng">風險：' + esc(t.risk) + '</div>';
-    h += '<div class="' + (t.ok ? 'ok' : 'ng') + '">程式檢查：' + esc(t.check || '') + '</div>';
+    h += '<div class="' + (t.ok ? 'ok' : 'ng') + '">' + lvTag('L0', '', 'L0 本機程式：用規則檢查這次試跑的計畫') + '程式檢查：' + esc(t.check || '') + '</div>';
     if (t.sim) {
       var ev = (t.sim.events || []).map(function (e) { return esc(e[0] + ' ' + e[1] + '：' + e[2]); });
       h += '<div class="bz-ai-trial-sim">回放之後的走勢（用每分鐘紀錄模擬，不是實盤）：<br>' + ev.concat([esc(t.sim.end || '')]).join('<br>') + '</div>';
@@ -12172,7 +12200,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
   function patHtml(d) {
     var w = Array.isArray(d.pattern_watch) ? d.pattern_watch : [], ps = Array.isArray(d.patterns) ? d.patterns : [];
     if (!Array.isArray(d.patterns) && !Array.isArray(d.pattern_watch)) return '';
-    var h = '<div class="bz-ai-pat" id="bz-ai-pat"><div class="bz-ai-pat-head"><span class="bz-ai-tag">型態</span><b>殺多點／嘎空點型態</b>' +
+    var h = '<div class="bz-ai-pat" id="bz-ai-pat"><div class="bz-ai-pat-head">' + lvTag('L0', '', 'L0 本機程式：照價格和價位自動標記型態（不花錢）') + '<span class="bz-ai-tag">型態</span><b>殺多點／嘎空點型態</b>' +
             '<span>只顯示、不下單（碰到成本區 → 回落／反彈 30 點並回到區外）</span>' +
             (ps.length > 3 ? '<span class="bz-ai-pat-n">共 ' + ps.length + ' 筆・可捲動</span>' : '') + '</div>';
     w.forEach(function (x) { h += '<div class="bz-ai-pat-watch">' + esc(x) + '</div>'; });
@@ -12309,11 +12337,12 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     } else {
       var o = describe(p, d.position || null, n(d.price));
       if (o.active) cls += p.side === 'long' ? ' ai-long' : ' ai-short';
-      html += '<div class="bz-ai-headline' + (o.tone ? ' ' + o.tone : '') + '">' + esc(o.head) +
+      html += '<div class="bz-ai-headline' + (o.tone ? ' ' + o.tone : '') + '">' +
+              lvTag('L2', '', 'L2 完整規劃' + (model ? '（' + model + '）' : '') + '給的計畫；進區、進場、停損、目標由 L0 程式照計畫追蹤') + esc(o.head) +
               (p.created_at ? '<span class="ago">' + esc(hm(p.created_at) + (ago(p.created_at) ? '（' + ago(p.created_at) + '）' : '') + ' ' + (p.reason || '')) + '</span>' : '') + '</div>';
-      if (p.summary) html += '<div class="bz-ai-summary">' + esc(p.summary) + '</div>';
-      if (o.why) html += '<div class="bz-ai-why">' + esc(o.why) + '</div>';
-      if (o.note) html += '<div class="bz-ai-why">' + esc(o.note) + '</div>';
+      if (p.summary) html += '<div class="bz-ai-summary">' + sumHtml(p.summary) + '</div>';
+      if (o.why) html += '<div class="bz-ai-why">' + lvTag('L0', '', 'L0 本機程式：照計畫執行的結果、不採用或取消的原因') + esc(o.why) + '</div>';
+      if (o.note) html += '<div class="bz-ai-why">' + lvTag('L0', '', 'L0 本機程式：照計畫執行的說明') + esc(o.note) + '</div>';
       if (o.nums.length) html += '<div class="bz-ai-nums">' + o.nums.map(function (x) {
         return '<div class="bz-ai-num' + (x[3] ? ' ' + x[3] : '') + '"><span class="k">' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>' + (x[2] ? '<small>' + esc(x[2]) + '</small>' : '') + '</div>';
       }).join('') + '</div>';
@@ -12334,10 +12363,11 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     html += patHtml(d);
     html += trialHtml(d.trial);
     var foot = [];
-    if (d.last_l1) foot.push('<span>最近判讀 <b>' + esc(d.last_l1.time) + '</b> ' + esc(d.last_l1.reason || '') + '：' + esc(d.last_l1.note || '') + '</span>');
-    if (d.events && d.events.length) foot.push('<span class="bz-ai-log bz-ai-scroll" data-scroll="log">' + d.events.slice(0, 3).map(function (e) { return esc(e.time.slice(-5) + ' ' + e.kind + '：' + e.text); }).join('<br>') + '</span>');
+    if (d.last_l1) foot.push('<span>' + lvTag('L1', MODEL[cfg.l1] || cfg.l1) + '最近判讀 <b>' + esc(d.last_l1.time) + '</b> ' + esc(d.last_l1.reason || '') + '：' + esc(d.last_l1.note || '') + '</span>');
+    if (d.events && d.events.length) foot.push('<span class="bz-ai-log bz-ai-scroll" data-scroll="log">' + d.events.slice(0, 3).map(function (e) { return evTag(e.kind) + esc(e.time.slice(-5) + ' ' + e.kind + '：' + e.text); }).join('<br>') + '</span>');
     if (d.last_error) foot.push('<span>錯誤：' + esc(d.last_error) + '</span>');
-    foot.push('<span>' + esc('今天 AI 快速判讀 ' + (u.calls_l1 || 0) + ' 次・完整規劃 ' + (u.calls_l2 || 0) + ' 次' + (u.calls_trial ? '・試跑 ' + u.calls_trial + ' 次' : '')) + '</span>');
+    foot.push('<span>' + lvTag('L0') + esc('本機程式一直盯盤（不花錢）｜今天 ') + lvTag('L1', MODEL[cfg.l1] || cfg.l1) + esc('快速判讀' + (cfg.l1 ? '（' + String(MODEL[cfg.l1] || cfg.l1).replace(/ [0-9.]+$/, '') + '）' : '') + ' ' + (u.calls_l1 || 0) + ' 次・') +
+              lvTag('L2', MODEL[cfg.l2] || cfg.l2) + esc('完整規劃' + (cfg.l2 ? '（' + String(MODEL[cfg.l2] || cfg.l2).replace(/ [0-9.]+$/, '') + '）' : '') + ' ' + (u.calls_l2 || 0) + ' 次' + (u.calls_trial ? '・試跑 ' + u.calls_trial + ' 次' : '')) + '</span>');
     var exp = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d.expiry || ''));
     foot.push('<span>' + esc('日盤 AI ' + (cfg.day ? '開 ' + (cfg.day_time || '') : '關') + '｜夜盤 AI ' + (cfg.night ? '開 ' + (cfg.night_time || '') : '關') +
       (exp ? '｜結算日 ' + exp[2] + '/' + exp[3] + '（日盤不做單）' : '') + (d.dry_run ? '｜模擬' : '')) + '</span>');
@@ -12522,6 +12552,20 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
   function signed(v) { v = Math.round(Number(v) || 0); return (v > 0 ? '+' : (v < 0 ? '−' : '±')) + Math.abs(v); }
   function why(w) { return WHY[w] || ('要重做但被擋（' + w + '）'); }
   function hasWatch(d) { return !!(d && d.watch && typeof d.watch === 'object'); }
+  /* 1.4.15（20261029）：L0／L1／L2 標示，看得出是誰給的訊息。L0＝本機程式（照規則和計畫追蹤，不花錢）；
+     L1＝快速判讀（Haiku）；L2＝完整規劃（Sonnet）：計畫、試跑、AI 判讀類事件都是 L2 */
+  var LV = { L0: '本機程式（照規則和 AI 的計畫追蹤，不花錢）', L1: '快速判讀', L2: '完整規劃' };
+  var AI_EV = ['新計畫', '計畫更新', '留倉'];
+  /* 1.4.16：程式檢查 AI 回覆後做的決定算 L0（計畫不合規則、確認那一次失敗、回覆回來時已經出場、不能留倉） */
+  var L0_EV = ['計畫不採用', 'AI 回覆不採用', 'AI 回覆不用處理', '不留倉'];
+  function lvTag(lv, model, title) {
+    return '<span class="bz-lv bz-lv' + lv.slice(1) + '" title="' + esc(title || (lv + ' ' + LV[lv] + (model ? '（' + model + '）' : ''))) + '">' + lv + '</span>';
+  }
+  function evLv(kind) { var k = String(kind || '').replace(/^對照：/, ''); return L0_EV.indexOf(k) < 0 && (/^AI /.test(k) || AI_EV.indexOf(k) >= 0) ? 'L2' : 'L0'; }
+  function evTag(kind) {
+    var k = String(kind || '').replace(/^對照：/, '');
+    return lvTag(evLv(k), '', L0_EV.indexOf(k) >= 0 ? 'L0 本機程式：檢查 AI 回覆之後的決定（後面引的是 AI 原本的話）' : '');
+  }
 
   /* 和 1.4.5 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才讀 */
   function allowed() {
@@ -12583,8 +12627,8 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
       if (q.exit_at) b.push(part('<b>' + esc(q.exit_at) + '</b> ' + esc(q.exit_kind || '') + '平倉'));
     }
     var h = '';
-    if (a.length) h += '<div class="bz-ai-watch-plan">' + join(a) + '</div>';
-    if (b.length) h += '<div class="bz-ai-watch-pos">' + join(b) + '</div>';
+    if (a.length) h += '<div class="bz-ai-watch-plan">' + lvTag('L0', '', 'L0 本機程式：什麼時候叫 L1／L2、冷卻、次數上限') + join(a) + '</div>';
+    if (b.length) h += '<div class="bz-ai-watch-pos">' + lvTag('L0', '', 'L0 本機程式：持倉的停損、保本、目標、平倉時間') + join(b) + '</div>';
     return h;
   }
 
@@ -12598,9 +12642,9 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
   function logHtml(d) {
     var ev = Array.isArray(d.events) ? d.events : [], p = d.plan && typeof d.plan === 'object' ? d.plan : null;
     var rows = [];
-    if (p && Number(p.div_n) > 0) rows.push(esc('已跟著分界移動 ' + Math.round(Number(p.div_n)) + ' 次，累計 ' + signed(p.div_shift)));
+    if (p && Number(p.div_n) > 0) rows.push(lvTag('L0') + esc('已跟著分界移動 ' + Math.round(Number(p.div_n)) + ' 次，累計 ' + signed(p.div_shift)));
     ev.filter(function (e) { return e && e.kind !== FOLLOW; }).slice(0, 3).forEach(function (e) {
-      rows.push(esc(String(e.time || '').slice(-5) + ' ' + e.kind + '：' + e.text));
+      rows.push(evTag(e.kind) + esc(String(e.time || '').slice(-5) + ' ' + e.kind + '：' + e.text));
     });
     return rows.join('<br>');
   }
@@ -12654,10 +12698,10 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     var l1s = foot.querySelector(':scope > span[data-z1411="l1"]');
     if (!l1s) {
       var first = foot.firstElementChild;
-      if (first && first.tagName === 'SPAN' && !first.className && /^最近判讀 /.test(first.textContent)) { l1s = first; l1s.setAttribute('data-z1411', 'l1'); }
+      if (first && first.tagName === 'SPAN' && !first.className && /^(L1)?最近判讀 /.test(first.textContent)) { l1s = first; l1s.setAttribute('data-z1411', 'l1'); }
     }
     if (l1 && l1s) {
-      var lh = '快速判讀（Haiku） <b>' + esc(l1.time) + '</b> ' + esc(l1.reason || '') + '：' + esc(l1.note || '') +
+      var lh = lvTag('L1', 'Haiku') + '快速判讀（Haiku） <b>' + esc(l1.time) + '</b> ' + esc(l1.reason || '') + '：' + esc(l1.note || '') +
                (l1.blocked ? '｜<span class="bz-ai-blk">' + esc(why(l1.blocked)) + '</span>' : '');
       if (l1s.__z1411 !== lh) { l1s.innerHTML = lh; l1s.__z1411 = lh; }
     }
