@@ -10511,6 +10511,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-r-res{color:var(--bz-res)}
 #baoz-system-panel .bz-r-sup{color:var(--bz-sup)}
 #baoz-system-panel .bz-r-div{color:var(--bz-ink)}
+#baoz-system-panel .bz-r-thr{color:var(--bz-muted)}
 #baoz-system-panel .bz-r-tgt{color:var(--bz-tgt)}
 #baoz-system-panel .bz-r-brk{color:var(--bz-attn)}
 #baoz-system-panel .bz-r-near{color:var(--bz-bg);background:var(--bz-ink);border-color:var(--bz-ink)}
@@ -10846,7 +10847,18 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
   }
 
   // ---------- 價位表
+  // 1.4.13（20261029）：價位表的「暴Z表 Kdiv＋100」是留多距離門檻（13:30 期貨要在這之上），不是多日分界；
+  //   上傳程式 1.0.0 把它也當成 multi_boundary，而且它排在多日分界上面，所以「多日方向」卡片的期貨分界會多 100 點
+  function isThr(r){return r.kind==='multi_boundary'&&(/門檻/.test(r.meaning||'')||/Kdiv\s*＋/.test(r.source||''));}
+  function multiBoundary(v){
+    const L=v.levels||[];
+    const row=L.find(r=>r.kind==='multi_boundary'&&/^暴Z表 Kdiv\s*\d/.test(r.source||''));if(row)return row.low;
+    const m=/分界換成期貨\s*(\d+)/.exec((v.multi_day&&v.multi_day.text)||'');if(m)return Number(m[1]);
+    const any=L.find(r=>r.kind==='multi_boundary'&&!isThr(r));if(any)return any.low;
+    return L.some(isThr)?null:(v.multi_day?v.multi_day.futures_boundary:null);
+  }
   function levelName(r) {
+    if(isThr(r))return '留多門檻';
     const names={current:'現價',multi_boundary:'多日分界',session_boundary:'今天／今晚分界',target_upper:'必來點上緣',target_lower:'必來點下緣',session_high:'本盤高',session_low:'本盤低'};
     if(names[r.kind])return names[r.kind];
     const cp=/Call|Put/.exec(r.source||'');
@@ -10857,6 +10869,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(r.broken&&/＝壓力/.test(r.meaning||''))return ['bz-r-res','跌破＝壓力'];          // V1.2.21：被穿過的暴Z表層角色互換
     if(r.broken&&/＝支撐/.test(r.meaning||''))return ['bz-r-sup','突破＝支撐'];
     if(r.broken)return ['bz-r-brk','已'+(/突破/.test(r.broken)?'突破':'跌破')];
+    if(isThr(r))return ['bz-r-thr','門檻'];
     if(/kdiv/i.test(r.source||'')||/分界/.test(r.kind))return ['bz-r-div','分界'];
     if(/必來點/.test(t))return ['bz-r-tgt','目標'];
     if(/壓力/.test(t))return ['bz-r-res','壓力'];
@@ -10928,14 +10941,14 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.5');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.13');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
     const quality=/資料[：:]([^｜]+)/.exec(v.source_quality||'');
     text('bz-data-note',[(quality?'來源資料：'+quality[1]:''),'資料檢核：'+v.data_check.status,v.warning.text,v.inconsistent?'來源指令與做單狀態不一致，請看原文':''].filter(Boolean).join('｜'));
     text('bz-futures',num(m.futures));text('bz-synthetic',num(m.synthetic));text('bz-basis',sign(m.basis));
-    text('bz-multi-label','多日方向 · '+String(v.multi_day.label||'未提供').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''));text('bz-multi-distance',sign(m.dist_a));text('bz-multi-boundary',num(v.multi_day.futures_boundary));
+    text('bz-multi-label','多日方向 · '+String(v.multi_day.label||'未提供').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''));text('bz-multi-distance',sign(m.dist_a));text('bz-multi-boundary',num(multiBoundary(v)));
     text('bz-session-label',(night?'今晚':'今天')+'方向 · '+String(v.session_direction.label||'未提供').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''));text('bz-session-distance',sign(m.dist_b));text('bz-session-boundary',num(v.session_direction.futures_boundary));
     [['bz-multi-distance',m.dist_a],['bz-session-distance',m.dist_b]].forEach(([id,n])=>{$(id).classList.toggle('bz-bull',n>0);$(id).classList.toggle('bz-bear',n<0);});
     gauge('bz-multi-gauge',m.dist_a,-800,800,[[-20,20]],[-200,-20,20,100],['−800（偏空）','0','+800（偏多）']);
