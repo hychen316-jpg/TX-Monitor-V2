@@ -10941,7 +10941,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.13');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.14');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -12210,6 +12210,9 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       if (px) o.nums.push(['現價', fmt(px), '', '']);
       o.nums.push(['停損', fmt(q.stop), px ? '還有 ' + Math.round(L ? px - q.stop : q.stop - px) + ' 點' : '', 'stop']);
       if (tg) o.nums.push([q.t1_done ? '第二目標' : '目標', fmt(tg), px ? '還差 ' + Math.round(Math.abs(tg - px)) + ' 點' : '', '']);
+      /* 1.4.14（20261029）：還沒到第一目標時也顯示第二目標（2 口單：第一目標出一半，剩一口看第二目標） */
+      var tg2 = n(q.target2) || t2;
+      if (!q.t1_done && tg2 && tg2 !== tg) o.nums.push(['第二目標', fmt(tg2), px ? '還差 ' + Math.round(Math.abs(tg2 - px)) + ' 點' : '', '']);
       var notes = [];
       if (n(q.trigger) && Number(q.trigger) !== ent) notes.push('觸發價 ' + fmt(q.trigger) + '，' + (q.fill_from || '') + '看到 ' + fmt(ent) + '，用看到的價記進場');
       if (q.t1_done) notes.push('第一目標已出一半，剩下一口停損移到成本 ' + fmt(q.stop));
