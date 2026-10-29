@@ -10941,7 +10941,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.16');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.19');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -12027,6 +12027,73 @@ html.z31-pro.z31-portrait #v2-live-page .v2-c1c4-card .chip-card { min-height: 0
 #baoz-system-panel .bz-lv1 { color: var(--bz-accent); }
 #baoz-system-panel .bz-lv2 { color: #c9a7ff; }
 #baoz-system-panel .bz-ai-headline .bz-lv { font-size: 12px; line-height: 17px; top: -3px; }
+/* 1.4.17：AI 卡重新排版（流程列 L0 → L1 → L2、目前計畫、最近動態、可展開的型態／試跑） */
+#baoz-system-panel #bz-ai-card { container-type: inline-size; }
+#baoz-system-panel .bz-flow { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); gap: 6px; margin-top: 8px; align-items: stretch; }
+#baoz-system-panel .bz-flow-arrow { align-self: center; color: var(--bz-muted); font-size: 14px; }
+#baoz-system-panel .bz-step { border: 1px solid var(--bz-line); border-radius: var(--bz-radius); padding: 6px 8px; min-width: 0; font-size: 12px; color: var(--bz-muted); background: var(--bz-raised); }
+#baoz-system-panel .bz-step.is-new.bz-step0 { border-color: var(--bz-muted); box-shadow: inset 0 0 0 1px var(--bz-muted); }
+#baoz-system-panel .bz-step.is-new.bz-step1 { border-color: var(--bz-accent); box-shadow: inset 0 0 0 1px var(--bz-accent); }
+#baoz-system-panel .bz-step.is-new.bz-step2 { border-color: #c9a7ff; box-shadow: inset 0 0 0 1px #c9a7ff; }
+#baoz-system-panel .bz-step-head { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; color: var(--bz-ink); }
+#baoz-system-panel .bz-step-head .bz-lv { margin-right: 2px; }
+#baoz-system-panel .bz-step-head .n { margin-left: auto; color: var(--bz-muted); font-size: 11px; }
+#baoz-system-panel .bz-new { font-size: 10px; font-weight: 700; line-height: 14px; padding: 0 4px; border-radius: 3px; background: var(--bz-attn); color: #15181d; }
+#baoz-system-panel .bz-step-main { margin-top: 4px; color: var(--bz-ink); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-step-main small { margin-left: 6px; font-size: 11px; font-weight: 400; color: var(--bz-muted); }
+#baoz-system-panel .bz-step-sub { margin-top: 2px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-step-sub b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-step-sub .ago { margin-left: 6px; color: var(--bz-muted); white-space: nowrap; }
+#baoz-system-panel .bz-step-sub.blk { color: var(--bz-attn); }
+#baoz-system-panel .bz-flow-cap { margin-top: 4px; font-size: 11px; color: var(--bz-muted); }
+#baoz-system-panel .bz-flow-cap b { color: var(--bz-attn); font-weight: 600; }
+#baoz-system-panel .bz-sec { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-top: 10px; padding-top: 6px; border-top: 1px dashed var(--bz-line); font-size: 12px; font-weight: 600; color: var(--bz-ink); }
+#baoz-system-panel .bz-sec span { font-weight: 400; color: var(--bz-muted); }
+#baoz-system-panel .bz-sec + .bz-ai-headline, #baoz-system-panel .bz-sec + .bz-ai-empty { margin-top: 4px; }
+#baoz-system-panel .bz-ai-guard { margin-top: 8px; font-size: 12px; color: var(--bz-muted); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-ai-guard b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-feed { display: grid; gap: 3px; margin-top: 4px; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-feed.bz-ai-scroll { max-height: 13.5em; padding-right: 6px; }
+#baoz-system-panel .bz-feed-row { display: grid; grid-template-columns: 2.9em auto minmax(0, 1fr); gap: 6px; align-items: baseline; }
+#baoz-system-panel .bz-feed-row .t { font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-feed-row .bz-lv { margin-right: 0; }
+#baoz-system-panel .bz-feed-row .x { min-width: 0; overflow-wrap: anywhere; }
+#baoz-system-panel .bz-feed-row .x b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-fold { margin-top: 8px; border: 1px solid var(--bz-line); border-radius: var(--bz-radius); }
+#baoz-system-panel .bz-fold > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; padding: 5px 10px; font-size: 12px; color: var(--bz-muted); cursor: pointer; list-style: none; }
+#baoz-system-panel .bz-fold > summary::-webkit-details-marker { display: none; }
+#baoz-system-panel .bz-fold > summary b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-fold > summary::after { content: "展開 ▸"; margin-left: auto; }
+#baoz-system-panel .bz-fold[open] > summary::after { content: "收起 ▾"; }
+#baoz-system-panel .bz-fold > .bz-ai-pat, #baoz-system-panel .bz-fold > .bz-ai-trial { margin: 0 8px 8px; }
+@container (max-width: 430px) {
+  #baoz-system-panel .bz-flow { grid-template-columns: minmax(0, 1fr); }
+  #baoz-system-panel .bz-flow-arrow { justify-self: center; transform: rotate(90deg); line-height: 1; }
+}
+/* 1.4.19：流程列改成 L0、L1、L2 各一行，最近動態約 3 則高（Edward 10/29：注意總高度，不要把下方擠下去） */
+#baoz-system-panel .bz-fl { display: grid; gap: 2px; margin-top: 8px; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-fl-row { display: grid; grid-template-columns: 1em auto 4.4em minmax(0, 1fr) auto; gap: 0 6px; align-items: center; padding: 1px 6px; border: 1px solid transparent; border-radius: var(--bz-radius); }
+#baoz-system-panel .bz-fl-row .bz-lv { margin-right: 0; }
+#baoz-system-panel .bz-fl-row.is-new { background: var(--bz-raised); }
+#baoz-system-panel .bz-fl-row0.is-new { border-color: var(--bz-muted); }
+#baoz-system-panel .bz-fl-row1.is-new { border-color: var(--bz-accent); }
+#baoz-system-panel .bz-fl-row2.is-new { border-color: #c9a7ff; }
+#baoz-system-panel .bz-fl-arr { text-align: center; color: var(--bz-muted); }
+#baoz-system-panel .bz-fl-name { color: var(--bz-ink); white-space: nowrap; }
+#baoz-system-panel .bz-fl-x { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-fl-x b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-fl-r { display: flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 11px; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-fl-sub { grid-column: 4 / -1; min-width: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+#baoz-system-panel .bz-fl-sub.blk { color: var(--bz-attn); }
+#baoz-system-panel .bz-fl-foot { padding: 0 6px; font-size: 11px; color: var(--bz-muted); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-fl-foot b { color: var(--bz-attn); font-weight: 600; }
+#baoz-system-panel .bz-sec { margin-top: 8px; padding-top: 4px; }
+#baoz-system-panel .bz-feed.bz-ai-scroll { max-height: 9.5em; }
+@container (max-width: 430px) {
+  #baoz-system-panel .bz-fl-row { grid-template-columns: 1em auto minmax(0, 1fr) auto; }
+  #baoz-system-panel .bz-fl-name { display: none; }
+  #baoz-system-panel .bz-fl-sub { grid-column: 3 / -1; }
+}
 #baoz-system-panel .bz-ai-meta { margin-left: auto; font-size: 12px; color: var(--bz-muted); }
 #baoz-system-panel .bz-ai-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 8px 16px; margin-top: 8px; }
 @media (max-width: 800px) { #baoz-system-panel .bz-ai-body { grid-template-columns: 1fr; } }
@@ -12086,7 +12153,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near_ai';
-  var st = { ref: null, fn: null, data: null, problem: '', allowed: false };
+  var st = { ref: null, fn: null, data: null, problem: '', allowed: false, fold: {} };
   window.__BaoZAIView = null;
 
   function $(id) { return document.getElementById(id); }
@@ -12157,6 +12224,8 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     c.id = 'bz-ai-card';
     c.className = 'bz-ai';
     c.setAttribute('aria-label', 'AI 即時分析');
+    /* 1.4.17：型態、試跑展開／收起的狀態（重畫時照舊） */
+    c.addEventListener('toggle', function (e) { var x = e.target; if (x && x.getAttribute && x.getAttribute('data-fold')) st.fold[x.getAttribute('data-fold')] = x.open; }, true);
     var head = panel.querySelector('.bz-head');
     if (head) panel.insertBefore(c, head); else panel.appendChild(c);
     return c;
@@ -12300,6 +12369,134 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     return o;
   }
 
+  /* ===== 1.4.17：AI 卡重新排版用 ===== */
+  var FOLLOW_EV = '計畫跟著分界移動';
+  /* 1.4.18：1.4.5 的 STATUS 沒有這三個（狀態膠囊由 1.4.11 改字），流程列 L0 那一格自己翻 */
+  var STATUS2 = { NOSIDE: '兩邊都不能做', L2_FULL: 'L2 已滿', STUCK: 'AI 卡住' };
+  var WHY1 = { '冷卻': '要重做但冷卻中', '沒變化': '要重做但和上次比沒變化', '上限': '要重做但本小時已滿', '預算': '要重做但預算不足' };
+  function whyTxt(w) { return WHY1[w] || ('要重做但被擋（' + w + '）'); }
+  function clip(s, k) { s = String(s == null ? '' : s); return s.length > k ? s.slice(0, k) + '…' : s; }
+  function isNumber(v) { return v !== null && v !== '' && typeof v !== 'boolean' && Number.isFinite(Number(v)); }
+  function pr(v) { var x = Number(v); return v != null && Number.isFinite(x) && x > 0 ? String(Math.round(x)) : ''; }
+  function shortModel(M, id) { return id ? String(M[id] || id).replace(/ [0-9.]+$/, '') : ''; }
+  /* "MM/DD HH:MM" 或 "HH:MM" → 時間（沒有日期＝今天；比現在晚 10 分鐘以上＝昨天／去年） */
+  function clockAt(s) {
+    var m = /(?:(\d{1,2})\/(\d{1,2}) )?(\d{1,2}):(\d{2})/.exec(String(s || ''));
+    if (!m) return null;
+    var now = new Date();
+    var t = new Date(now.getFullYear(), m[1] ? Number(m[1]) - 1 : now.getMonth(), m[2] ? Number(m[2]) : now.getDate(), Number(m[3]), Number(m[4]));
+    if (t.getTime() - now.getTime() > 10 * 60000) { if (m[1]) t.setFullYear(t.getFullYear() - 1); else t.setDate(t.getDate() - 1); }
+    return t;
+  }
+  function agoMin(t) {
+    if (!t) return '';
+    var m = Math.floor((Date.now() - t.getTime()) / 60000);
+    return m < 1 ? '剛剛' : (m < 60 ? m + ' 分鐘前' : (m < 1440 ? Math.floor(m / 60) + ' 小時前' : ''));
+  }
+  function stepSub(head, text, t, cls) {
+    return '<div class="bz-step-sub' + (cls ? ' ' + cls : '') + '"' + (text ? ' title="' + esc(text) + '"' : '') + '>' + (head ? '<b>' + esc(head) + '</b>' : '') +
+           (text ? (head ? '：' : '') + esc(clip(text, 42)) : '') + (t && agoMin(t) ? '<span class="ago">' + esc(agoMin(t)) + '</span>' : '') + '</div>';
+  }
+  /* ① 流程列（1.4.19：L0、L1、L2 各一行，整張卡不要太高；完整內容滑鼠移上去看，細節在最近動態）
+     L0 一直盯盤 → 碰到關鍵價位或定時，先叫 L1 判斷要不要重做 → 要重做才叫 L2 出計畫 → L0 照計畫追蹤；最近一次有動作的那一層標「最新」 */
+  function flowHtml(d, p, M, stale) {
+    var w = d.watch && typeof d.watch === 'object' ? d.watch : {}, u = d.usage || {}, cfg = d.config || {};
+    var ev = Array.isArray(d.events) ? d.events : [], e0 = null, i;
+    for (i = 0; i < ev.length; i++) { if (ev[i] && evLv(ev[i].kind) === 'L0') { e0 = ev[i]; break; } }
+    var l1 = d.last_l1 && typeof d.last_l1 === 'object' ? d.last_l1 : null;
+    var l2 = w.l2 && typeof w.l2 === 'object' && w.l2.time ? w.l2 : null;
+    var ts = [e0 ? clockAt(e0.time) : null, l1 ? clockAt(l1.time) : null,
+              l2 ? clockAt(l2.time) : (p && p.created_at && Number.isFinite(Date.parse(p.created_at)) ? new Date(Date.parse(p.created_at)) : null)];
+    var newest = -1;
+    for (i = 0; i < 3; i++) { if (ts[i] && (newest < 0 || ts[i].getTime() >= ts[newest].getTime())) newest = i; }
+    var m1 = shortModel(M, cfg.l1), m2 = shortModel(M, cfg.l2);
+    var dt = d.data_time ? String(d.data_time).slice(11, 19) : '';
+    /* 一行：箭頭、L 標示、名稱、時間＋做了什麼＋原因（太長用 …）、右邊（最新／幾分鐘前）；sub＝下面補充的小字 */
+    function row(k, lv, name, tip, head, text, right, sub) {
+      var full = [head, text].filter(Boolean).join('：');
+      return '<div class="bz-fl-row bz-fl-row' + k + (k === newest ? ' is-new' : '') + '" title="' + esc([tip, full].filter(Boolean).join('\n')) + '">' +
+             '<span class="bz-fl-arr" aria-hidden="true">' + (k ? '↓' : '') + '</span>' + lvTag(lv, '', tip) + '<span class="bz-fl-name">' + esc(name) + '</span>' +
+             '<span class="bz-fl-x">' + (head ? '<b>' + esc(head) + '</b>' : '') + (text ? (head ? '：' : '') + esc(clip(text, 120)) : '') + '</span>' +
+             '<span class="bz-fl-r">' + (k === newest ? '<span class="bz-new">最新</span>' : '') + esc(right || '') + '</span>' + (sub || '') + '</div>';
+    }
+    function sub(text, cls) { return text ? '<div class="bz-fl-sub' + (cls ? ' ' + cls : '') + '">' + esc(text) + '</div>' : ''; }
+    /* L0 */
+    var h0 = stale ? '沒有更新' : (e0 ? String(e0.time || '').slice(-5) + ' ' + e0.kind : (STATUS[d.status] || STATUS2[d.status] || d.status || '—'));
+    var hold = [], ns = w.noside && typeof w.noside === 'object' ? w.noside : null;
+    if (ns && (ns.recover || ns.text)) hold.push('兩邊都不能做' + (ns.since ? '（' + ns.since + ' 起）' : '') + (ns.recover ? '：等 ' + ns.recover : ''));
+    else if (w.mute) hold.push(String(w.mute));
+    var bk = w.blocked && typeof w.blocked === 'object' ? w.blocked : null;
+    if (bk && bk.why && !(l1 && l1.blocked === bk.why)) hold.push((bk.time ? bk.time + ' ' : '') + whyTxt(bk.why));   /* 和 L1 那行一樣就不重複 */
+    if (w.pending_until) hold.push('完整規劃保留到 ' + w.pending_until);
+    if (Number(w.pending_l1) > 0) hold.push('快速判讀排隊 ' + Number(w.pending_l1) + ' 個');
+    if (u.budget && typeof u.budget === 'object' && u.budget.note) hold.push(String(u.budget.note));
+    var r0 = row(0, 'L0', '本機程式', 'L0 本機程式：一直盯盤、照計畫追蹤（不花錢）' + (dt ? '｜資料 ' + dt : ''),
+                 h0, e0 && !stale ? e0.text : '', dt ? '資料 ' + dt : '', sub(hold.join('｜'), 'blk'));
+    /* L1 */
+    var r1 = l1 ? row(1, 'L1', '快速判讀', 'L1 快速判讀' + (m1 ? '（' + m1 + '）' : '') + '：判斷要不要重做計畫｜今天 ' + (u.calls_l1 || 0) + ' 次' + (l1.urgency ? '｜急迫：' + l1.urgency : ''),
+                      (l1.time || '') + ' ' + (l1.need_full ? '要完整規劃' : (l1.valid ? '計畫還有效' : '不用重做')),
+                      (l1.reason ? l1.reason + (l1.note ? '：' : '') : '') + (l1.note || ''), agoMin(ts[1]), l1.blocked ? sub(whyTxt(l1.blocked), 'blk') : '')
+                : row(1, 'L1', '快速判讀', 'L1 快速判讀' + (m1 ? '（' + m1 + '）' : '') + '｜今天 ' + (u.calls_l1 || 0) + ' 次', '', '還沒有快速判讀', '', '');
+    /* L2 */
+    var t2 = 'L2 完整規劃' + (m2 ? '（' + m2 + '）' : '') + '：出計畫｜今天 ' + (u.calls_l2 || 0) + ' 次';
+    var r2 = l2 ? row(2, 'L2', '完整規劃', t2, l2.time + ' ' + (l2.result || ''), l2.reason || '', agoMin(ts[2]), '')
+           : (p && p.created_at ? row(2, 'L2', '完整規劃', t2, hm(p.created_at) + ' ' + (p.decision || ''), p.reason || '', agoMin(ts[2]), '')
+           : row(2, 'L2', '完整規劃', t2, '', '還沒有完整規劃', '', ''));
+    /* 下面一行：今天次數、本小時上限、冷卻、下次定時；AI 回覆中放最前面 */
+    var lim = ['今天 L1 ' + (u.calls_l1 || 0) + ' 次・L2 ' + (u.calls_l2 || 0) + ' 次'];
+    if (isNumber(w.l2_hour)) lim.push('L2 本小時 ' + Number(w.l2_hour) + (isNumber(w.l2_cap) ? '/' + Number(w.l2_cap) : ' 次') + (w.l2_full_until ? '（到 ' + w.l2_full_until + '）' : ''));
+    if (w.cooldown_until) lim.push('冷卻到 ' + w.cooldown_until);
+    if (w.next_check) lim.push('下次定時 ' + w.next_check);
+    return '<div class="bz-fl" data-z1417="1" title="流程：L0 一直盯盤 → 碰到關鍵價位或定時，先叫 L1 判斷要不要重做 → 要重做才叫 L2 出計畫 → L0 照計畫進場、停損、出場">' +
+           r0 + r1 + r2 + '<div class="bz-fl-foot">' + (d.busy ? '<b>AI 回覆中…</b>｜' : '') + esc(lim.join('｜')) + '</div></div>';
+  }
+  /* ② 持倉看守（L0）：接在四格數字下面 */
+  function guardHtml(d) {
+    var w = d.watch && typeof d.watch === 'object' ? d.watch : null, q = w && w.pos && typeof w.pos === 'object' ? w.pos : null;
+    if (!q) return '';
+    var L = q.side === 'long', b = [];
+    if (q.be_done) b.push('已移保本' + (pr(q.stop) ? '（停損 <b>' + pr(q.stop) + '</b>）' : ''));
+    else {
+      if (pr(q.stop)) b.push('停損 <b>' + pr(q.stop) + '</b>');
+      if (pr(q.be_price)) b.push((isNumber(q.be_pts) && Number(q.be_pts) > 0 ? '+' + Math.round(Number(q.be_pts)) + ' ' : '') + '移保本 <b>' + pr(q.be_price) + '</b>（未移）');
+    }
+    if (pr(q.t1)) b.push('第一目標 <b>' + pr(q.t1) + '</b>' + (q.t1_done ? '（已到）' : ''));
+    if (isNumber(q.mfe)) b.push('最大浮盈 <b>' + Math.round(Number(q.mfe)) + '</b>');
+    if (pr(q.ask_price)) b.push(esc(q.ask_text || (L ? '跌破' : '站上')) + ' <b>' + pr(q.ask_price) + '</b> 會問 AI');
+    if (q.exit_at) b.push('<b>' + esc(q.exit_at) + '</b> ' + esc(q.exit_kind || '') + '平倉');
+    return b.length ? '<div class="bz-ai-guard">' + lvTag('L0', '', 'L0 本機程式：持倉的停損、保本、目標、平倉時間') + b.join('｜') + '</div>' : '';
+  }
+  /* ③ 最近動態：事件（最新 8 筆）＋快速判讀，照時間排，新的在上 */
+  function feedHtml(d, p) {
+    var rows = (Array.isArray(d.events) ? d.events : []).filter(function (e) { return e && e.kind !== FOLLOW_EV; }).map(function (e, k) {
+      return { t: clockAt(e.time), k: k, time: String(e.time || '').slice(-5), tag: evTag(e.kind), kind: e.kind, text: e.text || '' };
+    });
+    var l1 = d.last_l1 && typeof d.last_l1 === 'object' ? d.last_l1 : null;
+    if (l1 && l1.time) rows.push({ t: clockAt(l1.time), k: 999, time: l1.time, tag: lvTag('L1'), kind: '快速判讀',
+                                   text: (l1.reason ? l1.reason + '：' : '') + (l1.note || '') + (l1.blocked ? '｜' + whyTxt(l1.blocked) : '') });
+    rows.sort(function (a, b) { return ((b.t ? b.t.getTime() : 0) - (a.t ? a.t.getTime() : 0)) || (a.k - b.k); });
+    function row(time, tag, kind, text) {
+      return '<div class="bz-feed-row"><span class="t">' + esc(time) + '</span>' + tag + '<span class="x">' + (kind ? '<b>' + esc(kind) + '</b>' : '') +
+             (text ? (kind ? '：' : '') + esc(text) : '') + '</span></div>';
+    }
+    var h = rows.map(function (r) { return row(r.time, r.tag, r.kind, r.text); }).join('');
+    if (p && Number(p.div_n) > 0) h += row('', lvTag('L0'), '', '這個計畫已跟著分界移動 ' + Math.round(Number(p.div_n)) + ' 次，累計 ' + signed(p.div_shift));
+    if (!h) return '';
+    return '<div class="bz-sec">最近動態<span>新的在上</span></div><div class="bz-feed bz-ai-scroll" data-scroll="feed">' + h + '</div>';
+  }
+  /* ④ 型態、試跑：收成一行，按一下展開（記住展開狀態） */
+  function foldHtml(key, summary, inner) {
+    return '<details class="bz-fold" data-fold="' + key + '"' + (st.fold[key] ? ' open' : '') + '><summary>' + summary + '</summary>' + inner + '</details>';
+  }
+  function patSummary(d) {
+    var ps = Array.isArray(d.patterns) ? d.patterns : [], w = Array.isArray(d.pattern_watch) ? d.pattern_watch : [];
+    return lvTag('L0') + '<b>型態標記</b><span>' + esc(ps.length ? '最近 ' + ps.length + ' 筆，最新 ' + (ps[0].time || '') + ' ' + (ps[0].label || '') : '今天還沒有型態') +
+           (w.length ? esc('｜正在測試 ' + w.length + ' 個') : '') + '</span>';
+  }
+  function trialSummary(t) {
+    return lvTag('L2') + '<b>最近一次試跑</b><span>' + esc((t.time || '') + ' ' + (t.error ? '失敗' : (t.decision || ''))) + '</span>';
+  }
+
   function render() {
     var c = card();
     var d = st.data;
@@ -12331,6 +12528,10 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     var warn = stale || ['STALE', 'BUDGET', 'STOPPED'].indexOf(d.status) >= 0 || !!d.last_error;
     var notice = stale ? 'AI 程式沒有在更新（最後 ' + new Date(Number(d.updated_at_ms || 0)).toLocaleTimeString('zh-TW', { hour12: false }) + '），以下是最後的內容'
       : (d.status !== 'RUNNING' && d.status !== 'DRY_RUN' ? (d.status_text || '') : '');
+    /* 1.4.17 ① 流程列 */
+    html += flowHtml(d, p, MODEL, stale);
+    /* 1.4.17 ② 目前計畫 */
+    html += '<div class="bz-sec">目前計畫' + (p && p.created_at ? '<span>' + esc('L2 ' + hm(p.created_at) + ' 給的，L0 照計畫追蹤') + '</span>' : '') + '</div>';
     if (!p) {
       html += '<div class="bz-ai-empty">' + esc(notice || '還沒有 AI 計畫（等固定時點、價格靠近關鍵價位或規則改變時才會分析）。') + '</div>';
       view = { chip: stale ? '沒有更新' : (STATUS[d.status] || '待命'), tone: warn ? 'warn' : 'off' };
@@ -12346,6 +12547,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       if (o.nums.length) html += '<div class="bz-ai-nums">' + o.nums.map(function (x) {
         return '<div class="bz-ai-num' + (x[3] ? ' ' + x[3] : '') + '"><span class="k">' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>' + (x[2] ? '<small>' + esc(x[2]) + '</small>' : '') + '</div>';
       }).join('') + '</div>';
+      html += guardHtml(d);
       if (o.active) {
         var more = [];
         if (p.valid_until && p.state !== 'IN') more.push('計畫有效到 ' + hm(p.valid_until));
@@ -12360,14 +12562,15 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       if (notice) html += '<div class="bz-ai-risk">' + esc(notice) + '</div>';
       view = { chip: stale ? '沒有更新' : o.chip, tone: warn ? 'warn' : o.chipTone };
     }
-    html += patHtml(d);
-    html += trialHtml(d.trial);
+    /* 1.4.17 ③ 最近動態 */
+    html += feedHtml(d, p);
+    /* 1.4.17 ④ 型態、試跑（收起來） */
+    var ph = patHtml(d);
+    if (ph) html += foldHtml('pat', patSummary(d), ph);
+    var th = trialHtml(d.trial);
+    if (th) html += foldHtml('trial', trialSummary(d.trial), th);
     var foot = [];
-    if (d.last_l1) foot.push('<span>' + lvTag('L1', MODEL[cfg.l1] || cfg.l1) + '最近判讀 <b>' + esc(d.last_l1.time) + '</b> ' + esc(d.last_l1.reason || '') + '：' + esc(d.last_l1.note || '') + '</span>');
-    if (d.events && d.events.length) foot.push('<span class="bz-ai-log bz-ai-scroll" data-scroll="log">' + d.events.slice(0, 3).map(function (e) { return evTag(e.kind) + esc(e.time.slice(-5) + ' ' + e.kind + '：' + e.text); }).join('<br>') + '</span>');
     if (d.last_error) foot.push('<span>錯誤：' + esc(d.last_error) + '</span>');
-    foot.push('<span>' + lvTag('L0') + esc('本機程式一直盯盤（不花錢）｜今天 ') + lvTag('L1', MODEL[cfg.l1] || cfg.l1) + esc('快速判讀' + (cfg.l1 ? '（' + String(MODEL[cfg.l1] || cfg.l1).replace(/ [0-9.]+$/, '') + '）' : '') + ' ' + (u.calls_l1 || 0) + ' 次・') +
-              lvTag('L2', MODEL[cfg.l2] || cfg.l2) + esc('完整規劃' + (cfg.l2 ? '（' + String(MODEL[cfg.l2] || cfg.l2).replace(/ [0-9.]+$/, '') + '）' : '') + ' ' + (u.calls_l2 || 0) + ' 次' + (u.calls_trial ? '・試跑 ' + u.calls_trial + ' 次' : '')) + '</span>');
     var exp = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d.expiry || ''));
     foot.push('<span>' + esc('日盤 AI ' + (cfg.day ? '開 ' + (cfg.day_time || '') : '關') + '｜夜盤 AI ' + (cfg.night ? '開 ' + (cfg.night_time || '') : '關') +
       (exp ? '｜結算日 ' + exp[2] + '/' + exp[3] + '（日盤不做單）' : '') + (d.dry_run ? '｜模擬' : '')) + '</span>');
@@ -12676,6 +12879,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
       var mtx = mt.textContent, m2 = mtx.replace(/今天 US\$[0-9.]+／[0-9.]+/, String(bud.line));
       if (m2 !== mtx) mt.textContent = m2;
     }
+    if (c.querySelector(':scope > [data-z1417]')) { if (old) old.remove(); return; }   /* 1.4.17：新版面自己畫 watch、最近動態 */
     if (!hasWatch(d)) { if (old) old.remove(); return; }   /* 沒有 watch：和 1.4.10 一樣 */
 
     /* 2. 計畫下面兩行（放在型態／試跑／下方小字之前） */
