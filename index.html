@@ -10504,9 +10504,11 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-lv-name{display:flex;flex-wrap:wrap;gap:3px 6px;align-items:center}
 #baoz-system-panel .bz-lv-sub{display:block;font-size:11px;color:var(--bz-muted);margin-top:1px}
 #baoz-system-panel .bz-dotc{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+#baoz-system-panel .bz-dotc.bz-b-綠{background:#00e676}
 #baoz-system-panel .bz-dotc.bz-b-藍{background:#4f8dff}
 #baoz-system-panel .bz-dotc.bz-b-黃{background:#f5c542}
 #baoz-system-panel .bz-dotc.bz-b-紅{background:#ff5a5a}
+#baoz-system-panel .bz-dotc.bz-b-粉{background:#f48fb1}
 #baoz-system-panel .bz-role{font-size:10.5px;padding:0 5px;border-radius:3px;border:1px solid currentColor;white-space:nowrap;line-height:1.5}
 #baoz-system-panel .bz-r-res{color:var(--bz-res)}
 #baoz-system-panel .bz-r-sup{color:var(--bz-sup)}
@@ -10861,6 +10863,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(isThr(r))return '留多門檻';
     const names={current:'現價',multi_boundary:'多日分界',session_boundary:'今天／今晚分界',target_upper:'必來點上緣',target_lower:'必來點下緣',session_high:'本盤高',session_low:'本盤低'};
     if(names[r.kind])return names[r.kind];
+    if(!r.band&&(/重疊/.test(r.source||'')||/粉紅區/.test(r.meaning||'')))return (r.kind==='session_cost'?'今天':'多日')+'粉紅重疊區';
     const cp=/Call|Put/.exec(r.source||'');
     return [r.kind==='session_cost'?'今天賣方':'多日賣方',cp?cp[0]:'',r.band?r.band+'層':(r.kind==='session_cost'?'防線':'成本層')].filter(Boolean).join(' ');
   }
@@ -10874,6 +10877,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(/必來點/.test(t))return ['bz-r-tgt','目標'];
     if(/壓力/.test(t))return ['bz-r-res','壓力'];
     if(/支撐/.test(t))return ['bz-r-sup','支撐'];
+    if(/磁吸/.test(t))return ['bz-r-brk','磁吸區'];
     return null;
   }
   function levels(posInfo) {
@@ -10904,7 +10908,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       const b=el('td','bz-level-dist bz-num',r.kind==='current'?'':(r.distance_text||'—'));
       const dn=N(r.distance_text);if(dn!=null&&r.kind!=='current'){const bar=el('span','bz-dbar');bar.style.width=Math.max(4,Math.min(100,Math.abs(dn)/4))+'%';b.appendChild(bar);}
       const c=el('td','bz-level-meaning');const nm=el('div','bz-lv-name');
-      if(r.band){const d=el('span','bz-dotc bz-b-'+r.band);d.title=r.band+'層';nm.appendChild(d);}
+      const band=r.band||((/重疊/.test(r.source||'')||/粉紅區/.test(r.meaning||''))?'粉':null);
+      if(band){const d=el('span','bz-dotc bz-b-'+band);d.title=band==='粉'?'粉紅重疊區':band+'層';nm.appendChild(d);}
       nm.appendChild(el('span',r.kind==='current'?'':'',r.kind==='pos'?r.posLabel:levelName(r)));
       const rl=r.kind==='pos'?null:role(r);if(rl)nm.appendChild(el('span','bz-role '+rl[0],rl[1]));
       r.tags.forEach(([cls,t])=>nm.appendChild(el('span','bz-role '+cls,t)));
@@ -10941,7 +10946,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.19');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.20');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
