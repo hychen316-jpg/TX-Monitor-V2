@@ -10488,6 +10488,10 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-pos-cell.bz-done{opacity:.55}
 #baoz-system-panel .bz-pos-note{font-size:11.5px;color:var(--bz-muted);margin-top:6px;overflow-wrap:anywhere}
 #baoz-system-panel .bz-pos-note.bz-warn{color:var(--bz-attn)}
+#baoz-system-panel #bz-mode-note{padding:6px 0}
+#baoz-system-panel .bz-exec-trade{margin-top:8px;padding-top:8px;border-top:1px solid var(--bz-line)}
+#baoz-system-panel #bz-execution .bz-pos-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#baoz-system-panel #bz-execution p{margin-top:6px;overflow-wrap:anywhere}
 #baoz-system-panel .bz-track{position:relative;height:40px;margin:10px 14px 0}
 #baoz-system-panel .bz-track-line{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:linear-gradient(90deg,color-mix(in srgb,#ff453a 55%,var(--bz-raised)),var(--bz-raised) 30%,color-mix(in srgb,var(--bz-good) 45%,var(--bz-raised)))}
 #baoz-system-panel .bz-mark{position:absolute;top:0;transform:translateX(-50%);text-align:center;font-size:10.5px;color:var(--bz-muted);white-space:nowrap;line-height:1.25}
@@ -10525,12 +10529,14 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 </style>
 <template id="baoz-panel-template">
 <section id="baoz-system-panel" role="tabpanel" aria-labelledby="baoz-tab-baoz" hidden>
-  <div class="bz-source"><div class="bz-line"><strong>BaoZ 近月</strong><span id="bz-contract" class="bz-num">待資料</span><span id="bz-session" class="bz-tag">—</span><span id="bz-version" class="bz-small bz-muted">—</span></div><div class="bz-line bz-small"><span id="bz-source-time">來源：待資料</span><span id="bz-freshness" class="bz-tag">待資料</span><button type="button" id="bz-retry" class="bz-retry" hidden>重試連線</button></div></div>
+  <div class="bz-source"><div class="bz-line"><strong>BaoZ 近月</strong><span id="bz-contract" class="bz-num">待資料</span><span id="bz-session" class="bz-tag">—</span><span id="bz-version" class="bz-small bz-muted">—</span><span id="bz-mode" class="bz-tag">B95：來源未提供</span></div><div class="bz-line bz-small"><span id="bz-source-time">來源：待資料</span><span id="bz-freshness" class="bz-tag">待資料</span><button type="button" id="bz-retry" class="bz-retry" hidden>重試連線</button></div></div>
+  <p id="bz-mode-note" class="bz-small bz-muted" hidden></p>
   <div id="bz-banner" class="bz-banner" role="status" hidden></div>
   <div class="bz-head">
     <div class="bz-head-main">
       <div id="bz-cmd" class="bz-cmd" aria-live="polite"><span id="bz-command-eyebrow" class="bz-small bz-muted">即時指令</span><div id="bz-command" class="bz-command">等待資料</div><ul id="bz-cmd-lines" class="bz-cmd-lines"></ul></div>
       <section id="bz-pos" class="bz-pos" aria-label="持有部位" hidden></section>
+      <section id="bz-execution" class="bz-pos" aria-label="1101 執行政策，Excel 紀錄" hidden></section>
     </div>
     <div class="bz-sides">
       <div class="bz-side"><div class="bz-side-head"><span class="bz-side-name bz-bull">做多</span><span id="bz-long-status" class="bz-pill">未提供</span></div><p id="bz-long-reason">—</p><div id="bz-long-plan" class="bz-chips"></div></div>
@@ -10581,7 +10587,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 (() => {
   'use strict';
   if (window.__BaoZIntegration) return;
-  const BUILD='BaoZ-Z31-UI-1.4.5-20261024';
+  const BUILD='BaoZ-Z31-UI-1.4.20-1101-COMPAT-20261102';
   const NODE='baoz_realtime/near';
   const KEY='z31.live.systemView.v1';
   const s={mounted:false,payload:null,selected:'z31',all:false,level:null,refs:[],connected:null,offset:0,problem:'',generation:0,allowed:false};
@@ -10690,6 +10696,90 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     r.restored=/重開接回/.test(t);
     return r;
   }
+  // UI 1.4.20：只讀 Excel 已輸出的 B95 與逐筆政策，不在網頁重算戰法。
+  function algorithm(p) {
+    const mode=String(p&&p.source&&p.source.algorithm_mode||p&&p.execution&&p.execution.mode||'').trim();
+    return {mode,is1101:/^(?:暴Z\s*1101(?:（Margin1688）)?|BAOZ_1101|1101)$/i.test(mode)};
+  }
+  function executionState(p) {
+    const e=p&&p.execution,rows=[],errors=[];
+    if(!e)return {provided:false,rows,errors};
+    if(e.protocol!=='BAOZ_EXEC_1101_V1')return {provided:true,rows,errors:['執行政策版本無法辨識']};
+    const policies=collection(e.policies,true);
+    if(!Array.isArray(policies))return {provided:true,rows,errors:['執行政策格式不完整']};
+    const logs=[];
+    for(const log of p.recent_logs||[])if(/^做單紀錄/.test(log.label||''))for(const line of log.lines||[]){
+      const c=String(line).split('\t');
+      if(c.length>=21&&/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(c[1])&&/^(做多|做空)$/.test(c[3]))logs.push({
+        id:c[1]+'|'+(c[3]==='做多'?'L':'S'),contract:c[2],entry:N(c[4]),qty:N(c[7]),exit:c[11],
+        leg1At:c[17],leg1Px:c[18]?N(c[18]):null
+      });
+    }
+    const counts=new Map();
+    policies.forEach(r=>{if(r&&typeof r.trade_id==='string')counts.set(r.trade_id,(counts.get(r.trade_id)||0)+1);});
+    const finite=(r,k,min)=>typeof r[k]==='number'&&Number.isFinite(r[k])&&r[k]>=min;
+    const time=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(v)&&Number.isFinite(Date.parse(v.replace(' ','T')+'+08:00'));
+    const sides=new Set();
+    for(const r of policies){
+      if(!r||typeof r!=='object'||!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\|[LS]$/.test(r.trade_id||'')||counts.get(r.trade_id)!==1||
+          !time(r.trade_id.slice(0,-2))||![1,2,3,4,5].includes(r.strategy_id)||!Number.isInteger(r.qty)||r.qty<1||
+          !Number.isInteger(r.q1)||r.q1<0||r.q1>r.qty||!['entry','stop','target2'].every(k=>finite(r,k,Number.MIN_VALUE))||
+          !['target1','be_trigger','be_before','be_after','trail_points'].every(k=>finite(r,k,0))||
+          (r.q1>0&&r.target1<=0)||![0,1].includes(r.target_updated)||!time(r.entry_start)||!time(r.entry_cutoff)||!time(r.deadline)||
+          typeof r.contract!=='string'||!r.contract||typeof r.future_key!=='string'||!r.future_key){errors.push('部分逐筆政策欄位不完整，未推算缺值');continue;}
+      const side=r.trade_id.endsWith('|L')?'long':'short';
+      if(sides.has(side)){errors.push('同方向出現多筆政策，請核對來源');return {provided:true,rows:[],errors};}
+      sides.add(side);
+      const matches=logs.filter(x=>x.id===r.trade_id&&x.contract===r.contract&&x.entry===r.entry&&x.qty===r.qty);
+      const record=matches.length===1?matches[0]:null;
+      if(record&&record.exit){errors.push('政策與做單紀錄的出場狀態不一致');continue;}
+      rows.push({...r,side,record});
+    }
+    return {provided:true,rows,errors};
+  }
+  function policyForSide(p,key) {return executionState(p).rows.find(r=>r.side===key)||null;}
+  function executionCard(p) {
+    const a=algorithm(p),st=executionState(p),box=$('bz-execution');box.replaceChildren();
+    text('bz-mode',a.mode?'B95：'+a.mode:'B95：來源未提供');
+    text('bz-mode-note',a.is1101?'1101 進場依 Excel S1–S5；下方原表分界、必來點與 13:30 留倉為結構參考。AI 卡為獨立影子計畫。':'');
+    $('bz-mode-note').hidden=!a.is1101;
+    panel.classList.toggle('bz-mode-1101',a.is1101);
+    const carry=$('bz-carry-decision');
+    if(carry)carry.textContent=(a.is1101?'原表留倉參考：':'留倉：')+(p.view.carry.decision||'未提供');
+    box.hidden=!a.is1101&&!st.rows.length&&!st.errors.length;
+    if(box.hidden)return null;
+    box.appendChild(el('h3','','1101 執行政策 · Excel 紀錄'));
+    if(!st.rows.length)box.appendChild(el('p','bz-small bz-muted',st.provided&&!st.errors.length?'目前無 1101 持倉政策':'本快照未提供可辨識的逐筆政策，請查看來源原文'));
+    st.errors.forEach(t=>box.appendChild(el('p','bz-small bz-warn',t)));
+    const marks=[];
+    const names={1:'重疊區突破',2:'原生框反轉',3:'分界支撐／壓力',4:'選擇權 CP 條件',5:'結算突破'};
+    for(const r of st.rows){
+      const card=el('div','bz-exec-trade'),sg=r.side==='long'?1:-1,record=r.record;
+      const head=el('div','bz-pos-top');
+      head.append(el('span',r.side==='long'?'bz-bull':'bz-bear','S'+r.strategy_id+' '+names[r.strategy_id]+'｜'+(sg>0?'做多':'做空')),
+        el('span','bz-small bz-muted',r.contract+'｜進場 '+r.qty+' 口'));
+      card.append(head,el('div','bz-small bz-muted',r.trade_id.slice(0,-2)+'｜'+r.future_key));
+      const f=p.market&&p.market.futures;
+      if(r.contract===p.source.contract&&typeof f==='number'&&Number.isFinite(f)&&f>0){
+        const pnl=(f-r.entry)*sg,pn=el('div','bz-pos-pnl bz-num '+(pnl>0?'bz-bull':pnl<0?'bz-bear':''),sign(pnl));
+        pn.appendChild(el('small','','點／口 · 現價 '+num(f)));card.appendChild(pn);
+      }
+      const grid=el('div','bz-pos-grid');
+      const cell=(label,value,sub,done)=>{const c=el('div','bz-pos-cell'+(done?' bz-done':''));c.append(el('span','',label),el('b','bz-num',num(value)),el('i','',sub||''));grid.appendChild(c);};
+      cell('進場',r.entry,'Excel 紀錄');cell('目前停損',r.stop,'依來源更新');
+      if(r.q1>0&&r.target1>0)cell('第一段 '+r.q1+' 口',r.target1,record?(record.leg1At?record.leg1At+' 已出'+(record.leg1Px!=null?' '+num(record.leg1Px):''):'尚未記錄第一段出場'):'第一段成交狀態未提供',!!(record&&record.leg1At));
+      cell(r.q1>0?'第二段 '+(r.qty-r.q1)+' 口':'目標 '+r.qty+' 口',r.target2,'來源目標');
+      card.appendChild(grid);
+      const off=v=>(sg>0?'+':'−')+num(v);
+      card.appendChild(el('p','bz-small bz-muted',(r.be_trigger>0?'浮盈 '+num(r.be_trigger)+' 點：停損至進場價'+off(r.be_before):'浮盈門檻保本關閉')+(r.q1>0?'｜第一段後：停損至進場價'+off(r.be_after):'')+(r.trail_points>0?'｜移動停損 '+num(r.trail_points)+' 點':'')));
+      card.appendChild(el('p','bz-small','最晚平倉 '+r.deadline+(r.strategy_id===4?'｜夜盤目標'+(r.target_updated?'已更新':'尚未更新'):'')));
+      if(!a.is1101)card.appendChild(el('p','bz-small bz-muted','既有 1101 持倉政策；目前 B95 已切換'));
+      box.appendChild(card);
+      for(const [value,label] of [[r.entry,'進場'],[r.stop,'停損'],[r.q1>0?r.target1:null,'第一段目標'],[r.target2,r.q1>0?'第二段目標':'目標']])if(value!=null)marks.push([value,'S'+r.strategy_id+' '+(sg>0?'多':'空')+' '+label]);
+    }
+    return marks.length?{marks}:null;
+  }
+
   function sideInfo(v) {
     return [['long','做多',1,v.long],['short','做空',-1,v.short]].map(([key,name,sg,x])=>({key,name,sg,status:(x&&x.status)||'',reason:(x&&x.reason)||'',plan:parsePlan(x&&x.reason)}));
   }
@@ -10750,7 +10840,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     $('bz-command-eyebrow').textContent=bad?'資料狀態／最後快照':'即時指令（BaoZ 規則）';
     const cmd=$('bz-cmd');cmd.className='bz-cmd bz-c-'+(bad?(level==='bad'?'bad':'idle'):(derived?derived.cls:'idle'));
     $('bz-semantic').hidden=!p||unknown;
-    if(!p||unknown)$('bz-pos').hidden=true;
+    if(!p||unknown){$('bz-pos').hidden=true;$('bz-execution').hidden=true;}
     $('bz-fallback').hidden=!unknown;
     $('bz-retry').hidden=!s.problem||!allowed();
     if(p){text('bz-price-foot',(bad?'最後快照 · ':'')+'本盤高 '+num(p.market.session_high)+'／低 '+num(p.market.session_low));}
@@ -10772,9 +10862,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       pill.className='bz-pill '+(cls||'');
       const reason=$('bz-'+x.key+'-reason'),chips=$('bz-'+x.key+'-plan');chips.replaceChildren();
       const pl=x.plan,add=(k,val)=>{if(val==null||val==='')return;const c=el('span');c.append(el('em','',k),document.createTextNode(String(val)));chips.appendChild(c);};
-      if(x.status==='持有'||x.status==='進場'){reason.textContent='見「持有部位」卡：損益、停損、目標';}
+      if(x.status==='持有'||x.status==='進場'){reason.textContent=policyForSide(s.payload,x.key)?'見「1101 執行政策」：停損、分段目標、平倉期限':x.reason.includes('1101')?x.reason:'見「持有部位」卡：損益、停損、目標';}
       else if(x.status==='等待'||x.status==='準備'){
-        reason.textContent=x.reason.split('｜')[0];
+        reason.textContent=algorithm(s.payload).is1101?x.reason:x.reason.split('｜')[0];
         add(pl.triggerWord?pl.triggerWord+'進場':'進場',pl.trigger!=null?num(pl.trigger):pl.plan!=null?'約 '+num(pl.plan):null);
         add('停損',pl.stop!=null?num(pl.stop)+(pl.stopPts!=null?'（'+pl.stopPts+' 點）':''):null);
         add(pl.t1!=null?'第一段':'目標',pl.t1!=null?num(pl.t1):(pl.t2!=null?num(pl.t2):null));
@@ -10787,7 +10877,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
   // ---------- 持有部位卡
   function positionCard(v,m) {
     const box=$('bz-pos');box.replaceChildren();
-    const x=sideInfo(v).find(z=>z.status==='持有'||z.status==='進場');
+    const x=sideInfo(v).find(z=>(z.status==='持有'||z.status==='進場')&&!policyForSide(s.payload,z.key));
     if(!x){box.hidden=true;return null;}
     const pl=x.plan,f=N(m.futures);
     if(pl.entry==null||pl.stop==null){box.hidden=false;box.className='bz-pos';box.append(el('div','bz-pos-title',x.name+x.status),el('p','bz-pos-note',x.reason));return null;}
@@ -10931,9 +11021,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(!panel)return;
     const p=s.payload;
     if(!p){
-      ['bz-contract','bz-version','bz-source-time','bz-long-status','bz-short-status','bz-long-reason','bz-short-reason','bz-data-note'].forEach(id=>text(id,'待資料'));
-      ['bz-steps','bz-comparison','bz-next-plan','bz-timeline','bz-research','bz-diagnostics','bz-level-body','bz-target-body','bz-pos','bz-cmd-lines','bz-long-plan','bz-short-plan','bz-x3','bz-multi-gauge','bz-session-gauge'].forEach(id=>$(id).replaceChildren());
-      $('bz-pos').hidden=true;$('bz-x3').hidden=true;
+      ['bz-contract','bz-version','bz-mode','bz-source-time','bz-long-status','bz-short-status','bz-long-reason','bz-short-reason','bz-data-note'].forEach(id=>text(id,'待資料'));
+      ['bz-steps','bz-comparison','bz-next-plan','bz-timeline','bz-research','bz-diagnostics','bz-level-body','bz-target-body','bz-pos','bz-execution','bz-cmd-lines','bz-long-plan','bz-short-plan','bz-x3','bz-multi-gauge','bz-session-gauge'].forEach(id=>$(id).replaceChildren());
+      $('bz-pos').hidden=true;$('bz-execution').hidden=true;$('bz-mode-note').hidden=true;panel.classList.remove('bz-mode-1101');$('bz-x3').hidden=true;
       ['bz-futures','bz-synthetic','bz-basis','bz-multi-distance','bz-multi-boundary','bz-session-distance','bz-session-boundary','bz-carry-detail','bz-level-detail'].forEach(id=>text(id,'未提供'));
       $('bz-long-gates').replaceChildren();$('bz-short-gates').replaceChildren();text('bz-carry-decision','留倉：未提供');
       text('bz-raw-text','尚無來源資料');freshness();return;
@@ -10941,7 +11031,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.19');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+' · UI 1.4.20');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -10955,13 +11045,14 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     gauge('bz-session-gauge',m.dist_b,-150,150,[[-20,20]],[-20,20],['−150','±20 內＝貼近','+150']);
     x3(v);
     const posInfo=positionCard(v,m);
-    levels(posInfo);targets();
+    const execInfo=executionCard(p);
+    levels(execInfo?{marks:[...(posInfo&&posInfo.marks||[]),...execInfo.marks]}:posInfo);targets();
     const scenes=$('bz-scenarios');scenes.replaceChildren();
     // Preserve source scenarios verbatim: no browser-generated trade conditions.
     (v.conclusion.text||'').split('｜').filter(t=>/情境|站回|跌破|站上|留多距離/.test(t)).forEach(t=>item(scenes,{label:'情境',text:t}));
     if(!scenes.childElementCount)item(scenes,v.conclusion);
     item(scenes,{label:'波動',status:v.nine_steps.find(x=>x.row===19)?.status,text:v.nine_steps.find(x=>x.row===19)?.text});
-    text('bz-carry-decision','留倉：'+(v.carry.decision||'未提供'));gates('bz-long-gates',v.carry.long_gates);gates('bz-short-gates',v.carry.short_gates);
+    text('bz-carry-decision',(algorithm(p).is1101?'原表留倉參考：':'留倉：')+(v.carry.decision||'未提供'));gates('bz-long-gates',v.carry.long_gates);gates('bz-short-gates',v.carry.short_gates);
     text('bz-carry-detail',[v.carry.basis,v.carry.detail].filter(Boolean).join('｜'));
     items('bz-steps',v.nine_steps);items('bz-comparison',[v.comparison,v.warning]);items('bz-next-plan',v.plan);items('bz-timeline',v.timeline);
     text('bz-timeline-summary','最近時間軸 · '+v.timeline.length+' 筆');items('bz-research',[v.research]);$('bz-research').appendChild(el('p','bz-small bz-warn','來源目標碰觸統計，並非交易獲利率。'));
