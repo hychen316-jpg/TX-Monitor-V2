@@ -10516,6 +10516,22 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-anchor-board{container-type:inline-size}
 #baoz-system-panel .bz-anchor-main,#baoz-system-panel .bz-anchor-side{min-width:0}
 #baoz-system-panel .bz-anchor-side{margin-top:9px}
+#baoz-system-panel .bz-v4-pink[hidden]{display:none}
+#baoz-system-panel .bz-v4-pink{margin:0 0 9px;padding:7px 9px;border:1px solid rgba(248,187,208,.35);border-radius:6px;background:rgba(248,187,208,.06);font-size:12px}
+#baoz-system-panel .bz-v4-pink strong,#baoz-system-panel .bz-v4-zone.in{color:#f8bbd0}
+#baoz-system-panel .bz-v4-zones{display:flex;flex-wrap:wrap;gap:4px 10px;margin:4px 0}
+#baoz-system-panel .bz-v4-zone{font-variant-numeric:tabular-nums}
+#baoz-system-panel .bz-anchor-detail{margin-top:8px;padding:6px 8px;border:1px solid var(--bz-line);border-radius:6px}
+#baoz-system-panel .bz-anchor-detail>summary{cursor:pointer;font-weight:650}
+#baoz-system-panel .bz-anchor-detail .bz-pair{margin:7px 0;justify-content:flex-end}
+#baoz-system-panel .bz-anchor-nearest{display:inline-block;margin-left:0}
+@container (max-width: 540px){
+  #baoz-system-panel .bz-anchor-grid th,#baoz-system-panel .bz-anchor-grid td{padding:3px 4px}
+  #baoz-system-panel .bz-anchor-grid th:nth-child(2){width:36%}
+  #baoz-system-panel .bz-anchor-grid th:nth-child(3){width:24%}
+  #baoz-system-panel .bz-anchor-grid .bz-anchor-quote{font-size:15px!important}
+  #baoz-system-panel .bz-anchor-grid .bz-anchor-distance{margin-left:3px;padding-inline:3px}
+}
 @container (min-width: 820px){
   #baoz-system-panel .bz-anchor-layout{display:grid;grid-template-columns:minmax(0,2.15fr) minmax(230px,1fr);align-items:start;gap:14px}
   #baoz-system-panel .bz-anchor-side{margin-top:0}
@@ -10526,7 +10542,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-anchor-grid tr:not(.bz-anchor-current)>td:nth-child(2){background:rgba(82,185,240,.045)}
 #baoz-system-panel .bz-anchor-distance{display:inline-block;margin-left:6px;padding:1px 5px;border-radius:4px;background:rgba(127,160,200,.12);font-size:11px;color:var(--bz-ink);white-space:nowrap}
 #baoz-system-panel .bz-anchor-unpriced{opacity:.65}
-#baoz-system-panel .bz-anchor-nearest{margin-left:6px;font-size:11px;color:var(--bz-accent);white-space:nowrap}
+#baoz-system-panel .bz-anchor-nearest{font-size:11px;color:var(--bz-accent);white-space:nowrap}
 #baoz-system-panel .bz-anchor-quote{font-size:16px!important;color:var(--bz-ink);white-space:nowrap}
 #baoz-system-panel .bz-anchor-reference{font-size:13px;color:var(--bz-muted)}
 #baoz-system-panel .bz-anchor-grid .bz-anchor-current td{vertical-align:middle}
@@ -10588,16 +10604,17 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     <div id="bz-x3" class="bz-x3" hidden></div>
     <div class="bz-layout">
       <section class="bz-panel" aria-label="關鍵期貨價位">
-        <div class="bz-panel-head"><h3>關鍵價位 <span class="bz-small bz-muted">· 期貨座標（由高到低）</span></h3><div class="bz-pair"><button type="button" id="bz-levels-near" aria-pressed="true">近價重點</button><button type="button" id="bz-levels-all" aria-pressed="false">全部價位</button></div></div>
+        <div class="bz-panel-head"><h3>關鍵價位 <span class="bz-small bz-muted">· 期貨座標</span></h3></div>
         <div class="bz-anchor-board" aria-label="暴Z表與即時表四色對照">
           <p id="bz-anchor-meta" class="bz-anchor-meta">等待來源資料</p>
+          <section id="bz-v4-pink" class="bz-v4-pink" aria-label="V4 粉紅區與越階" hidden></section>
           <div class="bz-anchor-layout">
             <div class="bz-anchor-main">
           <div class="bz-anchor-scroll"><table class="bz-anchor-grid">
             <thead><tr><th scope="col">色層</th><th scope="col">即時表 · 期貨價<br><small class="bz-muted">距現價</small></th><th scope="col">暴Z表 · 基準</th><th scope="col">履約價差<br><small class="bz-muted">即時 − 基準</small></th></tr></thead>
             <tbody id="bz-anchor-body"></tbody>
           </table></div>
-          <div class="bz-anchor-note bz-muted">按即時表期貨價由高到低，缺值以暴Z表代排。距現價以區間上緣計。調單追蹤列出本頁收到的換檔。</div>
+          <div class="bz-anchor-note bz-muted">按即時表期貨價由高到低，缺值以暴Z表代排。距現價以區間上緣計。「最近色層」只按距離標示；支撐壓力見完整價位明細。</div>
             </div>
             <aside class="bz-anchor-side" aria-label="調單與結構摘要">
           <section class="bz-roll" aria-label="即時表調單紀錄">
@@ -10609,8 +10626,12 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
             </aside>
           </div>
         </div>
+        <details class="bz-anchor-detail">
+          <summary>完整價位明細 <span class="bz-muted">· 分界、必來點、支撐壓力</span></summary>
+          <div class="bz-pair"><button type="button" id="bz-levels-near" aria-pressed="true">近價重點</button><button type="button" id="bz-levels-all" aria-pressed="false">全部價位</button></div>
         <table><thead><tr><th class="bz-level-price">期貨價位</th><th class="bz-level-dist">距現價</th><th class="bz-level-meaning">用途／狀態</th></tr></thead><tbody id="bz-level-body"></tbody></table>
         <div id="bz-level-detail" class="bz-level-detail" aria-live="polite">點價位看來源（履約價、成本）。</div>
+        </details>
       </section>
       <div class="bz-right">
         <section class="bz-panel" aria-label="本盤必來點觀察目標"><div class="bz-panel-head"><h3>本盤必來點</h3><span class="bz-small bz-muted">觀察目標 · 不判方向</span></div><div id="bz-target-body" class="bz-targets"></div><p class="bz-footnote">「本盤尚差」相對本盤高低，與距現價分開。</p></section>
@@ -10963,7 +10984,40 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const a=to[0].lo-from[0].lo,b=to[0].hi-from[0].hi;
     return a===b?a:null;
   }
+  function renderV4Pink(p){
+    const box=$('bz-v4-pink');
+    box.replaceChildren();
+    box.hidden=!/V4/i.test(p?.source?.algo||'');
+    if(box.hidden)return;
+    const v=p.view;
+    const read=row=>String(v.nine_steps.find(step=>Number(step.row)===row)?.text||'');
+    const base=read(16),live=read(17);
+    const parts=(base+'｜'+live).split('｜');
+    const status=parts.some(t=>/^現價在粉紅區/.test(t))?'現價在粉紅區 · 磁吸':
+      parts.some(t=>/^現價不在粉紅區/.test(t))?'現價不在粉紅區':'現價狀態未提供';
+    box.appendChild(el('strong','', 'V4 粉紅重疊區 · '+status));
+    const zones=el('div','bz-v4-zones');
+    const rows=v.levels.filter(r=>['multi_cost','session_cost'].includes(r.kind)&&/重疊/.test(r.source||'')&&!r.band);
+    const px=r=>r.low===r.high?num(r.low):num(r.low)+'–'+num(r.high);
+    for(const r of rows){
+      const where=/區內|現價在/.test((r.distance_text||'')+' '+(r.meaning||''));
+      const label=where?'區內':/壓力/.test(r.meaning||'')?'上方壓力':/支撐/.test(r.meaning||'')?'下方支撐':'重疊';
+      const source=r.kind==='multi_cost'?'暴Z':'即時';
+      const item=el('span','bz-v4-zone'+(where?' in':''),source+' '+label+' '+px(r)+(where||!r.distance_text?'':'（'+r.distance_text+'）'));
+      item.title=r.source||'';
+      zones.appendChild(item);
+    }
+    if(!rows.length){
+      const absent=/上方壓力 沒有重疊區/.test(base)&&/下方支撐 沒有重疊區/.test(base)&&/｜重疊 沒有(?:｜|$)/.test(live)&&status==='現價不在粉紅區';
+      zones.appendChild(el('span','bz-muted',absent?'目前兩表皆無雙側重疊區':'本次價位表未列出可顯示的重疊期貨價'));
+    }
+    box.appendChild(zones);
+    const tier=v.levels.find(r=>/V4越階/.test(r.source||''));
+    if(tier)box.appendChild(el('div','bz-v4-zone','日盤越階 · '+px(tier)+'｜'+(tier.meaning||tier.source)));
+    box.appendChild(el('small','bz-muted','V4 中欄單側有色也會標粉紅；本卡只列 Excel 提供的雙側重疊與越階。'));
+  }
   function renderAnchorBoard(p){
+    renderV4Pink(p);
     const body=$('bz-anchor-body'), meta=$('bz-anchor-meta'), notes=$('bz-anchor-notes');
     const events=$('bz-roll-events'), rollSummary=$('bz-roll-summary');
     body.replaceChildren();notes.replaceChildren();events.replaceChildren();
@@ -11057,7 +11111,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(marketF>0){
       const upper=ladder.filter(row=>row.live&&row.price>marketF).at(-1);
       const lower=ladder.find(row=>row.live&&row.price<marketF);
-      for(const [row,label] of [[upper,'上方最近'],[lower,'下方最近']]){
+      for(const [row,label] of [[upper,'上方最近色層'],[lower,'下方最近色層']]){
         if(row)row.cell.appendChild(el('span','bz-anchor-nearest',label));
       }
     }
