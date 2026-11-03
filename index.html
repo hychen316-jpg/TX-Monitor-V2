@@ -12599,6 +12599,9 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai-headline.up, #baoz-system-panel .bz-ai-headline.win { color: var(--bz-up); }
 #baoz-system-panel .bz-ai-headline.down, #baoz-system-panel .bz-ai-headline.loss { color: var(--bz-down); }
 #baoz-system-panel .bz-ai-headline .ago { font-size: 13px; font-weight: 400; color: var(--bz-muted); margin-left: 8px; }
+#baoz-system-panel .bz-entry-audit{margin:6px 0;padding:6px 8px;border:1px solid var(--bz-line);border-radius:6px;font-size:12px;overflow-wrap:anywhere}
+#baoz-system-panel .bz-entry-audit>b{display:block;margin-top:3px}
+#baoz-system-panel .bz-entry-audit-warn{color:var(--bz-attn)}
 #baoz-system-panel .bz-ai-why { font-size: 13px; color: var(--bz-muted); margin-top: 2px; }
 #baoz-system-panel .bz-ai-nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
 #baoz-system-panel .bz-ai-num { border: 1px solid var(--bz-line); border-radius: var(--bz-radius); padding: 6px 10px; min-width: 0; }
@@ -13013,6 +13016,24 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       : (d.status !== 'RUNNING' && d.status !== 'DRY_RUN' ? (d.status_text || '') : '');
     /* 1.4.17 ① 流程列 */
     html += flowHtml(d, p, MODEL, stale);
+    /* 目前程式狀態與最近一次 L2 回覆分欄。 */
+    var gateView = d.entry_reason_view;
+    if (gateView) {
+      html += '<div class="bz-entry-audit"><b>L0 程式 · 目前進場次數</b><div>' +
+        esc('做多 ' + (gateView.long || '—') + '｜做空 ' + (gateView.short || '—') +
+            (gateView.count_limit === false ? '｜每盤次數限制關閉' : '')) + '</div>';
+      if (gateView.window) html += '<div>' + esc(gateView.window) + '</div>';
+      var reasonCheck = gateView.ai;
+      if (reasonCheck) {
+        html += '<b>L2 AI · ' + esc(hm(reasonCheck.time)) + '</b><div>' +
+          esc([reasonCheck.decision, reasonCheck.summary].filter(Boolean).join('｜')) + '</div>';
+        if (reasonCheck.gate) html += '<div>' + esc('回覆未採用 · ' + reasonCheck.gate) + '</div>';
+        var issues = Array.isArray(reasonCheck.issues) ? reasonCheck.issues : Object.values(reasonCheck.issues || {});
+        if (issues.length) html += '<div class="bz-entry-audit-warn">' +
+          esc('理由不一致 · ' + issues.join('；')) + '</div>';
+      }
+      html += '</div>';
+    }
     /* 1.4.17 ② 目前計畫 */
     html += '<div class="bz-sec">目前計畫' + (p && p.created_at ? '<span>' + esc('L2 ' + hm(p.created_at) + ' 給的，L0 照計畫追蹤') + '</span>' : '') + '</div>';
     if (!p) {
