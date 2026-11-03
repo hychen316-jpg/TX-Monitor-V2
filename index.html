@@ -13016,24 +13016,6 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
       : (d.status !== 'RUNNING' && d.status !== 'DRY_RUN' ? (d.status_text || '') : '');
     /* 1.4.17 ① 流程列 */
     html += flowHtml(d, p, MODEL, stale);
-    /* 目前程式狀態與最近一次 L2 回覆分欄。 */
-    var gateView = d.entry_reason_view;
-    if (gateView) {
-      html += '<div class="bz-entry-audit"><b>L0 程式 · 目前進場次數</b><div>' +
-        esc('做多 ' + (gateView.long || '—') + '｜做空 ' + (gateView.short || '—') +
-            (gateView.count_limit === false ? '｜每盤次數限制關閉' : '')) + '</div>';
-      if (gateView.window) html += '<div>' + esc(gateView.window) + '</div>';
-      var reasonCheck = gateView.ai;
-      if (reasonCheck) {
-        html += '<b>L2 AI · ' + esc(hm(reasonCheck.time)) + '</b><div>' +
-          esc([reasonCheck.decision, reasonCheck.summary].filter(Boolean).join('｜')) + '</div>';
-        if (reasonCheck.gate) html += '<div>' + esc('回覆未採用 · ' + reasonCheck.gate) + '</div>';
-        var issues = Array.isArray(reasonCheck.issues) ? reasonCheck.issues : Object.values(reasonCheck.issues || {});
-        if (issues.length) html += '<div class="bz-entry-audit-warn">' +
-          esc('理由不一致 · ' + issues.join('；')) + '</div>';
-      }
-      html += '</div>';
-    }
     /* 1.4.17 ② 目前計畫 */
     html += '<div class="bz-sec">目前計畫' + (p && p.created_at ? '<span>' + esc('L2 ' + hm(p.created_at) + ' 給的，L0 照計畫追蹤') + '</span>' : '') + '</div>';
     if (!p) {
@@ -13068,6 +13050,37 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     }
     /* 1.4.17 ③ 最近動態 */
     html += feedHtml(d, p);
+    var gateView = d.entry_reason_view;
+    if (gateView) {
+      var audit = '<div class="bz-entry-audit"><b>L0 程式 · AI 影子單進場次數</b><div>' +
+        esc('做多 ' + (gateView.long || '—') + '｜做空 ' + (gateView.short || '—') +
+            (gateView.count_limit === false ? '｜每盤次數限制關閉' : '')) + '</div>';
+      if (gateView.argon && (gateView.argon.long || gateView.argon.short)) {
+        audit += '<div class="bz-muted">' +
+          esc('Argon Excel · 參考｜做多 ' + (gateView.argon.long || '—') + '｜做空 ' + (gateView.argon.short || '—')) + '</div>';
+      }
+      if (gateView.window) audit += '<div>' + esc(gateView.window) + '</div>';
+      if (gateView.execution) audit += '<div>' + esc('執行狀態 · ' + gateView.execution) + '</div>';
+      var auditWarnings = [];
+      [['L1', gateView.l1], ['L2', gateView.l2 || gateView.ai]].forEach(function(pair) {
+        var reply = pair[1];
+        if (!reply) return;
+        var issues = Array.isArray(reply.issues) ? reply.issues : Object.values(reply.issues || {});
+        if (!issues.length && !reply.gate) return;
+        var label = pair[0] + (reply.time ? ' ' + hm(reply.time) : '');
+        if (issues.length) {
+          auditWarnings.push(pair[0] + ' 理由不一致');
+          audit += '<div class="bz-entry-audit-warn">' + esc(label + '｜理由不一致 · ' + issues.join('；')) + '</div>';
+        }
+        if (reply.gate) {
+          auditWarnings.push(pair[0] + ' 回覆未採用');
+          audit += '<div>' + esc(label + '｜回覆未採用 · ' + reply.gate) + '</div>';
+        }
+      });
+      html += foldHtml('entry_audit', '<b>程式限制與理由核對</b>' +
+        (auditWarnings.length ? '<span class="bz-entry-audit-warn">' + esc(auditWarnings.join('｜')) + '</span>' : ''),
+        audit + '</div>');
+    }
     /* 1.4.17 ④ 型態、試跑（收起來） */
     var ph = patHtml(d);
     if (ph) html += foldHtml('pat', patSummary(d), ph);
