@@ -10595,6 +10595,12 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-anchor-break{color:var(--bz-attn)}
 #baoz-system-panel .bz-anchor-note,#baoz-system-panel .bz-anchor-notes{margin-top:6px;font-size:11px;line-height:1.45}
 #baoz-system-panel .bz-anchor-notes p{margin:3px 0}
+#baoz-system-panel .bz-anchor-dual{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px;min-width:345px;align-items:start}
+#baoz-system-panel .bz-anchor-dual .bz-anchor-grid{min-width:0}
+#baoz-system-panel .bz-anchor-dual th:first-child{width:auto}
+#baoz-system-panel .bz-anchor-dual th:nth-child(2){width:100%}
+#baoz-system-panel .bz-anchor-dual .bz-anchor-distance{margin-left:3px;padding:0 3px}
+#baoz-system-panel .bz-anchor-dual .bz-anchor-label{font-size:11px}
 #baoz-system-panel .bz-anchor-board{padding:6px;margin:5px 0 7px}
 #baoz-system-panel .bz-anchor-meta{margin-bottom:3px}
 #baoz-system-panel .bz-anchor-watch{margin-bottom:4px;padding:4px 5px}
@@ -10659,10 +10665,18 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           <section id="bz-v4-pink" class="bz-v4-pink" aria-label="V4 粉紅區與越階" hidden></section>
           <div class="bz-anchor-layout">
             <div class="bz-anchor-main">
-          <div class="bz-anchor-scroll"><table class="bz-anchor-grid">
-            <thead><tr><th scope="col">色層</th><th scope="col">即時表 · 期貨價<br><small class="bz-muted">距現價</small></th><th scope="col">暴Z表 · 基準</th><th scope="col">履約價差<br><small class="bz-muted">即時 − 基準</small></th></tr></thead>
-            <tbody id="bz-anchor-body"></tbody>
-          </table></div>
+          <div class="bz-anchor-scroll">
+            <div class="bz-anchor-dual">
+              <table class="bz-anchor-grid">
+                <thead><tr><th scope="colgroup" colspan="2">即時表 · 本盤動態</th></tr><tr><th scope="col">色層</th><th scope="col">期貨價／距現價</th></tr></thead>
+                <tbody id="bz-anchor-body"></tbody>
+              </table>
+              <table class="bz-anchor-grid">
+                <thead><tr><th scope="colgroup" colspan="2">暴Z表 · 多日基準</th></tr><tr><th scope="col">色層</th><th scope="col">期貨價／距現價</th></tr></thead>
+                <tbody id="bz-anchor-base-body"></tbody>
+              </table>
+            </div>
+          </div>
             </div>
             <aside class="bz-anchor-side" aria-label="調單與結構摘要">
           <section class="bz-roll" aria-label="即時表調單紀錄">
@@ -10672,7 +10686,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           </section>
           <details class="bz-anchor-notes-detail">
             <summary>讀表說明與成交量</summary>
-          <div class="bz-anchor-note bz-muted">按即時表期貨價由高到低，缺值以暴Z表代排。區間排序與色層距離取上緣；防線距離取靠近現價的一側。</div>
+          <div class="bz-anchor-note bz-muted">兩張表各按期貨價由高到低排序，共用同一現價；區間按上緣排序，距離取靠近現價的一側。「對暴Z」是同權別、同色層的履約價差。</div>
             <div id="bz-anchor-notes" class="bz-anchor-notes"></div>
           </details>
             </aside>
@@ -11192,10 +11206,10 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
   }
   function renderAnchorBoard(p){
     renderV4Pink(p);
-    const body=$('bz-anchor-body'), meta=$('bz-anchor-meta'), notes=$('bz-anchor-notes');
+    const body=$('bz-anchor-body'), baseBody=$('bz-anchor-base-body'), meta=$('bz-anchor-meta'), notes=$('bz-anchor-notes');
     const events=$('bz-roll-events'), rollSummary=$('bz-roll-summary');
     const openEvents=new Set(Array.from(events.querySelectorAll('details[open]'),d=>d.dataset.stamp));
-    body.replaceChildren();notes.replaceChildren();events.replaceChildren();
+    body.replaceChildren();baseBody.replaceChildren();notes.replaceChildren();events.replaceChildren();
     if(!p){renderAnchorWatch(null);meta.textContent='等待來源資料';rollSummary.textContent='等待來源資料';anchorHistory=null;return;}
     const steps=p.view.nine_steps, base=steps.find(x=>Number(x.row)===16), live=steps.find(x=>Number(x.row)===17);
     const a=parseAnchorStep(base),b=parseAnchorStep(live);
@@ -11260,9 +11274,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       marks.forEach(m=>{
         const line=el('div','bz-anchor-mark');
         line.appendChild(el('strong',isLive?'bz-num bz-anchor-quote':'bz-num bz-anchor-reference',range(m.flo,m.fhi)));
-        if(isLive&&marketF>0){
-          const d=m.fhi-marketF;
-          line.appendChild(el('span','bz-anchor-distance',d===0?'同價':(d>0?'+':'−')+num(Math.abs(d))+' 點'));
+        if(marketF>0){
+          const d=m.flo>marketF?m.flo-marketF:m.fhi<marketF?m.fhi-marketF:0;
+          line.appendChild(el('span','bz-anchor-distance',d===0?(m.flo===m.fhi?'同價':'區內'):(d>0?'+':'−')+num(Math.abs(d))+' 點'));
         }
         const sub=el('div','bz-anchor-sub');
         sub.appendChild(el('small','bz-muted','履約 '+range(m.lo,m.hi)));
@@ -11278,52 +11292,42 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           if(r&&r.kind===(isLive?'session_cost':'multi_cost')&&(r.band||/[紅黃藍綠]/.exec(r.source||'')?.[0])===color&&
             (r.source||'').includes(side)&&r.low===m.flo&&r.high===m.fhi){
             if(!r.flip)sub.appendChild(el('span','bz-anchor-defense '+kind,label));
-            if(!isLive&&marketF>0){
-              const distance=(kind==='pressure'?r.low:r.high)-marketF;
-              sub.appendChild(el('span','bz-anchor-defense-distance',(distance>0?'+':distance<0?'−':'')+num(Math.abs(distance))+' 點'));
-            }
           }
         }
         line.appendChild(sub);
         td.appendChild(line);
       });
     }
-    const ladder=[];
-    for(const [i,side] of ['Call','Put'].entries()){
-      for(const [color,premium] of [['綠',400],['藍',200],['黃',100],['紅',50]]){
-        const tr=el('tr',''), label=el('th','bz-anchor-label'), dot=el('span','bz-dotc bz-b-'+color);
-        label.scope='row';label.append(dot,el('span','',side+' '+premium));
-        const left=el('td',''),right=el('td',''),diff=el('td','bz-anchor-diff bz-num');
-        const aa=a?.[i]?.[color],bb=b?.[i]?.[color];
-        display(left,aa,false,side,color);display(right,bb,true,side,color);
-        const d=anchorShift(aa,bb);
-        diff.appendChild(el('strong','bz-muted',d===null?'—':d===0?'0 點':(d>0?'+':'−')+num(Math.abs(d))+' 點'));
-        tr.append(label,right,left,diff);
-        const priced=bb?.length?bb:aa;
-        const price=priced?.length?Math.max(...priced.map(m=>m.fhi)):-Infinity;
-        if(!Number.isFinite(price))tr.className='bz-anchor-unpriced';
-        if(!bb?.length&&aa?.length)right.appendChild(el('small','bz-muted','基準代排'));
-        ladder.push({tr,price,current:false,live:!!bb?.length,cell:right});
+    for(const [grid,table,isLive] of [[b,body,true],[a,baseBody,false]]){
+      const ladder=[];
+      for(const [i,side] of ['Call','Put'].entries()){
+        for(const [color,premium] of [['綠',400],['藍',200],['黃',100],['紅',50]]){
+          const marks=grid?.[i]?.[color];
+          const diff=isLive?anchorShift(a?.[i]?.[color],marks):null;
+          // Legacy snapshots may have several ranges in the same color layer.
+          for(const mark of marks?.length?marks:[null]){
+            const tr=el('tr',mark?'':'bz-anchor-unpriced'),label=el('th','bz-anchor-label');
+            label.scope='row';
+            label.append(el('span','bz-dotc bz-b-'+color),el('span','',side+' '+premium));
+            const td=el('td','');
+            display(td,mark?[mark]:null,isLive,side,color);
+            if(diff!==null)td.appendChild(el('small','bz-muted','對暴Z '+(diff===0?'0':(diff>0?'+':'−')+num(Math.abs(diff)))));
+            tr.append(label,td);
+            ladder.push({tr,price:mark?mark.fhi:-Infinity,current:false});
+          }
+        }
       }
-    }
-    if(Number.isFinite(marketF)&&marketF>0){
-      const tr=el('tr','bz-anchor-current'),label=el('th','bz-anchor-label','▶ 期貨現價');
-      label.scope='row';
-      const td=el('td','');
-      td.appendChild(el('strong','bz-num',num(marketF)));
-      const fill=el('td','');fill.colSpan=2;
-      tr.append(label,td,fill);
-      ladder.push({tr,price:marketF,current:true});
-    }
-    ladder.sort((a,b)=>a.price===b.price?Number(b.current)-Number(a.current):b.price-a.price);
-    if(marketF>0){
-      const upper=ladder.filter(row=>row.live&&row.price>marketF).at(-1);
-      const lower=ladder.find(row=>row.live&&row.price<marketF);
-      for(const [row,label] of [[upper,'上方最近色層'],[lower,'下方最近色層']]){
-        if(row)row.cell.appendChild(el('span','bz-anchor-nearest',label));
+      if(Number.isFinite(marketF)&&marketF>0){
+        const tr=el('tr','bz-anchor-current'),label=el('th','bz-anchor-label','▶ 現價');
+        label.scope='row';
+        const td=el('td','');
+        td.appendChild(el('strong','bz-num',num(marketF)));
+        tr.append(label,td);
+        ladder.push({tr,price:marketF,current:true});
       }
+      ladder.sort((x,y)=>x.price===y.price?Number(y.current)-Number(x.current):y.price-x.price);
+      for(const row of ladder)table.appendChild(row.tr);
     }
-    ladder.forEach(row=>body.appendChild(row.tr));
     if(!a||!b)notes.appendChild(el('p','bz-muted','來源未提供完整的兩表色層原文，可查看下方原始價位表。'));
     for(const [step,label] of [[base,'暴Z表'],[live,'即時表']]){
       const raw=String(step?.text||'');
