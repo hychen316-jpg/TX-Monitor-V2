@@ -10516,7 +10516,14 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-anchor-board{container-type:inline-size}
 #baoz-system-panel .bz-anchor-main,#baoz-system-panel .bz-anchor-side{min-width:0}
 #baoz-system-panel .bz-anchor-side{margin-top:9px}
-#baoz-system-panel .bz-v4-pink[hidden]{display:none}
+#baoz-system-panel .bz-anchor-watch[hidden],#baoz-system-panel .bz-v4-pink[hidden]{display:none}
+#baoz-system-panel .bz-anchor-watch{margin-bottom:8px;padding:7px 8px;border:1px solid var(--bz-line);border-radius:6px;font-size:12px}
+#baoz-system-panel .bz-watch-line{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+#baoz-system-panel .bz-watch-quote{padding:4px 5px;background:rgba(82,185,240,.06);border-radius:4px}
+#baoz-system-panel .bz-watch-quote small{display:block;color:var(--bz-muted)}
+#baoz-system-panel .bz-watch-quote strong{font-size:15px;font-variant-numeric:tabular-nums}
+#baoz-system-panel .bz-watch-detail{margin:4px 0 0;overflow-wrap:anywhere}
+#baoz-system-panel .bz-watch-crossed{color:var(--bz-attn)}
 #baoz-system-panel .bz-v4-pink{margin:0 0 9px;padding:7px 9px;border:1px solid rgba(248,187,208,.35);border-radius:6px;background:rgba(248,187,208,.06);font-size:12px}
 #baoz-system-panel .bz-v4-pink strong,#baoz-system-panel .bz-v4-zone.in{color:#f8bbd0}
 #baoz-system-panel .bz-v4-zones{display:flex;flex-wrap:wrap;gap:4px 10px;margin:4px 0}
@@ -10607,6 +10614,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         <div class="bz-panel-head"><h3>關鍵價位 <span class="bz-small bz-muted">· 期貨座標</span></h3></div>
         <div class="bz-anchor-board" aria-label="暴Z表與即時表四色對照">
           <p id="bz-anchor-meta" class="bz-anchor-meta">等待來源資料</p>
+          <section id="bz-anchor-watch" class="bz-anchor-watch" aria-label="盤中防線總覽" hidden></section>
           <section id="bz-v4-pink" class="bz-v4-pink" aria-label="V4 粉紅區與越階" hidden></section>
           <div class="bz-anchor-layout">
             <div class="bz-anchor-main">
@@ -10987,8 +10995,13 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
   function renderV4Pink(p){
     const box=$('bz-v4-pink');
     box.replaceChildren();
-    box.hidden=!/V4/i.test(p?.source?.algo||'');
+    box.hidden=!p;
     if(box.hidden)return;
+    const algo=String(p.source.algo||'').trim();
+    if(!/V4/i.test(algo)){
+      box.appendChild(el('span','bz-muted',algo?'粉紅區｜目前模式：'+algo+'，V4 卡未啟用':'粉紅區｜快照未提供 B95 演算法，無法確認 V4'));
+      return;
+    }
     const v=p.view;
     const read=row=>String(v.nine_steps.find(step=>Number(step.row)===row)?.text||'');
     const base=read(16),live=read(17);
@@ -11016,12 +11029,51 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(tier)box.appendChild(el('div','bz-v4-zone','日盤越階 · '+px(tier)+'｜'+(tier.meaning||tier.source)));
     box.appendChild(el('small','bz-muted','V4 中欄單側有色也會標粉紅；本卡只列 Excel 提供的雙側重疊與越階。'));
   }
+  function renderAnchorWatch(p,b,latest){
+    const box=$('bz-anchor-watch'),f=p?.market?.futures==null?null:N(p.market.futures);
+    box.replaceChildren();box.hidden=!Number.isFinite(f)||f<=0;
+    if(box.hidden)return;
+    const v=p.view;
+    const quotes=el('div','bz-watch-line');
+    const levels=v.levels.filter(r=>Number.isFinite(r.low)&&Number.isFinite(r.high)&&!isThr(r)&&!['current','target_upper','target_lower'].includes(r.kind));
+    const nearest=(side,rule)=>levels.filter(r=>role(r)?.[0]===rule&&(side>0?r.low>f:r.high<f))
+      .sort((a,b)=>side>0?a.low-b.low:b.high-a.high)[0];
+    const res=nearest(1,'bz-r-res'),sup=nearest(-1,'bz-r-sup');
+    const range=(lo,hi)=>lo===hi?num(lo):num(lo)+'–'+num(hi);
+    const delta=d=>(d>0?'+':d<0?'−':'')+num(Math.abs(d));
+    function quote(label,value,detail){
+      const q=el('div','bz-watch-quote');
+      q.append(el('small','',label),el('strong','',value));
+      if(detail)q.appendChild(el('small','',detail));
+      quotes.appendChild(q);
+    }
+    quote('來源壓力',res?range(res.low,res.high):'—',res?delta(res.low-f)+' 點':'未列上方壓力');
+    quote('期貨現價',num(f),'快照');
+    quote('來源支撐',sup?range(sup.low,sup.high):'—',sup?delta(sup.high-f)+' 點':'未列下方支撐');
+    box.appendChild(quotes);
+    const crossed=[];
+    b?.forEach((side,i)=>{
+      for(const [color,marks] of Object.entries(side||{})){
+        for(const m of marks){
+          const state=/已(?:被)?(?:跌破|突破)/.exec(m.note||'');
+          if(state)crossed.push({label:(i===0?'Call':'Put')+color+' '+range(m.flo,m.fhi)+' '+state[0],distance:Math.max(m.flo-f,f-m.fhi,0)});
+        }
+      }
+    });
+    crossed.sort((a,b)=>a.distance-b.distance);
+    if(crossed.length)box.appendChild(el('p','bz-watch-detail bz-watch-crossed','最近已穿越 · '+crossed.slice(0,2).map(x=>x.label).join(' ｜ ')));
+    if(latest?.moves.length){
+      const clock=new Date(latest.stamp).toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});
+      const list=latest.moves.map(m=>m.side+m.color+' '+(m.shift>0?'↑':'↓')+num(Math.abs(m.shift)));
+      box.appendChild(el('p','bz-watch-detail','最新換檔 '+clock+' · '+list.join(' ｜ ')));
+    }
+  }
   function renderAnchorBoard(p){
     renderV4Pink(p);
     const body=$('bz-anchor-body'), meta=$('bz-anchor-meta'), notes=$('bz-anchor-notes');
     const events=$('bz-roll-events'), rollSummary=$('bz-roll-summary');
     body.replaceChildren();notes.replaceChildren();events.replaceChildren();
-    if(!p){meta.textContent='等待來源資料';rollSummary.textContent='等待來源資料';anchorHistory=null;return;}
+    if(!p){renderAnchorWatch(null);meta.textContent='等待來源資料';rollSummary.textContent='等待來源資料';anchorHistory=null;return;}
     const steps=p.view.nine_steps, base=steps.find(x=>Number(x.row)===16), live=steps.find(x=>Number(x.row)===17);
     const a=parseAnchorStep(base),b=parseAnchorStep(live);
     const stamp=p.source.generated_at_ms, session=p.source.session, marketF=p.market?.futures==null?null:N(p.market.futures);
@@ -11050,6 +11102,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const clock=ms=>new Date(ms).toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});
     const observed=active&&stamp===h.stamp;
     const newest=h.events[0];
+    renderAnchorWatch(p,b,observed?newest:null);
     const directions=moves=>moves.every(m=>m.shift>0)?'↑ 上移':moves.every(m=>m.shift<0)?'↓ 下移':'↕ 分歧';
     rollSummary.textContent=!observed?'目前快照不可比對':!newest?'已接收基準，等待下一次同色履約價換檔':
       '最近 '+clock(newest.stamp)+' ｜ '+['Call','Put'].map(side=>{
