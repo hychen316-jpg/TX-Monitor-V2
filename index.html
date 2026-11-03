@@ -10608,6 +10608,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-anchor-boundary>*{background:rgba(170,150,235,.07)}
 #baoz-system-panel .bz-anchor-boundary .bz-anchor-label,#baoz-system-panel .bz-anchor-boundary strong{color:var(--bz-ink)}
 #baoz-system-panel .bz-anchor-boundary .bz-anchor-label{white-space:normal}
+#baoz-system-panel .bz-kdiv-shift{display:inline-block;margin-inline-start:.4em;font-size:.85em;font-weight:normal;white-space:nowrap}
 #baoz-system-panel .bz-dotc.bz-b-綠{background:#00e676}
 #baoz-system-panel .bz-dotc.bz-b-藍{background:#4f8dff}
 #baoz-system-panel .bz-dotc.bz-b-黃{background:#f5c542}
@@ -10992,6 +10993,16 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const any=L.find(r=>r.kind==='multi_boundary'&&!isThr(r));if(any)return any.low;
     return L.some(isThr)?null:(v.multi_day?v.multi_day.futures_boundary:null);
   }
+  function sessionKdivShift(view) {
+    const step=view.nine_steps?.find(row=>Number(row.row)===15);
+    for(const source of [view.session_direction?.text,step?.text]){
+      const match=/即時表\s*Kdiv\s*30\s*分鐘(?:移動)?\s*([+＋\-−－]?\s*\d+(?:\.\d+)?)\s*點/i.exec(String(source||''));
+      if(!match)continue;
+      const value=Number(match[1].replace(/\s/g,'').replace(/[−－]/g,'-').replace(/＋/g,'+'));
+      if(Number.isFinite(value))return value;
+    }
+    return null;
+  }
   function levelName(r) {
     if(isThr(r))return '留多門檻';
     const names={current:'現價',multi_boundary:'多日分界',session_boundary:'今天／今晚分界',target_upper:'必來點上緣',target_lower:'必來點下緣',session_high:'本盤高',session_low:'本盤低'};
@@ -11322,6 +11333,15 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       if(!Number.isFinite(price)||price<=0)continue;
       const tr=el('tr','bz-anchor-boundary'),th=el('th','bz-anchor-label',label);
       th.scope='row';
+      if(isLive){
+        const shift=sessionKdivShift(view);
+        if(shift!==null){
+          const signedShift=shift===0?'0':(shift>0?'+':'−')+String(Math.abs(shift));
+          const badge=el('span','bz-kdiv-shift bz-muted','Kdiv 30分 '+signedShift+' 點');
+          badge.title='即時表 Kdiv 移動點數，由 Near 提供';
+          th.appendChild(badge);
+        }
+      }
       const td=el('td','');
       td.appendChild(el('strong','bz-num',num(price)));
       if(marketF>0){
