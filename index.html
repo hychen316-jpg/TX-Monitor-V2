@@ -10534,6 +10534,10 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-v4-pink strong,#baoz-system-panel .bz-v4-zone.in{color:#f8bbd0}
 #baoz-system-panel .bz-v4-zones{display:flex;flex-wrap:wrap;gap:4px 10px;margin:4px 0}
 #baoz-system-panel .bz-v4-zone{font-variant-numeric:tabular-nums}
+#baoz-system-panel .bz-v4-pink[data-tone="clear"]{border-color:var(--bz-line);background:transparent}
+#baoz-system-panel .bz-v4-pink[data-tone="clear"]>strong{color:var(--bz-ink)}
+#baoz-system-panel .bz-anchor-defense.pressure,#baoz-system-panel .bz-anchor-defense.support{margin-right:4px}
+#baoz-system-panel .bz-anchor-defense-distance{font-size:11px;white-space:nowrap;color:var(--bz-muted)}
 #baoz-system-panel .bz-anchor-detail{margin-top:8px;padding:6px 8px;border:1px solid var(--bz-line);border-radius:6px}
 #baoz-system-panel .bz-anchor-detail>summary{cursor:pointer;font-weight:650}
 #baoz-system-panel .bz-anchor-detail .bz-pair{margin:7px 0;justify-content:flex-end}
@@ -11002,6 +11006,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const box=$('bz-v4-pink');
     box.replaceChildren();
     box.hidden=!p;
+    box.removeAttribute('data-tone');
     if(box.hidden)return;
     const algo=String(p.source.algo||'').trim();
     const v4=/V4/i.test(algo);
@@ -11015,7 +11020,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const parts=(base+'｜'+live).split('｜');
     const status=parts.some(t=>/^現價在粉紅區/.test(t))?'現價在粉紅區 · 磁吸':
       parts.some(t=>/^現價不在粉紅區/.test(t))?'現價不在粉紅區':'現價狀態未提供';
-    box.appendChild(el('strong','', (v4?'V4 粉紅重疊區':'來源粉紅重疊區')+' · '+status));
+    if(status==='現價不在粉紅區')box.setAttribute('data-tone','clear');
+    box.appendChild(el('strong','', (v4?'V4 雙側重疊':'雙側重疊')+' · '+status));
     const zones=el('div','bz-v4-zones');
     const rows=v.levels.filter(r=>['multi_cost','session_cost'].includes(r.kind)&&/重疊/.test(r.source||'')&&!r.band);
     const px=r=>r.low===r.high?num(r.low):num(r.low)+'–'+num(r.high);
@@ -11029,7 +11035,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     }
     if(!rows.length){
       const absent=/上方壓力 沒有重疊區/.test(base)&&/下方支撐 沒有重疊區/.test(base)&&/｜重疊 沒有(?:｜|$)/.test(live)&&status==='現價不在粉紅區';
-      zones.appendChild(el('span','bz-muted',absent?'目前兩表皆無雙側重疊區':'本次價位表未列出可顯示的重疊期貨價'));
+      zones.appendChild(el('span','bz-muted',absent?'兩表均無雙側重疊；單邊防線見上方卡片。':'本次價位表未列出可顯示的重疊期貨價'));
     }
     box.appendChild(zones);
     const tier=v4?v.levels.find(r=>/V4越階/.test(r.source||'')):null;
@@ -11057,7 +11063,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         const origin=row.kind==='session_cost'?'即時表':row.kind==='multi_cost'?'暴Z表':'';
         const band=row.band||/[紅黃藍綠]/.exec(row.source||'')?.[0];
         const flip=/[＝=](?:壓力|支撐)/.test(row.meaning||'')?'｜破位轉換':'';
-        const summary=[origin,cp,band&&band+'層',/重疊/.test(row.source||'')?'重疊區':''].filter(Boolean).join(' ');
+        const structure=/重疊/.test(row.source||'')?'重疊區':/單邊/.test(row.meaning||'')?'單邊':'';
+        const summary=[origin,cp,band&&band+'層',structure].filter(Boolean).join(' ');
         const caption=el('small','bz-watch-source',(summary||row.source||'來源未標明')+flip);
         caption.title=row.source||'';
         q.appendChild(caption);
@@ -11151,6 +11158,10 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           if(r&&r.kind===(isLive?'session_cost':'multi_cost')&&(r.band||/[紅黃藍綠]/.exec(r.source||'')?.[0])===color&&
             (r.source||'').includes(side)&&r.low===m.flo&&r.high===m.fhi){
             line.appendChild(el('span','bz-anchor-defense '+kind,label));
+            if(!isLive&&marketF>0){
+              const distance=(kind==='pressure'?r.low:r.high)-marketF;
+              line.appendChild(el('span','bz-anchor-defense-distance',(distance>0?'+':distance<0?'−':'')+num(Math.abs(distance))+' 點'));
+            }
           }
         }
         td.appendChild(line);
@@ -11197,7 +11208,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     for(const [step,label] of [[base,'暴Z表'],[live,'即時表']]){
       const raw=String(step?.text||'');
       const extras=raw.split('｜').filter(t=>!/(?:Call|Put)[：:]/.test(t));
-      if(extras.length)notes.appendChild(el('p','',label+' · '+extras.join('｜')));
+      const supplemental=extras.filter(t=>!(/^(上方壓力|下方支撐) 沒有重疊區|^重疊 沒有$|^現價不在粉紅區$/.test(t)));
+      if(supplemental.length)notes.appendChild(el('p','',label+' · '+supplemental.join('｜')));
     }
   }
   function levels(posInfo) {
