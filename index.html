@@ -10529,8 +10529,19 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-watch-detail{margin:3px 0 0;overflow-wrap:anywhere}
 #baoz-system-panel .bz-watch-status{max-height:3.2em;overflow:auto;line-height:1.45;scrollbar-gutter:stable}
 #baoz-system-panel .bz-watch-status:empty{display:none}
-#baoz-system-panel .bz-anchor-drawer>summary{cursor:pointer;padding:4px 1px;font-size:12px;font-weight:650}
-#baoz-system-panel .bz-anchor-drawer-body{max-height:min(270px,35vh);overflow:auto;overscroll-behavior:contain}
+#baoz-system-panel .bz-live-roll{margin-top:6px;padding:4px 5px;border-top:1px solid var(--bz-line)}
+#baoz-system-panel .bz-live-roll>strong{font-size:12px}
+#baoz-system-panel .bz-live-roll-row{display:grid;grid-template-columns:3em minmax(0,1fr) auto;gap:4px;align-items:baseline;line-height:1.45;font-size:12px;font-variant-numeric:tabular-nums}
+#baoz-system-panel .bz-live-roll-row time{white-space:nowrap;font-size:11px}
+#baoz-system-panel .bz-live-roll-move{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#baoz-system-panel .bz-live-roll-note{display:block;color:var(--bz-muted);font-size:11px}
+#baoz-system-panel .bz-anchor-grid th,#baoz-system-panel .bz-anchor-grid td{line-height:1.25}
+#baoz-system-panel .bz-anchor-sub{display:flex;align-items:baseline;gap:0 4px;flex-wrap:wrap;line-height:1.2}
+#baoz-system-panel .bz-anchor-sub .bz-anchor-defense{margin:0;padding:0 3px}
+#baoz-system-panel .bz-roll-events .bz-roll-event{display:grid;grid-template-columns:4.8em minmax(0,1fr);gap:4px;padding:2px 0}
+#baoz-system-panel .bz-roll-event time{white-space:nowrap}
+#baoz-system-panel .bz-roll-event summary{cursor:pointer}
+#baoz-system-panel .bz-roll-event-more{padding-left:1em}
 #baoz-system-panel .bz-anchor-board .bz-v4-pink{margin-bottom:4px;padding:4px 7px}
 #baoz-system-panel .bz-pink-extra{max-height:4.4em;overflow:auto;line-height:1.4}
 #baoz-system-panel .bz-watch-crossed{color:var(--bz-attn)}
@@ -10636,9 +10647,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           <p id="bz-anchor-meta" class="bz-anchor-meta">等待來源資料</p>
           <section id="bz-anchor-watch" class="bz-anchor-watch" aria-label="盤中防線總覽" hidden></section>
           <section id="bz-v4-pink" class="bz-v4-pink" aria-label="V4 粉紅區與越階" hidden></section>
-          <details class="bz-anchor-drawer">
-            <summary>四色價位階梯與調單紀錄</summary>
-            <div class="bz-anchor-drawer-body" tabindex="0" aria-label="可捲動的四色價位階梯與調單紀錄">
           <div class="bz-anchor-layout">
             <div class="bz-anchor-main">
           <div class="bz-anchor-scroll"><table class="bz-anchor-grid">
@@ -10659,8 +10667,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           </details>
             </aside>
           </div>
-            </div>
-          </details>
         </div>
         <details class="bz-anchor-detail" open>
           <summary>完整價位明細 <span class="bz-muted">· 分界、必來點、支撐壓力</span></summary>
@@ -11095,7 +11101,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       .sort((a,b)=>(side>0?a.low-b.low:b.high-a.high)||Number(!!b.flip)-Number(!!a.flip))[0];
     return {res:nearest(1,'bz-r-res','壓力'),sup:nearest(-1,'bz-r-sup','支撐'),flips,pending};
   }
-  function renderAnchorWatch(p,a,b,latest){
+  function renderAnchorWatch(p,a,b,rollState){
+    const {observed,stamp,lastBySide}=rollState||{};
     const box=$('bz-anchor-watch'),f=p?.market?.futures==null?null:N(p.market.futures);
     box.replaceChildren();box.hidden=!Number.isFinite(f)||f<=0;
     if(box.hidden)return;
@@ -11126,6 +11133,28 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     quote('期貨現價',num(f),'','current');
     quote(sup?.flip?'翻轉支撐':'下方支撐',sup?range(sup.low,sup.high):'—',sup?delta(sup.high-f)+' 點':'來源未列','support',sup);
     box.appendChild(quotes);
+    const rolls=el('div','bz-live-roll');
+    rolls.appendChild(el('strong','','即時表調單 · 履約價換檔'));
+    const clock=ms=>new Date(ms).toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});
+    for(const side of ['Call','Put']){
+      const row=el('div','bz-live-roll-row');
+      const last=lastBySide?.[side];
+      row.appendChild(el('strong','',side));
+      if(!last){
+        row.appendChild(el('span','bz-muted',observed?'本頁尚未觀察到換檔':'等待可比對快照'));
+      }else{
+        const moves=last.moves;
+        const lead=moves[0];
+        const sameDirection=moves.every(m=>Math.sign(m.shift)===Math.sign(lead.shift));
+        const change=m=>m.color+' '+range(m.from.lo,m.from.hi)+' → '+range(m.to.lo,m.to.hi)+'（'+(m.shift>0?'↑':'↓')+num(Math.abs(m.shift))+'）';
+        const line=el('span','bz-live-roll-move '+(sameDirection?(lead.shift>0?'bz-bull':'bz-bear'):''),change(lead)+(moves.length>1?' · '+(sameDirection?'另':'分歧，另')+(moves.length-1)+'層':''));
+        line.title=moves.map(change).join(' ｜ ');
+        row.append(line,el('time','bz-muted',clock(last.stamp)));
+      }
+      rolls.appendChild(row);
+    }
+    rolls.appendChild(el('small','bz-live-roll-note',observed?'快照 '+clock(stamp)+' · 只記本頁觀察到的換檔':'目前快照不可比對 · 已有紀錄以各列時間為準'));
+    box.appendChild(rolls);
     const status=el('div','bz-watch-status');
     status.tabIndex=0;
     status.setAttribute('aria-label','可捲動的翻轉、穿越與換檔狀態');
@@ -11148,13 +11177,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     });
     crossed.sort((a,b)=>a.distance-b.distance);
     if(crossed.length)status.appendChild(el('p','bz-watch-detail bz-watch-crossed','最近穿越／未翻轉 · '+crossed.slice(0,2).map(x=>x.label).join(' ｜ ')));
-    if(latest?.moves.length){
-      const clock=new Date(latest.stamp).toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});
-      const list=latest.moves.map(m=>m.side+m.color+' '+(m.shift>0?'↑':'↓')+num(Math.abs(m.shift)));
-      status.appendChild(el('p','bz-watch-detail','最新換檔 '+clock+' · '+list.join(' ｜ ')));
-    }else{
-      status.appendChild(el('p','bz-watch-detail bz-muted','換檔 · 本頁暫無可顯示的紀錄'));
-    }
     box.appendChild(status);
     return {res,sup};
   }
@@ -11162,6 +11184,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     renderV4Pink(p);
     const body=$('bz-anchor-body'), meta=$('bz-anchor-meta'), notes=$('bz-anchor-notes');
     const events=$('bz-roll-events'), rollSummary=$('bz-roll-summary');
+    const openEvents=new Set(Array.from(events.querySelectorAll('details[open]'),d=>d.dataset.stamp));
     body.replaceChildren();notes.replaceChildren();events.replaceChildren();
     if(!p){renderAnchorWatch(null);meta.textContent='等待來源資料';rollSummary.textContent='等待來源資料';anchorHistory=null;return;}
     const steps=p.view.nine_steps, base=steps.find(x=>Number(x.row)===16), live=steps.find(x=>Number(x.row)===17);
@@ -11171,20 +11194,25 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const dateKey=new Date(+taipeiDate-(session==='NIGHT'&&taipeiDate.getUTCHours()<12?86400000:0));
     const key=[p.source.workbook,p.source.contract,p.source.algo,session,Number.isFinite(+dateKey)?dateKey.toISOString().slice(0,10):''].join('|');
     const active=b&&Number.isFinite(stamp)&&['DAY','NIGHT'].includes(session)&&p.view.adapter_status==='SUPPORTED'&&b.every(Boolean);
-    if(!anchorHistory||anchorHistory.key!==key)anchorHistory={key,stamp:0,side:null,moves:{},events:[]};
+    if(!anchorHistory||anchorHistory.key!==key)anchorHistory={key,stamp:0,side:null,events:[],lastBySide:{}};
     const h=anchorHistory;
     let latest=[];
     if(active&&stamp>h.stamp){
       if(h.side) b.forEach((side,i)=>['綠','藍','黃','紅'].forEach(color=>{
-        const shift=anchorShift(h.side[i][color],side[color]), id=i+color;
+        const shift=anchorShift(h.side[i][color],side[color]);
         if(shift){
           const move={shift,stamp,side:i===0?'Call':'Put',color,from:h.side[i][color][0],to:side[color][0]};
-          h.moves[id]=move;latest.push(move);
+          latest.push(move);
         }
-        else if(shift===null)delete h.moves[id];
       }));
       h.side=b;h.stamp=stamp;
-      if(latest.length)h.events=[{stamp,moves:latest},...h.events].slice(0,5);
+      if(latest.length){
+        h.events=[{stamp,moves:latest},...h.events].slice(0,5);
+        for(const side of ['Call','Put']){
+          const moves=latest.filter(m=>m.side===side);
+          if(moves.length)h.lastBySide[side]={stamp,moves};
+        }
+      }
     }
     meta.textContent='防線快覽';
     const range=(lo,hi)=>lo===hi?num(lo):num(lo)+'–'+num(hi);
@@ -11192,7 +11220,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const clock=ms=>new Date(ms).toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});
     const observed=active&&stamp===h.stamp;
     const newest=h.events[0];
-    const defenses=renderAnchorWatch(p,a,b,observed?newest:null);
+    const defenses=renderAnchorWatch(p,a,b,{observed,stamp,lastBySide:h.lastBySide});
     const directions=moves=>moves.every(m=>m.shift>0)?'↑ 上移':moves.every(m=>m.shift<0)?'↓ 下移':'↕ 分歧';
     rollSummary.textContent=!observed?'目前快照不可比對':!newest?'已接收基準，等待下一次同色履約價換檔':
       '最近 '+clock(newest.stamp)+' ｜ '+['Call','Put'].map(side=>{
@@ -11200,12 +11228,21 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         return side+' '+(group.length?directions(group):'無同步換檔');
       }).join(' · ');
     if(observed)for(const event of h.events){
-      const li=el('li','');
+      const li=el('li','bz-roll-event');
       li.appendChild(el('time','bz-muted',clock(event.stamp)));
-      for(const m of event.moves){
-        const desc=m.side+' '+m.color+' '+range(m.from.lo,m.from.hi)+' → '+range(m.to.lo,m.to.hi)+'（'+signed(m.shift)+'）';
-        li.appendChild(el('span',m.shift>0?'bz-bull':'bz-bear',desc));
-      }
+      const describe=m=>m.side+' '+m.color+' '+range(m.from.lo,m.from.hi)+' → '+range(m.to.lo,m.to.hi)+'（'+signed(m.shift)+'）';
+      const first=event.moves[0],more=event.moves.slice(1);
+      const firstLine=el('span',first.shift>0?'bz-bull':'bz-bear',describe(first));
+      if(more.length){
+        const detail=el('details','');
+        detail.dataset.stamp=String(event.stamp);
+        detail.open=openEvents.has(detail.dataset.stamp);
+        const head=el('summary','');
+        head.append(firstLine,el('span','bz-muted',' ＋'+more.length+' 層'));
+        detail.appendChild(head);
+        for(const m of more)detail.appendChild(el('div','bz-roll-event-more '+(m.shift>0?'bz-bull':'bz-bear'),describe(m)));
+        li.appendChild(detail);
+      }else li.appendChild(firstLine);
       events.appendChild(li);
     }
     function display(td,marks,isLive,side,color){
@@ -11217,22 +11254,27 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           const d=m.fhi-marketF;
           line.appendChild(el('span','bz-anchor-distance',d===0?'同價':(d>0?'+':'−')+num(Math.abs(d))+' 點'));
         }
-        line.appendChild(el('small','bz-muted','履約 '+range(m.lo,m.hi)));
+        const sub=el('div','bz-anchor-sub');
+        sub.appendChild(el('small','bz-muted','履約 '+range(m.lo,m.hi)));
         if(m.note){
           const flip=isLive||color==='紅'?'':flipDirection(side,m.note);
-          const label=flip?(flip==='壓力'?'支撐→壓力':'壓力→支撐')+' · 程式已翻轉':m.note.replace(/[（）]/g,' ').trim();
-          line.appendChild(el('small',/跌破|突破/.test(m.note)?'bz-anchor-break':'bz-muted',label));
+          const full=m.note.replace(/[（）]/g,' ').trim();
+          const label=flip?(flip==='壓力'?'支撐→壓力':'壓力→支撐'):/跳空/.test(full)?'跳空未回測':full;
+          const tag=el('small',/跌破|突破/.test(m.note)?'bz-anchor-break':'bz-muted',label);
+          tag.title=full;
+          sub.appendChild(tag);
         }
         for(const [r,kind,label] of [[defenses?.res,'pressure','上方壓力'],[defenses?.sup,'support','下方支撐']]){
           if(r&&r.kind===(isLive?'session_cost':'multi_cost')&&(r.band||/[紅黃藍綠]/.exec(r.source||'')?.[0])===color&&
             (r.source||'').includes(side)&&r.low===m.flo&&r.high===m.fhi){
-            line.appendChild(el('span','bz-anchor-defense '+kind,r.flip?'第一道翻轉'+r.flip:label));
+            if(!r.flip)sub.appendChild(el('span','bz-anchor-defense '+kind,label));
             if(!isLive&&marketF>0){
               const distance=(kind==='pressure'?r.low:r.high)-marketF;
-              line.appendChild(el('span','bz-anchor-defense-distance',(distance>0?'+':distance<0?'−':'')+num(Math.abs(distance))+' 點'));
+              sub.appendChild(el('span','bz-anchor-defense-distance',(distance>0?'+':distance<0?'−':'')+num(Math.abs(distance))+' 點'));
             }
           }
         }
+        line.appendChild(sub);
         td.appendChild(line);
       });
     }
@@ -11244,9 +11286,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         const left=el('td',''),right=el('td',''),diff=el('td','bz-anchor-diff bz-num');
         const aa=a?.[i]?.[color],bb=b?.[i]?.[color];
         display(left,aa,false,side,color);display(right,bb,true,side,color);
-        const d=anchorShift(aa,bb),move=active&&stamp===h.stamp?h.moves[i+color]:null;
+        const d=anchorShift(aa,bb);
         diff.appendChild(el('strong','bz-muted',d===null?'—':d===0?'0 點':(d>0?'+':'−')+num(Math.abs(d))+' 點'));
-        if(move)diff.appendChild(el('small','bz-muted','換檔 '+signed(move.shift)+' · '+clock(move.stamp)));
         tr.append(label,right,left,diff);
         const priced=bb?.length?bb:aa;
         const price=priced?.length?Math.max(...priced.map(m=>m.fhi)):-Infinity;
