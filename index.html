@@ -10605,6 +10605,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-anchor-detail{margin-top:5px;padding:4px 6px}
 #baoz-system-panel .bz-anchor-detail .bz-pair{margin:4px 0}
 #baoz-system-panel .bz-anchor-detail .bz-level-row td{padding-block:3px}
+#baoz-system-panel .bz-anchor-boundary>*{background:rgba(170,150,235,.07)}
+#baoz-system-panel .bz-anchor-boundary .bz-anchor-label,#baoz-system-panel .bz-anchor-boundary strong{color:var(--bz-ink)}
+#baoz-system-panel .bz-anchor-boundary .bz-anchor-label{white-space:normal}
 #baoz-system-panel .bz-dotc.bz-b-綠{background:#00e676}
 #baoz-system-panel .bz-dotc.bz-b-藍{background:#4f8dff}
 #baoz-system-panel .bz-dotc.bz-b-黃{background:#f5c542}
@@ -11118,7 +11121,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(box.hidden)return;
     const v=p.view;
     const quotes=el('div','bz-watch-line');
-    const levels=v.levels.filter(r=>Number.isFinite(r.low)&&Number.isFinite(r.high)&&!isThr(r)&&!['current','target_upper','target_lower'].includes(r.kind));
+    const levels=v.levels.filter(r=>Number.isFinite(r.low)&&Number.isFinite(r.high)&&!isThr(r)&&!['current','target_upper','target_lower','multi_boundary','session_boundary'].includes(r.kind));
     const {res,sup,flips,pending}=watchDefenses(levels,a,f);
     const range=(lo,hi)=>lo===hi?num(lo):num(lo)+'–'+num(hi);
     const delta=d=>(d>0?'+':d<0?'−':'')+num(Math.abs(d));
@@ -11312,6 +11315,21 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
           ladder.push({tr,price,current:false,live:!!live.length,cell:right});
         }
       }
+    }
+    const view=p.view;
+    const today=view.levels.find(r=>r.kind==='session_boundary'&&Number.isFinite(r.low)&&r.low>0)?.low??view.session_direction?.futures_boundary;
+    for(const [label,price,isLive] of [[session==='NIGHT'?'今晚分界':'今天分界',today,true],['多日分界',multiBoundary(view),false]]){
+      if(!Number.isFinite(price)||price<=0)continue;
+      const tr=el('tr','bz-anchor-boundary'),th=el('th','bz-anchor-label',label);
+      th.scope='row';
+      const td=el('td','');
+      td.appendChild(el('strong','bz-num',num(price)));
+      if(marketF>0){
+        const d=price-marketF;
+        td.appendChild(el('span','bz-anchor-distance',d===0?'同價':(d>0?'+':'−')+num(Math.abs(d))+' 點'));
+      }
+      tr.append(th,isLive?td:el('td',''),isLive?el('td',''):td,el('td',''));
+      ladder.push({tr,price,current:false});
     }
     if(Number.isFinite(marketF)&&marketF>0){
       const tr=el('tr','bz-anchor-current'),label=el('th','bz-anchor-label','▶ 期貨現價');
