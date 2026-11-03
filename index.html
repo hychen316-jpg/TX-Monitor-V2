@@ -10595,6 +10595,16 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-anchor-break{color:var(--bz-attn)}
 #baoz-system-panel .bz-anchor-note,#baoz-system-panel .bz-anchor-notes{margin-top:6px;font-size:11px;line-height:1.45}
 #baoz-system-panel .bz-anchor-notes p{margin:3px 0}
+#baoz-system-panel .bz-anchor-board{padding:6px;margin:5px 0 7px}
+#baoz-system-panel .bz-anchor-meta{margin-bottom:3px}
+#baoz-system-panel .bz-anchor-watch{margin-bottom:4px;padding:4px 5px}
+#baoz-system-panel .bz-watch-quote{padding:3px 4px}
+#baoz-system-panel .bz-live-roll{margin-top:3px;padding:2px 3px}
+#baoz-system-panel .bz-anchor-grid th,#baoz-system-panel .bz-anchor-grid td{padding-block:2px}
+#baoz-system-panel .bz-anchor-board .bz-roll{margin:4px 0;padding:4px 6px}
+#baoz-system-panel .bz-anchor-detail{margin-top:5px;padding:4px 6px}
+#baoz-system-panel .bz-anchor-detail .bz-pair{margin:4px 0}
+#baoz-system-panel .bz-anchor-detail .bz-level-row td{padding-block:3px}
 #baoz-system-panel .bz-dotc.bz-b-綠{background:#00e676}
 #baoz-system-panel .bz-dotc.bz-b-藍{background:#4f8dff}
 #baoz-system-panel .bz-dotc.bz-b-黃{background:#f5c542}
@@ -10653,7 +10663,6 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
             <thead><tr><th scope="col">色層</th><th scope="col">即時表 · 期貨價<br><small class="bz-muted">距現價</small></th><th scope="col">暴Z表 · 基準</th><th scope="col">履約價差<br><small class="bz-muted">即時 − 基準</small></th></tr></thead>
             <tbody id="bz-anchor-body"></tbody>
           </table></div>
-          <div class="bz-anchor-note bz-muted">按即時表期貨價由高到低，缺值以暴Z表代排。區間排序與色層距離取上緣；防線距離取靠近現價的一側。</div>
             </div>
             <aside class="bz-anchor-side" aria-label="調單與結構摘要">
           <section class="bz-roll" aria-label="即時表調單紀錄">
@@ -10662,7 +10671,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
             <ol id="bz-roll-events" class="bz-roll-events"></ol>
           </section>
           <details class="bz-anchor-notes-detail">
-            <summary>結構與成交量補充</summary>
+            <summary>讀表說明與成交量</summary>
+          <div class="bz-anchor-note bz-muted">按即時表期貨價由高到低，缺值以暴Z表代排。區間排序與色層距離取上緣；防線距離取靠近現價的一側。</div>
             <div id="bz-anchor-notes" class="bz-anchor-notes"></div>
           </details>
             </aside>
@@ -11059,13 +11069,13 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     }
     if(!rows.length){
       const absent=/上方壓力 沒有重疊區/.test(base)&&/下方支撐 沒有重疊區/.test(base)&&/｜重疊 沒有(?:｜|$)/.test(live)&&status==='現價不在粉紅區';
-      zones.appendChild(el('span','bz-muted',absent?'兩表均無雙側重疊；單邊防線見上方卡片。':'本次價位表未列出可顯示的重疊期貨價'));
+      zones.appendChild(el('span','bz-muted',absent?'兩表無雙側重疊。':'本次價位表未列出可顯示的重疊期貨價'));
     }
     const extra=el('div','bz-pink-extra');
     extra.appendChild(zones);
     const tier=v4?v.levels.find(r=>/V4越階/.test(r.source||'')):null;
     if(tier)extra.appendChild(el('div','bz-v4-zone','日盤越階 · '+px(tier)+'｜'+(tier.meaning||tier.source)));
-    extra.appendChild(el('small','bz-muted',v4?'V4 中欄單側有色也會標粉紅；本卡只列來源的雙側重疊與越階。':'快照未提供 B95，V4 模式未確認；重疊狀態依 Excel 原文顯示。'));
+    extra.appendChild(el('small','bz-muted',v4?'V4 中欄單側有色也會標粉紅；本卡只列來源的雙側重疊與越階。':'B95 未提供 · V4 模式未確認'));
     box.appendChild(extra);
   }
   function flipDirection(side,note){
@@ -11222,7 +11232,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const newest=h.events[0];
     const defenses=renderAnchorWatch(p,a,b,{observed,stamp,lastBySide:h.lastBySide});
     const directions=moves=>moves.every(m=>m.shift>0)?'↑ 上移':moves.every(m=>m.shift<0)?'↓ 下移':'↕ 分歧';
-    rollSummary.textContent=!observed?'目前快照不可比對':!newest?'已接收基準，等待下一次同色履約價換檔':
+    rollSummary.textContent=!observed?'目前快照不可比對':!newest?'本頁尚無換檔紀錄':
       '最近 '+clock(newest.stamp)+' ｜ '+['Call','Put'].map(side=>{
         const group=newest.moves.filter(m=>m.side===side);
         return side+' '+(group.length?directions(group):'無同步換檔');
