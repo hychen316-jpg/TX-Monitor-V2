@@ -10512,7 +10512,14 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-roll-events li{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 8px;padding:3px 0;border-top:1px solid var(--bz-line)}
 #baoz-system-panel .bz-roll-events li>span{overflow-wrap:anywhere}
 #baoz-system-panel .bz-anchor-scroll{overflow-x:auto}
-#baoz-system-panel .bz-anchor-grid{width:100%;max-width:900px;min-width:345px;table-layout:auto;font-size:12px}
+#baoz-system-panel .bz-anchor-grid{width:100%;min-width:345px;table-layout:auto;font-size:12px}
+#baoz-system-panel .bz-anchor-board{container-type:inline-size}
+#baoz-system-panel .bz-anchor-main,#baoz-system-panel .bz-anchor-side{min-width:0}
+#baoz-system-panel .bz-anchor-side{margin-top:9px}
+@container (min-width: 820px){
+  #baoz-system-panel .bz-anchor-layout{display:grid;grid-template-columns:minmax(0,2.15fr) minmax(230px,1fr);align-items:start;gap:14px}
+  #baoz-system-panel .bz-anchor-side{margin-top:0}
+}
 #baoz-system-panel .bz-anchor-grid th:nth-child(1){width:16%}
 #baoz-system-panel .bz-anchor-grid th:nth-child(2){width:35%}
 #baoz-system-panel .bz-anchor-grid th:nth-child(3){width:25%}
@@ -10584,17 +10591,23 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         <div class="bz-panel-head"><h3>關鍵價位 <span class="bz-small bz-muted">· 期貨座標（由高到低）</span></h3><div class="bz-pair"><button type="button" id="bz-levels-near" aria-pressed="true">近價重點</button><button type="button" id="bz-levels-all" aria-pressed="false">全部價位</button></div></div>
         <div class="bz-anchor-board" aria-label="暴Z表與即時表四色對照">
           <p id="bz-anchor-meta" class="bz-anchor-meta">等待來源資料</p>
+          <div class="bz-anchor-layout">
+            <div class="bz-anchor-main">
+          <div class="bz-anchor-scroll"><table class="bz-anchor-grid">
+            <thead><tr><th scope="col">色層</th><th scope="col">即時表 · 期貨價<br><small class="bz-muted">距現價</small></th><th scope="col">暴Z表 · 基準</th><th scope="col">履約價差<br><small class="bz-muted">即時 − 基準</small></th></tr></thead>
+            <tbody id="bz-anchor-body"></tbody>
+          </table></div>
+          <div class="bz-anchor-note bz-muted">按即時表期貨價由高到低，缺值以暴Z表代排。距現價以區間上緣計。調單追蹤列出本頁收到的換檔。</div>
+            </div>
+            <aside class="bz-anchor-side" aria-label="調單與結構摘要">
           <section class="bz-roll" aria-label="即時表調單紀錄">
             <div class="bz-roll-head"><strong>即時表調單追蹤</strong><span class="bz-muted">本盤 · 最近 5 次</span></div>
             <div id="bz-roll-summary" class="bz-small bz-muted">等待來源資料</div>
             <ol id="bz-roll-events" class="bz-roll-events"></ol>
           </section>
-          <div class="bz-anchor-scroll"><table class="bz-anchor-grid">
-            <thead><tr><th scope="col">色層</th><th scope="col">即時表 · 期貨價<br><small class="bz-muted">距現價</small></th><th scope="col">暴Z表 · 基準</th><th scope="col">履約價差<br><small class="bz-muted">即時 − 基準</small></th></tr></thead>
-            <tbody id="bz-anchor-body"></tbody>
-          </table></div>
           <div id="bz-anchor-notes" class="bz-anchor-notes"></div>
-          <div class="bz-anchor-note bz-muted">按即時表期貨價由高到低，缺值以暴Z表代排。距現價以區間上緣計。實際換檔看上方調單紀錄。</div>
+            </aside>
+          </div>
         </div>
         <table><thead><tr><th class="bz-level-price">期貨價位</th><th class="bz-level-dist">距現價</th><th class="bz-level-meaning">用途／狀態</th></tr></thead><tbody id="bz-level-body"></tbody></table>
         <div id="bz-level-detail" class="bz-level-detail" aria-live="polite">點價位看來源（履約價、成本）。</div>
@@ -11021,7 +11034,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         const aa=a?.[i]?.[color],bb=b?.[i]?.[color];
         display(left,aa,false);display(right,bb,true);
         const d=anchorShift(aa,bb),move=active&&stamp===h.stamp?h.moves[i+color]:null;
-        diff.appendChild(el('strong',d>0?'bz-bull':d<0?'bz-bear':'bz-muted',d===null?'—':signed(d)));
+        diff.appendChild(el('strong','bz-muted',d===null?'—':d===0?'0 點':(d>0?'+':'−')+num(Math.abs(d))+' 點'));
         if(move)diff.appendChild(el('small','bz-muted','換檔 '+signed(move.shift)+' · '+clock(move.stamp)));
         tr.append(label,right,left,diff);
         const priced=bb?.length?bb:aa;
