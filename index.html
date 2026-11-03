@@ -10524,6 +10524,12 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-watch-quote strong{font-size:15px;font-variant-numeric:tabular-nums}
 #baoz-system-panel .bz-watch-detail{margin:4px 0 0;overflow-wrap:anywhere}
 #baoz-system-panel .bz-watch-crossed{color:var(--bz-attn)}
+#baoz-system-panel .bz-watch-pressure{border-top:2px solid #fbad72}
+#baoz-system-panel .bz-watch-support{border-top:2px solid #79d3f6}
+#baoz-system-panel .bz-watch-source{margin-top:2px;overflow-wrap:anywhere}
+#baoz-system-panel .bz-anchor-defense{display:inline-block;margin:2px 0;padding:1px 5px;border-radius:4px;font-size:11px;font-weight:700}
+#baoz-system-panel .bz-anchor-defense.pressure{background:rgba(251,173,114,.12);color:#fbad72}
+#baoz-system-panel .bz-anchor-defense.support{background:rgba(121,211,246,.12);color:#79d3f6}
 #baoz-system-panel .bz-v4-pink{margin:0 0 9px;padding:7px 9px;border:1px solid rgba(248,187,208,.35);border-radius:6px;background:rgba(248,187,208,.06);font-size:12px}
 #baoz-system-panel .bz-v4-pink strong,#baoz-system-panel .bz-v4-zone.in{color:#f8bbd0}
 #baoz-system-panel .bz-v4-zones{display:flex;flex-wrap:wrap;gap:4px 10px;margin:4px 0}
@@ -10998,8 +11004,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     box.hidden=!p;
     if(box.hidden)return;
     const algo=String(p.source.algo||'').trim();
-    if(!/V4/i.test(algo)){
-      box.appendChild(el('span','bz-muted',algo?'粉紅區｜目前模式：'+algo+'，V4 卡未啟用':'粉紅區｜快照未提供 B95 演算法，無法確認 V4'));
+    const v4=/V4/i.test(algo);
+    if(!v4&&algo){
+      box.appendChild(el('span','bz-muted','粉紅區｜目前模式：'+algo+'，V4 卡未啟用'));
       return;
     }
     const v=p.view;
@@ -11008,7 +11015,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const parts=(base+'｜'+live).split('｜');
     const status=parts.some(t=>/^現價在粉紅區/.test(t))?'現價在粉紅區 · 磁吸':
       parts.some(t=>/^現價不在粉紅區/.test(t))?'現價不在粉紅區':'現價狀態未提供';
-    box.appendChild(el('strong','', 'V4 粉紅重疊區 · '+status));
+    box.appendChild(el('strong','', (v4?'V4 粉紅重疊區':'來源粉紅重疊區')+' · '+status));
     const zones=el('div','bz-v4-zones');
     const rows=v.levels.filter(r=>['multi_cost','session_cost'].includes(r.kind)&&/重疊/.test(r.source||'')&&!r.band);
     const px=r=>r.low===r.high?num(r.low):num(r.low)+'–'+num(r.high);
@@ -11025,9 +11032,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       zones.appendChild(el('span','bz-muted',absent?'目前兩表皆無雙側重疊區':'本次價位表未列出可顯示的重疊期貨價'));
     }
     box.appendChild(zones);
-    const tier=v.levels.find(r=>/V4越階/.test(r.source||''));
+    const tier=v4?v.levels.find(r=>/V4越階/.test(r.source||'')):null;
     if(tier)box.appendChild(el('div','bz-v4-zone','日盤越階 · '+px(tier)+'｜'+(tier.meaning||tier.source)));
-    box.appendChild(el('small','bz-muted','V4 中欄單側有色也會標粉紅；本卡只列 Excel 提供的雙側重疊與越階。'));
+    box.appendChild(el('small','bz-muted',v4?'V4 中欄單側有色也會標粉紅；本卡只列來源的雙側重疊與越階。':'快照未提供 B95，V4 模式未確認；重疊狀態依 Excel 原文顯示。'));
   }
   function renderAnchorWatch(p,b,latest){
     const box=$('bz-anchor-watch'),f=p?.market?.futures==null?null:N(p.market.futures);
@@ -11041,15 +11048,25 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const res=nearest(1,'bz-r-res'),sup=nearest(-1,'bz-r-sup');
     const range=(lo,hi)=>lo===hi?num(lo):num(lo)+'–'+num(hi);
     const delta=d=>(d>0?'+':d<0?'−':'')+num(Math.abs(d));
-    function quote(label,value,detail){
-      const q=el('div','bz-watch-quote');
+    function quote(label,value,detail,kind,row){
+      const q=el('div','bz-watch-quote'+(kind?' bz-watch-'+kind:''));
       q.append(el('small','',label),el('strong','',value));
       if(detail)q.appendChild(el('small','',detail));
+      if(row){
+        const cp=/Call|Put/.exec(row.source||'')?.[0];
+        const origin=row.kind==='session_cost'?'即時表':row.kind==='multi_cost'?'暴Z表':'';
+        const band=row.band||/[紅黃藍綠]/.exec(row.source||'')?.[0];
+        const flip=/[＝=](?:壓力|支撐)/.test(row.meaning||'')?'｜破位轉換':'';
+        const summary=[origin,cp,band&&band+'層',/重疊/.test(row.source||'')?'重疊區':''].filter(Boolean).join(' ');
+        const caption=el('small','bz-watch-source',(summary||row.source||'來源未標明')+flip);
+        caption.title=row.source||'';
+        q.appendChild(caption);
+      }
       quotes.appendChild(q);
     }
-    quote('來源壓力',res?range(res.low,res.high):'—',res?delta(res.low-f)+' 點':'未列上方壓力');
-    quote('期貨現價',num(f),'快照');
-    quote('來源支撐',sup?range(sup.low,sup.high):'—',sup?delta(sup.high-f)+' 點':'未列下方支撐');
+    quote('上方壓力',res?range(res.low,res.high):'—',res?delta(res.low-f)+' 點':'來源未列','pressure',res);
+    quote('期貨現價',num(f),'');
+    quote('下方支撐',sup?range(sup.low,sup.high):'—',sup?delta(sup.high-f)+' 點':'來源未列','support',sup);
     box.appendChild(quotes);
     const crossed=[];
     b?.forEach((side,i)=>{
@@ -11067,6 +11084,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       const list=latest.moves.map(m=>m.side+m.color+' '+(m.shift>0?'↑':'↓')+num(Math.abs(m.shift)));
       box.appendChild(el('p','bz-watch-detail','最新換檔 '+clock+' · '+list.join(' ｜ ')));
     }
+    return {res,sup};
   }
   function renderAnchorBoard(p){
     renderV4Pink(p);
@@ -11102,7 +11120,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const clock=ms=>new Date(ms).toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});
     const observed=active&&stamp===h.stamp;
     const newest=h.events[0];
-    renderAnchorWatch(p,b,observed?newest:null);
+    const defenses=renderAnchorWatch(p,b,observed?newest:null);
     const directions=moves=>moves.every(m=>m.shift>0)?'↑ 上移':moves.every(m=>m.shift<0)?'↓ 下移':'↕ 分歧';
     rollSummary.textContent=!observed?'目前快照不可比對':!newest?'已接收基準，等待下一次同色履約價換檔':
       '最近 '+clock(newest.stamp)+' ｜ '+['Call','Put'].map(side=>{
@@ -11118,7 +11136,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       }
       events.appendChild(li);
     }
-    function display(td,marks,isLive){
+    function display(td,marks,isLive,side,color){
       if(!marks?.length){td.appendChild(el('span','bz-muted','—'));return;}
       marks.forEach(m=>{
         const line=el('div','bz-anchor-mark');
@@ -11129,6 +11147,12 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         }
         line.appendChild(el('small','bz-muted','履約 '+range(m.lo,m.hi)));
         if(m.note)line.appendChild(el('small',/跌破|突破/.test(m.note)?'bz-anchor-break':'bz-muted',m.note.replace(/[（）]/g,' ').trim()));
+        for(const [r,kind,label] of [[defenses?.res,'pressure','上方壓力'],[defenses?.sup,'support','下方支撐']]){
+          if(r&&r.kind===(isLive?'session_cost':'multi_cost')&&(r.band||/[紅黃藍綠]/.exec(r.source||'')?.[0])===color&&
+            (r.source||'').includes(side)&&r.low===m.flo&&r.high===m.fhi){
+            line.appendChild(el('span','bz-anchor-defense '+kind,label));
+          }
+        }
         td.appendChild(line);
       });
     }
@@ -11139,7 +11163,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         label.scope='row';label.append(dot,el('span','',side+' '+premium));
         const left=el('td',''),right=el('td',''),diff=el('td','bz-anchor-diff bz-num');
         const aa=a?.[i]?.[color],bb=b?.[i]?.[color];
-        display(left,aa,false);display(right,bb,true);
+        display(left,aa,false,side,color);display(right,bb,true,side,color);
         const d=anchorShift(aa,bb),move=active&&stamp===h.stamp?h.moves[i+color]:null;
         diff.appendChild(el('strong','bz-muted',d===null?'—':d===0?'0 點':(d>0?'+':'−')+num(Math.abs(d))+' 點'));
         if(move)diff.appendChild(el('small','bz-muted','換檔 '+signed(move.shift)+' · '+clock(move.stamp)));
