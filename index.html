@@ -10504,6 +10504,19 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 #baoz-system-panel .bz-lv-name{display:flex;flex-wrap:wrap;gap:3px 6px;align-items:center}
 #baoz-system-panel .bz-lv-sub{display:block;font-size:11px;color:var(--bz-muted);margin-top:1px}
 #baoz-system-panel .bz-dotc{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+#baoz-system-panel .bz-anchor-board{margin:8px 0 12px;padding:9px;border:1px solid var(--bz-line);border-radius:8px;background:rgba(127,160,200,.045)}
+#baoz-system-panel .bz-anchor-meta{margin:0 0 7px;font-size:13px;font-weight:700;color:var(--bz-ink)}
+#baoz-system-panel .bz-anchor-scroll{overflow-x:auto}
+#baoz-system-panel .bz-anchor-grid{width:100%;min-width:310px;table-layout:auto;font-size:12px}
+#baoz-system-panel .bz-anchor-grid th,#baoz-system-panel .bz-anchor-grid td{padding:4px 5px;vertical-align:top;text-align:left}
+#baoz-system-panel .bz-anchor-grid tr:nth-child(5)>*{border-top:2px solid var(--bz-line)}
+#baoz-system-panel .bz-anchor-label{white-space:nowrap;font-weight:600}
+#baoz-system-panel .bz-anchor-label .bz-dotc{display:inline-block;margin-right:4px}
+#baoz-system-panel .bz-anchor-mark strong,#baoz-system-panel .bz-anchor-diff strong{font-size:14px;font-variant-numeric:tabular-nums}
+#baoz-system-panel .bz-anchor-mark small,#baoz-system-panel .bz-anchor-diff small{display:block;font-size:11px;white-space:normal}
+#baoz-system-panel .bz-anchor-break{color:var(--bz-attn)}
+#baoz-system-panel .bz-anchor-note,#baoz-system-panel .bz-anchor-notes{margin-top:6px;font-size:11px;line-height:1.45}
+#baoz-system-panel .bz-anchor-notes p{margin:3px 0}
 #baoz-system-panel .bz-dotc.bz-b-綠{background:#00e676}
 #baoz-system-panel .bz-dotc.bz-b-藍{background:#4f8dff}
 #baoz-system-panel .bz-dotc.bz-b-黃{background:#f5c542}
@@ -10552,6 +10565,15 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     <div class="bz-layout">
       <section class="bz-panel" aria-label="關鍵期貨價位">
         <div class="bz-panel-head"><h3>關鍵價位 <span class="bz-small bz-muted">· 期貨座標（由高到低）</span></h3><div class="bz-pair"><button type="button" id="bz-levels-near" aria-pressed="true">近價重點</button><button type="button" id="bz-levels-all" aria-pressed="false">全部價位</button></div></div>
+        <div class="bz-anchor-board" aria-label="暴Z表與即時表四色對照">
+          <p id="bz-anchor-meta" class="bz-anchor-meta">等待來源資料</p>
+          <div class="bz-anchor-scroll"><table class="bz-anchor-grid">
+            <thead><tr><th scope="col">權別／成本</th><th scope="col">暴Z表<br>多日基準</th><th scope="col">即時表<br>本盤動態</th><th scope="col">即時 − 基準<br>履約價差</th></tr></thead>
+            <tbody id="bz-anchor-body"></tbody>
+          </table></div>
+          <div id="bz-anchor-notes" class="bz-anchor-notes"></div>
+          <div class="bz-anchor-note bz-muted">粗體為履約價。最近 ↑／↓ 為開啟本頁後收到的即時表換檔；— 表示缺資料或價位無法一對一比較。破位、價差與換檔分開顯示。</div>
+        </div>
         <table><thead><tr><th class="bz-level-price">期貨價位</th><th class="bz-level-dist">距現價</th><th class="bz-level-meaning">用途／狀態</th></tr></thead><tbody id="bz-level-body"></tbody></table>
         <div id="bz-level-detail" class="bz-level-detail" aria-live="polite">點價位看來源（履約價、成本）。</div>
       </section>
@@ -10880,6 +10902,89 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(/磁吸/.test(t))return ['bz-r-brk','磁吸區'];
     return null;
   }
+  // Compare option strikes separately from futures-coordinate shifts caused by basis.
+  let anchorHistory = null;
+  function parseAnchorStep(step) {
+    const raw=String(step?.text||'');
+    const sides=/Call[：:]([^｜]*)｜Put[：:]([^｜]*)/.exec(raw);
+    if(!sides)return null;
+    return sides.slice(1).map(side=>{
+      const marks={};
+      for(const group of side.split(/[；;]/)){
+        const g=/^\s*([綠藍黃紅])\s*(.*)/.exec(group);
+        if(!g)continue;
+        const pattern=/([\d,]+)(?:[–—~－-]([\d,]+))?\s*→\s*([\d,]+)(?:[–—~－-]([\d,]+))?((?:[（(][^）)]*[）)])*)/g;
+        for(const m of g[2].matchAll(pattern)){
+          const toNum=x=>Number(x.replaceAll(',',''));
+          const k=toNum(m[1]), f=toNum(m[3]);
+          (marks[g[1]]??=[]).push({lo:k,hi:m[2]?toNum(m[2]):k,flo:f,fhi:m[4]?toNum(m[4]):f,note:m[5]});
+        }
+      }
+      return /[綠藍黃紅]/.test(side)&&!Object.keys(marks).length?null:marks;
+    });
+  }
+  function anchorShift(from,to){
+    if(from?.length!==1||to?.length!==1)return null;
+    const a=to[0].lo-from[0].lo,b=to[0].hi-from[0].hi;
+    return a===b?a:null;
+  }
+  function renderAnchorBoard(p){
+    const body=$('bz-anchor-body'), meta=$('bz-anchor-meta'), notes=$('bz-anchor-notes');
+    body.replaceChildren();notes.replaceChildren();
+    if(!p){meta.textContent='等待來源資料';anchorHistory=null;return;}
+    const steps=p.view.nine_steps, base=steps.find(x=>Number(x.row)===16), live=steps.find(x=>Number(x.row)===17);
+    const a=parseAnchorStep(base),b=parseAnchorStep(live);
+    const stamp=p.source.generated_at_ms, session=p.source.session, marketF=p.market?.futures==null?null:N(p.market.futures);
+    const taipeiDate=new Date(stamp+8*3600000);
+    const dateKey=new Date(+taipeiDate-(session==='NIGHT'&&taipeiDate.getUTCHours()<12?86400000:0));
+    const key=[p.source.workbook,p.source.contract,p.source.algo,session,Number.isFinite(+dateKey)?dateKey.toISOString().slice(0,10):''].join('|');
+    const active=b&&Number.isFinite(stamp)&&['DAY','NIGHT'].includes(session)&&p.view.adapter_status==='SUPPORTED'&&b.every(Boolean);
+    if(!anchorHistory||anchorHistory.key!==key)anchorHistory={key,stamp:0,side:null,moves:{}};
+    const h=anchorHistory;
+    let latest=[];
+    if(active&&stamp>h.stamp){
+      if(h.side) b.forEach((side,i)=>['綠','藍','黃','紅'].forEach(color=>{
+        const shift=anchorShift(h.side[i][color],side[color]), id=i+color;
+        if(shift){h.moves[id]={shift,stamp};latest.push(shift);}
+        else if(shift===null)delete h.moves[id];
+      }));
+      h.side=b;h.stamp=stamp;
+      if(latest.length)h.latest=latest;
+    }
+    latest=active&&stamp===h.stamp?h.latest||[]:[];
+    const latestLabel=latest.length?(latest.every(x=>x>0)?'即時表最新換檔 ↑ 上移':latest.every(x=>x<0)?'即時表最新換檔 ↓ 下移':'即時表最新換檔 · 分歧'):(active&&h.side?'等待下一次可比對的換檔':'即時表暫無可比對快照');
+    meta.textContent=(marketF==null?'':('期貨 '+num(marketF)+' ｜ '))+latestLabel;
+    const range=(lo,hi)=>lo===hi?num(lo):num(lo)+'–'+num(hi);
+    const signed=n=>n>0?'↑ +'+num(n):n<0?'↓ −'+num(-n):'0';
+    function display(td,marks){
+      if(!marks?.length){td.appendChild(el('span','bz-muted','—'));return;}
+      marks.forEach(m=>{
+        const line=el('div','bz-anchor-mark');
+        line.append(el('strong','bz-num',range(m.lo,m.hi)),el('small','bz-muted','期貨 '+range(m.flo,m.fhi)));
+        if(m.note)line.appendChild(el('small',/跌破|突破/.test(m.note)?'bz-anchor-break':'bz-muted',m.note.replace(/[（）]/g,' ').trim()));
+        td.appendChild(line);
+      });
+    }
+    for(const [i,side] of ['Call','Put'].entries()){
+      for(const [color,premium] of [['綠',400],['藍',200],['黃',100],['紅',50]]){
+        const tr=el('tr',''), label=el('th','bz-anchor-label'), dot=el('span','bz-dotc bz-b-'+color);
+        label.scope='row';label.append(dot,el('span','',side+' '+premium));
+        const left=el('td',''),right=el('td',''),diff=el('td','bz-anchor-diff bz-num');
+        const aa=a?.[i]?.[color],bb=b?.[i]?.[color];
+        display(left,aa);display(right,bb);
+        const d=anchorShift(aa,bb),move=active&&stamp===h.stamp?h.moves[i+color]:null;
+        diff.appendChild(el('strong',d>0?'bz-bull':d<0?'bz-bear':'bz-muted',d===null?'—':signed(d)));
+        if(move)diff.appendChild(el('small',move.shift>0?'bz-bull':'bz-bear','最近 '+signed(move.shift)+' · '+new Date(move.stamp).toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false})));
+        tr.append(label,left,right,diff);body.appendChild(tr);
+      }
+    }
+    if(!a||!b)notes.appendChild(el('p','bz-muted','來源未提供完整的兩表色層原文，可查看下方原始價位表。'));
+    for(const [step,label] of [[base,'暴Z表'],[live,'即時表']]){
+      const raw=String(step?.text||'');
+      const extras=raw.split('｜').filter(t=>!/(?:Call|Put)[：:]/.test(t));
+      if(extras.length)notes.appendChild(el('p','',label+' · '+extras.join('｜')));
+    }
+  }
   function levels(posInfo) {
     if(posInfo!==undefined)s.pos=posInfo;
     const body=$('bz-level-body');body.replaceChildren();
@@ -10935,6 +11040,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
   function render() {
     if(!panel)return;
     const p=s.payload;
+    renderAnchorBoard(p);
     if(!p){
       ['bz-contract','bz-version','bz-source-time','bz-long-status','bz-short-status','bz-long-reason','bz-short-reason','bz-data-note'].forEach(id=>text(id,'待資料'));
       ['bz-steps','bz-comparison','bz-next-plan','bz-timeline','bz-research','bz-diagnostics','bz-level-body','bz-target-body','bz-pos','bz-cmd-lines','bz-long-plan','bz-short-plan','bz-x3','bz-multi-gauge','bz-session-gauge'].forEach(id=>$(id).replaceChildren());
