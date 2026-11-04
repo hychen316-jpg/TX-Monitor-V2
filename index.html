@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.20');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.21');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -13485,5 +13485,174 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
 })();
 </script>
 <!-- Z31_BAOZ_AI_WATCH_UI_1_4_11_END（1.4.12：V0.1.28 兩邊都不能做、暫停叫 AI、月預算） -->
+<!-- Z31_BAOZ_AI_TDN_UI_1_4_21_BEGIN -->
+<style id="z31-baoz-ai-tdn-ui-1-4-21">
+/* ===== BaoZ UI 1.4.21（20261104，BaoZ AI V0.1.31）：AI 卡加「調單協助」一段
+   只改顯示：不寫 Firebase、不改任何計算、不改 1.4.20 以前的程式；只在同一個節點 baoz_realtime/near_ai 多掛一個「唯讀」監聽，
+   等 1.4.5 把 AI 卡畫好之後補上（MutationObserver）：
+   1. 流程列下面一段「調單協助」：現在突破／回測中的區和 AI 的意見（進／不進、信心、理由、在等什麼），
+      這一盤觸發的區和影子結果（AI 說進／不進各幾筆、點數）。AI 只給意見，影子記錄、不下單。
+   2. 自己出計畫關掉（own_plans false）時，「目前計畫」那一段的空白說明改成「自己出計畫：關」。
+   沒有 tdn（BaoZ AI V0.1.30 以前的資料）：AI 卡和 1.4.20 一模一樣。 ===== */
+#baoz-system-panel .bz-tdn-wrap .bz-sec { margin-top: 8px; }
+#baoz-system-panel .bz-tdn { display: grid; gap: 3px; margin-top: 4px; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-tdn.bz-ai-scroll { max-height: 9.5em; overflow-y: auto; padding-right: 6px; }
+#baoz-system-panel .bz-tdn-row { display: grid; grid-template-columns: 2.9em auto minmax(0, 1fr); gap: 6px; align-items: baseline; }
+#baoz-system-panel .bz-tdn-row .t { font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-tdn-row .bz-lv { margin-right: 0; }
+#baoz-system-panel .bz-tdn-row .x { min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-tdn-row .x b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-tdn-row .sub { display: block; }
+#baoz-system-panel .bz-tdn .v-go { color: var(--bz-ink); font-weight: 700; }
+#baoz-system-panel .bz-tdn .v-no { color: var(--bz-attn); font-weight: 700; }
+#baoz-system-panel .bz-tdn .s-long { color: var(--bz-up); }
+#baoz-system-panel .bz-tdn .s-short { color: var(--bz-down); }
+#baoz-system-panel .bz-tdn-empty { font-size: 12px; color: var(--bz-muted); margin-top: 4px; }
+</style>
+<script>
+/* BaoZ UI 1.4.21：AI 卡補上調單協助（只讀 Firebase，不寫；只改顯示） */
+(function () {
+  'use strict';
+  var NODE = 'baoz_realtime/near_ai';
+  var OWN_OFF = '自己出計畫：關（設定 own_plans）。AI 只在調單型突破、回測時給進／不進意見，見上面「調單協助」。';
+  var s = { ref: null, fn: null, data: null, card: null, mo: null, failAt: 0 };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function isNum(v) { return v !== null && v !== '' && typeof v !== 'boolean' && Number.isFinite(Number(v)); }
+  function signed(v) { v = Math.round(Number(v) || 0); return (v > 0 ? '+' : (v < 0 ? '−' : '±')) + Math.abs(v); }
+  function arr(v) { return Array.isArray(v) ? v.filter(function (x) { return x && typeof x === 'object'; }) : []; }
+  function lvTag(lv, title) {
+    return '<span class="bz-lv bz-lv' + lv.slice(1) + '" title="' + esc(title) + '">' + lv + '</span>';
+  }
+  var T0 = 'L0 本機程式：照 Argon 的 [調單型] 段落追蹤區的階段、觸發和影子結果（不花錢）';
+  var T2 = 'L2 調單協助：AI 只回答這一區觸發時要「進」還是「不進」（影子記錄，不下單、不改停損目標）';
+
+  /* 和 1.4.5 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才讀 */
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function detach() {
+    if (s.ref && s.fn) { try { s.ref.off('value', s.fn); } catch (e) {} }
+    s.ref = null; s.fn = null;
+  }
+  function reconcile() {
+    if (!allowed()) { if (s.ref) detach(); if (s.data) { s.data = null; patch(); } return; }
+    if (s.ref || Date.now() - s.failAt < 60000) return;
+    if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
+    s.ref = db.ref(NODE);
+    s.fn = function (sn) { s.data = sn && typeof sn.val === 'function' ? sn.val() : null; patch(); };
+    s.ref.on('value', s.fn, function () { s.failAt = Date.now(); detach(); });   /* 讀取失敗的說明 1.4.5 已經會顯示 */
+  }
+
+  function side(x) { return '<b class="' + (x === '多' ? 's-long' : (x === '空' ? 's-short' : '')) + '">' + esc(x || '') + '</b>'; }
+  function verdict(v) { return v === '進' ? '<span class="v-go">進</span>' : (v === '不進' ? '<span class="v-no">不進</span>' : esc(v || '—')); }
+  function row(t, lv, title, x) {
+    return '<div class="bz-tdn-row"><span class="t">' + esc(t || '') + '</span>' + lvTag(lv, title) + '<span class="x">' + x + '</span></div>';
+  }
+
+  /* 現在的區：突破／回測（剛結束的留 10 分鐘） */
+  function zoneRow(z) {
+    var head = side(z.side) + ' ' + esc(z.id) + ' <b>' + esc(z.ph || '') + '</b>' + (z.end && z.end !== z.ph ? '（' + esc(z.end) + '）' : '') + (z.k ? ' ' + esc(z.k) : '');
+    if (!z.v) return row(z.t, 'L0', T0, head + '｜' + esc(z.st || '還沒問 AI'));
+    var x = head + '｜AI ' + verdict(z.v) + (isNum(z.conf) ? '（信心 ' + Math.round(Number(z.conf)) + '）' : '') +
+            (z.on || z.at ? ' <span title="哪一次叫醒給的、幾點回來">' + esc((z.on ? z.on + '時' : '') + (z.at ? ' ' + z.at : '')) + '</span>' : '') +
+            (z.late ? '，晚到（觸發後才回來，不算）' : '') + (z.why ? '：' + esc(z.why) : '');
+    if (z.st) x += '｜' + esc(z.st);
+    if (z.watch) x += '<span class="sub">在等：' + esc(z.watch) + '</span>';
+    return row(z.t, 'L2', T2, x);
+  }
+  /* 這一盤觸發的：AI 當時的意見＋影子結果 */
+  function trigRow(p) {
+    var x = side(p.side) + ' ' + esc(p.id) + ' 觸發' + (p.res ? '（' + esc(p.res) + '）' : '') + '｜AI ' + verdict(p.v) + '｜' + esc(p.exit || '進行中') +
+            (isNum(p.pts) ? ' <b>' + signed(p.pts) + '</b>' : '');
+    return row(p.t, 'L0', T0 + '；點數＝規則照做的影子結果（合成座標，觸發 K 收盤進場）', x);
+  }
+  function headHtml(t) {
+    var m = t.sum && typeof t.sum === 'object' ? t.sum : {}, a = ['AI 只給進／不進意見・影子記錄・不下單'];
+    if (Number(m.n) > 0) {
+      /* 點數只算已經出場的（done_agree／done_veto）；括號裡寫「出場 N 筆 ±點」 */
+      var pts = function (done, p) { return Number(done) > 0 ? '（出場 ' + Number(done) + ' 筆 ' + signed(p) + '）' : ''; };
+      var b = '這盤觸發 ' + Number(m.n) + '：AI 說進 ' + Number(m.agree || 0) + pts(m.done_agree, m.pts_agree) +
+              '・不進 ' + Number(m.veto || 0) + pts(m.done_veto, m.pts_veto);
+      if (Number(m.none) > 0) b += '・沒有意見 ' + Number(m.none);
+      a.push(b);
+    }
+    return '<div class="bz-sec">調單協助<span>' + esc(a.join('｜')) + '</span></div>';
+  }
+  function tdnHtml(d) {
+    var t = d && d.tdn && typeof d.tdn === 'object' ? d.tdn : null;
+    if (!t) return '';
+    if (t.on === false && !arr(t.zones).length && !arr(t.trig).length) {
+      return headHtml(t) + '<div class="bz-tdn-empty">' + esc(t.note || '調單協助沒有在運作') + '</div>';
+    }
+    var rows = arr(t.zones).slice(0, 4).map(zoneRow).concat(arr(t.trig).slice(-3).reverse().map(trigRow));
+    var body = rows.length ? '<div class="bz-tdn bz-ai-scroll" data-scroll="tdn">' + rows.join('') + '</div>'
+      : '<div class="bz-tdn-empty">' + esc(t.note || t.err || '現在沒有調單型的區在突破或回測（Argon 的 [調單型] 段落）') + '</div>';
+    if (rows.length && (t.note || t.err)) body += '<div class="bz-tdn-empty">' + esc(t.note || t.err) + '</div>';
+    return headHtml(t) + body;
+  }
+
+  /* 2. 自己出計畫關掉：「目前計畫」下面的空白說明換掉（只換 1.4.5 的預設那句，其他提醒照舊） */
+  function ownOff(c, d) {
+    if (!d || d.own_plans !== false || d.plan) return;
+    var secs = c.querySelectorAll(':scope > .bz-sec');
+    for (var i = 0; i < secs.length; i++) {
+      if (!/^目前計畫/.test(secs[i].textContent)) continue;
+      var e = secs[i].nextElementSibling;
+      if (e && e.classList.contains('bz-ai-empty') && /^還沒有 AI 計畫/.test(e.textContent)) e.textContent = OWN_OFF;
+      return;
+    }
+  }
+
+  function patch() {
+    var c = $('bz-ai-card');
+    watchCard(c);
+    if (!c || c.hidden) return;
+    var d = s.data, old = c.querySelector(':scope > .bz-tdn-wrap');
+    if (!c.querySelector('.bz-ai-head .bz-pill')) { if (old) old.remove(); return; }   /* 還沒有資料／讀取失敗：1.4.5 的畫面不動 */
+    ownOff(c, d);
+    var h = tdnHtml(d);
+    if (!h) { if (old) old.remove(); if (s.mo) s.mo.takeRecords(); return; }   /* 沒有 tdn：和 1.4.20 一樣 */
+    var anchor = c.querySelector(':scope > .bz-fl') || c.querySelector(':scope > .bz-flow') || c.querySelector(':scope > .bz-ai-head');
+    if (old && old.__z1421 === h && old.previousElementSibling === anchor) return;
+    var keep = old ? (old.querySelector('[data-scroll]') || {}).scrollTop : 0;
+    if (old) old.remove();
+    var box = document.createElement('div');
+    box.className = 'bz-tdn-wrap';
+    box.setAttribute('data-z1421', '1');
+    box.innerHTML = h;
+    box.__z1421 = h;
+    if (anchor && anchor.nextSibling) c.insertBefore(box, anchor.nextSibling); else c.appendChild(box);
+    if (keep) { var sc = box.querySelector('[data-scroll]'); if (sc) sc.scrollTop = keep; }
+    if (s.mo) s.mo.takeRecords();
+  }
+
+  /* 1.4.5 每次重畫 AI 卡（資料變了、每 5 秒）之後馬上補上；自己改的不再觸發 */
+  function watchCard(c) {
+    if (!c || c === s.card || typeof MutationObserver === 'undefined') return;
+    if (s.mo) s.mo.disconnect();
+    s.card = c;
+    s.mo = new MutationObserver(function () { patch(); if (s.mo) s.mo.takeRecords(); });
+    s.mo.observe(c, { childList: true });
+  }
+
+  function start() {
+    reconcile();
+    patch();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(reconcile).observe(d, { attributes: true, attributeFilter: ['class'] });
+    try { if (typeof auth !== 'undefined' && auth && typeof auth.onAuthStateChanged === 'function') auth.onAuthStateChanged(function () { detach(); s.failAt = 0; reconcile(); }); } catch (e) {}
+    window.setInterval(function () { reconcile(); var c = $('bz-ai-card'); if (c && c !== s.card) patch(); }, 500);   /* AI 卡晚建立 */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_AI_TDN_UI_1_4_21_END -->
 </body>
 </html>
