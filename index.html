@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.21');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.22');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -13654,5 +13654,109 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
 })();
 </script>
 <!-- Z31_BAOZ_AI_TDN_UI_1_4_21_END -->
+<!-- Z31_BAOZ_WATCH_SYN_UI_1_4_22_BEGIN -->
+<style id="z31-baoz-watch-syn-ui-1-4-22">
+/* ===== BaoZ UI 1.4.22（20261105）：關鍵價位「防線快覽」的「期貨現價」格加上合成期貨
+   只改顯示：不寫 Firebase、不多開監聽、不改任何計算、不改 1.4.21 以前的程式。
+   數字直接拿同一頁上方「合成期貨／換算差」那一格（同一份 baoz_realtime/near 資料），
+   等防線快覽畫好之後補兩行（MutationObserver）：
+     合成 42,460      ← 合成期貨＝期貨 − 換算差（對照履約價用）
+     換算差 +179      ← 價位表的期貨價＝履約價 ＋ 換算差
+   合成期貨對不上「期貨 − 換算差」（換算差未知、用加權或期貨代替）時，寫「合成 未知」。
+   沒有資料、防線快覽沒顯示時：和 1.4.21 一模一樣。 ===== */
+#baoz-system-panel .bz-watch-current .bz-watch-syn { color: var(--bz-muted); font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-watch-current .bz-watch-syn b { color: var(--bz-ink); font-weight: 700; font-size: 13px; line-height: 1; }   /* line-height 1：格子高度和 1.4.21 一樣 */
+#baoz-system-panel .bz-watch-current .bz-watch-syn.bz-watch-syn-na b { color: var(--bz-attn); font-weight: 600; font-size: 12px; }
+</style>
+<script>
+/* BaoZ UI 1.4.22：防線快覽補上合成期貨（只讀畫面上已有的數字，不讀寫 Firebase；只改顯示） */
+(function () {
+  'use strict';
+  var s = { box: null, mo: null, srcs: [], srcMo: null };
+  var TIP_OK = '合成期貨＝期貨 − 換算差（拿來對照履約價）。防線快覽和價位表的期貨價＝履約價 ＋ 換算差，所以「離現價幾點」用期貨或合成算都一樣。';
+  var TIP_NA = '現在的「合成期貨」不等於「期貨 − 換算差」：換算差未知，Argon 暫時用加權或期貨代替，不是真的合成期貨。';
+
+  function $(id) { return document.getElementById(id); }
+  /* 和 1.4.5／1.4.21 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才顯示 */
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  /* 讀上方那一格的字：「42,460」「+179」「−23」「未提供」→ {t: 原字, v: 數字} 或 null */
+  function read(id) {
+    var e = $(id);
+    var t = e ? String(e.textContent || '').trim() : '';
+    if (!/^[+\-−]?[\d,]+(\.\d+)?$/.test(t)) return null;
+    var v = Number(t.replace(/,/g, '').replace('−', '-'));
+    return Number.isFinite(v) ? { t: t, v: v } : null;
+  }
+  function line(cls, label, value, tip) {
+    var e = document.createElement('small');
+    e.className = 'bz-watch-syn' + (cls ? ' ' + cls : '');
+    e.setAttribute('data-z1422', '1');
+    e.appendChild(document.createTextNode(label + ' '));
+    var b = document.createElement('b');
+    b.textContent = value;
+    e.appendChild(b);
+    e.title = tip;
+    return e;
+  }
+
+  function patch() {
+    var box = $('bz-anchor-watch');
+    watch(box);
+    if (!box) return;
+    var cur = box.querySelector('.bz-watch-current');
+    var old = cur ? cur.querySelectorAll('[data-z1422]') : [];
+    var want = null;
+    if (cur && !box.hidden && allowed()) {
+      var f = read('bz-futures'), syn = read('bz-synthetic'), bas = read('bz-basis');
+      if (f && syn && bas && Math.abs(f.v - bas.v - syn.v) <= 1) want = ['', syn.t, bas.t, TIP_OK];
+      else if (f && syn) want = ['bz-watch-syn-na', '未知', '未知', TIP_NA];
+    }
+    var key = want ? want.join('|') : '';
+    if (cur && cur.__z1422 === key && old.length === (want ? 2 : 0)) return;
+    for (var i = 0; i < old.length; i++) old[i].remove();
+    if (cur) cur.__z1422 = key;
+    if (!want) return;   /* 沒有數字：和 1.4.21 一樣 */
+    cur.appendChild(line(want[0], '合成', want[1], want[3]));
+    cur.appendChild(line(want[0] ? 'bz-watch-syn-na' : '', '換算差', want[2], want[3]));
+  }
+
+  /* 1.4.x 每次重畫防線快覽（replaceChildren）或上方數字變了之後馬上補上；自己加的不在監看範圍，不會一直觸發 */
+  function watch(box) {
+    if (typeof MutationObserver === 'undefined') return;
+    if (box !== s.box) {
+      if (s.mo) s.mo.disconnect();
+      s.box = box; s.mo = null;
+      if (box) {
+        s.mo = new MutationObserver(function () { patch(); });
+        s.mo.observe(box, { childList: true, attributes: true, attributeFilter: ['hidden'] });
+      }
+    }
+    var srcs = ['bz-futures', 'bz-synthetic', 'bz-basis'].map($);
+    var same = srcs.length === s.srcs.length && srcs.every(function (e, i) { return e === s.srcs[i]; });
+    if (!same) {
+      if (s.srcMo) s.srcMo.disconnect();
+      s.srcs = srcs;
+      s.srcMo = new MutationObserver(function () { patch(); });
+      srcs.forEach(function (e) { if (e) s.srcMo.observe(e, { childList: true, characterData: true, subtree: true }); });
+    }
+  }
+
+  function start() {
+    patch();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(patch).observe(d, { attributes: true, attributeFilter: ['class'] });
+    window.setInterval(function () { if ($('bz-anchor-watch') !== s.box || $('bz-synthetic') !== s.srcs[1]) patch(); }, 1000);   /* 面板晚建立／重建 */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_WATCH_SYN_UI_1_4_22_END -->
 </body>
 </html>
