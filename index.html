@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.24');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.25');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -14034,5 +14034,318 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
 })();
 </script>
 <!-- Z31_BAOZ_WATCH_STRIKE_UI_1_4_24_END -->
+<!-- Z31_BAOZ_MARKET_UI_1_4_25_BEGIN -->
+<style id="z31-baoz-market-ui-1-4-25">
+/* ===== BaoZ UI 1.4.25（20261105，BaoZ AI V0.1.35）：AI 卡加「AI 盤勢分析（影子）」一段
+   只改顯示：不寫 Firebase、不改任何計算、不改 1.4.24 以前的程式；和 1.4.11／1.4.21 一樣，只在同一個節點 baoz_realtime/near_ai
+   多掛一個「唯讀」監聽（1.4.5 的資料關在自己的程式裡拿不到；同一個路徑 Firebase 只會下載一份），
+   等 1.4.5 把 AI 卡畫好之後補上（MutationObserver），放在 1.4.21「調單協助」那一段的下面：
+   1. 標題列：AI 盤勢分析（影子）＋方向（偏多／偏空／觀望）＋動作（做多／做空／WAIT）＋信心＋幾點、幾分鐘前；下面一行小字是這次為什麼分析。
+      分析中寫「分析中…」；資料不完整（coverage 不是 OK）寫「資料不完整，信心打折」；盤勢分析沒有運作（on＝false）只顯示說明。
+   2. SOP：進場區、觸發、停損／失效、目標1、目標2、禁止。
+   3. L0「程式接單（影子）」：程式照規則接這份 SOP 的結果（等待中／已進區／影子持倉／已出場／失效／不採用／觀望）。
+   4. 盤勢細節（收起來，按一下展開，記住展開／收起）：位置、支撐、壓力、背離、E6/E5 時序、OP Force 時序、Mode A、Mode B、三本。
+   5. 這盤 SOP 記帳（可捲動）＋合計；6. Argon 調單觸發 vs SOP（只記錄）；7. 這盤次數／花費／額度、下次定時。
+   8.「目前計畫」是盤勢分析的 SOP 轉成的（plan.src＝MKT）：標題後面加一個小標「盤勢分析」。
+   沒有 market（BaoZ AI V0.1.34 以前的資料）：AI 卡和 1.4.24 一模一樣。 ===== */
+#baoz-system-panel .bz-mkt-wrap { font-size: 12px; color: var(--bz-muted); min-width: 0; }
+#baoz-system-panel .bz-mkt-wrap .bz-sec { margin-top: 8px; }
+#baoz-system-panel .bz-mkt-wrap b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-mkt-head > b { font-weight: 700; }
+#baoz-system-panel .bz-mkt-head .tm { font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-mkt-wrap .mk-up { color: var(--bz-up); }
+#baoz-system-panel .bz-mkt-wrap .mk-down { color: var(--bz-down); }
+#baoz-system-panel .bz-mkt-wrap .mk-wait { color: var(--bz-muted); }
+#baoz-system-panel .bz-mkt-wrap .mk-attn { color: var(--bz-attn); }
+#baoz-system-panel .bz-mkt-why { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; margin-top: 1px; overflow-wrap: anywhere; }
+#baoz-system-panel .bz-mkt-why > span { font-size: 11px; min-width: 0; }
+#baoz-system-panel .bz-mkt-why > .cov { font-size: 12px; color: var(--bz-attn); }
+#baoz-system-panel .bz-mkt-empty { margin-top: 4px; overflow-wrap: anywhere; }
+#baoz-system-panel .bz-mkt-sop { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1px 10px; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-mkt-sop dt, #baoz-system-panel .bz-mkt-dl dt { color: var(--bz-muted); white-space: nowrap; }
+#baoz-system-panel .bz-mkt-sop dd, #baoz-system-panel .bz-mkt-dl dd { margin: 0; min-width: 0; color: var(--bz-ink); overflow-wrap: anywhere; }
+#baoz-system-panel .bz-mkt-sop .f { color: var(--bz-attn); }
+@container (min-width: 600px) {
+  #baoz-system-panel .bz-mkt-sop { grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr); }
+}
+#baoz-system-panel .bz-mkt-l0 { margin-top: 4px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-mkt-l0 .bz-lv { margin-right: 4px; }
+#baoz-system-panel .bz-mkt-l0 .n { color: var(--bz-ink); margin-right: 6px; }
+#baoz-system-panel .bz-mkt-fold { margin-top: 6px; }
+#baoz-system-panel .bz-mkt-fold > summary { padding: 3px 10px; }
+@container (max-width: 430px) { #baoz-system-panel .bz-mkt-fold > summary > span { display: none; } }   /* 手機：摘要一行 */
+#baoz-system-panel .bz-mkt-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; margin: 0 10px 8px; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-mkt-list { display: grid; gap: 3px; margin-top: 4px; }
+#baoz-system-panel .bz-mkt-list.bz-ai-scroll { max-height: 9.5em; overflow-y: auto; padding-right: 6px; }
+#baoz-system-panel .bz-mkt-row { display: grid; grid-template-columns: 2.9em minmax(0, 1fr); gap: 6px; align-items: baseline; }
+#baoz-system-panel .bz-mkt-row .t { font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-mkt-row .x { min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-mkt-row .r { color: var(--bz-ink); }
+#baoz-system-panel .bz-mkt-foot { margin-top: 4px; font-size: 11px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+/* 8. 目前計畫標題後面的小標 */
+#baoz-system-panel .bz-sec > .bz-mkt-src { font-size: 11px; font-weight: 600; line-height: 15px; color: var(--bz-blue, var(--bz-accent)); border: 1px solid currentColor; border-radius: 4px; padding: 0 5px; align-self: center; }
+</style>
+<script>
+/* BaoZ UI 1.4.25：AI 卡補上 AI 盤勢分析（影子）（只讀 Firebase，不寫；只改顯示） */
+(function () {
+  'use strict';
+  var NODE = 'baoz_realtime/near_ai';
+  var KEY = 'z31.baoz.mkt.detail.v1';   /* 盤勢細節展開／收起（只存在這台瀏覽器） */
+  var s = { ref: null, fn: null, data: null, card: null, mo: null, failAt: 0, open: false, scroll: {} };
+  try { s.open = window.localStorage.getItem(KEY) === '1'; } catch (e) {}
+
+  var TITLE = 'AI 盤勢分析（影子）';
+  var TIP = 'BaoZ AI 盤勢分析：看整盤的位置、支撐壓力、時序，寫一份 SOP（進場區、觸發、停損、目標、禁止）；程式（L0）照規則接這份 SOP 做影子記錄，不下單';
+  var T0 = 'L0 本機程式：照規則接這份 SOP（進區、觸發、停損、目標），影子記錄、不下單';
+  var STATE = { WAIT: '等待中', ARMED: '已進區', IN: '影子持倉', DONE: '已出場', INVALID: '失效', REJECTED: '不採用', NONE: '觀望' };
+  var SIDE = { long: '做多', short: '做空' };
+  var REL = { '同向': '', '反向': 'mk-attn', '觀望': 'mk-wait', '沒有分析': 'mk-wait' };
+  var DET = [['position', '位置'], ['support', '支撐'], ['pressure', '壓力'], ['divergence', '背離'], ['primary', 'E6/E5 時序'],
+             ['opf', 'OP Force 時序'], ['mode_a', 'Mode A'], ['mode_b', 'Mode B'], ['align', '三本']];
+
+  function $(id) { return document.getElementById(id); }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function isNum(v) { return v !== null && v !== '' && typeof v !== 'boolean' && Number.isFinite(Number(v)); }
+  function int(v) { return isNum(v) ? Math.round(Number(v)) : 0; }
+  function signed(v) { v = Math.round(Number(v) || 0); return (v > 0 ? '+' : (v < 0 ? '−' : '±')) + Math.abs(v); }
+  /* 只收字串和數字（物件、陣列不顯示，免得出現 [object Object]） */
+  function txt(v) { return typeof v === 'string' ? v.trim() : (typeof v === 'number' && Number.isFinite(v) ? String(v) : ''); }
+  function obj(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : null; }
+  /* Firebase 的陣列可能變成 {"0":…,"1":…}；兩種都收 */
+  function list(v) {
+    if (obj(v)) {
+      var ks = Object.keys(v);
+      if (ks.length && ks.every(function (k) { return /^(0|[1-9]\d*)$/.test(k); })) v = ks.sort(function (a, b) { return a - b; }).map(function (k) { return v[k]; });
+    }
+    return Array.isArray(v) ? v.filter(function (x) { return x && typeof x === 'object'; }) : [];
+  }
+  function tone(x) { x = txt(x); return /^(偏多|做多|多)$/.test(x) ? 'mk-up' : (/^(偏空|做空|空)$/.test(x) ? 'mk-down' : 'mk-wait'); }
+  function ptsB(v) { var x = Math.round(Number(v) || 0); return '<b class="' + (x > 0 ? 'mk-up' : (x < 0 ? 'mk-down' : '')) + '">' + signed(x) + '</b>'; }
+  function lvTag(lv, title) { return '<span class="bz-lv bz-lv' + lv.slice(1) + '" title="' + esc(title) + '">' + lv + '</span>'; }
+  function hm(t) { var m = /T(\d\d:\d\d)/.exec(String(t || '')) || /^(\d{1,2}:\d{2})/.exec(String(t || '')); return m ? m[1] : ''; }
+  /* 幾分鐘前：照 t 算（每次重畫都會更新）；t 看不懂才用 age_min */
+  function agoTxt(x) {
+    var t = Date.parse(String(x.t || '')), m = Number.isFinite(t) ? Math.floor((Date.now() - t) / 60000) : NaN;
+    if (!(m >= 0) && isNum(x.age_min) && Number(x.age_min) >= 0) m = Math.floor(Number(x.age_min));
+    if (!(m >= 0)) return '';
+    return m < 1 ? '剛剛' : (m < 60 ? m + ' 分鐘前' : (m < 1440 ? Math.floor(m / 60) + ' 小時前' : ''));
+  }
+  /* [42229, 42284] → 42229–42284；一樣的價只寫一個；沒有＝— */
+  function zoneTxt(z) {
+    if (typeof z === 'string') return z.trim() || '—';
+    var a = Array.isArray(z) ? z : (obj(z) ? [z[0], z[1]] : null);
+    if (!a || !a.length) return '—';
+    var v = a.slice(0, 2).filter(isNum).map(function (x) { return Math.round(Number(x)); });
+    if (!v.length) return '—';
+    return v.length === 1 || v[0] === v[1] ? String(v[0]) : Math.min(v[0], v[1]) + '–' + Math.max(v[0], v[1]);
+  }
+
+  /* 和 1.4.5／1.4.21 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才讀 */
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function detach() {
+    if (s.ref && s.fn) { try { s.ref.off('value', s.fn); } catch (e) {} }
+    s.ref = null; s.fn = null;
+  }
+  function reconcile() {
+    if (!allowed()) { if (s.ref) detach(); if (s.data) { s.data = null; patch(); } return; }
+    if (s.ref || Date.now() - s.failAt < 60000) return;
+    if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
+    s.ref = db.ref(NODE);
+    s.fn = function (sn) { s.data = sn && typeof sn.val === 'function' ? sn.val() : null; patch(); };
+    s.ref.on('value', s.fn, function () { s.failAt = Date.now(); detach(); });   /* 讀取失敗的說明 1.4.5 已經會顯示 */
+  }
+
+  /* 1. 標題列 */
+  function headHtml(m, x) {
+    var a = [];
+    if (x) {
+      var dir = txt(x.direction), act = txt(x.action), t = hm(x.t), ago = agoTxt(x);
+      if (dir) a.push('<b class="' + tone(dir) + '">' + esc(dir) + '</b>');
+      if (act) a.push('<b class="' + tone(act) + '">' + esc(act) + '</b>');
+      if (isNum(x.confidence)) a.push('<span>信心 ' + int(x.confidence) + '</span>');
+      if (t || ago) a.push('<span class="tm">' + esc([t, ago].filter(Boolean).join('・')) + '</span>');
+    }
+    if (m.busy === true) a.push('<b class="mk-attn">分析中…</b>');
+    return '<div class="bz-sec bz-mkt-head" title="' + esc(TIP) + '">' + esc(TITLE) + a.join('') + '</div>';
+  }
+  /* 2. SOP */
+  function sopHtml(x) {
+    var rows = [['進場區', zoneTxt(x.zone)], ['觸發', txt(x.trigger)], ['停損／失效', txt(x.stop)], ['目標1', txt(x.t1)], ['目標2', txt(x.t2)]];
+    return '<dl class="bz-mkt-sop">' + rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1] || '—') + '</dd>'; }).join('') +
+           '<dt class="f">禁止</dt><dd class="f">' + esc(txt(x.forbid) || '—') + '</dd></dl>';
+  }
+  /* 3. L0 程式接單（影子） */
+  function execHtml(x) {
+    var e = obj(x.exec);
+    if (!e) return '';
+    var code = txt(e.state), lab = STATE[code] || code || '—', t = txt(e.text), body;
+    var cls = code === 'IN' || code === 'ARMED' ? (/^(做多|做空)$/.test(txt(x.action)) ? tone(x.action) : '') : (code === 'REJECTED' || code === 'INVALID' ? 'mk-attn' : '');
+    var b = '<b class="' + cls + '">' + esc(lab) + '</b>';
+    if (!t) body = b;
+    else if (t.indexOf(lab) === 0 && /^([（(]|$)/.test(t.slice(lab.length))) body = b + esc(t.slice(lab.length));   /* 「觀望（不做）」 */
+    else if (t.indexOf(lab) === 0 && /^[：:]/.test(t.slice(lab.length))) body = b + '：' + esc(t.slice(lab.length + 1).trim());   /* 「不採用：…」 */
+    else body = b + '：' + esc(t);
+    return '<div class="bz-mkt-l0"' + (e.adopted === true ? ' title="L0 採用這份 SOP"' : (e.adopted === false ? ' title="L0 沒有採用這份 SOP"' : '')) + '>' +
+           lvTag('L0', T0) + '<span class="n">程式接單（影子）</span>' + body + '</div>';
+  }
+  /* 4. 盤勢細節（收起來） */
+  function detailHtml(x) {
+    var rows = DET.filter(function (k) { return txt(x[k[0]]); });
+    if (!rows.length) return '';
+    return '<details class="bz-fold bz-mkt-fold" data-mfold="detail"><summary><b>盤勢細節</b><span>位置・支撐・壓力・背離・時序・Mode A／B・三本</span></summary>' +
+           '<dl class="bz-mkt-dl">' + rows.map(function (k) { return '<dt>' + esc(k[1]) + '</dt><dd>' + esc(txt(x[k[0]])) + '</dd>'; }).join('') + '</dl></details>';
+  }
+  /* 5. 這盤 SOP 記帳 */
+  function sumHtml(sm) {
+    var h = esc('SOP ' + int(sm.sop) + ' 份｜計畫 ' + int(sm.plans) + '｜交易 ' + int(sm.trades));
+    if (int(sm.trades) > 0 || int(sm.pts) !== 0) h += '｜' + ptsB(sm.pts) + ' 點' + esc('（' + int(sm.win) + ' 勝 ' + int(sm.loss) + ' 敗）');
+    return h;
+  }
+  /* 結果：已出場的點數照正負上色；結果字裡已經有點數（「停損 −135」「目標 +255」「保本 0」）就不再重複寫一次 */
+  function resHtml(res, pts) {
+    if (!isNum(pts)) return res ? '｜<span class="r">' + esc(res) + '</span>' : '';
+    var v = Math.round(Number(pts));
+    if (res && new RegExp('(^|[^0-9])[+−\\-±]?' + Math.abs(v) + '(?![0-9])').test(res)) return '｜<b class="' + (v > 0 ? 'mk-up' : (v < 0 ? 'mk-down' : '')) + '">' + esc(res) + '</b>';
+    return (res ? '｜<span class="r">' + esc(res) + '</span> ' : '｜') + ptsB(v);
+  }
+  function ledRow(r) {
+    var dir = txt(r.dir), act = txt(r.action), view = [dir, act].filter(Boolean).join(' '), z = zoneTxt(r.zone);
+    var x = (txt(r.why) ? esc(txt(r.why)) + '｜' : '') +
+            (view ? '<b class="' + (/^(做多|做空)$/.test(act) ? tone(act) : tone(dir)) + '">' + esc(view) + '</b>' : '') +
+            (z !== '—' ? (view ? ' ' : '') + esc(z) : '') + resHtml(txt(r.result), r.pts);
+    return '<div class="bz-mkt-row"><span class="t">' + esc(txt(r.t)) + '</span><span class="x">' + x + '</span></div>';
+  }
+  function ledgerHtml(m) {
+    var rows = list(m.ledger).slice(0, 10), sm = obj(m.sum);
+    if (!rows.length && !(sm && int(sm.sop) > 0)) return '';
+    return '<div class="bz-sec">這盤 SOP 記帳' + (sm ? '<span>' + sumHtml(sm) + '</span>' : '<span>新的在上</span>') + '</div>' +
+           (rows.length ? '<div class="bz-mkt-list bz-ai-scroll" data-mscroll="ledger">' + rows.map(ledRow).join('') + '</div>' : '');
+  }
+  /* 6. Argon 調單觸發 vs SOP */
+  function vsRow(r) {
+    var sd = SIDE[r.side] || txt(r.side), rel = txt(r.rel), sop = txt(r.sop);
+    var x = esc(txt(r.zone) || '—') + (sd ? ' <b class="' + tone(sd) + '">' + esc(sd) + '</b>' : '') +
+            (sop ? '｜SOP ' + esc(sop) + (isNum(r.age_min) ? esc('（' + int(r.age_min) + ' 分鐘前的 SOP）') : '') : '') +
+            (rel ? '｜<b class="' + (REL[rel] || '') + '">' + esc(rel) + '</b>' : '');
+    return '<div class="bz-mkt-row"><span class="t">' + esc(txt(r.t)) + '</span><span class="x">' + x + '</span></div>';
+  }
+  function vsHtml(m) {
+    var rows = list(m.vs_tdn).slice(0, 6);
+    if (!rows.length) return '';
+    return '<div class="bz-sec">Argon 調單觸發 vs SOP<span>觸發當下最近一份 SOP 的看法・只記錄</span></div>' +
+           '<div class="bz-mkt-list bz-ai-scroll" data-mscroll="vs">' + rows.map(vsRow).join('') + '</div>';
+  }
+  /* 7. 這盤次數／花費／額度、下次定時 */
+  function footHtml(m, x) {
+    var se = obj(m.session), a = [];
+    if (se) a.push('這盤 ' + int(se.calls) + ' 次・US$' + (Number(se.usd) || 0).toFixed(2) + (isNum(se.cap_usd) ? '／' + Number(se.cap_usd).toFixed(2) : ''));
+    if (txt(m.next)) a.push('下次 ' + txt(m.next));
+    if (!a.length) return '';
+    var tip = x ? [txt(x.model), isNum(x.cost_usd) ? '上次 US$' + Number(x.cost_usd).toFixed(3) : ''].filter(Boolean).join('｜') : '';
+    return '<div class="bz-mkt-foot"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(a.join('｜')) + '</div>';
+  }
+  function mktHtml(d) {
+    var m = obj(d && d.market);
+    if (!m) return '';   /* 沒有 market：和 1.4.24 一樣 */
+    if (m.on === false) return headHtml({}, null) + '<div class="bz-mkt-empty">' + esc(txt(m.note) || '盤勢分析沒有在運作') + '</div>';
+    var x = obj(m.last), h = headHtml(m, x);
+    if (x) {   /* 標題下面一行：為什麼分析（小字）＋資料不完整的提醒 */
+      var cov = txt(x.coverage) && txt(x.coverage) !== 'OK' ? '<span class="cov" title="' + esc('coverage：' + txt(x.coverage)) + '">資料不完整，信心打折</span>' : '';
+      if (txt(x.why) || cov) h += '<div class="bz-mkt-why">' + (txt(x.why) ? '<span>' + esc(txt(x.why)) + '</span>' : '') + cov + '</div>';
+    }
+    if (txt(m.note)) h += '<div class="bz-mkt-empty">' + esc(txt(m.note)) + '</div>';
+    if (!x) h += '<div class="bz-mkt-empty">' + esc('這盤還沒有盤勢分析' + (txt(m.next) ? '（下一次 ' + txt(m.next) + '）' : '')) + '</div>';
+    else h += sopHtml(x) + execHtml(x) + detailHtml(x);
+    return h + ledgerHtml(m) + vsHtml(m) + footHtml(m, x);
+  }
+
+  /* 8. 目前計畫是盤勢分析的 SOP 轉成的（plan.src＝MKT）：「目前計畫」後面加小標（只動 1.4.5 那一行標題，1.4.5 每次重畫會清掉，這裡再補） */
+  function planTag(c, d) {
+    var want = !!(d && obj(d.plan) && d.plan.src === 'MKT'), sec = null;
+    var secs = c.querySelectorAll(':scope > .bz-sec');
+    for (var i = 0; i < secs.length; i++) { if (/^目前計畫/.test(secs[i].textContent)) { sec = secs[i]; break; } }
+    var tag = c.querySelector(':scope > .bz-sec > .bz-mkt-src');
+    if (tag && (!want || tag.parentNode !== sec)) { tag.remove(); tag = null; }
+    if (!want || !sec || tag) return;
+    tag = document.createElement('span');
+    tag.className = 'bz-mkt-src';
+    tag.setAttribute('data-z1425', 'tag');
+    tag.title = '這份計畫是「AI 盤勢分析（影子）」的 SOP 由程式轉成的（影子，不下單）';
+    tag.textContent = '盤勢分析';
+    var first = sec.firstChild;
+    sec.insertBefore(tag, first && first.nodeType === 3 ? first.nextSibling : first);
+  }
+
+  function onToggle(e) {
+    var f = e.target;
+    s.open = !!f.open;
+    try { window.localStorage.setItem(KEY, s.open ? '1' : '0'); } catch (err) {}
+  }
+  function take() { if (s.mo) s.mo.takeRecords(); }
+
+  function patch() {
+    var c = $('bz-ai-card');
+    watchCard(c);
+    if (!c) return;
+    var old = c.querySelector(':scope > .bz-mkt-wrap');
+    if (c.hidden || !allowed() || !c.querySelector('.bz-ai-head .bz-pill')) {   /* 鎖回、還沒有資料／讀取失敗：1.4.5 的畫面不動 */
+      if (old) old.remove();
+      planTag(c, null);
+      take();
+      return;
+    }
+    var d = s.data, h = '';
+    planTag(c, d);
+    try { h = mktHtml(d); } catch (e) { h = ''; }
+    if (!h) { if (old) old.remove(); take(); return; }   /* 沒有 market：和 1.4.24 一樣 */
+    /* 放在 1.4.21 調單協助下面；沒有調單協助就放在流程列下面（1.4.21 之後補上時會插在流程列和這段中間，順序一樣） */
+    var after = c.querySelector(':scope > .bz-tdn-wrap') || c.querySelector(':scope > .bz-fl') || c.querySelector(':scope > .bz-flow') || c.querySelector(':scope > .bz-ai-head');
+    if (old && old.__z1425 === h && old.previousElementSibling === after) return;
+    if (old) old.remove();
+    var box = document.createElement('div');
+    box.className = 'bz-mkt-wrap';
+    box.setAttribute('data-z1425', '1');
+    box.innerHTML = h;
+    box.__z1425 = h;
+    var f = box.querySelector('details[data-mfold]');
+    if (f) { f.open = s.open; f.addEventListener('toggle', onToggle); }
+    if (after && after.nextSibling) c.insertBefore(box, after.nextSibling); else c.appendChild(box);
+    /* 1.4.5 每 5 秒整張重畫：卷軸位置自己記，重畫後放回去（停在最上面＝看最新的） */
+    Array.prototype.forEach.call(box.querySelectorAll('[data-mscroll]'), function (e) {
+      var k = e.getAttribute('data-mscroll');
+      if (s.scroll[k]) e.scrollTop = s.scroll[k];
+      e.addEventListener('scroll', function () { s.scroll[k] = e.scrollTop; }, { passive: true });
+    });
+    take();
+  }
+
+  /* 1.4.5 每次重畫 AI 卡（資料變了、每 5 秒）之後馬上補上；自己改的不再觸發 */
+  function watchCard(c) {
+    if (!c || c === s.card || typeof MutationObserver === 'undefined') return;
+    if (s.mo) s.mo.disconnect();
+    s.card = c;
+    s.mo = new MutationObserver(function () { patch(); if (s.mo) s.mo.takeRecords(); });
+    s.mo.observe(c, { childList: true });
+  }
+
+  function start() {
+    reconcile();
+    patch();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(reconcile).observe(d, { attributes: true, attributeFilter: ['class'] });
+    try { if (typeof auth !== 'undefined' && auth && typeof auth.onAuthStateChanged === 'function') auth.onAuthStateChanged(function () { detach(); s.failAt = 0; reconcile(); }); } catch (e) {}
+    window.setInterval(function () { reconcile(); var c = $('bz-ai-card'); if (c && c !== s.card) patch(); }, 500);   /* AI 卡晚建立 */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_MARKET_UI_1_4_25_END -->
 </body>
 </html>
