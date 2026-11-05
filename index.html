@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.27');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.28');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -14453,7 +14453,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     /* 計畫那幾行（白名單）：標題、L0 說明、數字、有效到；「AI 程式沒有在更新」這種提醒也留著 */
     Array.prototype.forEach.call(c.children, function (x) {
       var cl = x.classList, t = txt(x), p = null;
-      if (cl.contains('bz-ai-headline')) p = 'head';
+      if (cl.contains('bz-ai-headline')) { p = 'head'; set(x, 'title', t || null); }   /* 1.4.28：一行放不下時滑鼠移上去看全文 */
       else if (cl.contains('bz-ai-why')) p = 'why';
       else if (cl.contains('bz-ai-nums')) p = 'nums';
       else if (cl.contains('bz-ai-more')) p = 'more';
@@ -15075,7 +15075,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       return { up: up, dn: dn };
     };
     var cell = function (arr, dir) {
-      if (!arr.length) return '<span class="dc none">梯子範圍內沒有</span>';
+      if (!arr.length) return '<span class="dc none">' + (dir > 0 ? '上方' : '下方') + '沒有顏色層</span>';
       var a = arr[0][1], d = arr[0][0], n2 = arr[1];
       var tip = tbName(a.tb) + ' ' + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band + '（約 ' + BAND_W[a.band] + '）履約價 ' + fmt(a.k) + '｜期貨約 ' + fmt(a.k + M.basis) + (a.brk ? '｜已破：角色互換' : '') + (a.note ? '｜' + a.note : '');
       return '<span class="dc' + (d <= NEAR ? ' nr' : '') + '" title="' + esc(tip) + '"><i class="bz-lad-c z ' + a.band + (a.brk ? ' brk' : '') + '">' + a.band + '</i>' +
@@ -15171,5 +15171,11 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 })();
 </script>
 <!-- Z31_BAOZ_LADDER_UI_1_4_27_END -->
+<!-- Z31_BAOZ_FIX_UI_1_4_28 -->
+<style id="z31-baoz-fix-ui-1-4-28">
+/* 1.4.28：AI 卡精簡時計畫標題只排一行；調單協助的「在等：…」接在同一行 */
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-headline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s]:not([data-z26o]) [data-z26one] .sub { display: inline; margin-left: 8px; }
+</style>
 </body>
 </html>
