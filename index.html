@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.26');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.27');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -14497,5 +14497,679 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 })();
 </script>
 <!-- Z31_BAOZ_AICARD_UI_1_4_26_END -->
+<!-- Z31_BAOZ_LADDER_UI_1_4_27_BEGIN -->
+<style id="z31-baoz-ladder-ui-1-4-27">
+/* ===== BaoZ UI 1.4.27（20261105）：關鍵價位最上面加「價位梯子」＋兩級提醒（只改顯示）
+   - 跟 Excel 一樣用履約價（合成）座標、由高到低；先暴Z表（靠履約價那一欄）、再即時表（外側一欄）。
+     中間一條「合成／現價」列；粉紅框＝雙側重疊，虛線框＝箱型（調單區）；多日分界實線、今天分界虛線。
+   - 資料全部是 Argon 自己寫出來的（levels、九步驟 5／6 的三色層、market），HTML 不自己重算重疊。
+   - 提醒兩級：粉紅重疊（強）、箱型調單區（次）；合成進到區內或離區邊 ≦20 點才亮；同一區同一狀態 30 分鐘只閃一次；沒有聲音。
+   - 四色表、完整價位明細預設收合（不刪），按一下展開，記在這台瀏覽器。
+   - 唯讀：baoz_realtime/near、baoz_realtime/near_ai 各掛一個唯讀監聽，不寫 Firebase；沒有資料時畫面和 1.4.26 一樣。 ===== */
+#baoz-system-panel .bz-lad { margin: 8px 0 0; padding: 8px 8px 6px; border: 1px solid var(--bz-line); border-radius: 7px; background: var(--bz-surface); font-size: 12px; color: var(--bz-muted); container-type: inline-size; min-width: 0; }
+#baoz-system-panel .bz-lad b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-lad .num { font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-lad-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+#baoz-system-panel .bz-lad-head > strong { color: var(--bz-ink); font-size: 13px; }
+#baoz-system-panel .bz-lad-head .age { margin-left: auto; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-lad[data-stale] .age { color: var(--bz-attn); }
+#baoz-system-panel .bz-lad[data-stale] .bz-lad-main { opacity: .45; filter: grayscale(.7); }
+#baoz-system-panel .bz-lad-dir { margin-top: 0; }
+#baoz-system-panel .bz-lad-dir { display: flex; flex-wrap: wrap; gap: 3px 6px; margin-top: 5px; }
+#baoz-system-panel .bz-lad-chip { display: inline-flex; align-items: baseline; gap: 4px; padding: 1px 7px; border: 1px solid var(--bz-line); border-radius: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+#baoz-system-panel .bz-lad-chip.up { color: var(--bz-up); border-color: rgba(255,112,123,.55); }
+#baoz-system-panel .bz-lad-chip.down { color: var(--bz-down); border-color: rgba(82,217,160,.55); }
+#baoz-system-panel .bz-lad-chip.warn { color: var(--bz-attn); border-color: rgba(243,205,124,.6); }
+#baoz-system-panel .bz-lad-chip.exp { color: #0b0d10; background: var(--bz-attn); border-color: var(--bz-attn); font-weight: 600; }
+/* 提醒條 */
+#baoz-system-panel .bz-lad-alert { margin-top: 6px; padding: 5px 8px; border: 1px solid var(--bz-line); border-left-width: 4px; border-radius: 6px; background: var(--bz-raised); color: var(--bz-ink); }
+#baoz-system-panel .bz-lad-alert[data-lv="pink"] { border-color: #f48fb1; background: rgba(244,143,177,.16); }
+#baoz-system-panel .bz-lad-alert[data-lv="box"] { border-color: #f3cd7c; border-style: dashed; border-left-style: solid; background: rgba(243,205,124,.10); }
+#baoz-system-panel .bz-lad-alert.flash { animation: z26flash .7s ease-in-out 5; }
+@keyframes z26flash { 50% { box-shadow: 0 0 0 3px rgba(244,143,177,.6); } }
+#baoz-system-panel .bz-lad-alert[data-lv="box"].flash { animation-name: z26flashB; }
+@keyframes z26flashB { 50% { box-shadow: 0 0 0 3px rgba(243,205,124,.6); } }
+#baoz-system-panel .bz-lad-az { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; padding: 1px 0; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-lad-az + .bz-lad-az { border-top: 1px solid rgba(52,60,73,.7); margin-top: 2px; padding-top: 3px; }
+#baoz-system-panel .bz-lad-az .st { font-weight: 700; }
+#baoz-system-panel .bz-lad-az .st.in { color: #f48fb1; }
+#baoz-system-panel .bz-lad-az .st.near { color: var(--bz-attn); }
+#baoz-system-panel .bz-lad-az .sub { flex-basis: 100%; color: var(--bz-muted); font-size: 11.5px; }
+#baoz-system-panel .bz-lad-az .ok { color: var(--bz-down); }
+#baoz-system-panel .bz-lad-az .no { color: var(--bz-up); }
+#baoz-system-panel .bz-lad-tag { display: inline-block; padding: 0 5px; border-radius: 4px; font-size: 11px; line-height: 16px; font-weight: 600; white-space: nowrap; }
+#baoz-system-panel .bz-lad-tag.pk { background: #f48fb1; color: #1a0a10; }
+#baoz-system-panel .bz-lad-tag.bx { border: 1px dashed #f3cd7c; color: #f3cd7c; }
+#baoz-system-panel .bz-lad-quiet { color: var(--bz-muted); }
+/* 主體：窄（直立螢幕右欄）上下排；寬（寬螢幕右欄 ≥ 700 CSS px；#dashboard 有 zoom，所以用 container 寬度判斷）梯子＋說明左右排 */
+#baoz-system-panel .bz-lad-main { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "lad" "side"; gap: 6px 8px; margin-top: 4px; }
+#baoz-system-panel .bz-lad-top { grid-area: top; min-width: 0; }
+#baoz-system-panel .bz-lad-main > .bz-lad-lad { grid-area: lad; }
+#baoz-system-panel .bz-lad-main > .bz-lad-side { grid-area: side; }
+/* 寬螢幕：梯子在左、方向／位置／提醒和說明在右，梯子從最上面開始（1080 高的畫面放得下） */
+@container (min-width: 700px) { #baoz-system-panel .bz-lad-main { grid-template-columns: minmax(460px, 1.5fr) minmax(0, 1fr); grid-template-areas: "lad top" "lad side"; grid-template-rows: auto 1fr; } }
+#baoz-system-panel .bz-lad-side { display: grid; gap: 6px; align-content: start; min-width: 0; }
+#baoz-system-panel .bz-lad-box { padding: 5px 8px; border: 1px solid var(--bz-line); border-radius: 6px; min-width: 0; }
+#baoz-system-panel .bz-lad-box > .h { color: var(--bz-ink); font-weight: 600; margin-bottom: 2px; }
+#baoz-system-panel .bz-lad-li { display: grid; grid-template-columns: 4.2em minmax(0, 1fr); gap: 0 6px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+#baoz-system-panel .bz-lad-out { font-size: 11.5px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; padding: 1px 2px; }
+/* 梯子 */
+#baoz-system-panel .bz-lad-lad { position: relative; min-width: 0; }
+#baoz-system-panel .bz-lad-r { position: relative; z-index: 1; display: grid; grid-template-columns: 22px 30px 54px 30px 22px 52px 46px minmax(0, 1fr); column-gap: 3px; align-items: center; }
+#baoz-system-panel .bz-lad-r.imp { height: auto; min-height: 22px; border-top: 1px solid rgba(52,60,73,.55); }
+#baoz-system-panel .bz-lad-r.hd { height: auto; min-height: 18px; font-size: 11px; color: var(--bz-muted); border-bottom: 1px solid var(--bz-line); }
+#baoz-system-panel .bz-lad-r.hd > span { text-align: center; white-space: nowrap; overflow: hidden; }
+#baoz-system-panel .bz-lad-r.hd > span.l { text-align: left; }
+#baoz-system-panel .bz-lad-r.hg { height: auto; min-height: 16px; font-size: 11px; font-weight: 600; }
+#baoz-system-panel .bz-lad-r.hg > span { text-align: center; white-space: nowrap; overflow: hidden; border-radius: 3px; }
+#baoz-system-panel .bz-lad-r.hg > .gz { grid-column: 1 / 3; color: var(--bz-ink); background: rgba(138,184,255,.14); }
+#baoz-system-panel .bz-lad-r.hg > .gt { grid-column: 4 / 6; color: var(--bz-ink); background: rgba(82,217,160,.12); }
+/* 合成在兩張表的位置 */
+#baoz-system-panel .bz-lad-dist { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 3px 6px; align-items: stretch; margin: 0 0 6px; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-lad-dist .h { font-size: 11px; color: var(--bz-muted); padding: 0 4px; }
+#baoz-system-panel .bz-lad-dist .tb { align-self: center; color: var(--bz-ink); font-weight: 700; font-size: 13px; padding-right: 2px; }
+#baoz-system-panel .bz-lad-dist .dc { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "c d" "n n" "s s"; align-items: center; gap: 0 7px; padding: 4px 8px 5px; border: 1px solid var(--bz-line); border-radius: 6px; background: rgba(255,255,255,.02); min-width: 0; }
+#baoz-system-panel .bz-lad-dist .dc.nr { border-color: var(--bz-attn); box-shadow: 0 0 0 1px rgba(243,205,124,.35) inset; }
+#baoz-system-panel .bz-lad-dist .dc.none { display: block; color: var(--bz-muted); font-size: 11px; }
+#baoz-system-panel .bz-lad-dist .dc > i { grid-area: c; width: 22px; font-style: normal; }
+#baoz-system-panel .bz-lad-dist .dc .nm { grid-area: n; color: var(--bz-ink); font-size: 12px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#baoz-system-panel .bz-lad-dist .dc .nm em { font-style: normal; font-size: 10.5px; color: var(--bz-muted); margin-left: 4px; }
+#baoz-system-panel .bz-lad-dist .dc .dd { grid-area: d; font-size: 20px; line-height: 1.1; font-weight: 800; }
+#baoz-system-panel .bz-lad-dist .dc .dd.up { color: var(--bz-up); }
+#baoz-system-panel .bz-lad-dist .dc .dd.down { color: var(--bz-down); }
+#baoz-system-panel .bz-lad-dist .dc small { grid-area: s; font-size: 10.5px; color: var(--bz-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#baoz-system-panel .bz-lad-r.cl .d { font-weight: 700; font-size: 12.5px; }
+#baoz-system-panel .bz-lad-r.sm .d { opacity: .4; }
+#baoz-system-panel .bz-lad-pos { margin-top: 5px; display: grid; gap: 2px; }
+#baoz-system-panel .bz-lad-pos > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-lad-pos .tb { color: var(--bz-ink); font-weight: 700; min-width: 3.6em; }
+#baoz-system-panel .bz-lad-pos .in { color: #f48fb1; font-weight: 700; }
+#baoz-system-panel .bz-lad-pos .nr { color: var(--bz-attn); font-weight: 600; }
+#baoz-system-panel .bz-lad-r .k { text-align: right; padding-right: 3px; font-variant-numeric: tabular-nums; color: var(--bz-ink); }
+#baoz-system-panel .bz-lad-r.sm { height: 8px; }
+#baoz-system-panel .bz-lad-r.sm .f, #baoz-system-panel .bz-lad-r.sm .d, #baoz-system-panel .bz-lad-r.sm .k { visibility: hidden; }
+#baoz-system-panel .bz-lad-r.sm.h100 .k { visibility: visible; font-size: 9px; line-height: 8px; color: #59616e; }
+#baoz-system-panel .bz-lad-r .f { text-align: right; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-lad-r .d { text-align: right; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-lad-r .d.up { color: var(--bz-up); }
+#baoz-system-panel .bz-lad-r .d.down { color: var(--bz-down); }
+#baoz-system-panel .bz-lad-r .x { min-width: 0; display: flex; flex-wrap: wrap; gap: 0 6px; align-items: baseline; padding-left: 4px; line-height: 1.35; }
+#baoz-system-panel .bz-lad-c { height: 16px; border-radius: 3px; font-size: 10.5px; line-height: 16px; text-align: center; font-weight: 700; color: #0b0d10; overflow: hidden; }
+#baoz-system-panel .bz-lad-c.z { height: 18px; line-height: 18px; font-size: 11px; }
+#baoz-system-panel .bz-lad-c.t { opacity: .9; }
+#baoz-system-panel .bz-lad-c.藍 { background: #4f8dff; }
+#baoz-system-panel .bz-lad-c.黃 { background: #f5c542; }
+#baoz-system-panel .bz-lad-c.綠 { background: #00e676; }
+#baoz-system-panel .bz-lad-c.紅 { background: rgba(255,90,90,.35); color: #ffd4d4; }
+#baoz-system-panel .bz-lad-c.brk { background-image: repeating-linear-gradient(135deg, rgba(8,10,13,.55) 0 3px, transparent 3px 6px); }
+#baoz-system-panel .bz-lad-m { white-space: normal; }
+#baoz-system-panel .bz-lad-m.res { color: var(--bz-up); }
+#baoz-system-panel .bz-lad-m.sup { color: var(--bz-down); }
+#baoz-system-panel .bz-lad-m.dv { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-lad-m.tg { color: var(--bz-tgt, #c49bff); }
+#baoz-system-panel .bz-lad-m.pk { color: #f48fb1; font-weight: 600; }
+#baoz-system-panel .bz-lad-m.bx { color: #f3cd7c; }
+#baoz-system-panel .bz-lad-m.ps { color: var(--bz-attn); font-weight: 600; }
+#baoz-system-panel .bz-lad-m.mu { color: var(--bz-muted); }
+/* 合成／現價列（Edward 看合成期貨：合成放大，現價小字） */
+#baoz-system-panel .bz-lad-r.px { min-height: 26px; background: rgba(117,211,255,.16); border-top: 2px solid var(--bz-accent); border-bottom: 2px solid var(--bz-accent); color: var(--bz-accent); }
+#baoz-system-panel .bz-lad-r.px .k { color: var(--bz-accent); font-size: 14px; font-weight: 700; }
+#baoz-system-panel .bz-lad-r.px .f { color: var(--bz-muted); }
+#baoz-system-panel .bz-lad-r.px .x { color: var(--bz-accent); font-weight: 700; font-size: 13px; }
+#baoz-system-panel .bz-lad-r.px .x small { color: var(--bz-muted); font-weight: 400; font-size: 11px; }
+/* 線列：分界、必來點、持倉、調單停損目標；線在列的上緣，字在線下面，不會被線劃過 */
+#baoz-system-panel .bz-lad-r.ln { min-height: 15px; font-size: 11px; line-height: 13px; }
+#baoz-system-panel .bz-lad-r.ln .k, #baoz-system-panel .bz-lad-r.ln .f, #baoz-system-panel .bz-lad-r.ln .d { color: var(--bz-muted); }
+#baoz-system-panel .bz-lad-r.ln.dvA { border-top: 2px solid var(--bz-ink); min-height: 17px; }
+#baoz-system-panel .bz-lad-r.ln.dvA .k, #baoz-system-panel .bz-lad-r.ln.dvA .x { color: var(--bz-ink); font-weight: 700; }
+#baoz-system-panel .bz-lad-r.ln.dvB { border-top: 1.5px dashed rgba(238,241,247,.8); }
+#baoz-system-panel .bz-lad-r.ln.dvB .k, #baoz-system-panel .bz-lad-r.ln.dvB .x { color: var(--bz-ink); }
+#baoz-system-panel .bz-lad-r.ln.dvN { border-top: 1px dotted var(--bz-muted); }
+#baoz-system-panel .bz-lad-r.ln.tg { border-top: 1px dashed var(--bz-tgt, #c49bff); }
+#baoz-system-panel .bz-lad-r.ln.tg .x { color: var(--bz-tgt, #c49bff); }
+#baoz-system-panel .bz-lad-r.ln.pe { border-top: 1.5px solid var(--bz-attn); }
+#baoz-system-panel .bz-lad-r.ln.pe .x { color: var(--bz-attn); font-weight: 600; }
+#baoz-system-panel .bz-lad-r.ln.pst, #baoz-system-panel .bz-lad-r.ln.tst { border-top: 1.5px dashed var(--bz-up); }
+#baoz-system-panel .bz-lad-r.ln.pst .x, #baoz-system-panel .bz-lad-r.ln.tst .x { color: var(--bz-up); }
+#baoz-system-panel .bz-lad-r.ln.ptg, #baoz-system-panel .bz-lad-r.ln.ttg { border-top: 1.5px dashed var(--bz-down); }
+#baoz-system-panel .bz-lad-r.ln.ai { border-top: 1px dashed rgba(170,180,198,.55); }
+#baoz-system-panel .bz-lad-r.ln.ai .x { color: rgba(190,198,214,.8); font-style: italic; }
+#baoz-system-panel .bz-lad-r.ln.ptg .x, #baoz-system-panel .bz-lad-r.ln.ttg .x { color: var(--bz-down); }
+/* 疊在梯子上的框和線（在列的後面，不擋滑鼠） */
+#baoz-system-panel .bz-lad-ov { position: absolute; left: 0; right: 0; z-index: 0; pointer-events: none; border-radius: 4px; }
+#baoz-system-panel .bz-lad-ov.pk { background: rgba(244,143,177,.22); border: 2px solid #f48fb1; }
+#baoz-system-panel .bz-lad-ov.pk.t { border-width: 1.5px; background: rgba(244,143,177,.14); }
+#baoz-system-panel .bz-lad-ov.bx { background: rgba(243,205,124,.08); border: 2px dashed #f3cd7c; }
+#baoz-system-panel .bz-lad-ov.bx.t { border-width: 1.5px; background: rgba(243,205,124,.05); }
+#baoz-system-panel .bz-lad-ov.pk.on { box-shadow: 0 0 0 2px rgba(244,143,177,.45); }
+#baoz-system-panel .bz-lad-ov.bx.on { box-shadow: 0 0 0 2px rgba(243,205,124,.45); }
+#baoz-system-panel .bz-lad-hl { position: absolute; left: -5px; width: 3px; z-index: 2; pointer-events: none; background: #5b6472; border-radius: 2px; }
+#baoz-system-panel .bz-lad-leg { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 11px; margin-top: 4px; }
+#baoz-system-panel .bz-lad-leg i { display: inline-block; width: 12px; height: 9px; border-radius: 2px; margin-right: 3px; vertical-align: -1px; }
+/* 收合四色表、完整價位明細 */
+#baoz-system-panel .bz-lad-fold { display: block; width: 100%; margin: 6px 0 0; padding: 4px 10px; border: 1px dashed var(--bz-line); border-radius: 6px; background: transparent; color: var(--bz-muted); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+#baoz-system-panel .bz-lad-fold:hover { color: var(--bz-ink); border-color: var(--bz-accent); }
+#baoz-system-panel section[data-z1426-fold] .bz-anchor-board,
+#baoz-system-panel section[data-z1426-fold] .bz-anchor-layout,
+#baoz-system-panel section[data-z1426-fold] .bz-anchor-detail { display: none !important; }
+@container (max-width: 360px) {
+  #baoz-system-panel .bz-lad-r { grid-template-columns: 18px 26px 50px 26px 18px 50px 40px minmax(0, 1fr); column-gap: 2px; }
+  #baoz-system-panel .bz-lad-c, #baoz-system-panel .bz-lad-c.z { font-size: 0; }
+}
+</style>
+<script>
+/* BaoZ UI 1.4.27：價位梯子＋兩級提醒（只讀 Firebase，不寫；只改顯示） */
+(function () {
+  'use strict';
+  var NODE = 'baoz_realtime/near', NODE_AI = 'baoz_realtime/near_ai';
+  var NEAR = 20;                    /* 「接近」：合成離區邊幾點內（和 Argon 的區容許一樣） */
+  var RANGE_TALL = 800, RANGE_WIDE = 1000, STEP = 50;   /* 直立螢幕價平 ±800、寬螢幕 ±1000 */
+  var STALE_MS = 3 * 60000;         /* 快照超過 3 分鐘：整塊變灰 */
+  var REALERT_MS = 30 * 60000;      /* 同一區同一狀態 30 分鐘只閃一次 */
+  var FOLD_KEY = 'z31.baoz.ladder.fold.v1';
+  var s = { ref: null, fn: null, data: null, aref: null, afn: null, ai: null, failAt: 0, afailAt: 0,
+            box: null, btn: null, sec: null, html: '', fold: true, seen: {}, last: 0 };
+  try { s.fold = window.localStorage.getItem(FOLD_KEY) !== '0'; } catch (e) {}
+
+  function $(id) { return document.getElementById(id); }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(v) { if (v === null || v === undefined || v === '' || typeof v === 'boolean' || typeof v === 'object') return null; var n = Number(String(v).replace(/,/g, '')); return Number.isFinite(n) ? n : null; }
+  function fmt(v) { return v == null ? '—' : Math.round(v).toLocaleString('en-US'); }
+  function sgn(v) { v = Math.round(Number(v) || 0); return (v > 0 ? '+' : (v < 0 ? '−' : '±')) + Math.abs(v).toLocaleString('en-US'); }
+  function txt(v) { return typeof v === 'string' ? v.trim() : (typeof v === 'number' && Number.isFinite(v) ? String(v) : ''); }
+  /* Firebase 的陣列可能變成 {"0":…,"1":…}；兩種都收 */
+  function list(v) {
+    if (Array.isArray(v)) return v.filter(function (x) { return x != null; });
+    if (v && typeof v === 'object') return Object.keys(v).sort(function (a, b) { return Number(a) - Number(b); }).map(function (k) { return v[k]; }).filter(function (x) { return x != null; });
+    return [];
+  }
+
+  /* 和 1.4.5／1.4.23／1.4.25 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才讀 */
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function detach() {
+    if (s.ref && s.fn) { try { s.ref.off('value', s.fn); } catch (e) {} }
+    if (s.aref && s.afn) { try { s.aref.off('value', s.afn); } catch (e) {} }
+    s.ref = s.fn = s.aref = s.afn = null;
+  }
+  function reconcile() {
+    if (!allowed()) { if (s.ref || s.aref) detach(); s.data = s.ai = null; if (s.box) paint(); return; }
+    if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
+    if (!s.ref && Date.now() - s.failAt >= 60000) {
+      s.ref = db.ref(NODE);
+      s.fn = function (sn) { s.data = sn && typeof sn.val === 'function' ? sn.val() : null; paint(); };
+      s.ref.on('value', s.fn, function () { s.failAt = Date.now(); if (s.ref && s.fn) { try { s.ref.off('value', s.fn); } catch (e) {} } s.ref = s.fn = null; });
+    }
+    if (!s.aref && Date.now() - s.afailAt >= 60000) {
+      s.aref = db.ref(NODE_AI);
+      s.afn = function (sn) { s.ai = sn && typeof sn.val === 'function' ? sn.val() : null; paint(); };
+      s.aref.on('value', s.afn, function () { s.afailAt = Date.now(); if (s.aref && s.afn) { try { s.aref.off('value', s.afn); } catch (e) {} } s.aref = s.afn = null; });
+    }
+  }
+
+  /* ---------------- 資料：全部取自 Argon 寫出來的 payload ---------------- */
+  var BAND_W = { '藍': 200, '綠': 400, '黃': 100, '紅': 50 };
+  var OV_NAME = { '2x2': '2x2 鐵壁', '同列': '同列重疊', '相鄰': '相鄰斜向', '分界點': '莊家分界點' };
+  var ZRE = /^(暴Z表|即時表)\s*([\d,]{4,7})\s*[–—~－-]\s*([\d,]{4,7})\s*(重疊)?（([^）]*)）/;
+
+  function stepOf(v, row, re) {
+    var st = list(v.nine_steps), i;
+    for (i = 0; i < st.length; i++) if (st[i] && Number(st[i].row) === row && re.test(txt(st[i].label))) return txt(st[i].text) + ' ' + txt(st[i].extra);
+    for (i = 0; i < st.length; i++) if (st[i] && re.test(txt(st[i].label))) return txt(st[i].text) + ' ' + txt(st[i].extra);
+    return '';
+  }
+  function layers(text, tb) {
+    var out = [], m = /三色層\s*Call[：:]([^｜|]*)[｜|]\s*Put[：:]([^｜|]*)/.exec(text || '');
+    if (!m) return out;
+    [['C', m[1]], ['P', m[2]]].forEach(function (p) {
+      var re = /([紅黃藍綠])\s*(\d{4,6})\s*→\s*(\d{4,6})(?:（([^）]*)）)?/g, x;
+      while ((x = re.exec(p[1]))) {
+        var note = x[4] || '', brk = /已(?:被)?(?:突破|跌破)/.test(note);
+        out.push({ tb: tb, sd: p[0], band: x[1], k: Number(x[2]), f: Number(x[3]), off: /畫面外/.test(note), brk: brk,
+                   role: brk ? (/支撐/.test(note) ? '支撐' : (/壓力/.test(note) ? '壓力' : '')) : (p[0] === 'C' ? '壓力' : '支撐'), note: note });
+      }
+    });
+    return out;
+  }
+  /* Argon 還沒出場的那一筆（[做單紀錄]：進場時間、契約、方向、進場價、停損、目標、口數、進場區…、出場時間空白） */
+  function openTrade(d) {
+    var logs = list(d.recent_logs), g = null, ct = txt(d.source && d.source.contract), gen = num(d.source && d.source.generated_at_ms), best = null;
+    logs.forEach(function (l) { if (l && /^做單紀錄/.test(txt(l.label))) g = l; });
+    if (!g) return null;
+    list(g.lines).forEach(function (ln) {
+      var c = String(ln || '').split('\t');
+      if (c.length < 15 || !/^做(多|空)$/.test(c[3]) || (c[11] || '').trim() || (ct && c[2] !== ct)) return;
+      var t = Date.parse((c[1] || '').replace(' ', 'T') + '+08:00');
+      if (!Number.isFinite(t) || (gen && (gen - t > 20 * 3600000 || t - gen > 600000))) return;
+      var e = num(c[4]);
+      if (e == null) return;
+      best = { side: c[3] === '做多' ? 'L' : 'S', entry: e, stop: num(c[5]), target: num(c[6]), zone: (c[8] || '').trim(), t: (c[1] || '').slice(11, 16) };
+    });
+    return best;
+  }
+  function tdnZones(ai, ok) {
+    var t = ai && ai.tdn && typeof ai.tdn === 'object' ? ai.tdn : null, out = [];
+    if (!t || !ok) return out;
+    var zs = [];
+    list(t.zones).forEach(function (z) {   /* AI V0.1.35：只有突破／回測（剛結束的留 10 分鐘）＋AI 意見 */
+      var m = /(\d{4,6})\s*[–-]\s*(\d{4,6})/.exec(txt(z && z.k));
+      if (!m) return;
+      zs.push({ kl: Number(m[1]), kh: Number(m[2]), side: txt(z.side) === '多' ? 'L' : 'S', ph: txt(z.ph), t: txt(z.t), end: txt(z.end),
+                v: txt(z.v), conf: num(z.conf), full: false });
+    });
+    if (num(t.rows_n) == null) return zs;   /* 沒有 rows_n＝舊版 AI（V0.1.35）或讀不到 [調單型] */
+    list(t.rows).forEach(function (r) {   /* AI V0.1.36 起：完整 [調單型]；rows_n 0＝現在沒有區（Firebase 不存空 list） */
+      var kl = num(r && r.kl), kh = num(r && r.kh);
+      if (kl == null || kh == null) return;
+      var ph = txt(r.phase), o = { kl: Math.min(kl, kh), kh: Math.max(kl, kh), side: /^(多|L)/.test(txt(r.side)) ? 'L' : 'S', ph: txt(r.phase_raw) || ph,
+                 live: /^(進區|突破|回測)$/.test(ph), t: txt(r.phase_t), arm: txt(r.arm_t), brk: txt(r.broke_t), rt: txt(r.retest_t),
+                 far: num(r.far), deep: num(r.deep), stopk: num(r.stopk), tgtk: num(r.tgtk), tgtn: txt(r.tgt_name), end: txt(r.result), full: true };
+      zs.forEach(function (z) { if (z.side === o.side && Math.abs(z.kl - o.kl) <= 6 && Math.abs(z.kh - o.kh) <= 6) { o.v = z.v; o.conf = z.conf; } });
+      out.push(o);
+    });
+    return out;
+  }
+
+  function model(d, ai) {
+    if (!d || typeof d !== 'object' || !d.market || !d.view) return null;
+    var m = d.market, v = d.view;
+    var syn = num(m.synthetic), fut = num(m.futures), basis = num(m.basis);
+    if (syn == null || fut == null || syn < 1000) return null;
+    if (basis == null) basis = fut - syn;
+    var M = { syn: syn, fut: fut, basis: basis, at: num(d.source && d.source.generated_at_ms), session: txt(d.source && d.source.session),
+              contract: txt(d.source && d.source.contract), anchors: [], zones: [], marks: [], cost: {} };
+    M.anchors = layers(stepOf(v, 16, /暴Z表/), 'Z').concat(layers(stepOf(v, 17, /即時表/), 'T'));
+    list(v.levels).forEach(function (lv) {
+      var src = txt(lv && lv.source), x = ZRE.exec(src), mm;
+      if ((mm = /^暴Z表 (Call|Put) ([紅黃藍綠]) (\d{4,6})（成本約 (\d+)）/.exec(src))) M.cost['Z' + mm[1][0] + mm[3]] = Number(mm[4]);
+      if (x) {
+        var lo = num(x[2]), hi = num(x[3]), tag = x[5] || '', key = (x[1] === '暴Z表' ? 'Z' : 'T') + lo + '-' + hi;
+        if (lo == null || hi == null || M.zones.some(function (z) { return z.key === key; })) return;
+        var base = tag.split(/[，,]/)[0].trim(), mean = txt(lv.meaning);
+        M.zones.push({ key: key, tb: x[1] === '暴Z表' ? 'Z' : 'T', lo: Math.min(lo, hi), hi: Math.max(lo, hi), ov: !!x[4],
+                       name: x[4] ? (OV_NAME[base] || base || '重疊') : (base || '箱型'), gapNo: /跳空日不用/.test(tag),
+                       flo: num(lv.low), fhi: num(lv.high), meaning: mean,
+                       role: /撐/.test(base) || /支撐/.test(mean) ? '撐' : (/壓/.test(base) || /壓力/.test(mean) ? '壓' : '') });
+        return;
+      }
+      if ((mm = /V4越階（([^）]*)）\s*(\d{4,6})/.exec(src))) M.marks.push({ k: Number(mm[2]), cls: 'res', t: '越階：' + mm[1], tip: txt(lv.meaning) });
+    });
+    var kA = num(m.kdiv_a), kB = num(m.kdiv_b), dA = num(m.dist_a), dB = num(m.dist_b);
+    if (kA != null) M.marks.push({ k: kA, line: 'dvA', cls: 'dv', t: '多日分界（暴Z）', tip: '暴Z表 Kdiv：合成在它上面＝多日偏多；期貨 ' + fmt(kA + basis) });
+    if (kB != null) M.marks.push({ k: kB, line: 'dvB', cls: 'dv', t: '今天分界（即時表）', tip: '即時表 Kdiv（今天成本打平）：只當方向和目標，不當進場區；期貨 ' + fmt(kB + basis) });
+    M.kA = kA; M.kB = kB; M.dA = dA != null ? dA : (kA != null ? syn - kA : null); M.dB = dB != null ? dB : (kB != null ? syn - kB : null);
+    M.dirB = txt(v.session_direction && v.session_direction.label);
+    var tg = v.targets || {};
+    [['upper', '必來點上緣'], ['lower', '必來點下緣']].forEach(function (p) {
+      var t = tg[p[0]], pr = t && num(t.price);
+      if (pr != null) M.marks.push({ k: pr - basis, line: 'tg', cls: 'tg', t: p[1] + '（目標）', tip: '期貨 ' + fmt(pr) + '｜' + txt(t.state) + '｜必來點是目標，不是撐壓' });
+    });
+    var nr = d.night_ref, nbox = document.querySelector('#baoz-system-panel section.bz-nref');   /* 1.4.23 夜盤參考有顯示時才畫 */
+    if (nr && typeof nr === 'object' && num(nr.div_k) != null && nbox && !nbox.hidden && nbox.getBoundingClientRect().height > 0)
+      M.marks.push({ k: num(nr.div_k), line: 'dvN', cls: 'mu', t: '昨晚夜盤分界（參考）', tip: '昨晚夜盤即時表的分界（08:45–10:15 參考）' });
+    M.hi = num(m.session_high); M.lo = num(m.session_low);
+    M.pos = openTrade(d);
+    if (M.pos) {
+      var P = M.pos;
+      M.marks.push({ k: P.entry - basis, fut: P.entry, line: 'pe', cls: 'ps', t: 'Argon 持' + (P.side === 'L' ? '多' : '空') + '：進場' + (P.t ? ' ' + P.t : ''), tip: P.t + ' 進場（期貨價）｜' + P.zone });
+      if (P.stop != null) M.marks.push({ k: P.stop - basis, fut: P.stop, line: 'pst', cls: 'res', t: P.stop === P.entry ? 'Argon 停損（已移到保本）' : 'Argon 停損', tip: '期貨價' });
+      if (P.target != null) M.marks.push({ k: P.target - basis, fut: P.target, line: 'ptg', cls: 'sup', t: 'Argon 目標', tip: '期貨價' });
+    }
+    var aiCt = ai && txt(ai.contract);
+    M.tdn = tdnZones(ai, !aiCt || !M.contract || aiCt === M.contract);
+    M.tdn.forEach(function (t) {
+      if (!t.live) return;   /* 只畫還在進行的（進區／突破／回測）；觸發後看 Argon 持倉那幾條線 */
+      if (t.stopk != null) M.marks.push({ k: t.stopk, line: 'tst', cls: 'res', t: '調單' + (t.side === 'L' ? '多' : '空') + ' 預計停損', tip: '調單型預計停損（合成）' });
+      if (t.tgtk != null) M.marks.push({ k: t.tgtk, line: 'ttg', cls: 'tg', t: '調單' + (t.side === 'L' ? '多' : '空') + ' 預計目標' + (t.tgtn ? '（' + t.tgtn + '）' : ''), tip: '調單型預計目標（合成）' });
+    });
+    /* AI 影子計畫（plan／position 是期貨價）：等待中畫進場區，持倉中畫進場；停損、目標都畫。灰色虛線，AI 超過 3 分鐘沒更新就不畫 */
+    var ap = ai && ai.plan, aq = ai && ai.position, aFresh = ai && Date.now() - Number(ai.updated_at_ms || 0) < STALE_MS;
+    if (ap && typeof ap === 'object' && aFresh && (!aiCt || !M.contract || aiCt === M.contract) && /^(WAIT|ARMED|IN)$/.test(txt(ap.state))) {
+      var aL = ap.side === 'long', an = 'AI 影子' + (aL ? '多' : '空'), inPos = ap.state === 'IN' && aq && typeof aq === 'object' && num(aq.entry) > 1000;
+      var aMk = function (fu, t, tip) { if (fu != null && fu > 1000) M.marks.push({ k: fu - basis, fut: fu, line: 'ai', cls: 'mu', t: t, tip: tip + '（期貨價；影子，不下單）' }); };
+      if (inPos) {
+        aMk(num(aq.entry), an + ' 持倉：進場', 'AI 影子單進場價');
+        aMk(num(aq.stop), an + ' 停損', 'AI 影子單停損');
+        aMk(num(aq.t1_done ? aq.target2 : aq.target1), an + (aq.t1_done ? ' 第二目標' : ' 目標'), 'AI 影子單目標');
+      } else {
+        var zl = num(ap.zone_low), zh = num(ap.zone_high);
+        if (zl != null && zh != null) { aMk(Math.max(zl, zh), an + ' 進場區 ' + fmt(Math.min(zl, zh)) + '–' + fmt(Math.max(zl, zh)), 'AI 計畫進場區上緣'); if (Math.abs(zh - zl) >= 10) aMk(Math.min(zl, zh), an + ' 進場區下緣', 'AI 計畫進場區下緣'); }
+        aMk(num(ap.stop), an + ' 停損', 'AI 計畫停損');
+        aMk(num(ap.target1), an + ' 目標', 'AI 計畫第一目標');
+        if (num(ap.target2) != null && num(ap.target2) !== num(ap.target1)) aMk(num(ap.target2), an + ' 第二目標', 'AI 計畫第二目標');
+      }
+    }
+    M.long = { st: txt(v.long && v.long.status), why: txt(v.long && v.long.reason) };
+    M.short = { st: txt(v.short && v.short.status), why: txt(v.short && v.short.reason) };
+    var ex = ai && txt(ai.expiry_date);   /* AI V0.1.18 起就有（live.txt [控制台] B6 到期日）；沒有就不顯示。ai.expiry 是別的用途，不要讀 */
+    M.expiry = /^\d{4}-\d{2}-\d{2}/.test(ex) ? ex.slice(0, 10) : '';
+    return M;
+  }
+
+  /* 區的狀態：合成在區內／離區邊 ≦ NEAR／遠 */
+  function zstate(z, syn) {
+    var dz = syn > z.hi ? syn - z.hi : (syn < z.lo ? z.lo - syn : 0);
+    return { dz: Math.round(dz), above: z.lo > syn, st: dz === 0 ? 'in' : (dz <= NEAR ? 'near' : 'far') };
+  }
+  function tdnFor(M, z) {
+    for (var i = 0; i < M.tdn.length; i++) { var t = M.tdn[i]; if (Math.abs(t.kl - z.lo) <= 6 && Math.abs(t.kh - z.hi) <= 6) return t; }
+    return null;
+  }
+  function tbName(tb) { return tb === 'Z' ? '暴Z表' : '即時表'; }
+
+  /* ---------------- 畫面 ---------------- */
+  function zoneLine(M, z, zs, full) {
+    var tag = z.ov ? '<span class="bz-lad-tag pk">粉紅 ' + esc(z.name) + '</span>' : '<span class="bz-lad-tag bx">調單區 ' + esc(z.name) + '</span>';
+    var st = zs.st === 'in' ? '<span class="st in">' + (z.ov ? '區內：磁吸' : '區內') + '</span>'
+      : zs.st === 'near' ? '<span class="st near">接近：差 ' + zs.dz + ' 點</span>'
+      : '<span>' + (zs.above ? '在上方 ' : '在下方 ') + '<b class="num">' + zs.dz + '</b> 點</span>';
+    var fx = z.flo != null && z.fhi != null ? '期貨 ' + fmt(z.flo) + '–' + fmt(z.fhi) : '期貨約 ' + fmt(z.lo + M.basis) + '–' + fmt(z.hi + M.basis);
+    var h = '<div class="bz-lad-az">' + tag + '<span>' + tbName(z.tb) + ' <b class="num">' + fmt(z.lo) + '–' + fmt(z.hi) + '</b></span><span class="num">' + fx + '</span>' + st;
+    if (!full) return h + '</div>';
+    var sub = [];
+    if (z.ov && zs.st === 'in') sub.push('合成在粉紅區裡：Argon 不進場、13:30 不留倉');
+    if (M.kA != null) {
+      var edge = z.role === '撐' ? z.hi : (z.role === '壓' ? z.lo : (z.lo + z.hi) / 2), dk = Math.round(edge - M.kA);
+      var side = z.role === '撐' ? 'L' : (z.role === '壓' ? 'S' : '');
+      var with_ = side === 'L' ? M.syn > M.kA : (side === 'S' ? M.syn < M.kA : null);
+      var band = Math.abs(dk) > 150 ? '<span class="no">超過 150：追價</span>' : (Math.abs(dk) > 75 ? '75–150' : '0–75');
+      sub.push(with_ === false ? '<span class="no">逆多日（合成在多日分界' + (M.syn > M.kA ? '上' : '下') + '）：調單型不做</span>'
+        : '離多日分界 <b class="num">' + sgn(dk) + '</b>（' + band + '）' + (with_ ? '｜<span class="ok">順多日</span>' : ''));
+    }
+    var t = tdnFor(M, z);
+    if (t) {
+      var ph = '調單 ' + (t.side === 'L' ? '多' : '空') + '：<b>' + esc(t.ph || '—') + '</b>' + (t.t ? ' ' + esc(t.t) + ' 起' : '') + (t.end ? '（' + esc(t.end) + '）' : '');
+      if (t.arm) ph += '｜進區 ' + esc(t.arm);
+      if (t.brk) ph += '｜突破 ' + esc(t.brk) + (t.far != null ? '（突破後最遠 ' + fmt(t.far) + '）' : '');
+      if (t.rt) ph += '｜回測 ' + esc(t.rt) + (t.deep != null ? '（回測最深 ' + fmt(t.deep) + '）' : '');
+      if (t.stopk != null) ph += '｜停損 ' + fmt(t.stopk) + '（期貨約 ' + fmt(t.stopk + M.basis) + '）';
+      if (t.tgtk != null) ph += '｜目標 ' + fmt(t.tgtk) + '（期貨約 ' + fmt(t.tgtk + M.basis) + '）';
+      if (t.v) ph += '｜AI ' + esc(t.v) + (t.conf != null ? '（信心 ' + Math.round(t.conf) + '）' : '');
+      sub.push(ph);
+    }
+    var as = z.role === '撐' ? ['做多', M.long] : (z.role === '壓' ? ['做空', M.short] : null);
+    if (as && as[1].st) sub.push('Argon ' + as[0] + '：<b>' + esc(as[1].st) + '</b>' + (as[1].why ? '｜' + esc(as[1].why) : ''));
+    if (z.gapNo) sub.push('跳空日不用');
+    if (sub.length) h += '<span class="sub">' + sub.join('<br>') + '</span>';
+    return h + '</div>';
+  }
+
+  function alertHtml(M, now) {
+    var hot = [], above = null, below = null;
+    M.zones.forEach(function (z) {
+      var zs = zstate(z, M.syn);
+      if (zs.st !== 'far') hot.push([z, zs]);
+      else if (zs.above) { if (!above || zs.dz < above[1].dz) above = [z, zs]; }
+      else if (!below || zs.dz < below[1].dz) below = [z, zs];
+    });
+    hot.sort(function (a, b) { return (b[0].ov - a[0].ov) || (a[1].dz - b[1].dz); });
+    var lv = hot.length ? (hot.some(function (x) { return x[0].ov; }) ? 'pink' : 'box') : 'none', flash = false;
+    hot.forEach(function (x) {
+      var key = x[0].key + '|' + x[1].st;
+      if (!s.seen[key] || now - s.seen[key] > REALERT_MS) { s.seen[key] = now; flash = true; }
+    });
+    var body = hot.length ? hot.map(function (x) { return zoneLine(M, x[0], x[1], true); }).join('')
+      : (above || below ? [above, below].filter(Boolean).map(function (x) { return zoneLine(M, x[0], x[1], false); }).join('')
+                        : '<div class="bz-lad-quiet">價平 ±1000 內沒有重疊區或調單區</div>');
+    return { lv: lv, flash: flash, html: '<div class="bz-lad-alert" data-z1426-bar data-lv="' + lv + '" data-state="' + (hot.length ? hot[0][1].st : 'far') + '">' +
+             (hot.length ? '' : '<div class="bz-lad-quiet" style="font-size:11px">最近的區（合成進區或離區邊 ' + NEAR + ' 點內才會亮）</div>') + body + '</div>' };
+  }
+
+  /* 梯子的列：每個履約價一列（由高到低），分界、必來點、持倉、合成這些「線」各自插一列在兩個履約價中間 */
+  function rowsOf(M, R) {
+    var top = Math.ceil((M.syn + R) / STEP) * STEP, bot = Math.floor((M.syn - R) / STEP) * STEP, rows = [], by = {}, out = { up: [], dn: [] }, k;
+    var inR = function (p) { return p >= bot - STEP / 2 && p < top + STEP / 2; };
+    var at = function (p) { return Math.round(p / STEP) * STEP; };
+    for (k = top; k >= bot; k -= STEP) { by[k] = { k: k, cells: {}, ms: [], imp: false }; rows.push(by[k]); }
+    M.anchors.forEach(function (a) {
+      var r = by[a.k], who = (a.tb === 'Z' ? '暴Z ' : '今天 ') + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band;
+      if (!r) { (a.k > M.syn ? out.up : out.dn).push(who + ' ' + fmt(a.k) + '（' + sgn(a.k - M.syn) + '）'); return; }
+      r.cells[a.tb + a.sd] = a; r.imp = true;
+      var t = a.brk ? who + '（已破＝' + (a.role || '換角色') + '）' : (a.tb === 'T' && a.band === '綠' ? who + '（今天攻擊目標）' : who);
+      var cost = M.cost['Z' + a.sd + a.k];
+      r.ms.push({ cls: a.role === '壓力' ? 'res' : 'sup', t: t, tip: who + (cost ? '｜成本約 ' + cost : '') + '｜期貨 ' + fmt(a.f) + (a.note ? '｜' + a.note : '') });
+    });
+    M.zones.forEach(function (z) {
+      var mid = (z.lo + z.hi) / 2, cov = zoneRows(z, by);
+      if (!inR(mid) || !cov.length) { (mid > M.syn ? out.up : out.dn).push((z.ov ? '粉紅 ' : '調單區 ') + z.name + ' ' + fmt(z.lo) + '–' + fmt(z.hi) + '（' + sgn((mid > M.syn ? z.lo : z.hi) - M.syn) + '）'); return; }
+      cov.forEach(function (kk) { by[kk].imp = true; });
+      by[cov[0]].ms.unshift({ cls: z.ov ? 'pk' : 'bx', t: (z.ov ? '粉紅 ' : '調單區 ') + z.name + '（' + (z.tb === 'Z' ? '暴Z' : '今天') + '）', tip: tbName(z.tb) + ' ' + fmt(z.lo) + '–' + fmt(z.hi) + '｜' + z.meaning });
+    });
+    var lines = [{ px: true, k: M.syn }];
+    M.marks.forEach(function (mk) {
+      if (!inR(mk.k)) { (mk.k > M.syn ? out.up : out.dn).push(mk.t + '（' + sgn(mk.k - M.syn) + '）'); return; }
+      if (mk.line && (/^dv/.test(mk.line) || Math.abs(mk.k - at(mk.k)) > 0.5)) { lines.push(mk); return; }
+      var r = by[at(mk.k)]; if (!r) return;
+      r.imp = true; r.ms.push(mk);
+    });
+    lines.sort(function (a, b) { return (b.k - a.k) || ((b.px ? 1 : 0) - (a.px ? 1 : 0)); });
+    /* 線列插在「第一個 ≦ 它的履約價」前面；合成上下兩列一定展開 */
+    var items = [], li = 0;
+    rows.forEach(function (r, i) {
+      while (li < lines.length && lines[li].k >= r.k) { items.push(lines[li]); if (lines[li].px) { r.imp = true; if (rows[i - 1]) rows[i - 1].imp = true; } li++; }
+      items.push(r);
+    });
+    while (li < lines.length) items.push(lines[li++]);
+    return { items: items, by: by, top: top, bot: bot, out: out };
+  }
+  /* 區蓋到哪幾個履約價列：K 在 (K低−15, K高+15) 之內；都沒有就取最接近中間的那一列 */
+  function zoneRows(z, by) {
+    var ks = [], k;
+    for (k = Math.ceil((z.lo - 15) / STEP) * STEP; k < z.hi + 15; k += STEP) if (k > z.lo - 15 && by[k]) ks.push(k);
+    if (!ks.length) { k = Math.round((z.lo + z.hi) / 2 / STEP) * STEP; if (by[k]) ks.push(k); }
+    return ks.sort(function (a, b) { return b - a; });
+  }
+
+  function ladderHtml(M, L) {
+    var hd = '<div class="bz-lad-r hg"><span class="gz" title="多日的莊家成本">暴Z表</span><span></span><span class="gt" title="今天這一盤的莊家成本">即時表</span></div>' +
+             '<div class="bz-lad-r hd"><span title="暴Z表 Call 賣方（壓力）">C</span><span title="暴Z表 Put 賣方（支撐）">P</span><span>履約價</span>' +
+             '<span title="即時表 Call 賣方（壓力）">C</span><span title="即時表 Put 賣方（支撐）">P</span><span>期貨</span><span>距離</span><span class="l">莊家在這裡</span></div>';
+    var cell = function (r, key, z) {
+      var a = r.cells[key];
+      if (!a) return '<span></span>';
+      var cost = M.cost['Z' + a.sd + a.k];
+      return '<span class="bz-lad-c ' + a.band + (z ? ' z' : ' t') + (a.brk ? ' brk' : '') + '" title="' + esc(tbName(a.tb) + ' ' + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band + '（約 ' + BAND_W[a.band] + '）' + (cost ? '｜成本約 ' + cost : '') + (a.note ? '｜' + a.note : '')) + '">' + a.band + '</span>';
+    };
+    var body = L.items.map(function (r) {
+      if (r.px) {
+        return '<div class="bz-lad-r px" data-px><span></span><span></span><span class="k" title="合成期貨（選擇權座標，和 Excel 的合成期貨同一個數字）">' + fmt(M.syn) + '</span><span></span><span></span>' +
+               '<span class="f" title="台指期現價">' + fmt(M.fut) + '</span><span class="d"></span><span class="x">◀ 合成期貨 ' + fmt(M.syn) + ' <small>現價 ' + fmt(M.fut) + '｜換算差 ' + sgn(M.basis) + '</small></span></div>';
+      }
+      if (r.line) {
+        return '<div class="bz-lad-r ln ' + r.line + '"' + (r.tip ? ' title="' + esc(r.tip) + '"' : '') + '><span></span><span></span><span class="k">' + fmt(r.k) + '</span><span></span><span></span>' +
+               '<span class="f">' + fmt(r.fut != null ? r.fut : r.k + M.basis) + '</span><span class="d">' + sgn(r.k - M.syn) + '</span><span class="x">' + esc(r.t) + '</span></div>';
+      }
+      var d = r.k - M.syn, ms = r.ms.map(function (mk) { return '<span class="bz-lad-m ' + (mk.cls || '') + '"' + (mk.tip ? ' title="' + esc(mk.tip) + '"' : '') + '>' + esc(mk.t) + '</span>'; }).join('');
+      return '<div class="bz-lad-r ' + (r.imp ? 'imp' : 'sm' + (r.k % 100 === 0 ? ' h100' : '')) + (Object.keys(r.cells).length ? ' cl' : '') + '" data-k="' + r.k + '">' + cell(r, 'ZC', true) + cell(r, 'ZP', true) + '<span class="k">' + fmt(r.k) + '</span>' + cell(r, 'TC') + cell(r, 'TP') +
+             '<span class="f">' + fmt(r.k + M.basis) + '</span><span class="d ' + (d > 0 ? 'up' : 'down') + '">' + sgn(d) + '</span><span class="x">' + ms + '</span></div>';
+    }).join('');
+    return '<div class="bz-lad-lad" data-z1426-lad>' + hd + body + '</div>';
+  }
+
+  /* 列畫好之後量位置，把框對齊到它蓋到的履約價列（價格在區內時把合成列也框進去）；本盤高低畫在左邊一條 */
+  function overlay(box, M, L) {
+    var lad = box.querySelector('[data-z1426-lad]');
+    if (!lad) return;
+    Array.prototype.forEach.call(lad.querySelectorAll('.bz-lad-ov,.bz-lad-hl'), function (e) { e.remove(); });
+    var px = lad.querySelector('[data-px]');
+    var span = function (els) {
+      var t = Infinity, b = -Infinity;
+      els.forEach(function (e) { if (!e) return; t = Math.min(t, e.offsetTop); b = Math.max(b, e.offsetTop + e.offsetHeight); });
+      return t < b ? [t, b] : null;
+    };
+    var rowEl = function (k) { return lad.querySelector('.bz-lad-r[data-k="' + k + '"]'); };
+    var hc = lad.querySelectorAll('.bz-lad-r.hd > span'), W = lad.clientWidth;
+    var colL = function (i) { return hc[i] ? hc[i].offsetLeft : 0; }, colR = function (i) { return hc[i] ? hc[i].offsetLeft + hc[i].offsetWidth : W; };
+    var add = function (cls, sp, tip, tb) {
+      var e = document.createElement('div'); e.className = cls; e.style.top = Math.round(sp[0]) + 'px'; e.style.height = Math.max(5, Math.round(sp[1] - sp[0])) + 'px';
+      if (tb === 'Z') { e.style.left = Math.max(0, colL(0) - 2) + 'px'; e.style.right = Math.max(0, W - colR(2) - 2) + 'px'; }
+      if (tb === 'T') { e.style.left = Math.max(0, colL(2) - 2) + 'px'; e.style.right = Math.max(0, W - colR(4) - 2) + 'px'; }
+      if (tip) e.title = tip;
+      lad.appendChild(e);
+    };
+    M.zones.forEach(function (z) {
+      var ks = zoneRows(z, L.by), st = zstate(z, M.syn).st;
+      if (!ks.length) return;
+      var els = ks.map(rowEl);
+      if (st === 'in') els.push(px);
+      var sp = span(els);
+      if (sp) add('bz-lad-ov ' + (z.ov ? 'pk' : 'bx') + (z.tb === 'T' ? ' t' : '') + (st !== 'far' ? ' on' : ''), [sp[0] - 1, sp[1] + 1], tbName(z.tb) + ' ' + fmt(z.lo) + '–' + fmt(z.hi), z.tb);
+    });
+    if (M.hi != null && M.lo != null) {
+      var at = function (p) { return Math.min(L.top, Math.max(L.bot, Math.round(p / STEP) * STEP)); };
+      var sp = span([rowEl(at(M.hi - M.basis)), rowEl(at(M.lo - M.basis)), px]);
+      if (sp) add('bz-lad-hl', sp);
+    }
+  }
+
+  function sideHtml(M, L) {
+    var h = '';
+    if (L.out.up.length || L.out.dn.length) {
+      h += '<div class="bz-lad-box"><div class="h">梯子範圍外</div>' +
+           (L.out.up.length ? '<div class="bz-lad-out">▲ ' + L.out.up.map(esc).join('｜') + '</div>' : '') +
+           (L.out.dn.length ? '<div class="bz-lad-out">▼ ' + L.out.dn.map(esc).join('｜') + '</div>' : '') + '</div>';
+    }
+    if (M.tdn.length) {
+      h += '<div class="bz-lad-box"><div class="h">調單型（AI 讀 Argon [調單型]）</div>' + M.tdn.slice(0, 6).map(function (t) {
+        return '<div class="bz-lad-li' + (t.full && !t.live ? ' bz-lad-quiet' : '') + '"><span>' + esc(t.t || '') + '</span><span>' + (t.side === 'L' ? '多' : '空') + ' ' + fmt(t.kl) + '–' + fmt(t.kh) + ' <b>' + esc(t.ph || '') + '</b>' +
+               (t.end ? '（' + esc(t.end) + '）' : '') + (t.stopk != null ? '｜停損 ' + fmt(t.stopk) : '') + (t.tgtk != null ? '｜目標 ' + fmt(t.tgtk) : '') + (t.v ? '｜AI ' + esc(t.v) : '') + '</span></div>';
+      }).join('') + (M.tdn.some(function (t) { return t.full; }) ? '' : '<div class="bz-lad-out bz-lad-quiet">現在只看得到突破／回測；進區、停損、目標要等 AI V0.1.36</div>') + '</div>';
+    }
+    h += '<div class="bz-lad-box"><div class="h">怎麼看</div><div class="bz-lad-leg">' +
+         '<span><i style="background:#4f8dff"></i>藍 200</span><span><i style="background:#f5c542"></i>黃 100</span><span><i style="background:#00e676"></i>綠 400</span>' +
+         '<span><i style="background:rgba(244,143,177,.35);border:1.5px solid #f48fb1"></i>粉紅＝雙側重疊</span><span><i style="border:1.5px dashed #f3cd7c"></i>虛線＝箱型（調單區）</span>' +
+         '<span><i style="border-top:2px solid #eef1f7;height:0;width:14px"></i>多日分界</span><span><i style="border-top:1.5px dashed #eef1f7;height:0;width:14px"></i>今天分界</span><span><i style="border-top:1px dashed rgba(170,180,198,.8);height:0;width:14px"></i>AI 影子計畫</span>' +
+         '<span><i style="background:#5b6472;width:3px"></i>本盤高低</span></div>' +
+         '<div class="bz-lad-out">靠履約價的兩欄是暴Z表（多日），外側兩欄是即時表（今天）。斜線格＝已被穿過、角色互換。顏色代表「莊家在那裡」，2 年回測守住的比例和隨機價位差不多，不代表一定守住。滑鼠移到格子上可以看成本。</div></div>';
+    return h;
+  }
+
+  /* 合成在兩張表的位置：各自上方、下方最近的一層（顏色或區），在區內就直接說 */
+  function nearestOf(M, tb) {
+    var up = null, dn = null, inZ = null;
+    var pick = function (cur, d, t, isZone) { return !cur || d < cur.d ? { d: d, t: t, z: isZone } : cur; };
+    M.zones.forEach(function (z) {
+      if (z.tb !== tb) return;
+      var zs = zstate(z, M.syn), t = (z.ov ? '粉紅 ' : '調單區 ') + z.name + ' ' + fmt(z.lo) + '–' + fmt(z.hi);
+      if (zs.st === 'in') inZ = { t: t, ov: z.ov };
+      else if (zs.above) up = pick(up, zs.dz, t, true); else dn = pick(dn, zs.dz, t, true);
+    });
+    M.anchors.forEach(function (a) {
+      if (a.tb !== tb) return;
+      var d = a.k - M.syn, t = (a.sd === 'C' ? 'Call ' : 'Put ') + a.band + ' ' + fmt(a.k) + (a.brk ? '（已破）' : '');
+      if (d > 0) up = pick(up, d, t, false); else if (d < 0) dn = pick(dn, -d, t, false);
+    });
+    return { up: up, dn: dn, inZ: inZ };
+  }
+  /* 離壓力／支撐顏色多遠：兩張表各取合成上面最近一層（壓力色）、下面最近一層（支撐色），紅色不算（不是撐壓）；第二近的小字 */
+  function distHtml(M) {
+    var pickTb = function (tb) {
+      var up = [], dn = [];
+      M.anchors.forEach(function (a) { if (a.tb !== tb || a.band === '紅') return; var d = a.k - M.syn; if (d > 0) up.push([d, a]); else if (d < 0) dn.push([-d, a]); else up.push([0, a]); });
+      up.sort(function (x, y) { return x[0] - y[0]; }); dn.sort(function (x, y) { return x[0] - y[0]; });
+      return { up: up, dn: dn };
+    };
+    var cell = function (arr, dir) {
+      if (!arr.length) return '<span class="dc none">梯子範圍內沒有</span>';
+      var a = arr[0][1], d = arr[0][0], n2 = arr[1];
+      var tip = tbName(a.tb) + ' ' + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band + '（約 ' + BAND_W[a.band] + '）履約價 ' + fmt(a.k) + '｜期貨約 ' + fmt(a.k + M.basis) + (a.brk ? '｜已破：角色互換' : '') + (a.note ? '｜' + a.note : '');
+      return '<span class="dc' + (d <= NEAR ? ' nr' : '') + '" title="' + esc(tip) + '"><i class="bz-lad-c z ' + a.band + (a.brk ? ' brk' : '') + '">' + a.band + '</i>' +
+             '<span class="nm">' + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band + ' ' + fmt(a.k) + (a.brk ? '<em>已破</em>' : '') + '</span>' +
+             '<b class="dd ' + (dir > 0 ? 'up' : 'down') + '">' + (dir > 0 ? '+' : '−') + Math.round(d) + '</b>' +
+             '<small>期貨 ' + fmt(a.k + M.basis) + (n2 ? '｜再' + (dir > 0 ? '上' : '下') + ' ' + n2[1].band + ' ' + fmt(n2[1].k) + ' ' + (dir > 0 ? '+' : '−') + fmt(n2[0]) : '') + '</small></span>';
+    };
+    var row = function (tb, label) { var p = pickTb(tb); return '<span class="tb">' + label + '</span>' + cell(p.up, 1) + cell(p.dn, -1); };
+    return '<div class="bz-lad-dist" title="合成期貨 ' + fmt(M.syn) + ' 離兩張表上下最近的顏色層幾點（＋往上、−往下）；滑鼠移到格子上看期貨價">' +
+           '<span class="h">合成 ' + fmt(M.syn) + '</span><span class="h">▲ 上方壓力色</span><span class="h">▼ 下方支撐色</span>' +
+           row('Z', '暴Z表') + row('T', '即時表') + '</div>';
+  }
+
+  function headHtml(M, now) {
+    var age = M.at ? Math.max(0, Math.round((now - M.at) / 60000)) : null, stale = !!(M.at && now - M.at > STALE_MS), dir = [];
+    if (M.kA != null && M.dA != null) {
+      var a = Math.abs(M.dA), up = M.dA > 0;
+      dir.push('<span class="bz-lad-chip ' + (up ? 'up' : 'down') + '" title="暴Z表 Kdiv（期貨 ' + fmt(M.kA + M.basis) + '）；調單型要順多日分界">多日分界 ' + fmt(M.kA) + '：合成在' + (up ? '上 ' : '下 ') + Math.round(a) + ' → ' + (up ? '偏多' : '偏空') + '</span>');
+      if (a > 150) dir.push('<span class="bz-lad-chip warn" title="研究：離多日分界 150 點以上才追的，21 個月大虧；75–150 兩期都賺">離分界超過 150：追價區</span>');
+    }
+    if (M.kB != null && M.dB != null) dir.push('<span class="bz-lad-chip" title="即時表 Kdiv（期貨 ' + fmt(M.kB + M.basis) + '）">今天分界 ' + fmt(M.kB) + '：' + (M.dB >= 0 ? '合成在上 ' : '合成在下 ') + Math.round(Math.abs(M.dB)) + (M.dirB ? '｜' + esc(M.dirB.replace(/\s*[-+−]?\d+$/, '')) : '') + '</span>');
+    if (M.expiry) {
+      var tw = new Date(now + 8 * 3600000).toISOString(), today = tw.slice(0, 10), hm = tw.slice(11, 16);
+      var tmr = new Date(Date.parse(today + 'T00:00:00Z') + 86400000).toISOString().slice(0, 10), et = '';
+      if (M.expiry === today && M.session !== 'NIGHT') et = hm >= '13:30' ? '近月已結算' : '今天到期：10:30 後看縮水、13:30 前出清';
+      else if (M.expiry === today && hm < '05:00') et = '近月今天日盤到期（' + M.expiry.slice(5).replace('-', '/') + '）';
+      else if (M.expiry === tmr) et = '近月明天到期（' + M.expiry.slice(5).replace('-', '/') + '）';
+      if (et) dir.push('<span class="bz-lad-chip exp" title="控制台 B6 到期日（AI expiry_date）">' + et + '</span>');
+    }
+    return { stale: stale, html: '<div class="bz-lad-head"><strong>價位梯子</strong><span>履約價（合成）座標，跟 Excel 一樣由高到低；左暴Z表、右即時表</span><span class="age">' +
+             (age == null ? '' : (stale ? '資料 ' + age + ' 分鐘前（舊）' : (age < 1 ? '剛更新' : age + ' 分鐘前'))) + '</span></div>',
+             info: distHtml(M) + '<div class="bz-lad-dir">' + dir.join('') + '</div>' };
+  }
+
+  function section() { return document.querySelector('#baoz-system-panel section[aria-label="關鍵期貨價位"]'); }
+  function unmount() {
+    if (s.box) { s.box.remove(); s.box = null; }
+    if (s.btn) { s.btn.remove(); s.btn = null; }
+    if (s.sec) s.sec.removeAttribute('data-z1426-fold');
+    s.sec = null; s.html = '';
+  }
+  function place(sec) {
+    var head = sec.querySelector(':scope > .bz-panel-head'), after = head;
+    if (head && head.nextElementSibling && head.nextElementSibling.classList.contains('bz-nref')) after = head.nextElementSibling;
+    if (s.box.parentNode !== sec || s.box.previousElementSibling !== after) {
+      if (after) sec.insertBefore(s.box, after.nextSibling); else sec.insertBefore(s.box, sec.firstChild);
+    }
+    if (s.btn.parentNode !== sec || s.btn.previousElementSibling !== s.box) sec.insertBefore(s.btn, s.box.nextSibling);
+  }
+  function foldBtn() {
+    s.btn.textContent = s.fold ? '▸ 防線快覽、V4 重疊、四色表、完整價位明細已收合（梯子裡都有）：按一下展開' : '▾ 收合防線快覽、V4 重疊、四色表、完整價位明細';
+    if (s.sec) { if (s.fold) s.sec.setAttribute('data-z1426-fold', '1'); else s.sec.removeAttribute('data-z1426-fold'); }
+  }
+
+  function paint() {
+    var sec = section(), now = Date.now();
+    var M = sec && allowed() ? model(s.data, s.ai) : null;
+    if (!M) { unmount(); return; }
+    if (s.sec && s.sec !== sec) unmount();
+    s.sec = sec;
+    if (!s.box) {
+      s.box = document.createElement('div'); s.box.className = 'bz-lad'; s.box.setAttribute('data-z1426', '1');
+      s.btn = document.createElement('button'); s.btn.type = 'button'; s.btn.className = 'bz-lad-fold'; s.btn.setAttribute('data-z1426-fold-btn', '1');
+      s.btn.addEventListener('click', function () { s.fold = !s.fold; try { window.localStorage.setItem(FOLD_KEY, s.fold ? '1' : '0'); } catch (e) {} foldBtn(); });
+    }
+    place(sec); foldBtn();
+    var tall = window.innerHeight >= window.innerWidth, L = rowsOf(M, tall ? RANGE_TALL : RANGE_WIDE);
+    var H = headHtml(M, now), A = alertHtml(M, now);
+    var html = H.html + '<div class="bz-lad-main"><div class="bz-lad-top">' + H.info + A.html + '</div>' + ladderHtml(M, L) + '<div class="bz-lad-side">' + sideHtml(M, L) + '</div></div>';
+    if (H.stale) s.box.setAttribute('data-stale', '1'); else s.box.removeAttribute('data-stale');
+    if (html !== s.html) { s.box.innerHTML = html; s.html = html; overlay(s.box, M, L); }
+    if (A.flash && !H.stale) s.flashUntil = now + 3600;
+    if (now < (s.flashUntil || 0)) { var bar = s.box.querySelector('[data-z1426-bar]'); if (bar && !bar.classList.contains('flash')) bar.classList.add('flash'); }
+    s.last = now;
+  }
+
+  function start() {
+    reconcile(); paint();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(reconcile).observe(d, { attributes: true, attributeFilter: ['class'] });
+    try { if (typeof auth !== 'undefined' && auth && typeof auth.onAuthStateChanged === 'function') auth.onAuthStateChanged(function () { detach(); s.failAt = s.afailAt = 0; reconcile(); }); } catch (e) {}
+    window.setInterval(function () {
+      reconcile();
+      var sec = section();
+      if (s.box && sec && s.box.parentNode !== sec) { s.html = ''; paint(); }   /* 1.4.5 重畫區塊時接回來 */
+      else if (s.data && Date.now() - s.last > 15000) paint();                 /* 資料新舊、到期日提醒 */
+    }, 1000);
+    var rt = 0;
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { s.html = ''; paint(); }, 150); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_LADDER_UI_1_4_27_END -->
 </body>
 </html>
