@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.25');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.26');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -14347,5 +14347,155 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
 })();
 </script>
 <!-- Z31_BAOZ_MARKET_UI_1_4_25_END -->
+<!-- Z31_BAOZ_AICARD_UI_1_4_26_BEGIN -->
+<style id="z31-baoz-aicard-ui-1-4-26">
+/* ===== BaoZ UI 1.4.26（20261105）：AI 卡精簡＋Argon 實單指令排最上面（只改顯示，不改 1.4.5／1.4.21／1.4.25 的內容、資料、Firebase）
+   - 兩欄版面（直立 ≥760、寬螢幕）左欄順序：Argon 即時指令／持有部位（實單）→ AI 卡（影子）→ 方向數字、三檔、折疊區。
+   - AI 卡「精簡」（預設）：只留 ① 影子計畫一行（等待中／已進區／持倉中才有數字；失效、取消、出場、觀望只留一行灰字）
+     ② 盤勢分析一行（方向、信心、時間、下次分析、花費）③ 調單協助最新一筆。按盤勢分析或調單協助那一行可以單獨展開。
+     流程 L0／L1／L2、最近動態、SOP 記帳、調單觸發 vs SOP、程式限制、型態標記、模型／花費列都收進「全部顯示」。
+   - 精簡時 AI 卡固定高度：AI 有沒有計畫，下面的卡都不會被推動。「全部顯示」或展開一段時最高 75% 螢幕、在卡內捲動。
+   - 選擇記在這台瀏覽器（z31.baoz.aicard.v1）。沒有 AI 資料、讀取失敗時和 1.4.25 一樣。 ===== */
+/* 一長條版面（窄視窗、原版版面）也照這個順序：改成直向 flex 才能排；兩欄版面的 grid 規則比這條優先 */
+#baoz-system-panel:not([hidden]) { display: flex; flex-direction: column; }
+#baoz-system-panel > .bz-source, #baoz-system-panel > #bz-banner { order: 0; }
+#baoz-system-panel > *, #baoz-system-panel #bz-semantic > * { order: 3; }
+#baoz-system-panel > .bz-head, #baoz-system-panel > #bz-data-note { order: 1; }
+#baoz-system-panel > #bz-ai-card { order: 2; }
+#baoz-system-panel #bz-ai-card[data-z26ai] { box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #3a4552 transparent; padding-top: 0; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"]:not([data-z26any]) { height: var(--z26-aih, 240px); }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"][data-z26any], #baoz-system-panel #bz-ai-card[data-z26ai="f"] { min-height: var(--z26-aih, 240px); max-height: 75vh; }
+html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px; }
+@media (max-width: 640px) { #baoz-system-panel #bz-ai-card[data-z26ai="c"]:not([data-z26any]) { height: auto; } }   /* 手機：字會折行，不固定高度 */
+#baoz-system-panel #bz-ai-card[data-z26ai] > .bz-ai-head { position: sticky; top: 0; z-index: 3; background: var(--bz-surface); padding: 8px 0 5px; margin: 0; }
+#baoz-system-panel #bz-ai-card .z26-tg { margin-left: auto; font: inherit; font-size: 11px; color: var(--bz-muted); background: transparent; border: 1px solid var(--bz-line); border-radius: 10px; padding: 1px 9px; cursor: pointer; }
+#baoz-system-panel #bz-ai-card .z26-tg:hover { color: var(--bz-ink); border-color: var(--bz-muted); }
+/* 影子：左邊框改虛線、淡一點，和 Argon 實單的實色分開 */
+#baoz-system-panel #bz-ai-card[data-z26ai] { border-left-style: dashed; }
+/* ---- 精簡：白名單（標題、計畫、盤勢分析、調單協助），其他都收進「全部顯示」 ---- */
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] { display: flex; flex-direction: column; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > * { flex: none; order: 4; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > :not(.bz-ai-head):not([data-z26p]):not(.bz-mkt-wrap):not(.bz-tdn-wrap) { display: none !important; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-head { order: 0; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-head .bz-ai-meta { display: none; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26p] { order: 1; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap { order: 2; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-tdn-wrap { order: 3; }
+/* 計畫：進行中（等待中／已進區／持倉中）＝一行標題＋一排數字＋有效到 */
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-headline { margin-top: 2px; font-size: 16px; line-height: 1.35; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"].ai-long > .bz-ai-headline::before,
+#baoz-system-panel #bz-ai-card[data-z26ai="c"].ai-short > .bz-ai-headline::before { content: '影子計畫'; display: inline-block; margin-right: 6px; padding: 0 6px; font-size: 11px; font-weight: 600; line-height: 17px; vertical-align: 2px; color: var(--bz-muted); border: 1px dashed var(--bz-muted); border-radius: 9px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-headline .ago { font-size: 11px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-nums { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-nums > .bz-ai-num { flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; padding: 1px 8px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-nums > .bz-ai-num b { font-size: 14px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-nums > .bz-ai-num small { font-size: 11px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-more,
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-why,
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26p="note"] { margin-top: 3px; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 計畫：失效／取消／出場／觀望＝只留一行灰字 */
+#baoz-system-panel #bz-ai-card[data-z26ai="c"]:not(.ai-long):not(.ai-short) > .bz-ai-headline { font-size: 12.5px; font-weight: 600; color: var(--bz-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"]:not(.ai-long):not(.ai-short) > .bz-ai-headline::before { content: 'AI 計畫：'; font-weight: 400; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"]:not(.ai-long):not(.ai-short) > .bz-ai-nums { display: none !important; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"]:not(.ai-long):not(.ai-short) > .bz-ai-why { color: var(--bz-muted); }
+/* 盤勢分析、調單協助：收成一行，按一下展開 */
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s] { position: relative; padding-right: 18px; margin-top: 5px; padding-top: 4px; border-top: 1px solid var(--bz-line); cursor: pointer; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s]::after { content: '▸'; position: absolute; right: 4px; top: 5px; font-size: 11px; color: var(--bz-muted); }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s][data-z26o] { cursor: auto; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s][data-z26o]::after { content: '▾'; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s][data-z26o] > [data-z26h] { cursor: pointer; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s]:not([data-z26o]) > :not([data-z26h]) { display: none !important; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s]:not([data-z26o]) [data-z26one] { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s]:not([data-z26o]) [data-z26one] > * { display: inline; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s]:not([data-z26o]) [data-z26one] > .bz-lv { display: inline-block; margin: 0 4px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mkt-head { margin: 0; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mkt-foot { margin: 0; font-size: 11px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-tdn-wrap[data-z26s]:not([data-z26o]) { display: flex; gap: 8px; align-items: baseline; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-tdn-wrap[data-z26s]:not([data-z26o]) > .bz-sec { flex: none; margin: 0; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-tdn-wrap[data-z26s]:not([data-z26o]) > .bz-sec > * { display: none; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-tdn-wrap[data-z26s]:not([data-z26o]) > .bz-tdn { flex: 1 1 auto; min-width: 0; max-height: none; overflow: hidden; margin: 0; display: block; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-tdn-wrap[data-z26s]:not([data-z26o]) > .bz-tdn > :not([data-z26one]) { display: none; }
+</style>
+<script>
+(function () {
+  'use strict';
+  /* BaoZ UI 1.4.26 AI 卡精簡：只在 AI 卡上加屬性、標題列加一個按鈕；不讀也不寫 Firebase。
+     1.4.5 每 5 秒整張重畫、1.4.21／1.4.25 補段落之後，馬上把屬性補回去（MutationObserver，畫面不會閃） */
+  var KEY = 'z31.baoz.aicard.v1';
+  var s = { card: null, mo: null, mode: 'c', open: {} };
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && typeof sv === 'object') { s.mode = sv.mode === 'f' ? 'f' : 'c'; s.open = sv.open && typeof sv.open === 'object' ? { mkt: !!sv.open.mkt, tdn: !!sv.open.tdn } : {}; } } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ mode: s.mode, open: s.open })); } catch (e) {} }
+  function txt(e) { return e ? String(e.textContent || '').replace(/\s+/g, ' ').trim() : ''; }
+  function set(e, k, v) { if (!e) return; if (v == null) { if (e.hasAttribute(k)) e.removeAttribute(k); } else if (e.getAttribute(k) !== v) e.setAttribute(k, v); }
+  function sec(el, key, heads, one) {
+    if (!el) return false;
+    set(el, 'data-z26s', key);
+    set(el, 'data-z26o', s.open[key] ? '1' : null);
+    Array.prototype.forEach.call(el.children, function (x) { set(x, 'data-z26h', heads.indexOf(x) >= 0 ? '1' : null); });
+    if (one) set(one, 'data-z26one', '1');
+    return !!s.open[key];
+  }
+  function decorate() {
+    var c = s.card;
+    if (!c) return;
+    if (!c.querySelector(':scope > .bz-ai-foot')) { set(c, 'data-z26ai', null); set(c, 'data-z26any', null); return; }   /* 還沒有資料／讀取失敗：照 1.4.25 */
+    set(c, 'data-z26ai', s.mode);
+    var head = c.querySelector(':scope > .bz-ai-head');
+    if (head) {
+      var b = head.querySelector(':scope > .z26-tg');
+      if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'z26-tg'; head.appendChild(b); }
+      var lab = s.mode === 'c' ? '全部顯示' : '精簡';
+      if (b.textContent !== lab) b.textContent = lab;
+      set(b, 'title', s.mode === 'c' ? '顯示 AI 卡全部內容（流程、最近動態、SOP 記帳、程式限制、型態…）' : '回到精簡：計畫、盤勢分析、調單協助各一行');
+      set(head, 'title', txt(head.querySelector('.bz-ai-meta')) || null);
+    }
+    /* 計畫那幾行（白名單）：標題、L0 說明、數字、有效到；「AI 程式沒有在更新」這種提醒也留著 */
+    Array.prototype.forEach.call(c.children, function (x) {
+      var cl = x.classList, t = txt(x), p = null;
+      if (cl.contains('bz-ai-headline')) p = 'head';
+      else if (cl.contains('bz-ai-why')) p = 'why';
+      else if (cl.contains('bz-ai-nums')) p = 'nums';
+      else if (cl.contains('bz-ai-more')) p = 'more';
+      else if (cl.contains('bz-ai-risk') && !/^風險：/.test(t)) p = 'note';
+      else if (cl.contains('bz-ai-empty') && !/^還沒有 AI 計畫/.test(t)) p = 'note';
+      set(x, 'data-z26p', p);
+    });
+    var any = false;
+    var td = c.querySelector(':scope > .bz-tdn-wrap');
+    if (td) { var tl = td.querySelector(':scope > .bz-tdn'); any = sec(td, 'tdn', [td.querySelector(':scope > .bz-sec'), tl], tl && tl.querySelector(':scope > .bz-tdn-row')) || any; }
+    var mk = c.querySelector(':scope > .bz-mkt-wrap');
+    if (mk) any = sec(mk, 'mkt', [mk.querySelector(':scope > .bz-mkt-head'), mk.querySelector(':scope > .bz-mkt-foot')], null) || any;
+    set(c, 'data-z26any', any ? '1' : null);
+  }
+  function onClick(e) {
+    var c = s.card, t = e.target;
+    if (!c || !t || !t.closest) return;
+    if (t.closest('.z26-tg')) { s.mode = s.mode === 'c' ? 'f' : 'c'; save(); decorate(); e.preventDefault(); return; }
+    if (s.mode !== 'c' || t.closest('summary, a, button, input, select, details')) return;
+    var el = t.closest('#bz-ai-card > [data-z26s]');
+    if (!el) return;
+    if (el.hasAttribute('data-z26o') && !t.closest('[data-z26h]')) return;   /* 展開後只有按標題那一行才收起來 */
+    var k = el.getAttribute('data-z26s');
+    s.open[k] = !s.open[k];
+    save(); decorate();
+  }
+  function watch() {
+    var c = document.getElementById('bz-ai-card');
+    if (c && c !== s.card && typeof MutationObserver !== 'undefined') {
+      if (s.mo) s.mo.disconnect();
+      if (s.card) s.card.removeEventListener('click', onClick, true);
+      s.card = c;
+      c.addEventListener('click', onClick, true);
+      s.mo = new MutationObserver(decorate);
+      s.mo.observe(c, { childList: true });
+    }
+    decorate();
+  }
+  function start() { watch(); window.setInterval(watch, 1000); }   /* AI 卡晚建立 */
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
+<!-- Z31_BAOZ_AICARD_UI_1_4_26_END -->
 </body>
 </html>
