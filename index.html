@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.22');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.24');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -13758,5 +13758,281 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
 })();
 </script>
 <!-- Z31_BAOZ_WATCH_SYN_UI_1_4_22_END -->
+<!-- Z31_BAOZ_NIGHT_REF_UI_1_4_23_BEGIN -->
+<style id="z31-baoz-night-ref-ui-1-4-23">
+/* ===== BaoZ UI 1.4.23（20261105，Argon V1.2.40＋上傳程式 1.0.3）：「關鍵價位」標題下面加「夜盤參考」
+   Edward 11/05 08:43：夜盤即時表在日盤 10:15 前放進關鍵價位，日盤一開始可以參考。
+   只改顯示：不寫 Firebase、不改任何計算、不改 1.4.22 以前的程式；同一個節點 baoz_realtime/near 多掛一個唯讀監聽，只用 night_ref 和 market.futures。
+   1. 只在台北時間 08:45–10:15，而且是今天日盤接的那一盤夜盤（night_ref.day／fut_day＝今天）才出現；10:15 自動收起。
+   2. 夜盤高低（期貨夜盤表）＝2 年支撐壓力研究裡唯一比隨機線好的價位（掃過再收回）；
+      夜盤分界、夜盤支撐壓力、尾段守穩回收／尾段壓回（夜盤即時表 05:00 固定）＝未驗證，只看盤參考。
+   3. 下單程式、BaoZ AI 都不讀這一段。沒有 night_ref（Argon V1.2.39 以前、上傳程式 1.0.2 以前）＝和 1.4.22 一模一樣。
+   4. 今天日盤的快照、但兩個日期都不是今天（05:00–08:45 Excel 沒開、Argon 出錯）：只用黃字說明原因，不顯示數字；快照超過 3 分鐘沒更新：不算距離。 ===== */
+#baoz-system-panel .bz-nref[hidden] { display: none; }
+#baoz-system-panel .bz-nref { margin: 8px 0 0; padding: 6px 8px; border: 1px dashed var(--bz-line); border-radius: 6px; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-nref-head { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; }
+#baoz-system-panel .bz-nref-head strong { color: var(--bz-ink); font-size: 13px; }
+#baoz-system-panel .bz-nref-row { display: flex; flex-wrap: wrap; gap: 1px 12px; margin-top: 3px; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-nref-row > span { white-space: nowrap; }
+#baoz-system-panel .bz-nref-row b { color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-nref-tag { display: inline-block; padding: 0 5px; border: 1px solid var(--bz-line); border-radius: 4px; font-size: 11px; line-height: 1.5; }
+#baoz-system-panel .bz-nref-tag.ok { color: var(--bz-ink); border-color: var(--bz-accent); }
+#baoz-system-panel .bz-nref-tag.nv { color: var(--bz-attn); }
+#baoz-system-panel .bz-nref-warn { color: var(--bz-attn); }
+</style>
+<script>
+/* BaoZ UI 1.4.23：關鍵價位加夜盤參考（只讀 Firebase，不寫；只改顯示） */
+(function () {
+  'use strict';
+  var NODE = 'baoz_realtime/near';
+  var OPEN = 8 * 60 + 45, CLOSE = 10 * 60 + 15;          /* 台北時間 08:45–10:15 */
+  var s = { ref: null, fn: null, data: null, failAt: 0, box: null, html: null };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function isNum(v) { return typeof v === 'number' && Number.isFinite(v); }
+  function num(v) { return Math.round(v).toLocaleString('en-US'); }
+  function delta(d) { d = Math.round(d); return (d > 0 ? '+' : (d < 0 ? '−' : '±')) + Math.abs(d).toLocaleString('en-US') + ' 點'; }
+  function md(d) { var m = /^\d{4}-(\d{2})-(\d{2})$/.exec(String(d || '')); return m ? m[1] + '/' + m[2] : '—'; }
+
+  /* 台北時間：今天日期 yyyy-mm-dd、幾點幾分（分鐘） */
+  function twNow() {
+    var o = {};
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+        .formatToParts(new Date()).forEach(function (p) { o[p.type] = p.value; });
+    } catch (e) { return null; }
+    var h = Number(o.hour) % 24, m = Number(o.minute);
+    if (!o.year || !Number.isFinite(h) || !Number.isFinite(m)) return null;
+    return { date: o.year + '-' + o.month + '-' + o.day, min: h * 60 + m };
+  }
+
+  /* 和 1.4.5 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才讀 */
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function detach() {
+    if (s.ref && s.fn) { try { s.ref.off('value', s.fn); } catch (e) {} }
+    s.ref = null; s.fn = null;
+  }
+  function reconcile() {
+    if (!allowed()) { if (s.ref) detach(); if (s.data) { s.data = null; render(); } return; }
+    if (s.ref || Date.now() - s.failAt < 60000) return;
+    if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
+    s.ref = db.ref(NODE);
+    s.fn = function (sn) {
+      var v = sn && typeof sn.val === 'function' ? sn.val() : null;
+      s.data = v && typeof v === 'object' ? { nr: v.night_ref, f: v.market && v.market.futures, src: v.source || {} } : null;
+      render();
+    };
+    s.ref.on('value', s.fn, function () { s.failAt = Date.now(); detach(); });   /* 讀取失敗的說明 1.4.5 已經會顯示 */
+  }
+
+  function lv(label, v, f) {
+    return '<span>' + esc(label) + ' <b>' + num(v) + '</b>' + (isNum(f) && f > 0 ? ' ' + delta(v - f) : '') + '</span>';
+  }
+  function zone(label, z, f) {
+    if (!z || !isNum(z.lo)) return '<span>' + esc(label) + ' —</span>';
+    var hi = isNum(z.hi) ? z.hi : z.lo, near = !(isNum(f) && f > 0) ? null : (f < z.lo ? z.lo : (f > hi ? hi : f));
+    return '<span>' + esc(label) + ' <b>' + num(z.lo) + (hi > z.lo ? '–' + num(hi) : '') + '</b>' + (near === null ? '' : ' ' + delta(near - f)) + '</span>';
+  }
+  function list(label, a) {
+    a = Array.isArray(a) ? a.filter(isNum) : [];
+    return '<span>' + esc(label) + ' ' + (a.length ? '<b>' + a.map(num).join('、') + '</b>' : '沒有') + '</span>';
+  }
+
+  /* 要顯示的內容；不該出現＝'' */
+  function build(d, now) {
+    if (!d || !now || now.min < OPEN || now.min >= CLOSE) return '';
+    var nr = d.nr, ms = Number(d.src.generated_at_ms);
+    var fresh = Number.isFinite(ms) && Date.now() - ms < 180000;          /* 快照 3 分鐘沒更新：不算距離（現價可能是舊的） */
+    var f = isNum(d.f) && fresh ? d.f : null;
+    if (!nr || typeof nr !== 'object') return '';
+    var futOk = nr.fut_day === now.date && isNum(nr.fut_hi) && isNum(nr.fut_lo);
+    var tabOk = nr.day === now.date && !!nr.key;
+    var dayData = String(d.src.generated_at || '').slice(0, 10) === now.date && d.src.session === 'DAY';
+    if (!futOk && !tabOk && !(dayData && (nr.key || nr.fut_day || nr.err))) return '';    /* 週末、休市、資料還是昨天的：不出現 */
+    var night = tabOk ? nr.night : (nr.fut_day === now.date ? nr.fut_night : nr.night);
+    var h = '<div class="bz-nref-head"><strong>夜盤參考</strong><span>' + esc(md(night)) + ' 夜盤 · 只看盤，下單和 AI 都不讀 · 10:15 收起</span>' +
+      (fresh ? '' : '<span class="bz-nref-warn">快照超過 3 分鐘沒更新，先不算距離</span>') + '</div>';
+    if (nr.err) h += '<div class="bz-nref-row bz-nref-warn">Argon 寫夜盤參考出錯（' + esc(nr.err) + '），下面可能不完整</div>';
+    var tipHL = '夜盤高低＝期貨夜盤表（' + (nr.fut_src || '來源未標明') + '）。2 年 1004 盤支撐壓力研究：18 種價位裡只有「前一盤高低」比隨機線好，' +
+      '好在價格掃過以後收回來（+6.2 點/筆）；單獨拿來做單還不顯著。收盤價本身比隨機線更容易被穿過。距＝價位 − 現價。';
+    if (futOk) {
+      h += '<div class="bz-nref-row" title="' + esc(tipHL) + '"><span class="bz-nref-tag ok">2 年比隨機好</span>' +
+        lv('夜盤高', nr.fut_hi, f) + lv('夜盤低', nr.fut_lo, f) + (isNum(nr.fut_close) ? '<span>收 ' + num(nr.fut_close) + '</span>' : '') + '</div>';
+    } else {
+      h += '<div class="bz-nref-row bz-nref-warn">夜盤高低：期貨夜盤表沒有今天日盤接的那一盤</div>';
+    }
+    if (tabOk && !nr.fixed) {
+      h += '<div class="bz-nref-row bz-nref-warn">夜盤即時表是 V1.2.39 固定的，沒有給網頁的數字（V1.2.40 下一次夜盤 05:00 固定後才有），分界、支撐壓力看 Excel 的「夜盤即時表」</div>';
+    } else if (tabOk) {
+      var b = isNum(nr.basis) ? nr.basis : null;
+      var tip = '夜盤即時表 ' + (nr.fixed ? String(nr.fixed).slice(5, 16).replace('T', ' ') + ' ' : '') + '固定。期貨價＝履約價＋夜盤收盤換算差' +
+        (b === null ? '（換算差未知）' : ' ' + (b > 0 ? '+' : '') + Math.round(b)) + '。即時表的價位在 2 年研究裡和隨機線差不多，還沒驗證。' +
+        (nr.cblocks ? ' Call 色塊（履約價）：' + nr.cblocks + '。' : '') + (nr.pblocks ? ' Put 色塊（履約價）：' + nr.pblocks + '。' : '');
+      var div = isNum(nr.div_fut) ? lv('夜盤分界', nr.div_fut, f) :
+        (isNum(nr.div_k) ? '<span>夜盤分界 履約價 <b>' + num(nr.div_k) + '</b>（換算差未知）</span>' : '<span>夜盤分界 沒有</span>');
+      h += '<div class="bz-nref-row" title="' + esc(tip) + '"><span class="bz-nref-tag nv">未驗證</span>' + div +
+        (b === null ? '<span>支撐壓力、尾段：換算差未知，看 Excel 的「夜盤即時表」（履約價）</span>' :
+          zone('支撐', nr.sup_fut, f) + zone('壓力', nr.res_fut, f) +
+          (nr.tail_ok === false ? '<span>尾段守穩／壓回：沒有夜盤每分鐘紀錄</span>' : list('尾段守穩', nr.tail_sup_fut) + list('尾段壓回', nr.tail_res_fut))) + '</div>';
+    } else {
+      h += '<div class="bz-nref-row bz-nref-warn">夜盤即時表還是 ' + esc(md(nr.night)) + ' 夜盤（05:00–08:45 Excel 沒開著就不會換），分界、支撐壓力先不看</div>';
+    }
+    return h;
+  }
+
+  function anchor() {
+    var p = $('baoz-system-panel');
+    var sec = p && p.querySelector('section[aria-label="關鍵期貨價位"]');
+    return sec ? sec.querySelector(':scope > .bz-panel-head') : null;
+  }
+  function render() {
+    var h = build(s.data, twNow());
+    var a = anchor();
+    if (!a) return;
+    if (!s.box || !s.box.isConnected || s.box.previousElementSibling !== a) {
+      if (s.box && s.box.parentNode) s.box.parentNode.removeChild(s.box);
+      s.box = document.createElement('section');
+      s.box.className = 'bz-nref';
+      s.box.setAttribute('aria-label', '夜盤參考');
+      s.box.setAttribute('data-z1423', '1');
+      s.box.hidden = true;
+      s.html = null;
+      a.insertAdjacentElement('afterend', s.box);
+    }
+    if (h === s.html) return;
+    s.html = h;
+    s.box.innerHTML = h;
+    s.box.hidden = !h;
+  }
+
+  function start() {
+    reconcile();
+    render();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(reconcile).observe(d, { attributes: true, attributeFilter: ['class'] });
+    try { if (typeof auth !== 'undefined' && auth && typeof auth.onAuthStateChanged === 'function') auth.onAuthStateChanged(function () { detach(); s.failAt = 0; reconcile(); }); } catch (e) {}
+    window.setInterval(function () { reconcile(); render(); }, 10000);   /* 08:45 出現、10:15 收起；面板晚建立 */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_NIGHT_REF_UI_1_4_23_END -->
+<!-- Z31_BAOZ_WATCH_STRIKE_UI_1_4_24_BEGIN -->
+<style id="z31-baoz-watch-strike-ui-1-4-24">
+/* ===== BaoZ UI 1.4.24（20261105）：關鍵價位「防線快覽」的上方壓力／下方支撐兩格加上履約價
+   只改顯示：不寫 Firebase、不多開監聽、不改任何計算、不改 1.4.23 以前的程式。
+   防線快覽的價位是「期貨座標」＝履約價 ＋ 換算差，所以 履約價 ＝ 格子裡的期貨價 − 換算差
+   （換算差拿同一頁上方「合成期貨／換算差」那一格，同一份 baoz_realtime/near 資料；Argon 換算價位用的也是這個換算差）：
+     翻轉壓力
+     42,431
+     履約價 42,250     ← 新加的一行
+     +219 點
+     暴Z表 Put 綠層｜程式已翻轉
+   箱型區（例如 暴Z表 41,680–41,735 箱型撐）是履約價座標上的一段價格，照樣換回去顯示。
+   沒有換算差、這一格沒有價位（—）、防線快覽沒顯示時：和 1.4.23 一模一樣。 ===== */
+#baoz-system-panel .bz-watch-quote .bz-watch-strike { color: var(--bz-muted); font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-watch-quote .bz-watch-strike b { color: var(--bz-ink); font-weight: 700; font-size: 12px; line-height: 1; white-space: nowrap; }   /* 區間不從中間斷行；1080 直立螢幕一行放得下 */
+</style>
+<script>
+/* BaoZ UI 1.4.24：防線快覽壓力／支撐補上履約價（只讀畫面上已有的數字，不讀寫 Firebase；只改顯示） */
+(function () {
+  'use strict';
+  var s = { box: null, mo: null, src: null, srcMo: null };
+  var TIP = '履約價座標＝期貨價 − 換算差（暴Z表／即時表上的數字）。箱型區是履約價座標上的一段價格，不一定剛好是某一檔履約價。';
+
+  function $(id) { return document.getElementById(id); }
+  /* 和 1.4.5／1.4.21／1.4.22 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才顯示 */
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function toNum(t) {
+    t = String(t || '').trim();
+    if (!/^[+\-−]?[\d,]+(\.\d+)?$/.test(t)) return null;
+    var v = Number(t.replace(/,/g, '').replace('−', '-'));
+    return Number.isFinite(v) ? v : null;
+  }
+  function fmt(v) { return Math.round(v).toLocaleString('en-US'); }
+  /* 「42,431」或「41,861–41,916」→ 履約價文字；看不懂就 null */
+  function strikeText(price, basis) {
+    var parts = String(price || '').trim().split('–');
+    if (parts.length < 1 || parts.length > 2) return null;
+    var vals = parts.map(toNum);
+    if (vals.some(function (v) { return v === null || v <= 0; })) return null;
+    return vals.map(function (v) { return fmt(v - basis); }).join('–');
+  }
+
+  function patch() {
+    var box = $('bz-anchor-watch');
+    watch(box);
+    if (!box) return;
+    var basis = toNum(($('bz-basis') || {}).textContent);
+    var ok = !box.hidden && basis !== null && allowed();
+    var cells = box.querySelectorAll('.bz-watch-pressure, .bz-watch-support');
+    for (var i = 0; i < cells.length; i++) {
+      var q = cells[i];
+      var old = q.querySelector(':scope > [data-z1424]');
+      var strong = q.querySelector(':scope > strong');
+      var want = ok && strong ? strikeText(strong.textContent, basis) : null;
+      if (old && old.__z1424 === want && old.previousElementSibling === strong) continue;
+      if (old) old.remove();
+      if (!want) continue;   /* 沒有價位或沒有換算差：和 1.4.23 一樣 */
+      var e = document.createElement('small');
+      e.className = 'bz-watch-strike';
+      e.setAttribute('data-z1424', '1');
+      e.__z1424 = want;
+      e.title = TIP;
+      e.appendChild(document.createTextNode('履約價 '));
+      var b = document.createElement('b');
+      b.textContent = want;
+      e.appendChild(b);
+      strong.insertAdjacentElement('afterend', e);
+    }
+  }
+
+  /* 1.4.x 每次重畫防線快覽（replaceChildren）或換算差變了之後馬上補上；自己加的不在監看範圍，不會一直觸發 */
+  function watch(box) {
+    if (typeof MutationObserver === 'undefined') return;
+    if (box !== s.box) {
+      if (s.mo) s.mo.disconnect();
+      s.box = box; s.mo = null;
+      if (box) {
+        s.mo = new MutationObserver(function () { patch(); });
+        s.mo.observe(box, { childList: true, attributes: true, attributeFilter: ['hidden'] });
+      }
+    }
+    var src = $('bz-basis');
+    if (src !== s.src) {
+      if (s.srcMo) s.srcMo.disconnect();
+      s.src = src; s.srcMo = null;
+      if (src) {
+        s.srcMo = new MutationObserver(function () { patch(); });
+        s.srcMo.observe(src, { childList: true, characterData: true, subtree: true });
+      }
+    }
+  }
+
+  function start() {
+    patch();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(patch).observe(d, { attributes: true, attributeFilter: ['class'] });
+    window.setInterval(function () { if ($('bz-anchor-watch') !== s.box || $('bz-basis') !== s.src) patch(); }, 1000);   /* 面板晚建立／重建 */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_WATCH_STRIKE_UI_1_4_24_END -->
 </body>
 </html>
