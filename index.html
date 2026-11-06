@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.28');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.29');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -15177,5 +15177,267 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 #baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-ai-headline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z26s]:not([data-z26o]) [data-z26one] .sub { display: inline; margin-left: 8px; }
 </style>
+<!-- Z31_BAOZ_HOLD_UI_1_4_29_BEGIN -->
+<style id="z31-baoz-hold-ui-1-4-29">
+/* ===== BaoZ UI 1.4.29（20261106，BaoZ AI V0.1.40）：AI 持倉維護一眼看＋AI 卡小修＋直立時 Argon 實單卡數字不被切
+   1. AI 卡最上面（標題下）加「AI 持倉維護」：讀 baoz_realtime/near_ai 的 market.pos（V0.1.40 持倉健檢）。
+      空手＝一行；有持倉＝方向／進場價／浮動／停損／目標、最新健檢（續抱／注意／移保本／提早出場、信心、幾點幾分・幾分鐘前）、理由兩行、這盤健檢次數和花費。
+      健檢說移保本／提早出場時閃 3 下（沒有聲音），同一次健檢只閃一次。
+   2. 自己出計畫關著時，「自己出計畫：關…」那一行收起來（位置給持倉維護）；AI 卡高度不變，下面的卡不會被推動。
+   3. 盤勢分析一行後面加 SOP 狀態（還在做的加進場區：等待中／已進區／影子持倉；做完的只標：已出場／失效／不採用），失效的方向變淡，不會看起來像還在做。
+   4. Argon 實單卡（持有部位）比較窄的時候（直立兩欄）：停損／第一段／第二段的數字縮小、線下面只留文字，不會被切掉或疊在一起。
+   只讀不寫 Firebase；不改 1.4.28 以前的程式和資料；健檢結果只是顯示，實單照不照做看下單程式的 ai_hold 開關。 ===== */
+#baoz-system-panel #bz-ai-card > #bz-hold29 { margin: 2px 0 4px; padding: 6px 8px 6px; border: 1px solid var(--bz-line); border-radius: 6px; background: var(--bz-raised, #1e232b); font-size: 12px; line-height: 1.4; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > #bz-hold29 { display: block !important; order: 0; flex: none; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z29off] { display: none !important; }
+#bz-hold29 .h1 { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; overflow: hidden; }
+#bz-hold29 .h1 .ttl { font-weight: 700; font-size: 12.5px; color: var(--bz-ink); }
+#bz-hold29 .h1 .tg { font-size: 10.5px; padding: 0 6px; border-radius: 8px; border: 1px solid #ff9f43; color: #ffb36b; line-height: 16px; }
+#bz-hold29 .h1 .tg.off { border-color: var(--bz-line); color: var(--bz-muted); }
+#bz-hold29 .h1 .rt { margin-left: auto; font-size: 11px; color: var(--bz-muted); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; }
+#bz-hold29 .flat { margin-top: 2px; color: var(--bz-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#bz-hold29 .flat b { color: var(--bz-ink); font-weight: 600; }
+#bz-hold29 .pos { margin-top: 3px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; font-variant-numeric: tabular-nums; }
+#bz-hold29 .pos .sd { font-weight: 700; }
+#bz-hold29 .pos .sd.long { color: var(--bz-up); }
+#bz-hold29 .pos .sd.short { color: var(--bz-down); }
+#bz-hold29 .pos .pl.p { color: var(--bz-up); } #bz-hold29 .pos .pl.n { color: var(--bz-down); }
+#bz-hold29 .pos small { color: var(--bz-muted); font-size: 11px; }
+#bz-hold29 .st { margin-top: 4px; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; }
+#bz-hold29 .st .b { font-size: 15px; font-weight: 800; padding: 0 10px; border-radius: 6px; border: 1.5px solid currentColor; line-height: 21px; flex: none; }
+#bz-hold29 .st .b.hold { color: #75d3ff; }
+#bz-hold29 .st .b.watch { color: #f3cd7c; }
+#bz-hold29 .st .b.prot { color: #ff9f43; background: rgba(255, 159, 67, .12); }
+#bz-hold29 .st .b.exit { color: #fff; background: #c62f45; border-color: #ff6b81; }
+#bz-hold29 .st .b.none { color: var(--bz-muted); border-style: dashed; font-size: 13px; font-weight: 600; }
+#bz-hold29 .st .cf { font-size: 12px; color: var(--bz-ink); flex: none; }
+#bz-hold29 .st .nt { font-size: 11px; color: var(--bz-attn); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#bz-hold29 .pos .be { color: #ffb36b; font-size: 11px; border: 1px solid #ff9f43; border-radius: 6px; padding: 0 4px; margin-left: 4px; }
+#bz-hold29 .st .tm { font-size: 11px; color: var(--bz-muted); font-variant-numeric: tabular-nums; flex: none; }
+#bz-hold29 .st .busy { font-size: 11px; color: #75d3ff; animation: z29blink 1.2s ease-in-out infinite; }
+#bz-hold29 .why { margin-top: 3px; color: var(--bz-ink); overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+#bz-hold29 .why .ap { color: var(--bz-muted); }
+#bz-hold29.z29-stale { opacity: .55; }
+#bz-hold29.z29-on-prot { border-color: #ff9f43; }
+#bz-hold29.z29-on-exit { border-color: #ff6b81; }
+#bz-hold29.z29-flash { animation: z29flash .9s ease-in-out 3; }
+@keyframes z29flash { 0%, 100% { box-shadow: none; } 50% { box-shadow: 0 0 0 3px rgba(255, 107, 129, .55); } }
+@keyframes z29blink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { #bz-hold29.z29-flash, #bz-hold29 .st .busy { animation: none; } }
+/* 3. 盤勢分析一行後面：進場區＋SOP 狀態 */
+#baoz-system-panel #bz-ai-card .bz-mkt-head > .z29-mx { font-weight: 400; font-size: 11.5px; color: var(--bz-muted); font-variant-numeric: tabular-nums; }
+#baoz-system-panel #bz-ai-card .bz-mkt-head > .z29-mx b { font-weight: 600; }
+#baoz-system-panel #bz-ai-card .bz-mkt-head > .z29-mx b.live { color: var(--bz-attn); }
+#baoz-system-panel #bz-ai-card .bz-mkt-head > .z29-mx b.dead { color: var(--bz-muted); text-decoration: line-through; }
+#baoz-system-panel #bz-ai-card .bz-mkt-head.z29-dead > b { opacity: .55; }
+/* 4. Argon 實單卡窄的時候 */
+#baoz-system-panel[data-z29narrow] #bz-pos .bz-pos-cell b { font-size: 15px; letter-spacing: -.3px; white-space: nowrap; }
+#baoz-system-panel[data-z29narrow] #bz-pos .bz-pos-cell > span { white-space: nowrap; font-size: 11px; }
+#baoz-system-panel[data-z29narrow] #bz-pos .bz-pos-cell i { font-size: 10.5px; }
+#baoz-system-panel[data-z29narrow] #bz-pos .bz-pos-cell { min-width: 0; overflow: hidden; padding: 5px 4px; }
+#baoz-system-panel[data-z29narrow] #bz-pos .bz-mark br, #baoz-system-panel[data-z29narrow] #bz-pos .bz-mark .bz-num { display: none; }
+</style>
+<script>
+/* BaoZ UI 1.4.29：AI 持倉維護（只讀 baoz_realtime/near_ai，不寫 Firebase） */
+(function () {
+  'use strict';
+  var NODE = 'baoz_realtime/near_ai';
+  var s = { ref: null, fn: null, data: null, card: null, mo: null, failAt: 0, seen: {}, box: null, html: '' };
+  var ST = { HOLD: ['續抱', 'hold'], WATCH: ['注意・續抱', 'watch'], EARLY_PROTECT: ['移保本', 'prot'], TRUE_REVERSAL_EXIT: ['提早出場', 'exit'] };
+  var ACT = { '續抱': 'HOLD', '移保本': 'EARLY_PROTECT', '提早出場': 'TRUE_REVERSAL_EXIT' };
+  var MSTATE = { WAIT: ['等待中', 'live'], ARMED: ['已進區', 'live'], IN: ['影子持倉', 'live'], DONE: ['已出場', 'dead'], INVALID: ['失效', 'dead'],
+                 REJECTED: ['不採用', 'dead'], NONE: ['觀望', 'dead'] };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function isNum(v) { return v !== null && v !== '' && typeof v !== 'boolean' && Number.isFinite(Number(v)); }
+  function txt(v) { return typeof v === 'string' ? v.trim() : (typeof v === 'number' && Number.isFinite(v) ? String(v) : ''); }
+  function obj(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : null; }
+  function list(v) {
+    if (obj(v)) {
+      var ks = Object.keys(v);
+      if (ks.length && ks.every(function (k) { return /^(0|[1-9]\d*)$/.test(k); })) v = ks.sort(function (a, b) { return a - b; }).map(function (k) { return v[k]; });
+    }
+    return Array.isArray(v) ? v.filter(function (x) { return x && typeof x === 'object'; }) : [];
+  }
+  function px(v) { return isNum(v) ? Math.round(Number(v)).toLocaleString('en-US') : '—'; }
+  function signed(v) { v = Math.round(Number(v) || 0); return (v > 0 ? '+' : (v < 0 ? '−' : '±')) + Math.abs(v); }
+  function hm(t) { var m = /[T ](\d\d:\d\d)/.exec(String(t || '')) || /^(\d{1,2}:\d{2})/.exec(String(t || '')); return m ? m[1] : ''; }
+  function ago(t) {
+    var x = Date.parse(String(t || '').replace(' ', 'T') + (/[+Z]/.test(String(t || '').slice(10)) ? '' : '+08:00'));
+    if (!Number.isFinite(x)) return '';
+    var m = Math.floor((Date.now() - x) / 60000);
+    return m < 1 ? '剛剛' : (m < 60 ? m + ' 分鐘前' : (m < 1440 ? Math.floor(m / 60) + ' 小時前' : ''));
+  }
+  function sideOf(it) { var v = txt(it.side); return v === 'long' || v === '多' ? 'long' : (v === 'short' || v === '空' ? 'short' : ''); }
+  function zoneTxt(z) {
+    if (typeof z === 'string') return z.trim();
+    var a = Array.isArray(z) ? z : (obj(z) ? [z[0], z[1]] : null);
+    if (!a) return '';
+    var v = a.slice(0, 2).filter(isNum).map(function (x) { return Math.round(Number(x)); });
+    return !v.length ? '' : (v.length === 1 || v[0] === v[1] ? String(v[0]) : Math.min(v[0], v[1]) + '–' + Math.max(v[0], v[1]));
+  }
+
+  /* 和 1.4.5／1.4.25 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才讀 */
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function detach() { if (s.ref && s.fn) { try { s.ref.off('value', s.fn); } catch (e) {} } s.ref = null; s.fn = null; }
+  function reconcile() {
+    if (!allowed()) { if (s.ref) detach(); if (s.data) { s.data = null; patch(); } return; }
+    if (s.ref || Date.now() - s.failAt < 60000) return;
+    if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
+    s.ref = db.ref(NODE);
+    s.fn = function (sn) { s.data = sn && typeof sn.val === 'function' ? sn.val() : null; patch(); };
+    s.ref.on('value', s.fn, function () { s.failAt = Date.now(); detach(); });
+  }
+
+  /* ---- 1. AI 持倉維護 ---- */
+  function holdHtml(d) {
+    var m = obj(d && d.market), p = m && obj(m.pos);
+    if (!p) return { h: '' };                                  /* 舊版 AI（沒有 market.pos）：不顯示 */
+    var hp = obj(p.health) || {}, se = obj(p.session) || {};
+    var hon = p.on !== false && hp.on === true;
+    var tag = p.on === false ? '<span class="tg off">持倉監控 關</span>' :
+      (hon ? '<span class="tg" title="BaoZ AI 持倉健檢（' + esc(txt(hp.model)) + '，effort ' + esc(txt(hp.effort)) + '）。下單程式 0.2.8 的 ai_hold 開著時，移保本／提早出場會照做實單（這裡讀不到下單程式的開關，照做了 Telegram 會通知）">健檢 開</span>'
+           : '<span class="tg off" title="position_health 關：持倉建議照盤勢分析（只記錄）">健檢 關</span>');
+    var rt = isNum(se.calls) ? '這盤 ' + Math.round(Number(se.calls)) + ' 次・US$' + (Number(se.usd) || 0).toFixed(2) + (isNum(se.cap_usd) ? '／' + Number(se.cap_usd).toFixed(2) : '') : '';
+    var h = '<div class="h1"><span class="ttl">AI 持倉維護</span>' + tag + (rt ? '<span class="rt">' + esc(rt) + '</span>' : '') + '</div>';
+    if (p.on === false) return { h: h + '<div class="flat">' + esc(txt(p.note) || '持倉監控已關閉') + '</div>' };
+    var items = list(p.items), open = items.filter(function (x) { return x.open === true && x.argon_open !== false; });
+    var it = open.length ? open[open.length - 1] : null;
+    if (!it) {
+      var last = items.length ? items[items.length - 1] : null, lt = '';
+      if (last) {
+        var sd = sideOf(last) === 'long' ? '做多' : '做空';
+        var ex = txt(last.exit_kind) || (last.argon_open === false ? 'Argon 已出場' : '');
+        lt = '｜上一筆 ' + sd + ' ' + px(last.entry) + (ex ? '：' + ex + (isNum(last.exit_px) ? ' ' + px(last.exit_px) : '') : '') +
+             (isNum(last.pts) ? '（影子 ' + signed(last.pts) + '）' : '') + (isNum(last.argon_pts) ? '・Argon ' + signed(last.argon_pts) : '');
+      }
+      return { h: h + '<div class="flat"' + (lt ? ' title="' + esc(lt.slice(1)) + '"' : '') + '><b>空手</b>' + (lt ? esc(lt) : '｜有持倉時每次盤勢分析一起健檢') + '</div>' };
+    }
+    var side = sideOf(it), sg = side === 'long' ? 1 : -1, price = d && isNum(d.price) ? Number(d.price) : (obj(d && d.price) && isNum(d.price.price) ? Number(d.price.price) : null);
+    var pl = price != null && isNum(it.entry) ? Math.round((price - Number(it.entry)) * sg) : null;
+    var stop = isNum(it.stop_now) ? it.stop_now : it.stop_orig;
+    var pos = '<div class="pos"><span class="sd ' + side + '"' + (hm(it.trade) ? ' title="' + esc(hm(it.trade)) + ' 進場（Argon 做單紀錄）"' : '') + '>' + (side === 'long' ? '做多' : '做空') + ' ' + px(it.entry) + '</span>' +
+      (pl != null ? '<span class="pl ' + (pl > 0 ? 'p' : (pl < 0 ? 'n' : '')) + '">浮動 ' + signed(pl) + '</span>' : '') +
+      '<span>停損 ' + px(stop) + (it.be_moved ? '<span class="be" title="AI 影子帳已把停損移到進場價">已保本</span>' : '') + '</span>' +
+      (isNum(it.target) ? '<span><small>目標</small> ' + px(it.target) + '</span>' : '') + '</div>';
+    var state = txt(it.state).toUpperCase(), act = txt(it.action);
+    if (!ST[state] && ACT[act]) state = ACT[act];
+    var hasH = !!ST[state] && (txt(it.src) === '健檢' || !hon);
+    var b, cls = '';
+    if (hasH) {
+      b = '<span class="b ' + ST[state][1] + '">' + ST[state][0] + '</span>' + (isNum(it.conf) ? '<span class="cf">信心 ' + Math.round(Number(it.conf)) + '</span>' : '') +
+          '<span class="tm">' + esc([hm(it.at), ago(it.at)].filter(Boolean).join('・')) + (txt(it.src) && txt(it.src) !== '健檢' ? '（' + esc(txt(it.src)) + '）' : '') + '</span>';
+      if (state === 'EARLY_PROTECT') cls = 'z29-on-prot'; else if (state === 'TRUE_REVERSAL_EXIT') cls = 'z29-on-exit';
+    } else b = '<span class="b none">' + (hon ? '等第一次健檢' : '還沒有持倉建議') + '</span>';
+    if (hp.busy) b += '<span class="busy">健檢中…</span>';
+    var nt = txt(hp.note) || txt(p.note);
+    if (nt) b += '<span class="nt" title="' + esc(nt) + '">' + esc(nt) + '</span>';
+    var why = '';
+    if (hasH && (txt(it.reason) || txt(it.applied))) {
+      var ap = txt(it.applied).replace(/^影子/, '');
+      var full = [txt(it.reason), txt(it.watch) ? '看：' + txt(it.watch) : '', ap ? 'AI 影子帳：' + ap : ''].filter(Boolean).join('｜');
+      why = '<div class="why" title="' + esc(full) + '">' + esc(txt(it.reason) || '—') + (ap ? '<span class="ap">｜AI 影子帳：' + esc(ap) + '</span>' : '') + '</div>';
+    }
+    var fk = hasH && (state === 'EARLY_PROTECT' || state === 'TRUE_REVERSAL_EXIT') ? txt(it.trade) + '|' + txt(it.at) : '';
+    return { h: h + pos + '<div class="st">' + b + '</div>' + why, cls: cls, flash: fk };
+  }
+
+  /* ---- 3. 盤勢分析一行：進場區＋SOP 狀態 ---- */
+  function mktExtra(c, d) {
+    var head = c.querySelector(':scope > .bz-mkt-wrap > .bz-mkt-head');
+    if (!head) return;
+    var m = obj(d && d.market), x = m && obj(m.last), ex = x && obj(x.exec);
+    var z = x ? zoneTxt(x.zone) : '', st = ex && MSTATE[txt(ex.state)] ? MSTATE[txt(ex.state)] : null;
+    if (st && st[1] === 'dead') z = '';                         /* 失效／已出場：區間不用再看，只標狀態 */
+    var h = (z || st) ? (z ? esc(z) : '') + (st ? (z ? '｜' : '') + '<b class="' + st[1] + '" title="' + esc(txt(ex.text)) + '">' + st[0] + '</b>' : '') : '';
+    var sp = head.querySelector(':scope > .z29-mx');
+    if (!h) { if (sp) sp.remove(); head.classList.remove('z29-dead'); return; }
+    if (!sp) { sp = document.createElement('span'); sp.className = 'z29-mx'; var tm = head.querySelector(':scope > .tm'); head.insertBefore(sp, tm || null); }
+    if (sp.__h !== h) { sp.innerHTML = h; sp.__h = h; }
+    head.classList.toggle('z29-dead', !!(st && st[1] === 'dead'));
+  }
+
+  function take() { if (s.mo) s.mo.takeRecords(); }
+  function clean(c) {                                          /* 鎖回：把 1.4.29 加的記號都拿掉，回到 1.4.28 的樣子 */
+    Array.prototype.forEach.call(c.querySelectorAll('[data-z29off]'), function (e) { e.removeAttribute('data-z29off'); });
+    Array.prototype.forEach.call(c.querySelectorAll('.z29-mx'), function (e) { e.remove(); });
+    Array.prototype.forEach.call(c.querySelectorAll('.z29-dead'), function (e) { e.classList.remove('z29-dead'); });
+  }
+  function patch() {
+    var c = $('bz-ai-card');
+    watchCard(c);
+    narrow();
+    if (!c) return;
+    var box = s.box;
+    if (c.hidden || !allowed() || !c.querySelector('.bz-ai-head .bz-pill')) {   /* 鎖回、還沒有資料／讀取失敗：1.4.5 的畫面不動 */
+      if (box) box.remove();
+      s.box = null; s.html = '';
+      clean(c);
+      take();
+      return;
+    }
+    var d = s.data, r = { h: '' };
+    try { r = holdHtml(d); } catch (e) { r = { h: '' }; }
+    /* 自己出計畫關著：「自己出計畫：關…」那一行收起來 */
+    Array.prototype.forEach.call(c.querySelectorAll(':scope > .bz-ai-empty'), function (e) {
+      var off = !!r.h && /^自己出計畫：關/.test(String(e.textContent || '').trim());
+      if (off !== e.hasAttribute('data-z29off')) { if (off) e.setAttribute('data-z29off', '1'); else e.removeAttribute('data-z29off'); }
+    });
+    try { mktExtra(c, d); } catch (e) {}
+    if (!r.h) { if (box) box.remove(); s.box = null; s.html = ''; take(); return; }
+    var head = c.querySelector(':scope > .bz-ai-head');
+    if (!box) { box = s.box = document.createElement('div'); box.id = 'bz-hold29'; box.setAttribute('data-z1429', '1'); s.html = ''; }
+    if (box.parentNode !== c || box.previousElementSibling !== head) {
+      if (head && head.nextSibling) c.insertBefore(box, head.nextSibling); else c.insertBefore(box, c.firstChild);
+    }
+    if (s.html !== r.h) { box.innerHTML = r.h; s.html = r.h; }
+    var age = d && isNum(d.updated_at_ms) ? Date.now() - Number(d.updated_at_ms) : 0;
+    var cls = (r.cls || '') + (age > 3 * 60000 ? ' z29-stale' : '');
+    ['z29-on-prot', 'z29-on-exit', 'z29-stale'].forEach(function (k) { box.classList.toggle(k, cls.indexOf(k) >= 0); });
+    if (r.flash && !s.seen[r.flash]) {                         /* 同一次健檢只閃一次 */
+      s.seen[r.flash] = 1;
+      box.classList.remove('z29-flash'); void box.offsetWidth; box.classList.add('z29-flash');
+      window.setTimeout(function () { if (s.box) s.box.classList.remove('z29-flash'); }, 3000);
+    }
+    take();
+  }
+
+  /* ---- 4. Argon 實單卡窄的時候（寬度不到 360）：面板上掛一個記號，CSS 照它縮字 ---- */
+  function narrow() {
+    var P = $('baoz-system-panel'), e = $('bz-pos');
+    if (!P) return;
+    var n = !!(e && e.offsetWidth > 0 && e.offsetWidth < 360);
+    if (n !== P.hasAttribute('data-z29narrow')) { if (n) P.setAttribute('data-z29narrow', '1'); else P.removeAttribute('data-z29narrow'); }
+  }
+
+  /* 1.4.5 每次重畫 AI 卡（資料變了、每 5 秒）之後馬上補上；自己改的不再觸發 */
+  function watchCard(c) {
+    if (!c || c === s.card || typeof MutationObserver === 'undefined') return;
+    if (s.mo) s.mo.disconnect();
+    s.card = c;
+    s.mo = new MutationObserver(function () { patch(); if (s.mo) s.mo.takeRecords(); });
+    s.mo.observe(c, { childList: true, subtree: false });
+  }
+
+  function start() {
+    reconcile();
+    patch();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(reconcile).observe(d, { attributes: true, attributeFilter: ['class'] });
+    try { if (typeof auth !== 'undefined' && auth && typeof auth.onAuthStateChanged === 'function') auth.onAuthStateChanged(function () { detach(); s.failAt = 0; reconcile(); }); } catch (e) {}
+    window.setInterval(function () { reconcile(); patch(); }, 1000);   /* AI 卡晚建立；「幾分鐘前」、資料變舊每秒更新；內容沒變不重畫 */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_HOLD_UI_1_4_29_END -->
 </body>
 </html>
