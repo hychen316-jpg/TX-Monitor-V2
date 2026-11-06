@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.30');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.31');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -14848,6 +14848,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     M.short = { st: txt(v.short && v.short.status), why: txt(v.short && v.short.reason) };
     var ex = ai && txt(ai.expiry_date);   /* AI V0.1.18 起就有（live.txt [控制台] B6 到期日）；沒有就不顯示。ai.expiry 是別的用途，不要讀 */
     M.expiry = /^\d{4}-\d{2}-\d{2}/.test(ex) ? ex.slice(0, 10) : '';
+    M.sr = null; try { if (window.BZ_SR1431) M.sr = window.BZ_SR1431.model(d, M); } catch (e) { M.sr = null; }   /* 1.4.31 撐壓狀態 */
     return M;
   }
 
@@ -14940,6 +14941,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       cov.forEach(function (kk) { by[kk].imp = true; });
       by[cov[0]].ms.unshift({ cls: z.ov ? 'pk' : 'bx', t: (z.ov ? '粉紅 ' : '調單區 ') + z.name + '（' + (z.tb === 'Z' ? '暴Z' : '今天') + '）', tip: tbName(z.tb) + ' ' + fmt(z.lo) + '–' + fmt(z.hi) + '｜' + z.meaning });
     });
+    if (M.sr) { try { window.BZ_SR1431.rows(M, by); } catch (e) {} }   /* 1.4.31：撐壓線蓋到的履約價列 */
     var lines = [{ px: true, k: M.syn }];
     M.marks.forEach(function (mk) {
       if (!inR(mk.k)) { (mk.k > M.syn ? out.up : out.dn).push(mk.t + '（' + sgn(mk.k - M.syn) + '）'); return; }
@@ -14986,7 +14988,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       }
       var d = r.k - M.syn, ms = r.ms.map(function (mk) { return '<span class="bz-lad-m ' + (mk.cls || '') + '"' + (mk.tip ? ' title="' + esc(mk.tip) + '"' : '') + '>' + esc(mk.t) + '</span>'; }).join('');
       return '<div class="bz-lad-r ' + (r.imp ? 'imp' : 'sm' + (r.k % 100 === 0 ? ' h100' : '')) + (Object.keys(r.cells).length ? ' cl' : '') + '" data-k="' + r.k + '">' + cell(r, 'ZC', true) + cell(r, 'ZP', true) + '<span class="k">' + fmt(r.k) + '</span>' + cell(r, 'TC') + cell(r, 'TP') +
-             '<span class="f">' + fmt(r.k + M.basis) + '</span><span class="d ' + (d > 0 ? 'up' : 'down') + '">' + sgn(d) + '</span><span class="x">' + ms + '</span></div>';
+             '<span class="f">' + fmt(r.k + M.basis) + '</span><span class="d ' + (d > 0 ? 'up' : 'down') + '">' + sgn(d) + '</span><span class="x">' + ms + (r.sr && M.sr ? window.BZ_SR1431.badges(r.sr, M) : '') + '</span></div>';
     }).join('');
     return '<div class="bz-lad-lad" data-z1426-lad>' + hd + body + '</div>';
   }
@@ -15028,7 +15030,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
   }
 
   function sideHtml(M, L) {
-    var h = '';
+    var h = M.sr ? window.BZ_SR1431.block(M) : '';   /* 1.4.31：撐壓狀態小框 */
     if (L.out.up.length || L.out.dn.length) {
       h += '<div class="bz-lad-box"><div class="h">梯子範圍外</div>' +
            (L.out.up.length ? '<div class="bz-lad-out">▲ ' + L.out.up.map(esc).join('｜') + '</div>' : '') +
@@ -15471,5 +15473,154 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 #baoz-system-panel #bz-ai-card[data-z26ai="c"][data-z30hold] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mkt-foot { display: none !important; }
 </style>
 <!-- Z31_BAOZ_AICARD_UI_1_4_30_END -->
+<!-- Z31_BAOZ_SR_STATE_UI_1_4_31_BEGIN -->
+<style id="z31-baoz-sr-state-ui-1-4-31">
+/* ===== BaoZ UI 1.4.31（20261106，Argon V1.2.45＋上傳程式 1.0.4）：價位梯子加「撐壓狀態」
+   Argon V1.2.45 live.txt 檔尾 [撐壓狀態]（暴Z表／即時表 黃藍綠層、即時表 Call／Put 最大量履約價，每條線的狀態）→ 上傳程式 1.0.4 sr_state。
+   1. 梯子：線蓋到的履約價列（K低−10 ≦ 履約價 ≦ K高＋10）在「莊家在這裡」後面加一個小標：表＋邊（暴P、即C、量C…）＋狀態原文；
+      綠＝撐、紅＝壓、灰＝盤整中心；黃框＝待確認（突破／跌破／跳空）；有假突破／假跌破次數加「假N」。滑鼠移上去看全部欄位。
+   2. 梯子右邊（直立螢幕在梯子下面）「撐壓狀態」小框：合成上面最近 3 條、下面最近 3 條（表／邊／顏色、期貨價、距離、狀態）；標題寫 B109 影子／開。
+   3. 沒有 sr_state（Argon V1.2.44 以前、上傳程式 1.0.3 以前）、B109 關、沒有線：梯子和 1.4.30 一模一樣，不顯示小框。
+   只讀不寫 Firebase；不加監聽（用 1.4.27 梯子已經在讀的 baoz_realtime/near）；下單程式、BaoZ AI 都不讀這一段。 ===== */
+#baoz-system-panel .bz-sr-b { display: inline-flex; align-items: baseline; gap: 3px; max-width: 100%; padding: 0 4px; border: 1px solid var(--bz-line); border-radius: 4px; font-size: 10.5px; line-height: 15px; font-weight: 600; white-space: normal; overflow-wrap: anywhere; vertical-align: 1px; }
+#baoz-system-panel .bz-sr-b > i { font-style: normal; font-weight: 400; font-size: 10px; opacity: .8; white-space: nowrap; }
+#baoz-system-panel .bz-sr-b > b { padding: 0 3px; border-radius: 3px; background: rgba(243,205,124,.18); color: var(--bz-attn); font-size: 10px; font-weight: 700; white-space: nowrap; }
+#baoz-system-panel .bz-sr-b.sup { color: var(--bz-down); border-color: rgba(82,217,160,.55); background: rgba(82,217,160,.10); }
+#baoz-system-panel .bz-sr-b.res { color: var(--bz-up); border-color: rgba(255,112,123,.55); background: rgba(255,112,123,.10); }
+#baoz-system-panel .bz-sr-b.mid { color: #c3c9d4; border-color: rgba(170,180,198,.5); background: rgba(170,180,198,.12); }
+#baoz-system-panel .bz-sr-b.pend { border-color: var(--bz-attn); box-shadow: 0 0 0 1px var(--bz-attn); }
+/* 小框（梯子右邊／直立在梯子下面；和「梯子範圍外」同一種框） */
+#baoz-system-panel .bz-sr > .h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+#baoz-system-panel .bz-sr .md { font-size: 10.5px; padding: 0 6px; border-radius: 8px; border: 1px solid #ff9f43; color: #ffb36b; line-height: 16px; font-weight: 600; }
+#baoz-system-panel .bz-sr .md.on { border-color: var(--bz-accent); color: var(--bz-accent); }
+#baoz-system-panel .bz-sr .lg { margin-left: auto; font-size: 10.5px; font-weight: 400; color: var(--bz-muted); white-space: nowrap; }
+#baoz-system-panel .bz-sr .lg .s { color: var(--bz-down); } #baoz-system-panel .bz-sr .lg .r { color: var(--bz-up); } #baoz-system-panel .bz-sr .lg .p { color: var(--bz-attn); }
+/* 一條一行：名稱／期貨價／距離固定寬，狀態放得下就接在後面，放不下整個換到下一行（不拆字） */
+#baoz-system-panel .bz-sr-li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 6px; padding: 1px 0; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-sr-li + .bz-sr-li { border-top: 1px solid rgba(52,60,73,.6); }
+#baoz-system-panel .bz-sr-li > .w { flex: 0 0 6.6em; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--bz-ink); }
+#baoz-system-panel .bz-sr-li > .p { flex: 0 0 4.3em; text-align: right; color: var(--bz-ink); font-weight: 600; }
+#baoz-system-panel .bz-sr-li > .d { flex: 0 0 3.4em; text-align: right; }
+#baoz-system-panel .bz-sr-li > .d.up { color: var(--bz-up); } #baoz-system-panel .bz-sr-li > .d.down { color: var(--bz-down); }
+#baoz-system-panel .bz-sr-li > .bz-sr-b { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
+#baoz-system-panel .bz-sr-li .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: 0; border: 1px solid transparent; }
+#baoz-system-panel .bz-sr-li .sw.藍 { background: #4f8dff; } #baoz-system-panel .bz-sr-li .sw.黃 { background: #f5c542; }
+#baoz-system-panel .bz-sr-li .sw.綠 { background: #00e676; } #baoz-system-panel .bz-sr-li .sw.紅 { background: rgba(255,90,90,.6); }
+#baoz-system-panel .bz-sr-li .sw.x { border-color: var(--bz-muted); }
+#baoz-system-panel .bz-sr-px { margin: 2px 0; padding: 0 4px; border-top: 1.5px solid var(--bz-accent); border-bottom: 1.5px solid var(--bz-accent); background: rgba(117,211,255,.10); color: var(--bz-accent); font-size: 11px; font-weight: 600; line-height: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#baoz-system-panel .bz-sr-none { color: var(--bz-muted); font-size: 11px; }
+@container (max-width: 360px) { #baoz-system-panel .bz-sr .lg { display: none; } #baoz-system-panel .bz-sr-li > .w { flex-basis: 5.6em; } #baoz-system-panel .bz-sr-li { gap: 1px 4px; } }
+</style>
+<script>
+/* BaoZ UI 1.4.31：撐壓狀態（只讀；1.4.27 梯子畫的時候呼叫這裡，沒有資料就回 null／''，梯子照 1.4.30） */
+(function () {
+  'use strict';
+  var TOL = 10, NEAR_N = 3;
+  var ROLE = { '撐': 'sup', '壓': 'res', '中心': 'mid' };
+  var TB = { '暴Z表': '暴Z', '即時表': '即時', '即時最大量': '最大量' };
+  var TB1 = { '暴Z表': '暴', '即時表': '即', '即時最大量': '量' };
+  var COLOR = { '藍': 1, '黃': 1, '綠': 1, '紅': 1 };
+
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(v) { if (v === null || v === undefined || v === '' || typeof v === 'boolean' || typeof v === 'object') return null; var n = Number(String(v).replace(/,/g, '')); return Number.isFinite(n) ? n : null; }
+  function fmt(v) { return v == null ? '—' : Math.round(v).toLocaleString('en-US'); }
+  function sgn(v) { v = Math.round(Number(v) || 0); return (v > 0 ? '+' : (v < 0 ? '−' : '±')) + Math.abs(v).toLocaleString('en-US'); }
+  function txt(v) { return typeof v === 'string' ? v.trim() : (typeof v === 'number' && Number.isFinite(v) ? String(v) : ''); }
+  function list(v) {   /* Firebase 的陣列可能變成 {"0":…,"1":…} */
+    if (Array.isArray(v)) return v.filter(function (x) { return x != null; });
+    if (v && typeof v === 'object') return Object.keys(v).sort(function (a, b) { return Number(a) - Number(b); }).map(function (k) { return v[k]; }).filter(function (x) { return x != null; });
+    return [];
+  }
+  function sideOf(v) { v = txt(v); return /^c/i.test(v) ? 'C' : (/^p/i.test(v) ? 'P' : ''); }
+
+  /* sr_state → 線（履約價座標，和梯子同一個座標）。沒有 K低／K高 才用 期貨－目前換算差 */
+  function model(d, M) {
+    var sr = d && d.sr_state;
+    if (!sr || typeof sr !== 'object' || !M) return null;
+    var mode = txt(sr.mode);
+    if (mode === '關') return null;
+    var out = [];
+    list(sr.rows).forEach(function (r, i) {
+      if (!r || typeof r !== 'object') return;
+      var kl = num(r['K低']), kh = num(r['K高']), fl = num(r['期貨低']), fh = num(r['期貨高']), fromF = false;
+      if (kl == null) kl = kh; if (kh == null) kh = kl;
+      if (fl == null) fl = fh; if (fh == null) fh = fl;
+      if (kl == null && fl != null && M.basis != null) { kl = fl - M.basis; kh = fh - M.basis; fromF = true; }
+      if (kl == null || kl < 1000) return;
+      if (kl > kh) { var t = kl; kl = kh; kh = t; }
+      if (fl != null && fl > fh) { var u = fl; fl = fh; fh = u; }
+      var role = txt(r['角色']), tb = txt(r['表']), sd = sideOf(r['邊']), col = txt(r['顏色']);
+      out.push({ i: i, kl: kl, kh: kh, mid: (kl + kh) / 2, fl: fl, fh: fh, fromF: fromF, role: role, cls: ROLE[role] || 'mid',
+                 st: txt(r['狀態']) || role || '—', tb: tb, sd: sd, col: col, fake: Math.max(0, Math.round(num(r['假次數']) || 0)),
+                 pend: txt(r['待確認']), t: txt(r['事件時間']), ct: txt(r['確認時間']), id: txt(r['線代號']),
+                 tag: (TB1[tb] || (tb ? tb.charAt(0) : '?')) + sd });
+    });
+    return out.length ? { mode: mode, lines: out } : null;
+  }
+
+  /* 梯子的履約價列：線的 K低−10 ～ K高＋10 蓋到的列加標記（列一定展開） */
+  function rows(M, by) {
+    if (!M || !M.sr || !by) return;
+    Object.keys(by).forEach(function (key) {
+      var r = by[key], k = r && num(r.k);
+      if (k == null) return;
+      M.sr.lines.forEach(function (L) {
+        if (k >= L.kl - TOL && k <= L.kh + TOL) { (r.sr = r.sr || []).push(L); r.imp = true; }
+      });
+    });
+  }
+
+  /* 期貨價位＝履約價＋目前換算差（和梯子的「期貨」欄同一個算法）；Argon 寫的期貨低／高放在滑鼠提示（換算差可能是事件當時的） */
+  function argonF(L) { return L.fl != null && !L.fromF ? fmt(L.fl) + (L.fh !== L.fl ? '–' + fmt(L.fh) : '') : ''; }
+  function tip(L, M) {
+    var a = [(L.tb || '—') + ' ' + (L.sd === 'C' ? 'Call' : (L.sd === 'P' ? 'Put' : '')) + ' ' + L.col,
+             '履約價 ' + fmt(L.kl) + (L.kh !== L.kl ? '–' + fmt(L.kh) : ''),
+             '期貨 ' + fmt(L.kl + M.basis) + (L.kh !== L.kl ? '–' + fmt(L.kh + M.basis) : '') + '（目前換算差 ' + sgn(M.basis) + '）' + (argonF(L) ? '｜Argon 寫的期貨 ' + argonF(L) : ''),
+             '角色 ' + (L.role || '—') + '｜' + L.st];
+    if (L.t) a.push('事件 ' + L.t);
+    if (L.fake) a.push('假突破／假跌破 ' + L.fake + ' 次');
+    if (L.ct) a.push('確認 ' + L.ct);
+    if (L.pend) a.push('待確認：' + L.pend);
+    if (L.id) a.push('線 ' + L.id);
+    a.push('Argon B109 撐壓狀態 ' + (M.sr.mode || '—'));
+    return a.join('｜');
+  }
+  function badge(L, M, noTag) {   /* 梯子裡加「暴P／即C／量C」（同一列可能有兩張表）；小框前面已經寫了就不加 */
+    return '<span class="bz-sr-b ' + L.cls + (L.pend ? ' pend' : '') + '" data-z1431="' + L.i + '" title="' + esc(tip(L, M)) + '">' + (noTag ? '' : '<i>' + esc(L.tag) + '</i>') + esc(L.st) +
+           (L.fake > 0 ? '<b>假' + L.fake + '</b>' : '') + '</span>';
+  }
+  function badges(arr, M) {
+    try { return (arr || []).map(function (L) { return badge(L, M); }).join(''); } catch (e) { return ''; }
+  }
+
+  /* 小框：合成上面最近 3 條（遠的在上）、合成、下面最近 3 條；和梯子一樣由高到低 */
+  function block(M) {
+    try {
+      var S = M && M.sr;
+      if (!S) return '';
+      var up = [], dn = [];
+      S.lines.forEach(function (L) { var d = L.mid - M.syn; (d > 0 ? up : dn).push([Math.abs(d), L]); });
+      var near = function (a) { return a.sort(function (x, y) { return (x[0] - y[0]) || (x[1].i - y[1].i); }).slice(0, NEAR_N); };
+      up = near(up).reverse(); dn = near(dn);
+      var li = function (x) {
+        var L = x[1], d = L.mid - M.syn, tn = TB[L.tb] || L.tb || '—';
+        var nm = tn + ' ' + (L.sd === 'C' ? 'Call' : (L.sd === 'P' ? 'Put' : '')) + (L.col && tn.indexOf(L.col) < 0 ? ' ' + L.col : '');
+        return '<div class="bz-sr-li"><span class="w" title="' + esc(nm) + '"><i class="sw ' + (COLOR[L.col] ? L.col : 'x') + '"></i>' + esc(nm) + '</span>' +
+               '<span class="p" title="' + esc('期貨價位＝履約價 ' + fmt(L.mid) + ' ' + sgn(M.basis) + '（目前換算差，和梯子一樣）' + (argonF(L) ? '｜Argon 寫的期貨 ' + argonF(L) : '')) + '">' + fmt(L.mid + M.basis) + '</span>' +
+               '<span class="d ' + (d > 0 ? 'up' : 'down') + '" title="履約價－合成">' + sgn(d) + '</span>' + badge(L, M, true) + '</div>';
+      };
+      var mode = S.mode || '—', more = S.lines.length - up.length - dn.length;
+      return '<div class="bz-lad-box bz-sr" data-z1431-box><div class="h">撐壓狀態<span class="md' + (mode === '開' ? ' on' : '') + '" title="Argon 控制台 B109「撐壓狀態」">B109 ' + esc(mode) + '</span>' +
+             '<span class="lg"><span class="s">綠撐</span> <span class="r">紅壓</span> 灰＝盤整中心 <span class="p">黃框＝待確認</span></span></div>' +
+             (up.length ? up.map(li).join('') : '<div class="bz-sr-none">上方沒有線</div>') +
+             '<div class="bz-sr-px" title="和梯子同一個現價">◀ 合成 ' + fmt(M.syn) + '｜現價 ' + fmt(M.fut) + (more > 0 ? '｜另有 ' + more + ' 條' : '') + '</div>' +
+             (dn.length ? dn.map(li).join('') : '<div class="bz-sr-none">下方沒有線</div>') + '</div>';
+    } catch (e) { return ''; }
+  }
+
+  window.BZ_SR1431 = { model: model, rows: rows, badges: badges, block: block };
+})();
+</script>
+<!-- Z31_BAOZ_SR_STATE_UI_1_4_31_END -->
 </body>
 </html>
