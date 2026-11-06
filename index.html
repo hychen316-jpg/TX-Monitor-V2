@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.31');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.32');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -15030,11 +15030,13 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
   }
 
   function sideHtml(M, L) {
-    var h = M.sr ? window.BZ_SR1431.block(M) : '';   /* 1.4.31：撐壓狀態小框 */
-    if (L.out.up.length || L.out.dn.length) {
+    var h = '';   /* 1.4.32：不放撐壓狀態小框（梯子上的小標就有一樣的資訊） */
+    var srU = '', srD = '';   /* 1.4.32：梯子範圍外的撐壓線 */
+    if (M.sr) { try { srU = window.BZ_SR1431.outs(M, L, 1); srD = window.BZ_SR1431.outs(M, L, -1); } catch (e) { srU = srD = ''; } }
+    if (L.out.up.length || L.out.dn.length || srU || srD) {
       h += '<div class="bz-lad-box"><div class="h">梯子範圍外</div>' +
-           (L.out.up.length ? '<div class="bz-lad-out">▲ ' + L.out.up.map(esc).join('｜') + '</div>' : '') +
-           (L.out.dn.length ? '<div class="bz-lad-out">▼ ' + L.out.dn.map(esc).join('｜') + '</div>' : '') + '</div>';
+           (L.out.up.length || srU ? '<div class="bz-lad-out">▲ ' + L.out.up.map(esc).join('｜') + (L.out.up.length && srU ? '｜' : '') + srU + '</div>' : '') +
+           (L.out.dn.length || srD ? '<div class="bz-lad-out">▼ ' + L.out.dn.map(esc).join('｜') + (L.out.dn.length && srD ? '｜' : '') + srD + '</div>' : '') + '</div>';
     }
     if (M.tdn.length) {
       h += '<div class="bz-lad-box"><div class="h">調單型（AI 讀 Argon [調單型]）</div>' + M.tdn.slice(0, 6).map(function (t) {
@@ -15107,7 +15109,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       else if (M.expiry === tmr) et = '近月明天到期（' + M.expiry.slice(5).replace('-', '/') + '）';
       if (et) dir.push('<span class="bz-lad-chip exp" title="控制台 B6 到期日（AI expiry_date）">' + et + '</span>');
     }
-    return { stale: stale, html: '<div class="bz-lad-head"><strong>價位梯子</strong><span>履約價（合成）座標，跟 Excel 一樣由高到低；左暴Z表、右即時表</span><span class="age">' +
+    return { stale: stale, html: '<div class="bz-lad-head"><strong>價位梯子</strong>' + (M.sr ? window.BZ_SR1431.head(M) : '') + '<span>履約價（合成）座標，跟 Excel 一樣由高到低；左暴Z表、右即時表</span><span class="age">' +
              (age == null ? '' : (stale ? '資料 ' + age + ' 分鐘前（舊）' : (age < 1 ? '剛更新' : age + ' 分鐘前'))) + '</span></div>',
              info: distHtml(M) + '<div class="bz-lad-dir">' + dir.join('') + '</div>' };
   }
@@ -15509,6 +15511,14 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 #baoz-system-panel .bz-sr-li .sw.x { border-color: var(--bz-muted); }
 #baoz-system-panel .bz-sr-px { margin: 2px 0; padding: 0 4px; border-top: 1.5px solid var(--bz-accent); border-bottom: 1.5px solid var(--bz-accent); background: rgba(117,211,255,.10); color: var(--bz-accent); font-size: 11px; font-weight: 600; line-height: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #baoz-system-panel .bz-sr-none { color: var(--bz-muted); font-size: 11px; }
+/* 1.4.32：梯子標題的撐壓 B109、梯子範圍外的撐壓線 */
+#baoz-system-panel .bz-sr-md { font-size: 10.5px; padding: 0 6px; border-radius: 8px; border: 1px solid #ff9f43; color: #ffb36b; line-height: 16px; font-weight: 600; white-space: nowrap; }
+#baoz-system-panel .bz-sr-md.on { border-color: var(--bz-accent); color: var(--bz-accent); }
+#baoz-system-panel .bz-sr-lg { font-size: 10.5px; color: var(--bz-muted); white-space: nowrap; }
+#baoz-system-panel .bz-sr-lg .s { color: var(--bz-down); } #baoz-system-panel .bz-sr-lg .r { color: var(--bz-up); } #baoz-system-panel .bz-sr-lg .p { color: var(--bz-attn); }
+#baoz-system-panel .bz-sr-o { white-space: nowrap; } #baoz-system-panel .bz-sr-o > i { font-style: normal; margin-right: 3px; }
+#baoz-system-panel .bz-lad-out .bz-sr-b { white-space: nowrap; }
+@container (max-width: 360px) { #baoz-system-panel .bz-sr-lg { display: none; } }
 @container (max-width: 360px) { #baoz-system-panel .bz-sr .lg { display: none; } #baoz-system-panel .bz-sr-li > .w { flex-basis: 5.6em; } #baoz-system-panel .bz-sr-li { gap: 1px 4px; } }
 </style>
 <script>
@@ -15618,7 +15628,31 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     } catch (e) { return ''; }
   }
 
-  window.BZ_SR1431 = { model: model, rows: rows, badges: badges, block: block };
+  /* 1.4.32：梯子上沒有畫到的線（K低−10 ～ K高＋10 沒有蓋到梯子任何一列；sg 1＝合成上面、－1＝合成下面），由高到低 */
+  function outs(M, L, sg) {
+    try {
+      var S = M && M.sr;
+      if (!S || !L || !L.by) return '';
+      var on = {};
+      Object.keys(L.by).forEach(function (k) { var r = L.by[k]; if (r && r.sr) r.sr.forEach(function (x) { on[x.i] = 1; }); });
+      var a = S.lines.filter(function (x) { return !on[x.i] && (sg > 0 ? x.mid > M.syn : x.mid <= M.syn); });
+      a.sort(function (x, y) { return (y.mid - x.mid) || (x.i - y.i); });
+      return a.map(function (x) {
+        return '<span class="bz-sr-o"><i>' + esc(x.tag) + ' ' + fmt(x.mid) + '（' + sgn(x.mid - M.syn) + '）</i>' + badge(x, M, true) + '</span>';
+      }).join('｜');
+    } catch (e) { return ''; }
+  }
+  /* 1.4.32：梯子標題旁邊「撐壓 B109 開／影子」＋顏色說明（原本在小框標題） */
+  function head(M) {
+    try {
+      var mode = (M && M.sr && M.sr.mode) || '—';
+      return '<span class="bz-sr-md' + (mode === '開' ? ' on' : '') + '" data-z1432-md title="Argon 控制台 B109「撐壓狀態」；梯子上的小標＝撐壓狀態">撐壓 B109 ' + esc(mode) + '</span>' +
+             '<span class="bz-sr-lg"><span class="s">綠撐</span> <span class="r">紅壓</span> 灰＝盤整中心 <span class="p">黃框＝待確認</span></span>';
+    } catch (e) { return ''; }
+  }
+
+  window.BZ_SR1431 = { model: model, rows: rows, badges: badges, block: block, outs: outs, head: head };
+  window.BZ_SR1432 = true;
 })();
 </script>
 <!-- Z31_BAOZ_SR_STATE_UI_1_4_31_END -->
