@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.32');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.33');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -15656,5 +15656,81 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 })();
 </script>
 <!-- Z31_BAOZ_SR_STATE_UI_1_4_31_END -->
+<!-- Z31_BAOZ_PHONE_SCROLL_UI_1_4_33_BEGIN -->
+<style id="z31-baoz-phone-scroll-ui-1-4-33">
+/* BaoZ UI 1.4.33（20261106）：手機看價位梯子時畫面不往下跑（只改捲動）
+   觸控螢幕關掉瀏覽器自己的自動捲動校正：AI 卡每 5 秒整張重畫時，Chrome 會選錯基準，一次往上捲幾百點 */
+@media (pointer: coarse) { html, body { overflow-anchor: none !important; } }
+</style>
+<script>
+/* BaoZ UI 1.4.33：觸控螢幕自己校正捲動——記住畫面最上緣在哪一塊（價位梯子優先），上面的卡片重畫、變高變矮後捲回去，讓那一塊停在原位。
+   手指在滑、剛點過的 0.7 秒內不動。電腦（滑鼠）什麼都不做。不讀不寫 Firebase。 */
+(function () {
+  'use strict';
+  if (window.BZ_SCROLL1433) return;
+  window.BZ_SCROLL1433 = true;
+  var mq = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
+  var st = { el: null, top: 0, busy: 0, lost: 0 };
+  function touchDev() { return !!(mq && mq.matches); }
+  function hit(e) {
+    if (!e || !e.isConnected) return false;
+    var r = e.getBoundingClientRect();
+    return r.height > 0 && r.top <= 1 && r.bottom > 1;
+  }
+  /* 畫面最上緣那一塊：價位梯子 → 梯子那一欄的各區 → BaoZ 面板的各塊（這些框本身不會被換掉，只換裡面的字） */
+  function pick() {
+    var panel = document.getElementById('baoz-system-panel');
+    if (!panel) return null;
+    var lad = panel.querySelector('[data-z1426]');
+    if (hit(lad)) return lad;
+    var a = panel.querySelectorAll('.bz-layout > *'), i;
+    for (i = 0; i < a.length; i++) if (hit(a[i])) return a[i];
+    a = panel.children;
+    for (i = 0; i < a.length; i++) if (hit(a[i])) return a[i];
+    return null;
+  }
+  function remember() {
+    st.el = null; st.lost = 0;
+    if (!touchDev() || window.scrollY <= 0) return;   /* 在最上面：照原樣往下長 */
+    var e = pick();
+    if (e) { st.el = e; st.top = e.getBoundingClientRect().top; }
+  }
+  function fix() {
+    try {
+      if (!touchDev()) return;
+      if (Date.now() < st.busy) { remember(); return; }
+      if (!st.el) { remember(); return; }
+      if (!st.el.isConnected) {                        /* 區塊重畫時梯子會暫時拿掉、1 秒內接回來：等它回來再對齊 */
+        if (!st.lost) st.lost = Date.now();
+        else if (Date.now() - st.lost > 3000) remember();
+        return;
+      }
+      st.lost = 0;
+      var r = st.el.getBoundingClientRect();
+      if (r.height > 0) {
+        var dy = r.top - st.top;
+        if (Math.abs(dy) >= 1) window.scrollBy(0, dy);
+      }
+      remember();
+    } catch (e) {}
+  }
+  function user() { st.busy = Date.now() + 700; }
+  ['touchstart', 'touchmove', 'wheel', 'keydown', 'pointerdown'].forEach(function (t) {
+    window.addEventListener(t, user, { passive: true, capture: true });
+  });
+  window.addEventListener('scroll', function () {
+    if (Date.now() < st.busy) { st.busy = Math.max(st.busy, Date.now() + 300); remember(); }   /* 你在滑（含放手後的慣性）：照你的位置 */
+  }, { passive: true });
+  window.addEventListener('resize', function () { st.busy = Date.now() + 500; }, { passive: true });   /* 網址列收起／轉向 */
+  function start() {
+    if (typeof MutationObserver !== 'undefined') new MutationObserver(fix).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true });
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fix).observe(document.documentElement);
+    remember();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_PHONE_SCROLL_UI_1_4_33_END -->
 </body>
 </html>
