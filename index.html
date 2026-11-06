@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.29');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.30');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -15346,7 +15346,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       why = '<div class="why" title="' + esc(full) + '">' + esc(txt(it.reason) || '—') + (ap ? '<span class="ap">｜AI 影子帳：' + esc(ap) + '</span>' : '') + '</div>';
     }
     var fk = hasH && (state === 'EARLY_PROTECT' || state === 'TRUE_REVERSAL_EXIT') ? txt(it.trade) + '|' + txt(it.at) : '';
-    return { h: h + pos + '<div class="st">' + b + '</div>' + why, cls: cls, flash: fk };
+    return { h: h + pos + '<div class="st">' + b + '</div>' + why, cls: cls, flash: fk, open: true };
   }
 
   /* ---- 3. 盤勢分析一行：進場區＋SOP 狀態 ---- */
@@ -15369,6 +15369,19 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     Array.prototype.forEach.call(c.querySelectorAll('[data-z29off]'), function (e) { e.removeAttribute('data-z29off'); });
     Array.prototype.forEach.call(c.querySelectorAll('.z29-mx'), function (e) { e.remove(); });
     Array.prototype.forEach.call(c.querySelectorAll('.z29-dead'), function (e) { e.classList.remove('z29-dead'); });
+    z30(c, null, { h: '' });
+  }
+  /* 1.4.30：計畫是盤勢分析給的（自己出計畫關）→ 精簡時「AI 計畫」那幾行收起來（盤勢分析那一行已經有區間和狀態）；
+     還在做的在盤勢分析下面留 L0 一行；有持倉時盤勢分析只留標題。舊版 AI（沒有持倉維護）照 1.4.28 */
+  function flag(e, k, on) { if (e && on !== e.hasAttribute(k)) { if (on) e.setAttribute(k, '1'); else e.removeAttribute(k); } }
+  function z30(c, d, r) {
+    var pl = obj(d && d.plan), mp = !!r.h && !!pl && (txt(pl.src) === 'MKT' || /^盤勢分析/.test(txt(pl.reason)));
+    Array.prototype.forEach.call(c.children, function (e) {
+      if (/(^|\s)bz-ai-(headline|why|nums|more)(\s|$)/.test(e.className)) flag(e, 'data-z30off', mp);
+    });
+    var m = obj(d && d.market), x = m && obj(m.last), ex = x && obj(x.exec), st = ex && MSTATE[txt(ex.state)];
+    flag(c, 'data-z30l0', mp && !!st && st[1] === 'live' && !r.open);
+    flag(c, 'data-z30hold', !!r.h && !!r.open);
   }
   function patch() {
     var c = $('bz-ai-card');
@@ -15391,6 +15404,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       if (off !== e.hasAttribute('data-z29off')) { if (off) e.setAttribute('data-z29off', '1'); else e.removeAttribute('data-z29off'); }
     });
     try { mktExtra(c, d); } catch (e) {}
+    try { z30(c, d, r); } catch (e) {}
     if (!r.h) { if (box) box.remove(); s.box = null; s.html = ''; take(); return; }
     var head = c.querySelector(':scope > .bz-ai-head');
     if (!box) { box = s.box = document.createElement('div'); box.id = 'bz-hold29'; box.setAttribute('data-z1429', '1'); s.html = ''; }
@@ -15439,5 +15453,23 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 })();
 </script>
 <!-- Z31_BAOZ_HOLD_UI_1_4_29_END -->
+<!-- Z31_BAOZ_AICARD_UI_1_4_30_BEGIN -->
+<style id="z31-baoz-aicard-ui-1-4-30">
+/* ===== BaoZ UI 1.4.30（20261106）：AI 卡精簡時不擠（z55 實盤 10:44 畫面＋10:47 AI 狀態檢查）
+   問題：自己出計畫關著時，「AI 計畫」那幾行就是盤勢分析的同一份計畫（和下面盤勢分析那一行重複）；
+         計畫還在做、又有持倉時，AI 卡固定高度放不下，最下面的「調單協助」被擠出去看不到。
+   1. 計畫是盤勢分析給的：精簡時「AI 計畫」那幾行收起來（盤勢分析那一行已經有進場區和狀態）。
+      還在做（等待中／已進區／影子持倉）時，盤勢分析下面多一行 L0：觸發／停損／目標。
+   2. 盤勢分析標題只排一行，放不下時先把「幾點・幾分鐘前」縮掉（滑鼠移上去看全文）。
+   3. AI 持倉維護有持倉時：盤勢分析只留標題一行（不顯示這盤次數／下次定時、L0 那一行）。
+   只在精簡時；「全部顯示」和以前一樣。只改顯示，不讀不寫 Firebase 設定。 ===== */
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > [data-z30off] { display: none !important; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mkt-head { flex-wrap: nowrap; white-space: nowrap; overflow: hidden; min-width: 0; max-width: 100%; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mkt-head > * { flex: none; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mkt-head > .tm { flex: 0 1 auto; min-width: 4.4em; overflow: hidden; text-overflow: ellipsis; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"][data-z30l0] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mkt-l0 { display: block !important; order: 3; flex: 0 0 100%; margin: 1px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11.5px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"][data-z30hold] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mkt-foot { display: none !important; }
+</style>
+<!-- Z31_BAOZ_AICARD_UI_1_4_30_END -->
 </body>
 </html>
