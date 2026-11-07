@@ -11444,7 +11444,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.33');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.34');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -13515,6 +13515,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
   'use strict';
   var NODE = 'baoz_realtime/near_ai';
   var OWN_OFF = '自己出計畫：關（設定 own_plans）。AI 只在調單型突破、回測時給進／不進意見，見上面「調單協助」。';
+  var OWN_OFF_ST = '自己出計畫：關（設定 own_plans）。AI 只判斷盤勢狀態、不出計畫；Argon 進場那一刻的擋單意見見「AI 盤勢狀態」，調單協助只當影子。';   /* 1.4.34 */
   var s = { ref: null, fn: null, data: null, card: null, mo: null, failAt: 0 };
 
   function $(id) { return document.getElementById(id); }
@@ -13573,7 +13574,8 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     return row(p.t, 'L0', T0 + '；點數＝規則照做的影子結果（合成座標，觸發 K 收盤進場）', x);
   }
   function headHtml(t) {
-    var m = t.sum && typeof t.sum === 'object' ? t.sum : {}, a = ['AI 只給進／不進意見・影子記錄・不下單'];
+    var m = t.sum && typeof t.sum === 'object' ? t.sum : {};
+    var a = [t.ai === 'shadow' ? 'AI 意見只記錄・不寫給自動下單（擋單看盤勢狀態）' : (t.ai === 'off' ? 'AI 關著（tdn.ask_ai）・只追蹤區和 Argon 結果' : 'AI 只給進／不進意見・影子記錄・不下單')];   /* 1.4.34 */
     if (Number(m.n) > 0) {
       /* 點數只算已經出場的（done_agree／done_veto）；括號裡寫「出場 N 筆 ±點」 */
       var pts = function (done, p) { return Number(done) > 0 ? '（出場 ' + Number(done) + ' 筆 ' + signed(p) + '）' : ''; };
@@ -13582,7 +13584,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
       if (Number(m.none) > 0) b += '・沒有意見 ' + Number(m.none);
       a.push(b);
     }
-    return '<div class="bz-sec">調單協助<span>' + esc(a.join('｜')) + '</span></div>';
+    return '<div class="bz-sec">調單協助' + (t.ai === 'shadow' ? '（影子）' : (t.ai === 'off' ? '（AI 關）' : '')) + '<span>' + esc(a.join('｜')) + '</span></div>';
   }
   function tdnHtml(d) {
     var t = d && d.tdn && typeof d.tdn === 'object' ? d.tdn : null;
@@ -13604,7 +13606,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     for (var i = 0; i < secs.length; i++) {
       if (!/^目前計畫/.test(secs[i].textContent)) continue;
       var e = secs[i].nextElementSibling;
-      if (e && e.classList.contains('bz-ai-empty') && /^還沒有 AI 計畫/.test(e.textContent)) e.textContent = OWN_OFF;
+      if (e && e.classList.contains('bz-ai-empty') && /^還沒有 AI 計畫/.test(e.textContent)) e.textContent = d.market && d.market.mode === 'state' ? OWN_OFF_ST : OWN_OFF;
       return;
     }
   }
@@ -14250,9 +14252,173 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     var tip = x ? [txt(x.model), isNum(x.cost_usd) ? '上次 US$' + Number(x.cost_usd).toFixed(3) : ''].filter(Boolean).join('｜') : '';
     return '<div class="bz-mkt-foot"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(a.join('｜')) + '</div>';
   }
+  /* ===== UI 1.4.34（BaoZ AI V0.1.41）：market.mode＝state（盤勢狀態）時這一段改畫「AI 盤勢狀態」；legacy_sop 照上面 1.4.25 ===== */
+  var ST_TITLE = 'AI 盤勢狀態';
+  var ST_TIP = 'BaoZ AI 盤勢狀態（V0.1.41）：AI 只判斷現在的多空結構（結構方、目前控制、戰役、各軸、價格、反轉窗），不出進場、停損、目標；' +
+               'Argon 進場那一刻用它給 AI 擋單意見（ai_gate）。開盤第一份、固定時間、盤勢事件、Argon 調單區預熱、很久沒判（錨點）才叫 AI';
+  var OPN = { '進': ['進', 'mk-go'], '不進': ['不進', 'mk-no'], 'NO_OPINION': ['不給意見', 'mk-wait'], '不給意見': ['不給意見', 'mk-wait'] };
+  var EFF = { VETO: '擋掉（不跟）', ARGON_ONLY: '照 Argon' };
+  var MSN = [['BOOTSTRAP', '開盤'], ['SCHEDULED', '固定'], ['MATERIAL', '事件'], ['WINDOW_OPEN', '時段開始'], ['CATCHUP', '補跑'],
+             ['PREWARM', '預熱'], ['ANCHOR', '錨點'], ['MANUAL', '手動'], ['POSITION', '持倉']];
+  var SAX = [['established', '已確立'], ['joiners', '剛加入'], ['lagging', '落後'], ['opposing', '反向']];
+  var SSUM = [['primary', 'E6/E5'], ['opf', 'OP Force'], ['mode_a', 'Mode A'], ['mode_b', 'Mode B'], ['align', '價格']];
+  /* 字串陣列（Firebase 的陣列可能變成 {"0":…}） */
+  function vals(v) {
+    if (obj(v)) { var ks = Object.keys(v).filter(function (k) { return /^(0|[1-9]\d*)$/.test(k); }); v = ks.sort(function (a, b) { return a - b; }).map(function (k) { return v[k]; }); }
+    return Array.isArray(v) ? v.map(txt).filter(Boolean) : [];
+  }
+  function stDir(v) { v = txt(v); return v === '偏多' ? 'mk-up' : (v === '偏空' ? 'mk-down' : 'mk-wait'); }
+  function stCtl(v) { v = txt(v); return /^多方/.test(v) ? 'mk-up' : (/^空方/.test(v) ? 'mk-down' : 'mk-attn'); }
+  function opB(v) { var o = OPN[txt(v)] || [txt(v) || '—', 'mk-wait']; return '<b class="' + o[1] + '">' + esc(o[0]) + '</b>'; }
+  function usd(v) { return 'US$' + (Number(v) || 0).toFixed(2); }
+
+  /* 1. 標題列 */
+  function stHead(m, x, g) {
+    var a = [];
+    if (x) {
+      var z = obj(x.zh) || {}, dir = txt(z.dir) || txt(x.direction), ctl = txt(z.control), t = hm(x.t), ago = agoTxt(x);
+      if (dir) a.push('<b class="' + stDir(dir) + '" title="結構方向（structural_owner）">' + esc(dir) + '</b>');
+      if (ctl) a.push('<b class="' + stCtl(ctl) + '" title="目前控制（current_control）">' + esc(ctl) + '</b>');
+      if (txt(z.health)) a.push('<span title="戰役（campaign_health）">' + esc(txt(z.health)) + '</span>');
+      if (isNum(x.confidence)) a.push('<span>信心 ' + int(x.confidence) + '</span>');
+      if (t || ago) a.push('<span class="tm">' + esc([t, ago].filter(Boolean).join('・')) + '</span>');
+      if (g && g.stale === true) a.push('<b class="mk-attn" title="' + esc('超過 ' + int(g.max_age_s) + ' 秒：AI 擋單不給意見，照 Argon') + '">過期</b>');
+    }
+    if (m.busy === true) a.push('<b class="mk-attn">分析中…</b>');
+    return '<div class="bz-sec bz-mkt-head" data-z1434="head" title="' + esc(ST_TIP) + '">' + esc(ST_TITLE) + a.join('') + '</div>';
+  }
+  /* 2. AI 擋單：開關、做多／做空現在的意見（Argon 進場那一刻凍結的就是這個）；關＝只記錄 */
+  function stGate(g) {
+    if (!g) return '';
+    var on = g.on === true, ok = g.available !== false && g.stale !== true, a = [];
+    a.push('<span class="lb" title="' + esc(txt(g.text) + (txt(g.note) ? '｜' + txt(g.note) : '')) + '">AI 擋單 <b class="' + (on ? 'mk-on' : 'mk-off') + '">' + (on ? '開' : '關') + '</b></span>');
+    if (g.available === false) a.push('<span>還沒有盤勢狀態：照 Argon</span>');
+    else if (g.stale === true) a.push('<span class="mk-attn">盤勢狀態過期：不給意見，照 Argon</span>');
+    else ['long', 'short'].forEach(function (k) {
+      var v = obj(g[k]);
+      if (v) a.push('<span class="sd" title="' + esc(txt(v.why) || txt(v.rel_text)) + '">' + SIDE[k] + ' ' + opB(v.opinion) + '</span>');
+    });
+    if (!on && ok) a.push('<span class="nt">只記錄</span>');
+    a.push('<span class="pol">' + esc([txt(g.policy), isNum(g.min_conf) ? '信心≥' + int(g.min_conf) : '', isNum(g.max_age_s) ? int(g.max_age_s) + ' 秒內' : ''].filter(Boolean).join('・')) + '</span>');
+    return '<div class="bz-mst-gate" data-z1434="gate"' + (on ? ' data-on="1"' : '') + '>' + a.join('') + '</div>';
+  }
+  /* 3. 盤勢狀態各格（AI 回的欄位，中文是程式翻的） */
+  function stGrid(x) {
+    var z = obj(x.zh) || {};
+    var rows = [['結構方', txt(z.owner) + (txt(z.accept) && txt(z.accept) !== '不明' ? '（' + txt(z.accept) + '）' : '')], ['目前控制', txt(z.control)],
+                ['戰役', [txt(z.health), txt(z.maturity)].filter(Boolean).join('・')], ['各軸', txt(z.topology)], ['價格', txt(z.price)],
+                ['反轉窗', txt(z.reversal)], ['段落', txt(z.episode)]];
+    if (txt(z.counter) && txt(z.counter) !== '—') rows.splice(1, 0, ['反方', txt(z.counter)]);
+    var h = '<dl class="bz-mkt-sop bz-mst-grid">' + rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1] || '—') + '</dd>'; }).join('') + '</dl>';
+    if (txt(x.reason)) h += '<div class="bz-mst-txt"><span>判斷</span>' + esc(txt(x.reason)) + '</div>';
+    if (txt(x.watch)) h += '<div class="bz-mst-txt"><span>在看</span>' + esc(txt(x.watch)) + '</div>';
+    return h;
+  }
+  /* 4. 各軸和摘要（收起來，和 1.4.25 的盤勢細節同一個展開／收起） */
+  function stDetail(x) {
+    var z = obj(x.zh) || {};
+    var rows = SAX.map(function (k) { return [k[1], txt(z[k[0]])]; }).filter(function (r) { return r[1] && r[1] !== '—'; })
+      .concat(SSUM.map(function (k) { return [k[1], txt(x[k[0]])]; }).filter(function (r) { return r[1]; }));
+    if (!rows.length) return '';
+    return '<details class="bz-fold bz-mkt-fold" data-mfold="detail"><summary><b>各軸和摘要</b><span>已確立・落後・反向・E6/E5・OP Force・Mode A／B・價格</span></summary>' +
+           '<dl class="bz-mkt-dl">' + rows.map(function (r) { return '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('') + '</dl></details>';
+  }
+  /* 5. Argon 進場那一刻凍結的擋單意見（之後回來的不算） */
+  function stFrozen(g) {
+    var rows = list(g && g.frozen).slice(0, 6);
+    if (!rows.length) return '';
+    return '<div class="bz-sec">Argon 進場那一刻的擋單意見<span>凍結・之後回來的不算</span></div>' +
+           '<div class="bz-mkt-list bz-ai-scroll" data-mscroll="frozen">' + rows.map(function (r) {
+             var sd = txt(r.side), x = esc(txt(r.zone) || '—') + (sd ? ' <b class="' + tone(sd) + '">' + esc(sd) + '</b>' : '') +
+               '｜' + opB(r.opinion) + (txt(r.rel_text) ? esc('（' + txt(r.rel_text) + '）') : '') + '｜' + esc(EFF[txt(r.effective)] || txt(r.effective) || '—') +
+               (txt(r.exit) || isNum(r.pts) ? '｜' + esc(txt(r.exit)) + (isNum(r.pts) ? ' ' + ptsB(r.pts) : '') : '');
+             return '<div class="bz-mkt-row"><span class="t">' + esc(txt(r.t).slice(0, 5)) + '</span><span class="x">' + x + '</span></div>';
+           }).join('') + '</div>';
+  }
+  /* 6. 排程：這盤叫了幾次、為什麼叫、花費和上限、記著的事件 */
+  function stSched(sc) {
+    if (!sc) return '';
+    var w = vals(sc.window), bt = obj(sc.by_type) || {};
+    var hd = [w.length === 2 ? '事件時段 ' + w[0] + '–' + w[1] : '', isNum(sc.anchor_min) ? '錨點 ' + int(sc.anchor_min) + ' 分' : '',
+              isNum(sc.prewarm_s) ? '預熱 ' + int(sc.prewarm_s) + ' 秒內用快取' : ''].filter(Boolean).join('・');
+    var h = '<div class="bz-sec">排程<span>' + esc(hd) + '</span></div>';
+    if (sc.on === false) h += '<div class="bz-mkt-empty">排程關（market_state_scheduler.enabled）：只叫手動、持倉監控</div>';
+    var by = MSN.map(function (k) { var n = int(bt[k[0]]); return n ? k[1] + ' ' + n : ''; }).filter(Boolean).join('・');
+    var l2 = ['合併 ' + int(sc.coalesced_events), '預熱用快取 ' + int(sc.prewarm_cached), isNum(sc.latency_avg) ? '平均 ' + Math.round(Number(sc.latency_avg)) + ' 秒' : '',
+              int(sc.errors) ? '出錯 ' + int(sc.errors) : '', int(sc.dropped) ? '沒送出 ' + int(sc.dropped) : ''].filter(Boolean).join('・');
+    var used = Number(sc.used_usd) || 0, soft = Number(sc.soft_cap) || 0;
+    var l3 = '花費 ' + usd(used) + (int(bt.POSITION) ? '（持倉監控叫的另計）' : '') + '／軟上限 ' + usd(soft) + (txt(sc.budget_mode) === 'prewarm_only' ? '（到了只剩 Argon 調單區預熱、開盤第一份）' : '（到了只警告）') +
+             '・全停 ' + usd(sc.runaway_cap);
+    h += '<div class="bz-mst-line">' + esc('這盤 L2 ' + int(sc.session_l2_calls) + ' 次' + (by ? '（' + by + '）' : '')) + '</div>' +
+         '<div class="bz-mst-line">' + esc(l2) + '</div><div class="bz-mst-line' + (soft && used >= soft ? ' mk-attn' : '') + '">' + esc(l3) + '</div>';
+    var pend = vals(sc.pending);
+    if (int(sc.pending_n) > 0) h += '<div class="bz-mst-line mk-attn" title="' + esc(pend.join('\n')) + '">' + esc('記著 ' + int(sc.pending_n) + ' 個事件' + (pend.length ? '：' + pend.slice(-2).join('；') : '')) + '</div>';
+    if (txt(sc.err)) h += '<div class="bz-mkt-empty mk-attn">' + esc(txt(sc.err)) + '</div>';
+    return h;
+  }
+  /* 7. 這盤盤勢狀態記帳 */
+  function stLedger(m) {
+    var rows = list(m.ledger).slice(0, 10), sm = obj(m.sum);
+    if (!rows.length) return '';
+    return '<div class="bz-sec">這盤盤勢狀態<span>' + esc('新的在上' + (sm ? '・共 ' + int(sm.sop) + ' 份' : '')) + '</span></div>' +
+           '<div class="bz-mkt-list bz-ai-scroll" data-mscroll="ledger">' + rows.map(function (r) {
+             var dir = txt(r.dir), x = (txt(r.why) ? esc(txt(r.why)) + '｜' : '') + (dir ? '<b class="' + stDir(dir) + '">' + esc(dir) + '</b> ' : '') +
+               esc(txt(r.action)) + (isNum(r.conf) ? esc('・信心 ' + int(r.conf)) : '');
+             return '<div class="bz-mkt-row"><span class="t">' + esc(txt(r.t)) + '</span><span class="x">' + x + '</span></div>';
+           }).join('') + '</div>';
+  }
+  /* 8. Argon 調單 vs 盤勢狀態（進區、突破、回測、觸發那一刻；只記錄） */
+  function stVs(m) {
+    var rows = list(m.vs_tdn).slice(0, 6);
+    if (!rows.length) return '';
+    return '<div class="bz-sec">Argon 調單 vs 盤勢狀態<span>進區・突破・回測・觸發當下・只記錄</span></div>' +
+           '<div class="bz-mkt-list bz-ai-scroll" data-mscroll="vs">' + rows.map(function (r) {
+             var sd = SIDE[r.side] || txt(r.side), sop = txt(r.sop), rel = txt(r.rel);
+             var x = esc(txt(r.zone) || '—') + (sd ? ' <b class="' + tone(sd) + '">' + esc(sd) + '</b>' : '') + (txt(r.phase) ? ' ' + esc(txt(r.phase)) : '') +
+               (sop ? '｜' + esc(sop) + (isNum(r.age_min) ? esc('（' + int(r.age_min) + ' 分鐘前）') : '') : '｜還沒有盤勢狀態') +
+               (rel ? '｜<b class="' + (/都反向|目前反向/.test(rel) ? 'mk-attn' : (/都同向/.test(rel) ? '' : 'mk-wait')) + '">' + esc(rel) + '</b>' : '') +
+               (txt(r.opinion) ? '｜' + opB(r.opinion) : '');
+             return '<div class="bz-mkt-row"><span class="t">' + esc(txt(r.t).slice(0, 5)) + '</span><span class="x">' + x + '</span></div>';
+           }).join('') + '</div>';
+  }
+  /* 9. 這盤次數・花費／軟上限・下次（開盤第一份、固定時間、錨點） */
+  function stFoot(m, x) {
+    var se = obj(m.session), a = [];
+    if (se) a.push('這盤 ' + int(se.calls) + ' 次・' + usd(se.usd) + (isNum(se.cap_usd) ? '／' + Number(se.cap_usd).toFixed(2) : ''));
+    if (txt(m.next)) a.push('下次 ' + txt(m.next));
+    if (!a.length) return '';
+    var tip = x ? [txt(x.model), isNum(x.cost_usd) ? '上次 US$' + Number(x.cost_usd).toFixed(3) : '', '額度＝軟上限（market_state_scheduler.soft_cap_usd）'].filter(Boolean).join('｜') : '';
+    return '<div class="bz-mkt-foot" data-z1434="foot"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(a.join('｜')) + '</div>';
+  }
+  function stHtml(m) {
+    var x = obj(m.last), g = obj(m.gate), sc = obj(m.sched), h = stHead(m, x, g);
+    if (x) {
+      var cov = txt(x.coverage) && txt(x.coverage) !== 'OK' ? '<span class="cov" title="' + esc('coverage：' + txt(x.coverage)) + '">資料不完整，信心打折</span>' : '';
+      if (txt(x.why) || cov) h += '<div class="bz-mkt-why">' + (txt(x.why) ? '<span>' + esc(txt(x.why)) + '</span>' : '') + cov + '</div>';
+    }
+    if (txt(m.note)) h += '<div class="bz-mkt-empty">' + esc(txt(m.note)) + '</div>';
+    if (!x) h += '<div class="bz-mkt-empty">' + esc('這盤還沒有盤勢狀態' + (txt(m.next) ? '（下一次 ' + txt(m.next) + '）' : '')) + '</div>';
+    h += stGate(g);
+    if (x) h += stGrid(x) + stDetail(x);
+    return h + stFrozen(g) + stSched(sc) + stLedger(m) + stVs(m) + stFoot(m, x);
+  }
+
+  /* AI 擋單開著時，標題的「影子・不下單」改成「不下單・擋單開」（AI 自己不下單，但 Argon 進場可能被擋；1.4.5 每次重畫會改回來，這裡再補） */
+  function gateTag(c, d) {
+    var tg = c.querySelector(':scope > .bz-ai-head > .bz-ai-tag');
+    if (!tg) return;
+    var m = obj(d && d.market), on = !!(m && m.mode === 'state' && obj(m.gate) && m.gate.on === true);
+    var want = on ? '不下單・擋單開' : '影子・不下單';
+    if (tg.textContent !== want) tg.textContent = want;
+    tg.classList.toggle('z34-on', on);
+    if (on) tg.title = 'AI 自己不下單；AI 擋單（ai_gate）開著：Argon 進場那一刻盤勢狀態說「不進」，自動下單的 ai_veto 也開的話，這一筆不跟';
+    else if (tg.hasAttribute('title')) tg.removeAttribute('title');
+  }
+
   function mktHtml(d) {
     var m = obj(d && d.market);
     if (!m) return '';   /* 沒有 market：和 1.4.24 一樣 */
+    if (m.mode === 'state' && m.on !== false) return stHtml(m);   /* 1.4.34：V0.1.41 盤勢狀態 */
     if (m.on === false) return headHtml({}, null) + '<div class="bz-mkt-empty">' + esc(txt(m.note) || '盤勢分析沒有在運作') + '</div>';
     var x = obj(m.last), h = headHtml(m, x);
     if (x) {   /* 標題下面一行：為什麼分析（小字）＋資料不完整的提醒 */
@@ -14297,11 +14463,13 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     if (c.hidden || !allowed() || !c.querySelector('.bz-ai-head .bz-pill')) {   /* 鎖回、還沒有資料／讀取失敗：1.4.5 的畫面不動 */
       if (old) old.remove();
       planTag(c, null);
+      gateTag(c, null);   /* 1.4.34 */
       take();
       return;
     }
     var d = s.data, h = '';
     planTag(c, d);
+    gateTag(c, d);   /* 1.4.34 */
     try { h = mktHtml(d); } catch (e) { h = ''; }
     if (!h) { if (old) old.remove(); take(); return; }   /* 沒有 market：和 1.4.24 一樣 */
     /* 放在 1.4.21 調單協助下面；沒有調單協助就放在流程列下面（1.4.21 之後補上時會插在流程列和這段中間，順序一樣） */
@@ -14465,7 +14633,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     var td = c.querySelector(':scope > .bz-tdn-wrap');
     if (td) { var tl = td.querySelector(':scope > .bz-tdn'); any = sec(td, 'tdn', [td.querySelector(':scope > .bz-sec'), tl], tl && tl.querySelector(':scope > .bz-tdn-row')) || any; }
     var mk = c.querySelector(':scope > .bz-mkt-wrap');
-    if (mk) any = sec(mk, 'mkt', [mk.querySelector(':scope > .bz-mkt-head'), mk.querySelector(':scope > .bz-mkt-foot')], null) || any;
+    if (mk) any = sec(mk, 'mkt', [mk.querySelector(':scope > .bz-mkt-head'), mk.querySelector(':scope > .bz-mst-gate'), mk.querySelector(':scope > .bz-mkt-foot')], null) || any;   /* 1.4.34：擋單一行 */
     set(c, 'data-z26any', any ? '1' : null);
   }
   function onClick(e) {
@@ -15732,5 +15900,29 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 })();
 </script>
 <!-- Z31_BAOZ_PHONE_SCROLL_UI_1_4_33_END -->
+<!-- Z31_BAOZ_MSTATE_UI_1_4_34_BEGIN -->
+<style id="z31-baoz-mstate-ui-1-4-34">
+/* ===== BaoZ UI 1.4.34（20261107，BaoZ AI V0.1.41_gpt）：AI 盤勢狀態、AI 擋單、排程、調單協助影子
+   程式在 1.4.25（盤勢那一段：market.mode＝state 時改畫盤勢狀態）、1.4.26（精簡時擋單一行留著）、1.4.21（調單協助影子標題）裡；這裡只有樣式。
+   legacy_sop（V0.1.40 以前的資料）的畫面和 z59 一模一樣。只改顯示，不寫 Firebase、不加監聽。 ===== */
+#baoz-system-panel .bz-mkt-wrap .mk-go { color: var(--bz-ink); }
+#baoz-system-panel .bz-mkt-wrap .mk-no { color: var(--bz-attn); }
+#baoz-system-panel .bz-mkt-wrap .mk-on { color: #ffb36b; }
+#baoz-system-panel .bz-mkt-wrap .mk-off { color: var(--bz-muted); }
+#baoz-system-panel .bz-ai-tag.z34-on { color: #ffb36b; border-color: #ff9f43; }
+#baoz-system-panel .bz-mst-gate { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; margin-top: 5px; padding: 2px 8px; border: 1px dashed var(--bz-line); border-radius: 5px; font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-mst-gate[data-on] { border-style: solid; border-color: #ff9f43; }
+#baoz-system-panel .bz-mst-gate .lb { color: var(--bz-ink); }
+#baoz-system-panel .bz-mst-gate .nt, #baoz-system-panel .bz-mst-gate .pol { font-size: 11px; }
+#baoz-system-panel .bz-mst-grid { margin-top: 6px; }
+#baoz-system-panel .bz-mst-txt { margin-top: 3px; overflow-wrap: anywhere; color: var(--bz-ink); }
+#baoz-system-panel .bz-mst-txt > span { color: var(--bz-muted); margin-right: 8px; }
+#baoz-system-panel .bz-mst-line { margin-top: 2px; font-size: 11.5px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+/* 精簡、收起來：盤勢狀態一行＋擋單一行＋次數・下次一行 */
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mst-gate { flex: 0 0 100%; min-width: 0; box-sizing: border-box; margin: 1px 0 0; padding: 0 6px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; font-size: 11.5px; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mst-gate > * { flex: none; }
+#baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mst-gate > .pol { display: none; }
+</style>
+<!-- Z31_BAOZ_MSTATE_UI_1_4_34_END -->
 </body>
 </html>
