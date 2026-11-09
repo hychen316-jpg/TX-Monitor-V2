@@ -14288,6 +14288,63 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     return '<div class="bz-sec bz-mkt-head" data-z1434="head" title="' + esc(ST_TIP) + '">' + esc(ST_TITLE) + a.join('') + '</div>';
   }
   /* 2. AI 擋單：開關、做多／做空現在的意見（Argon 進場那一刻凍結的就是這個）；關＝只記錄 */
+
+  /* V4 Gate RC02: ONLY the Near BaoZ AI immediate-analysis block.
+     Pure display of read-only near_ai.market.v4_gate_files.
+     Does not alter authentication, Firebase listeners, existing A_PLUS output,
+     Argon trade trigger, AI decision path, or other dashboard sections. */
+  function stV4Gate(v) {
+    function e(s) { return esc(String(s == null ? '' : s)); }
+    var head = '<div class="bz-v4gate-view" data-zv4gate="1" ' +
+      'style="margin-top:5px;border:1px dashed var(--bz-line);border-radius:5px;padding:5px 8px;font-size:12px;line-height:1.55">' +
+      '<div style="font-weight:700">V4 擋單檔案｜B112 A_PLUS ＋ B113 Hybrid</div>';
+    if (!v || typeof v !== 'object' || !v.asof_ms) {
+      return head + '<div>UNKNOWN：新版 AI 尚未發布雙 Gate 檔案狀態。</div>' +
+        '<div style="font-size:11px;opacity:.8">不代表放行，也不代表已擋單。</div></div>';
+    }
+    var t = Date.now(), a = Number(v.asof_ms), age = t - a;
+    var snapshotFresh = isFinite(a) && a > 0 && age >= -30000 && age <= 30000 && !v.error;
+    function explain(code) {
+      var x = { STATE_TOO_OLD:'L2 狀態超過 15 分鐘',
+                STATE_GRACE:'L2 狀態過 10 分鐘，暫不擋',
+                HARD_DIRTY:'重大市場事件待重判',
+                LOW_CONFIDENCE:'AI 信心未達門檻',
+                CONTROL_CONTESTED:'AI 判定控制權拉鋸',
+                STATE_STALE:'AI 狀態過期',
+                FILE_EXPIRED_OR_FUTURE:'檔案已過期／時間異常',
+                FILE_MISSING:'擋單檔案不存在',
+                FILE_BAD_FORMAT:'擋單檔案格式錯誤',
+                FILE_SHADOW:'檔案為影子，不正式否決',
+                FILE_SESSION_CONTRACT_POLICY_MISMATCH:'盤別／契約／策略不一致',
+                PRODUCER_OFF:'AI Gate 產生器已關閉',
+                NO_COVERAGE:'沒有可驗證的資料' };
+      return x[code] || code || '—';
+    }
+    function cell(name, side) {
+      var g = v[name] || {}, c = g[side] || {};
+      var expires = Number(g.expires_ms), issued = Number(g.issued_ms);
+      var live = snapshotFresh && g.valid === true && g.status === 'LIVE' &&
+                 g.file_mode === 'LIVE' && isFinite(expires) && expires > t &&
+                 isFinite(issued) && issued <= t && issued > 0;
+      var block = live && c.gate_file_block === true;
+      var txt0 = live ? (block ? '可能擋單' : '此 Gate 不發否決') : 'UNKNOWN／無有效檔案';
+      var why = live ? (c.reason || c.op || '') : (g.status || 'NO_COVERAGE');
+      var remain = live ? ('｜有效剩 ' + Math.max(0, Math.ceil((expires - t) / 1000)) + ' 秒') : '';
+      return '<div style="display:flex;flex-wrap:wrap;column-gap:8px;padding:1px 0">' +
+         '<span style="min-width:80px">' + e(name === 'a_plus' ? 'A_PLUS' : 'Hybrid') + '</span>' +
+         '<b style="' + (block ? 'color:var(--bz-attn)' : '') + '">' + e(txt0) + '</b>' +
+         '<span style="font-size:11px;opacity:.82">' + e(explain(why) + remain) + '</span></div>';
+    }
+    var out = head;
+    out += '<div style="margin-top:3px"><b>做多</b>' + cell('a_plus','long') + cell('hybrid','long') + '</div>';
+    out += '<div style="margin-top:3px"><b>做空</b>' + cell('a_plus','short') + cell('hybrid','short') + '</div>';
+    if (!snapshotFresh) out += '<div style="color:var(--bz-attn)">資料快照過期或缺失：UNKNOWN</div>';
+    out += '<div style="font-size:11px;opacity:.78;border-top:1px dashed var(--bz-line);margin-top:3px;padding-top:3px">' +
+       '僅顯示有效擋單檔；Excel B112／B113 必須是「開」，且 V4 已觸發，才可能真正擋單。' +
+       '本畫面不代表已有交易被否決。</div></div>';
+    return out;
+  }
+
   function stGate(g) {
     if (!g) return '';
     var on = g.on === true, ok = g.available !== false && g.stale !== true, a = [];
@@ -14399,6 +14456,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     if (txt(m.note)) h += '<div class="bz-mkt-empty">' + esc(txt(m.note)) + '</div>';
     if (!x) h += '<div class="bz-mkt-empty">' + esc('這盤還沒有盤勢狀態' + (txt(m.next) ? '（下一次 ' + txt(m.next) + '）' : '')) + '</div>';
     h += stGate(g);
+    h += stV4Gate(obj(m.v4_gate_files));
     if (x) h += stGrid(x) + stDetail(x);
     return h + stFrozen(g) + stSched(sc) + stLedger(m) + stVs(m) + stFoot(m, x);
   }
