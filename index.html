@@ -12655,69 +12655,6 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
 #baoz-system-panel .bz-ai-pat .ng { margin-top: 4px; color: var(--bz-attn); }
 </style>
 <script>
-/* 更新有變動的 AI 子區塊；相同內容保留原 DOM、展開狀態與閱讀位置。 */
-window.baozPatchAiParts = (function () {
-  'use strict';
-  var rendered = new WeakMap();
-  function key(el) {
-    var label = el.id || el.getAttribute('data-fold') || el.getAttribute('data-mfold') ||
-                el.getAttribute('data-scroll') || el.getAttribute('data-mscroll') ||
-                el.getAttribute('data-z1434') || el.classList[0] || '';
-    if (label === 'bz-sec' && el.firstChild && el.firstChild.nodeType === 3) label += '|' + el.firstChild.nodeValue;
-    return el.tagName + '|' + label;
-  }
-  function scrolls(el) {
-    var sel = '[data-scroll], [data-mscroll]';
-    var nodes = Array.from(el.querySelectorAll(sel));
-    if (el.matches(sel)) nodes.unshift(el);
-    return nodes;
-  }
-  function scrollKey(el) {
-    return el.hasAttribute('data-scroll') ? 's|' + el.getAttribute('data-scroll') : 'm|' + el.getAttribute('data-mscroll');
-  }
-  return function (parent, html) {
-    var prev = rendered.get(parent) || { html: null, parts: [] };
-    var old = prev.parts.filter(function (p) { return p.el.parentNode === parent; });
-    if (prev.html === html && old.length === prev.parts.length) return false;
-    var oldTop = parent.scrollTop, scroll = new Map(), byKey = new Map();
-    old.forEach(function (p) {
-      if (!byKey.has(p.key)) byKey.set(p.key, []);
-      byKey.get(p.key).push(p);
-    });
-    var template = document.createElement('template');
-    template.innerHTML = html;
-    var parts = Array.from(template.content.children, function (el) {
-      var k = key(el), markup = el.outerHTML, group = byKey.get(k);
-      var prior = group && group.shift();
-      if (prior && prior.html === markup) return prior;
-      if (prior) {
-        scrolls(prior.el).forEach(function (e) { scroll.set(scrollKey(e), e.scrollTop); });
-        if (el.tagName === 'DETAILS') el.open = prior.el.open;
-        parent.replaceChild(el, prior.el);
-      }
-      return { el: el, key: k, html: markup };
-    });
-    byKey.forEach(function (group) { group.forEach(function (p) { p.el.remove(); }); });
-    var anchor = null;
-    for (var i = parts.length - 1; i >= 0; i--) {
-      var el = parts[i].el;
-      if (el.parentNode !== parent || (anchor && !(el.compareDocumentPosition(anchor) & Node.DOCUMENT_POSITION_FOLLOWING))) {
-        parent.insertBefore(el, anchor);
-      }
-      anchor = el;
-    }
-    rendered.set(parent, { html: html, parts: parts });
-    if (parent.scrollTop !== oldTop) parent.scrollTop = oldTop;
-    if (scroll.size) parts.forEach(function (p) {
-      scrolls(p.el).forEach(function (e) {
-        var k = scrollKey(e);
-        if (scroll.has(k) && e.scrollTop !== scroll.get(k)) e.scrollTop = scroll.get(k);
-      });
-    });
-    return true;
-  };
-})();
-
 /* BaoZ UI 1.4.5：AI 即時分析卡＋型態標記＋最近一次試跑（只讀 Firebase，不寫） */
 (function () {
   'use strict';
@@ -13072,14 +13009,13 @@ window.baozPatchAiParts = (function () {
     var view = { chip: '未啟動', tone: 'off' };
     if (!c) { window.__BaoZAIView = view; return; }
     if (!st.allowed) { c.hidden = true; window.__BaoZAIView = null; return; }
-    if (c.hidden) c.hidden = false;
+    c.hidden = false;
     var cls = 'bz-ai';
     var html = '<div class="bz-ai-head"><span class="bz-ai-title">AI 即時分析</span><span class="bz-ai-tag">影子・不下單</span>';
     if (st.problem || !d) {
       html += '</div><div class="bz-ai-empty">' + esc(st.problem || '電腦上的 BaoZ AI 程式還沒有啟動（或還沒有寫入資料）。') + '</div>';
-      var emptyClass = cls + (st.problem ? ' ai-warn' : '');
-      if (c.className !== emptyClass) c.className = emptyClass;
-      window.baozPatchAiParts(c, html);
+      c.className = cls + (st.problem ? ' ai-warn' : '');
+      c.innerHTML = html;
       window.__BaoZAIView = { chip: st.problem ? '讀取失敗' : '未啟動', tone: st.problem ? 'warn' : 'off' };
       return;
     }
@@ -13176,9 +13112,12 @@ window.baozPatchAiParts = (function () {
     foot.push('<span>' + esc('日盤 AI ' + (cfg.day ? '開 ' + (cfg.day_time || '') : '關') + '｜夜盤 AI ' + (cfg.night ? '開 ' + (cfg.night_time || '') : '關') +
       (exp ? '｜結算日 ' + exp[2] + '/' + exp[3] + '（日盤不做單）' : '') + (d.dry_run ? '｜模擬' : '')) + '</span>');
     html += '<div class="bz-ai-foot">' + foot.join('') + '</div>';
-    cls += warn ? ' ai-warn' : '';
-    if (c.className !== cls) c.className = cls;
-    window.baozPatchAiParts(c, html);
+    c.className = cls + (warn ? ' ai-warn' : '');
+    /* 1.4.7：重畫前記住卷軸位置，重畫後放回去（停在最上面＝看最新的，就繼續停在最上面） */
+    var keep = {};
+    Array.prototype.forEach.call(c.querySelectorAll('[data-scroll]'), function (e) { keep[e.getAttribute('data-scroll')] = e.scrollTop; });
+    c.innerHTML = html;
+    Array.prototype.forEach.call(c.querySelectorAll('[data-scroll]'), function (e) { var v = keep[e.getAttribute('data-scroll')]; if (v) e.scrollTop = v; });
     window.__BaoZAIView = view;
   }
 
@@ -13662,18 +13601,12 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
 
   /* 2. 自己出計畫關掉：「目前計畫」下面的空白說明換掉（只換 1.4.5 的預設那句，其他提醒照舊） */
   function ownOff(c, d) {
-    if (!d || d.plan) return;
+    if (!d || d.own_plans !== false || d.plan) return;
     var secs = c.querySelectorAll(':scope > .bz-sec');
     for (var i = 0; i < secs.length; i++) {
       if (!/^目前計畫/.test(secs[i].textContent)) continue;
       var e = secs[i].nextElementSibling;
-      if (e && e.classList.contains('bz-ai-empty')) {
-        if (d.own_plans === false && /^還沒有 AI 計畫/.test(e.textContent)) e.__bzDefaultPlan = e.textContent;
-        if (e.__bzDefaultPlan) {
-          var label = d.own_plans === false ? (d.market && d.market.mode === 'state' ? OWN_OFF_ST : OWN_OFF) : e.__bzDefaultPlan;
-          if (e.textContent !== label) e.textContent = label;
-        }
-      }
+      if (e && e.classList.contains('bz-ai-empty') && /^還沒有 AI 計畫/.test(e.textContent)) e.textContent = d.market && d.market.mode === 'state' ? OWN_OFF_ST : OWN_OFF;
       return;
     }
   }
@@ -14160,7 +14093,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
   'use strict';
   var NODE = 'baoz_realtime/near_ai';
   var KEY = 'z31.baoz.mkt.detail.v1';   /* 盤勢細節展開／收起（只存在這台瀏覽器） */
-  var s = { ref: null, fn: null, data: null, card: null, mo: null, failAt: 0, open: false };
+  var s = { ref: null, fn: null, data: null, card: null, mo: null, failAt: 0, open: false, scroll: {} };
   try { s.open = window.localStorage.getItem(KEY) === '1'; } catch (e) {}
 
   var TITLE = 'AI 盤勢分析（影子）';
@@ -14396,11 +14329,11 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
       var block = live && c.gate_file_block === true;
       var txt0 = live ? (block ? '可能擋單' : '此 Gate 不發否決') : 'UNKNOWN／無有效檔案';
       var why = live ? (c.reason || c.op || '') : (g.status || 'NO_COVERAGE');
-      var remain = live ? '<span data-v4remain="' + name + '" style="white-space:nowrap">｜有效剩 <span style="display:inline-block;min-width:2ch;text-align:right;font-variant-numeric:tabular-nums"></span> 秒</span>' : '';
+      var remain = live ? ('｜有效剩 ' + Math.max(0, Math.ceil((expires - t) / 1000)) + ' 秒') : '';
       return '<div style="display:flex;flex-wrap:wrap;column-gap:8px;padding:1px 0">' +
          '<span style="min-width:80px">' + e(name === 'a_plus' ? 'A_PLUS' : 'Hybrid') + '</span>' +
          '<b style="' + (block ? 'color:var(--bz-attn)' : '') + '">' + e(txt0) + '</b>' +
-         '<span style="font-size:11px;opacity:.82">' + e(explain(why)) + remain + '</span></div>';
+         '<span style="font-size:11px;opacity:.82">' + e(explain(why) + remain) + '</span></div>';
     }
     var out = head;
     out += '<div style="margin-top:3px"><b>做多</b>' + cell('a_plus','long') + cell('hybrid','long') + '</div>';
@@ -14536,9 +14469,8 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     var want = on ? '不下單・擋單開' : '影子・不下單';
     if (tg.textContent !== want) tg.textContent = want;
     tg.classList.toggle('z34-on', on);
-    var tip = 'AI 自己不下單；AI 擋單（ai_gate）開著：Argon 進場那一刻盤勢狀態說「不進」，自動下單的 ai_veto 也開的話，這一筆不跟';
-    if (on && tg.title !== tip) tg.title = tip;
-    else if (!on && tg.hasAttribute('title')) tg.removeAttribute('title');
+    if (on) tg.title = 'AI 自己不下單；AI 擋單（ai_gate）開著：Argon 進場那一刻盤勢狀態說「不進」，自動下單的 ai_veto 也開的話，這一筆不跟';
+    else if (tg.hasAttribute('title')) tg.removeAttribute('title');
   }
 
   function mktHtml(d) {
@@ -14600,25 +14532,22 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     if (!h) { if (old) old.remove(); take(); return; }   /* 沒有 market：和 1.4.24 一樣 */
     /* 放在 1.4.21 調單協助下面；沒有調單協助就放在流程列下面（1.4.21 之後補上時會插在流程列和這段中間，順序一樣） */
     var after = c.querySelector(':scope > .bz-tdn-wrap') || c.querySelector(':scope > .bz-fl') || c.querySelector(':scope > .bz-flow') || c.querySelector(':scope > .bz-ai-head');
-    var box = old || document.createElement('div');
-    if (!old) {
-      box.className = 'bz-mkt-wrap';
-      box.setAttribute('data-z1425', '1');
-    }
-    var prevFold = box.querySelector('details[data-mfold]');
-    var changed = window.baozPatchAiParts(box, h);
+    if (old && old.__z1425 === h && old.previousElementSibling === after) return;
+    if (old) old.remove();
+    var box = document.createElement('div');
+    box.className = 'bz-mkt-wrap';
+    box.setAttribute('data-z1425', '1');
+    box.innerHTML = h;
+    box.__z1425 = h;
     var f = box.querySelector('details[data-mfold]');
-    if (f && f !== prevFold) { f.open = s.open; f.addEventListener('toggle', onToggle); }
-    if (!old || box.previousElementSibling !== after) {
-      if (after && after.nextSibling) c.insertBefore(box, after.nextSibling); else c.appendChild(box);
-    }
-    var gates = d && d.market && d.market.v4_gate_files;
-    Array.prototype.forEach.call(box.querySelectorAll('[data-v4remain]'), function (e) {
-      var g = gates && gates[e.getAttribute('data-v4remain')];
-      var label = g ? String(Math.max(0, Math.ceil((Number(g.expires_ms) - Date.now()) / 1000))) : '';
-      if (e.firstElementChild.textContent !== label) e.firstElementChild.textContent = label;
+    if (f) { f.open = s.open; f.addEventListener('toggle', onToggle); }
+    if (after && after.nextSibling) c.insertBefore(box, after.nextSibling); else c.appendChild(box);
+    /* 1.4.5 每 5 秒整張重畫：卷軸位置自己記，重畫後放回去（停在最上面＝看最新的） */
+    Array.prototype.forEach.call(box.querySelectorAll('[data-mscroll]'), function (e) {
+      var k = e.getAttribute('data-mscroll');
+      if (s.scroll[k]) e.scrollTop = s.scroll[k];
+      e.addEventListener('scroll', function () { s.scroll[k] = e.scrollTop; }, { passive: true });
     });
-    if (old && changed) c.dispatchEvent(new Event('bz-ai-market-updated'));
     take();
   }
 
@@ -14637,11 +14566,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     var d = $('dashboard');
     if (d && typeof MutationObserver !== 'undefined') new MutationObserver(reconcile).observe(d, { attributes: true, attributeFilter: ['class'] });
     try { if (typeof auth !== 'undefined' && auth && typeof auth.onAuthStateChanged === 'function') auth.onAuthStateChanged(function () { detach(); s.failAt = 0; reconcile(); }); } catch (e) {}
-    window.setInterval(function () {
-      reconcile();
-      var c = $('bz-ai-card'), m = s.data && s.data.market;
-      if (c && (c !== s.card || (m && m.mode === 'state' && m.v4_gate_files))) patch();
-    }, 1000);   /* Gate 秒數與逾時依實際時間更新 */
+    window.setInterval(function () { reconcile(); var c = $('bz-ai-card'); if (c && c !== s.card) patch(); }, 500);   /* AI 卡晚建立 */
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
@@ -14785,13 +14710,9 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     var c = document.getElementById('bz-ai-card');
     if (c && c !== s.card && typeof MutationObserver !== 'undefined') {
       if (s.mo) s.mo.disconnect();
-      if (s.card) {
-        s.card.removeEventListener('click', onClick, true);
-        s.card.removeEventListener('bz-ai-market-updated', decorate);
-      }
+      if (s.card) s.card.removeEventListener('click', onClick, true);
       s.card = c;
       c.addEventListener('click', onClick, true);
-      c.addEventListener('bz-ai-market-updated', decorate);
       s.mo = new MutationObserver(decorate);
       s.mo.observe(c, { childList: true });
     }
