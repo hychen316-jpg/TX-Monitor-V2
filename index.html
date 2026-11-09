@@ -2988,7 +2988,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyCPkFmEOfCRBBR6TQbji8G5kNZk7XBi_JQ",
+      apiKey: "[REDACTED]",
       authDomain: "tx-monitor-93eb2.firebaseapp.com",
       databaseURL: "https://tx-monitor-93eb2-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "tx-monitor-93eb2",
@@ -4347,10 +4347,10 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
         const n2dCarryBuild = n2dCarryBuildMatch ? n2dCarryBuildMatch[1].trim() : "";
         const nightCloseManagement = /(?:^|\|)NIGHT_CLOSE_MGMT=1(?:\||$)/.test(zStatusDisplayRaw)
             || rawExecutionAdvice.includes("NIGHT_CLOSE_MANAGEMENT_ZONE");
-        const executionAdviceTokens = rawExecutionAdvice.split("|").map(token => token.trim()).filter(Boolean);
+        const executionAdviceTokens = rawExecutionAdvice.split("|").map(token =[REDACTED] token.trim()).filter(Boolean);
         const carryAllowIndex = executionAdviceTokens.indexOf("NIGHT_DAY_CARRY_ARMED");
         const carryRejectIndex = executionAdviceTokens.indexOf("NIGHT_DAY_CARRY_REJECT");
-        const positionRecoveryInAdvice = executionAdviceTokens.some(token => token.startsWith("POSITION_RECOVERY"));
+        const positionRecoveryInAdvice = executionAdviceTokens.some(token =[REDACTED] token.startsWith("POSITION_RECOVERY"));
         const carryStageToken = carryAllowIndex >= 0 ? (executionAdviceTokens[carryAllowIndex + 1] || "") : "";
         const carryReasonTokens = carryAllowIndex >= 0
             ? executionAdviceTokens.slice(carryAllowIndex + 2)
@@ -14390,6 +14390,71 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     var tip = x ? [txt(x.model), isNum(x.cost_usd) ? '上次 US$' + Number(x.cost_usd).toFixed(3) : '', '額度＝軟上限（market_state_scheduler.soft_cap_usd）'].filter(Boolean).join('｜') : '';
     return '<div class="bz-mkt-foot" data-z1434="foot"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(a.join('｜')) + '</div>';
   }
+
+  /* V0.1.43 RC02: read-only Dual V4 Gate (actual 12s Argon opinion files).
+     NEVER infer a block from the L2 narrative / sentiment alone. */
+  var v4DisplayData = null;
+  function v4Text(s) { return String(s == null ? '' : s); }
+  function v4Label(op, code) {
+    if (op === 'BLOCK' || op === 'VETO') return '擋單訊號';
+    if (op === 'ALLOW') return 'ALLOW（不擋）';
+    if (op === 'FALLBACK' || op === 'NO_OPINION') return '不給否決意見';
+    return op || 'UNKNOWN';
+  }
+  function v4Reason(code) {
+    var m = { STATE_TOO_OLD:'L2 超過 15 分鐘未更新',
+              STATE_GRACE:'L2 超過 10 分鐘，暫不否決',
+              LOW_CONFIDENCE:'AI 信心不足，不否決',
+              HARD_DIRTY:'關鍵事件待重判',
+              CONTROL_CONTESTED:'正式判為控制權拉鋸',
+              STATE_STALE:'A_PLUS 狀態過期，不否決',
+              STATE_MISSING:'尚無 L2 狀態',
+              NO_COVERAGE:'沒有可核實的 Gate 檔案' };
+    return m[code] || code || '—';
+  }
+  function stV4Gate(v) {
+    v4DisplayData = v || null;
+    if (!v) return '<div class="bz-v4r" data-zv4gate="1"><b>V4 實際擋單檔案</b><span>尚未發布（需 BaoZ AI V0.1.43 顯示相容性更新）</span></div>';
+    var age = Date.now() - Number(v.asof_ms || 0);
+    var stale = !v.asof_ms || !isFinite(age) || age > 30000 || age < -30000 || !!v.error;
+    var head = '<b>V4 Gate｜當下做多／做空</b><span>' +
+      esc(stale ? '資料未更新／UNKNOWN' : '檔案快照（不是實際成交或否決紀錄）') + '</span>';
+    var h = '<div class="bz-v4r" data-zv4gate="1">' + head;
+    function row(key, title, cell) {
+      var one = v[key] || {}, timed = Number(one.expires_ms || 0),
+          live = !stale && one.valid === true && timed > Date.now() &&
+                 one.file_mode === 'LIVE';
+      var op = one[cell] || {}, veto = live && op.gate_file_block === true;
+      var mode = one.producer_mode || '未知';
+      var summary = !live ? ('UNKNOWN／不以舊檔判斷（' + (one.status || 'NO_COVERAGE') + '）')
+                          : (veto ? 'Gate 會擋（須確認 Excel ' +
+                                   (key === 'a_plus' ? 'B112' : 'B113') + '＝開）'
+                                  : 'Gate 不發否決（' + v4Label(op.op, op.reason) + '）');
+      return '<div class="bz-v4r-row"><span>' + esc(title) +
+             '（AI 設定：' + esc(mode) + '）</span>' +
+             '<b class="' + (veto ? 'bz-v4r-block' : 'bz-v4r-neutral') + '">' +
+             esc(summary) + '</b><small>' +
+             esc(v4Reason(live ? op.reason : (one.status || 'NO_COVERAGE'))) +
+             '</small></div>';
+    }
+    h += row('a_plus', 'A_PLUS 做多', 'long') +
+         row('hybrid', 'Hybrid 做多', 'long') +
+         row('a_plus', 'A_PLUS 做空', 'short') +
+         row('hybrid', 'Hybrid 做空', 'short');
+    h += '<div class="bz-v4r-note">有效期限 12 秒；顯示的是 Argon 將讀到的 Gate 檔案資格。' +
+         '需 Excel B112／B113＝開、正式 V4 進場條件達成且資料同盤同約，才會真正否決進場。' +
+         '未知、檔案過期不等於已放行其他交易條件。</div></div>';
+    return h;
+  }
+  setInterval(function () {
+    try {
+      var old = document.querySelector('#bz-ai-card [data-zv4gate="1"]');
+      if (!old || !v4DisplayData) return;
+      var html = stV4Gate(v4DisplayData);
+      if (old.outerHTML !== html) old.outerHTML = html;
+    } catch (e) {}
+  }, 2000);
+
   function stHtml(m) {
     var x = obj(m.last), g = obj(m.gate), sc = obj(m.sched), h = stHead(m, x, g);
     if (x) {
@@ -14398,6 +14463,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     }
     if (txt(m.note)) h += '<div class="bz-mkt-empty">' + esc(txt(m.note)) + '</div>';
     if (!x) h += '<div class="bz-mkt-empty">' + esc('這盤還沒有盤勢狀態' + (txt(m.next) ? '（下一次 ' + txt(m.next) + '）' : '')) + '</div>';
+    h += stV4Gate(obj(m.v4_gate_files));
     h += stGate(g);
     if (x) h += stGrid(x) + stDetail(x);
     return h + stFrozen(g) + stSched(sc) + stLedger(m) + stVs(m) + stFoot(m, x);
@@ -15924,5 +15990,20 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 #baoz-system-panel #bz-ai-card[data-z26ai="c"] > .bz-mkt-wrap[data-z26s]:not([data-z26o]) > .bz-mst-gate > .pol { display: none; }
 </style>
 <!-- Z31_BAOZ_MSTATE_UI_1_4_34_END -->
+
+<style id="baoz-v4-dual-gate-ui-rc01">
+#baoz-system-panel .bz-v4r {border:1px solid var(--bz-line);border-radius:6px;padding:7px;margin:7px 0;font-size:12px;display:flex;flex-direction:column;gap:4px}
+#baoz-system-panel .bz-v4r > b {font-size:12px}
+#baoz-system-panel .bz-v4r > span {font-size:11px;color:var(--bz-muted)}
+#baoz-system-panel .bz-v4r-row {display:grid;grid-template-columns:minmax(95px,1fr) minmax(170px,2fr);gap:3px 7px;border-top:1px solid var(--bz-line);padding-top:5px}
+#baoz-system-panel .bz-v4r-row span {font-size:11px;color:var(--bz-muted)}
+#baoz-system-panel .bz-v4r-row b {font-weight:650}
+#baoz-system-panel .bz-v4r-row small {grid-column:1/-1;color:var(--bz-muted);font-size:11px}
+#baoz-system-panel .bz-v4r-block {color:var(--bz-attn)}
+#baoz-system-panel .bz-v4r-neutral {color:var(--bz-text)}
+#baoz-system-panel .bz-v4r-note {font-size:10px;color:var(--bz-muted);line-height:1.5}
+</style>
+<!-- BaoZ V4 Dual Gate RC02: display-only, no trade actions -->
+
 </body>
 </html>
