@@ -12938,6 +12938,10 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     if (u.budget && typeof u.budget === 'object' && u.budget.note) hold.push(String(u.budget.note));
     var r0 = row(0, 'L0', '本機程式', 'L0 本機程式：一直盯盤、照計畫追蹤（不花錢）' + (dt ? '｜資料 ' + dt : ''),
                  h0, e0 && !stale ? e0.text : '', dt ? '資料 ' + dt : '', sub(hold.join('｜'), 'blk'));
+    if (d && d.own_plans === false && d.market && d.market.mode === 'state') {
+      return '<div class="bz-fl" data-z1417="1" title="L0 仍是舊流程監看；盤勢分析的 L2 呼叫由下方排程呈現">' +
+             r0 + '<div class="bz-fl-foot">AI 自己出計畫：關｜盤勢 L2 次數與下一次呼叫請看下方「排程」</div></div>';
+    }
     /* L1 */
     var r1 = l1 ? row(1, 'L1', '快速判讀', 'L1 快速判讀' + (m1 ? '（' + m1 + '）' : '') + '：判斷要不要重做計畫｜今天 ' + (u.calls_l1 || 0) + ' 次' + (l1.urgency ? '｜急迫：' + l1.urgency : ''),
                       (l1.time || '') + ' ' + (l1.need_full ? '要完整規劃' : (l1.valid ? '計畫還有效' : '不用重做')),
@@ -14308,76 +14312,171 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
      Argon trade trigger, AI decision path, or other dashboard sections. */
   /* RC03 GPT：V4 Gate producer/file/Excel 消費端三層嚴格分離。
      只看 near_ai.market.v4_gate_files；沒有 B112/B113 實值不得稱真正擋單。 */
-  function stV4Gate(v) {
+  /* RC04 GPT: data-age checks belong to the UI, not the stale backend snapshot.
+     These checks affect DISPLAY ONLY; the Excel/Trader engines are untouched. */
+  function rc04Heartbeat(d) {
+    if (!d || !isNum(d.updated_at_ms)) return {ok:false,why:'HEARTBEAT_UNKNOWN'};
+    var now = Date.now(), sent = Number(d.updated_at_ms), age = now - sent;
+    if (!(sent > 0) || !Number.isFinite(age) || age < -30000) return {ok:false,why:'HEARTBEAT_INVALID'};
+    if (age > 180000) return {ok:false,why:'HEARTBEAT_STALE'};
+    return {ok:true,why:'OK'};
+  }
+  function rc04TdnFresh(d, m, g) {
+    var hb = rc04Heartbeat(d);
+    if (!hb.ok) return hb;
+    if (!m || !g || g.on !== true) return {ok:false,why:'TDN_PRODUCER_OFF_OR_UNKNOWN'};
+    if (g.available !== true) return {ok:false,why:'STATE_NOT_AVAILABLE'};
+    if (g.stale !== false) return {ok:false,why:'STATE_STALE_OR_UNKNOWN'};
+    var x = obj(m.last);
+    if (!x || !txt(x.t)) return {ok:false,why:'STATE_TIME_UNKNOWN'};
+    var stateAt = Date.parse(x.t), limit = Number(g.max_age_s);
+    if (!Number.isFinite(stateAt) || !isNum(g.max_age_s) || !(limit > 0))
+      return {ok:false,why:'STATE_TIME_OR_LIMIT_UNKNOWN'};
+    var age = Date.now() - stateAt;
+    if (age < -30000 || age > limit * 1000) return {ok:false,why:'STATE_EXPIRED'};
+    return {ok:true,why:'OK'};
+  }
+  function rc04ExpectedSession(d) {
+    var m = obj(d && d.market) || {}, se = obj(m.session) || {};
+    var k = /^(\d{8})([DN])$/.exec(txt(se.key));
+    return k ? k[2] + k[1] : '';
+  }
+  /* RC04 GPT: no affirmative Gate claim without fresh heartbeat, matching
+     Near session/contract, complete side opinion and consistent block flag.
+     Keep producer/file diagnostic even when top-level asof is missing. */
+  function stV4Gate(v, d) {
     function e(s) { return esc(String(s == null ? '' : s)); }
-    function ex(c) {
-      var map = { STATE_TOO_OLD:'L2 狀態超過 15 分鐘',
-        STATE_GRACE:'L2 狀態過 10 分鐘，暫不擋',
-        HARD_DIRTY:'重大事件待重新判斷（非方向性否決）',
-        LOW_CONFIDENCE:'L2 信心未達門檻',
-        CONTROL_CONTESTED:'目前控制權拉鋸',
-        STATE_STALE:'L2 已過期', STATE_MISSING:'沒有 L2',
-        FILE_EXPIRED_OR_FUTURE:'檔案過期／時間異常',
-        FILE_MISSING:'檔案不存在', FILE_BAD_FORMAT:'檔案格式不符',
-        FILE_SHADOW:'檔案是影子模式', FILE_TIME_BAD_FORMAT:'時間格式不符',
-        FILE_TIME_BAD_VALUE:'時間無效',
-        FILE_SESSION_CONTRACT_POLICY_MISMATCH:'盤別、契約或策略不符',
-        SESSION_OR_CONTRACT_UNKNOWN:'盤別／契約 UNKNOWN',
-        PRODUCER_OFF:'產生器關閉', NO_COVERAGE:'資料不足' };
-      return map[c] || c || 'NO_COVERAGE';
-    }
     var h = '<div class="bz-v4gate-view" data-zv4gate="1">' +
       '<div class="bz-v4gate-title">V4 Gate 檔案資格｜A_PLUS（B112）／Hybrid（B113）</div>' +
-      '<div class="bz-v4gate-note">Excel B112／B113 實際開關、FIRE 當秒是否否決：NOT_EXPOSED</div>';
-    if (!v || typeof v !== 'object' || !isNum(v.asof_ms)) {
-      return h + '<div class="mk-attn">NO_COVERAGE：舊版或未發布 V4 Gate 狀態</div></div>';
+      '<div class="bz-v4gate-note">Excel B112／B113 實際開關、V4 FIRE 是否真的被否決：NOT_EXPOSED</div>';
+    if (!v || typeof v !== 'object') {
+      return h + '<div class="mk-attn">NO_COVERAGE：目前沒有 V4 Gate 發布欄位</div></div>';
     }
-    var now = Date.now(), asof = Number(v.asof_ms), age = now - asof;
-    var snapFresh = isFinite(asof) && asof > 0 && age >= -30000 && age <= 30000 && !v.error;
-    var hdr = [];
-    if (txt(v.session)) hdr.push('盤 ' + txt(v.session));
-    if (txt(v.contract)) hdr.push('契約 ' + txt(v.contract));
-    hdr.push(snapFresh ? '快照 ' + Math.max(0,Math.floor(age / 1000)) + ' 秒前' : '快照非即時／UNKNOWN');
-    h += '<div class="bz-v4gate-meta">' + e(hdr.join('｜')) + '</div>';
+    var now = Date.now();
+    var asof = isNum(v.asof_ms) ? Number(v.asof_ms) : NaN;
+    var age = now - asof, hb = rc04Heartbeat(d);
+    var snapshotOk = hb.ok && Number.isFinite(asof) && asof > 0 &&
+      age >= -30000 && age <= 30000 && !v.error;
+    var nearContract = txt(d && d.contract), fileContract = txt(v.contract);
+    var nearSession = rc04ExpectedSession(d), fileSession = txt(v.session);
+    var contractOk = !!nearContract && !!fileContract && nearContract === fileContract;
+    var sessionOk = !!nearSession && !!fileSession && nearSession === fileSession;
+    function explain(s) {
+      var m = {
+        HARD_DIRTY:'重大事件待重新判斷（非方向性否決）',
+        STATE_TOO_OLD:'盤勢狀態超過15分鐘', STATE_GRACE:'盤勢狀態逾10分鐘（暫不否決）',
+        LOW_CONFIDENCE:'AI 信心不足', CONTROL_CONTESTED:'控制權拉鋸',
+        FILE_MISSING:'檔案不存在', FILE_BAD_FORMAT:'檔案格式不符',
+        FILE_SHADOW:'檔案僅影子', PRODUCER_OFF:'Gate 產生器關閉',
+        FILE_EXPIRED_OR_FUTURE:'Gate 檔案已過期或時間異常',
+        FILE_SESSION_CONTRACT_POLICY_MISMATCH:'盤別／契約／策略不符',
+        SESSION_OR_CONTRACT_UNKNOWN:'盤別或契約未提供',
+        FILE_TIME_BAD_FORMAT:'時間格式不符', FILE_TIME_BAD_VALUE:'時間值無效',
+        STATE_STALE:'盤勢已過期', NO_COVERAGE:'無有效覆蓋',
+        HEARTBEAT_STALE:'AI 心跳中斷', HEARTBEAT_INVALID:'AI 心跳時間異常',
+        HEARTBEAT_UNKNOWN:'AI 心跳缺失',
+        CONTRACT_MISMATCH:'Gate 與 Near 契約不一致',
+        SESSION_MISMATCH:'Gate 與 Near 盤別不一致',
+        SIDE_MISSING:'方向意見缺失',
+        SIDE_INVALID:'方向意見或旗標不一致',
+        SNAPSHOT_STALE:'Firebase Gate 快照逾期或不完整'
+      };
+      return m[s] || s || 'NO_COVERAGE';
+    }
+    var info = [
+      'Near ' + (nearContract || 'UNKNOWN'),
+      'Gate ' + (fileContract || 'UNKNOWN'),
+      'Near 盤 ' + (nearSession || 'UNKNOWN'),
+      'Gate 盤 ' + (fileSession || 'UNKNOWN'),
+      snapshotOk ? ('快照 ' + Math.floor(age / 1000) + ' 秒前') : '快照非即時／UNKNOWN'
+    ];
+    h += '<div class="bz-v4gate-meta">' + e(info.join('｜')) + '</div>';
     function cell(name, side) {
-      var g = obj(v[name]) || {}, c = obj(g[side]) || {};
+      var g = obj(v[name]);
+      if (!g) return '<div class="bz-v4gate-row"><span class="bz-v4gate-key">' +
+        e(name === 'a_plus' ? 'A_PLUS' : 'Hybrid') +
+        '</span><b class="mk-attn">UNKNOWN</b><span class="bz-v4gate-reason">NO_COVERAGE：Gate 欄位缺失</span></div>';
+      var c = obj(g[side]);
+      var producer = g.producer_enabled === true ? '開' : (g.producer_enabled === false ? '關' : 'UNKNOWN');
+      var mode = txt(g.producer_mode) || 'UNKNOWN';
+      var why = '';
+      if (g.producer_enabled === false || mode === '關') why = 'PRODUCER_OFF';
+      else if (g.status && g.status !== 'LIVE') why = txt(g.status);
+      else if (!hb.ok) why = hb.why;
+      else if (!contractOk) why = 'CONTRACT_MISMATCH';
+      else if (!sessionOk) why = 'SESSION_MISMATCH';
+      else if (!snapshotOk) why = 'SNAPSHOT_STALE';
+      else if (g.valid !== true || g.file_mode !== 'LIVE' || g.status !== 'LIVE' ||
+               g.available !== true || g.producer_enabled !== true || mode !== '開') why = txt(g.status) || 'NO_COVERAGE';
       var issued = isNum(g.issued_ms) ? Number(g.issued_ms) : NaN;
-      var expires = isNum(g.expires_ms) ? Number(g.expires_ms) : NaN;
-      var active = snapFresh && g.valid === true && g.status === 'LIVE' &&
-        g.file_mode === 'LIVE' && isFinite(issued) && issued > 0 && issued <= now &&
-        isFinite(expires) && expires > now;
-      var b = active && c.gate_file_block === true;
-      var opinion = txt(c.op) || 'UNKNOWN';
-      var reason = active ? ex(txt(c.reason) || opinion) : ex(txt(g.status) || 'NO_COVERAGE');
-      var ttl = active ? '｜有效剩 ' + Math.ceil((expires - now) / 1000) + ' 秒' : '';
-      var enabled = g.producer_enabled === true ? '開' : (g.producer_enabled === false ? '關' : 'UNKNOWN');
-      var mode = txt(g.producer_mode);
-      var why = '產生器 ' + enabled + (mode ? '／' + mode : '') + '｜' + reason + ttl;
-      var verdict = active ? (b ? '可能發出否決' : '此 Gate 不發否決') : 'UNKNOWN／當下無有效檔案';
-      return '<div class="bz-v4gate-row"><span class="bz-v4gate-key">' + e(name === 'a_plus' ? 'A_PLUS' : 'Hybrid') + '</span>' +
-        '<b class="' + (b ? 'mk-attn' : '') + '">' + e(verdict) + '</b>' +
-        '<span class="bz-v4gate-reason">' + e('意見 ' + opinion + '｜' + why) + '</span></div>';
+      var exp = isNum(g.expires_ms) ? Number(g.expires_ms) : NaN;
+      if (!why && (!Number.isFinite(issued) || !(issued > 0) || issued > now ||
+                   !Number.isFinite(exp) || exp <= now)) why = 'FILE_EXPIRED_OR_FUTURE';
+      var op = c ? txt(c.op) : '';
+      var validOps = name === 'a_plus' ? {VETO:true, NO_OPINION:true} :
+                     {ALLOW:true, BLOCK:true, FALLBACK:true};
+      var expectedBlock = op === (name === 'a_plus' ? 'VETO' : 'BLOCK');
+      if (!why && (!c || !op || !validOps[op] || !txt(c.reason) ||
+                   typeof c.gate_file_block !== 'boolean' ||
+                   c.gate_file_block !== expectedBlock)) {
+        why = c ? 'SIDE_INVALID' : 'SIDE_MISSING';
+      }
+      var active = !why;
+      var status = active ? (expectedBlock ? '可能發出否決' : '此 Gate 不發否決') : 'UNKNOWN／不可判定';
+      var reason = why ? explain(why) +
+        ((why === 'CONTRACT_MISMATCH' || why === 'SESSION_MISMATCH') ? '（資料不同步）' : '') :
+        explain(txt(c.reason));
+      var detail = '產生器 ' + producer + '／' + mode +
+        '｜方向意見 ' + (op || 'UNKNOWN') + '｜' + reason +
+        (active ? '｜剩 ' + Math.ceil((exp - now) / 1000) + ' 秒' : '');
+      return '<div class="bz-v4gate-row"><span class="bz-v4gate-key">' +
+        e(name === 'a_plus' ? 'A_PLUS' : 'Hybrid') + '</span>' +
+        '<b class="' + (active && expectedBlock ? 'mk-attn' : (!active ? 'mk-attn' : '')) + '">' +
+        e(status) + '</b><span class="bz-v4gate-reason">' + e(detail) + '</span></div>';
     }
     h += '<div class="bz-v4gate-side"><b>做多</b>' + cell('a_plus','long') + cell('hybrid','long') + '</div>';
     h += '<div class="bz-v4gate-side"><b>做空</b>' + cell('a_plus','short') + cell('hybrid','short') + '</div>';
-    if (!snapFresh) h += '<div class="mk-attn">快照已失效或延遲：只能查看歷史意見，不能推論目前是否擋單。</div>';
-    h += '<div class="bz-v4gate-note">這是 AI 讀取 Gate 檔的當前資格；只有 Excel 開關＋V4 FIRE＋檔案有效性都成立，才有可能真正否決。Trader／券商成交狀態需另外核對。</div></div>';
-    return h;
+    if (!snapshotOk || !contractOk || !sessionOk)
+      h += '<div class="mk-attn">即時有效性未確認：以上保留已知原因，但不能推定 Excel 放行或否決。</div>';
+    return h + '<div class="bz-v4gate-note">僅 Gate 檔案資格；Excel 真正的 B112／B113、V4 FIRE、Trader／券商狀態都不在本欄。</div></div>';
   }
 
-  function stGate(g) {
-    if (!g) return '';
-    var on = g.on === true, ok = g.available !== false && g.stale !== true, a = [];
-    a.push('<span class="lb" title="' + esc(txt(g.text) + (txt(g.note) ? '｜' + txt(g.note) : '')) + '">TDN AI 意見 <b class="' + (on ? 'mk-on' : 'mk-off') + '">' + (on ? '開' : '關') + '</b></span>');
-    if (g.available === false) a.push('<span>還沒有盤勢狀態：照 Argon</span>');
-    else if (g.stale === true) a.push('<span class="mk-attn">盤勢狀態過期：不給意見，照 Argon</span>');
-    else ['long', 'short'].forEach(function (k) {
-      var v = obj(g[k]);
-      if (v) a.push('<span class="sd" title="' + esc(txt(v.why) || txt(v.rel_text)) + '">' + SIDE[k] + ' ' + opB(v.opinion) + '</span>');
-    });
-    if (!on && ok) a.push('<span class="nt">產生器關／意見只記錄</span>');
-    a.push('<span class="pol">' + esc([txt(g.policy), isNum(g.min_conf) ? '信心≥' + int(g.min_conf) : '', isNum(g.max_age_s) ? int(g.max_age_s) + ' 秒內' : ''].filter(Boolean).join('・')) + '</span>');
-    return '<div class="bz-mst-gate" data-z1434="gate"' + (on ? ' data-on="1"' : '') + '>' + a.join('') + '</div>';
+  /* RC04 GPT: stale backend flags must not outlive the heartbeat/state itself. */
+  function stGate(g, d, m) {
+    if (!g) return '<div class="bz-mst-gate mk-attn">TDN AI 意見：NO_COVERAGE</div>';
+    var on = g.on === true, fresh = rc04TdnFresh(d, m, g), a = [];
+    a.push('<span class="lb" title="' + esc(txt(g.text) +
+      (txt(g.note) ? '｜' + txt(g.note) : '')) + '">TDN 意見產生器 <b class="' +
+      (on ? 'mk-on' : 'mk-off') + '">' + (on ? '開' : '關') + '</b></span>');
+    if (!fresh.ok) {
+      var reason = {
+        HEARTBEAT_STALE:'AI 已停止更新，舊的做多／做空意見不得當成即時意見',
+        HEARTBEAT_INVALID:'AI 心跳時間異常',
+        HEARTBEAT_UNKNOWN:'AI 心跳時間缺失',
+        STATE_EXPIRED:'盤勢狀態超過 Gate 有效期限',
+        STATE_STALE_OR_UNKNOWN:'盤勢狀態過期或未標示有效',
+        STATE_NOT_AVAILABLE:'盤勢狀態尚未就緒',
+        STATE_TIME_OR_LIMIT_UNKNOWN:'狀態時間或有效期限缺失',
+        STATE_TIME_UNKNOWN:'盤勢狀態時間缺失',
+        TDN_PRODUCER_OFF_OR_UNKNOWN:'TDN 意見關閉或資料缺失'
+      };
+      a.push('<b class="mk-attn" title="' + esc(fresh.why) + '">即時意見 UNKNOWN｜' +
+        esc(reason[fresh.why] || fresh.why) + '</b>');
+      a.push('<span class="nt">歷史意見不作為現在的多空判斷</span>');
+    } else {
+      ['long','short'].forEach(function(k) {
+        var z = obj(g[k]);
+        var op = z ? txt(z.opinion) : '';
+        var valid = op === '進' || op === '不進' || op === 'NO_OPINION';
+        a.push('<span class="sd" title="' + esc(z ? (txt(z.why) || txt(z.rel_text)) : '方向資料未提供') +
+          '">' + SIDE[k] + ' ' + (valid ? opB(op) : '<b class="mk-attn">UNKNOWN</b>') + '</span>');
+      });
+    }
+    a.push('<span class="pol">' + esc([txt(g.policy),
+      isNum(g.min_conf) ? '信心≥' + int(g.min_conf) : '',
+      isNum(g.max_age_s) ? int(g.max_age_s) + ' 秒內' : ''].filter(Boolean).join('・')) + '</span>');
+    return '<div class="bz-mst-gate" data-z1434="gate"' +
+      (on && fresh.ok ? ' data-on="1"' : '') + '>' + a.join('') + '</div>';
   }
   /* 3. 盤勢狀態各格（AI 回的欄位，中文是程式翻的） */
   function stGrid(x) {
@@ -14471,7 +14570,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     var tip = x ? [txt(x.model), isNum(x.cost_usd) ? '上次 US$' + Number(x.cost_usd).toFixed(3) : '', '額度＝軟上限（market_state_scheduler.soft_cap_usd）'].filter(Boolean).join('｜') : '';
     return '<div class="bz-mkt-foot" data-z1434="foot"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(a.join('｜')) + '</div>';
   }
-  function stHtml(m) {
+  function stHtml(m, d) {
     var x = obj(m.last), g = obj(m.gate), sc = obj(m.sched), h = stHead(m, x, g);
     if (x) {
       var cov = txt(x.coverage) && txt(x.coverage) !== 'OK' ? '<span class="cov" title="' + esc('coverage：' + txt(x.coverage)) + '">資料不完整，信心打折</span>' : '';
@@ -14479,28 +14578,32 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     }
     if (txt(m.note)) h += '<div class="bz-mkt-empty">' + esc(txt(m.note)) + '</div>';
     if (!x) h += '<div class="bz-mkt-empty">' + esc('這盤還沒有盤勢狀態' + (txt(m.next) ? '（下一次 ' + txt(m.next) + '）' : '')) + '</div>';
-    h += stGate(g);
-    h += stV4Gate(obj(m.v4_gate_files));
+    h += stGate(g, d, m);
+    h += stV4Gate(obj(m.v4_gate_files), d);
     if (x) h += stGrid(x) + stDetail(x);
     return h + stFrozen(g) + stSched(sc) + stLedger(m) + stVs(m) + stFoot(m, x);
   }
 
   /* AI 擋單開著時，標題的「影子・不下單」改成「不下單・擋單開」（AI 自己不下單，但 Argon 進場可能被擋；1.4.5 每次重畫會改回來，這裡再補） */
+  /* RC04 GPT: distinguish producer config from data that is actually fresh. */
   function gateTag(c, d) {
     var tg = c.querySelector(':scope > .bz-ai-head > .bz-ai-tag');
     if (!tg) return;
-    var m = obj(d && d.market), on = !!(m && m.mode === 'state' && obj(m.gate) && m.gate.on === true);
-    var want = on ? '不下單・TDN意見開' : '影子・不下單';
+    var m = obj(d && d.market), g = m && obj(m.gate);
+    var cfgOn = !!(m && m.mode === 'state' && g && g.on === true);
+    var fresh = cfgOn && rc04TdnFresh(d,m,g).ok;
+    var want = cfgOn ? (fresh ? '不下單・TDN產生器開' : '不下單・TDN意見過期') : '影子・不下單';
     if (tg.textContent !== want) tg.textContent = want;
-    tg.classList.toggle('z34-on', on);
-    if (on) tg.title = '僅表示 TDN ai_gate 產生意見；不等於 V4 B112/B113 已開或 Trader/券商真的擋單。Excel 必須核對實際 Gate 消費事件。';
-    else if (tg.hasAttribute('title')) tg.removeAttribute('title');
+    tg.classList.toggle('z34-on', fresh);
+    if (cfgOn) {
+      tg.title = '僅指 TDN 意見產生器；心跳或狀態過期時不得顯示即時判斷。V4 B112／B113及 Trader／券商是否擋單仍未驗證。';
+    } else if (tg.hasAttribute('title')) tg.removeAttribute('title');
   }
 
   function mktHtml(d) {
     var m = obj(d && d.market);
     if (!m) return '';   /* 沒有 market：和 1.4.24 一樣 */
-    if (m.mode === 'state' && m.on !== false) return stHtml(m);   /* 1.4.34：V0.1.41 盤勢狀態 */
+    if (m.mode === 'state' && m.on !== false) return stHtml(m, d);   /* 1.4.34：V0.1.41 盤勢狀態 */
     if (m.on === false) return headHtml({}, null) + '<div class="bz-mkt-empty">' + esc(txt(m.note) || '盤勢分析沒有在運作') + '</div>';
     var x = obj(m.last), h = headHtml(m, x);
     if (x) {   /* 標題下面一行：為什麼分析（小字）＋資料不完整的提醒 */
@@ -15573,12 +15676,12 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
         lt = '｜上一筆 ' + sd + ' ' + px(last.entry) + (ex ? '：' + ex + (isNum(last.exit_px) ? ' ' + px(last.exit_px) : '') : '') +
              (isNum(last.pts) ? '（影子 ' + signed(last.pts) + '）' : '') + (isNum(last.argon_pts) ? '・Argon ' + signed(last.argon_pts) : '');
       }
-      return { h: h + '<div class="flat"' + (lt ? ' title="' + esc(lt.slice(1)) + '"' : '') + '><b>空手</b>' + (lt ? esc(lt) : '｜有持倉時每次盤勢分析一起健檢') + '</div>' };
+      return { h: h + '<div class="flat"' + (lt ? ' title="' + esc(lt.slice(1)) + '"' : '') + '><b>AI 無追蹤持倉</b>' + (lt ? esc(lt) : '｜有持倉時每次盤勢分析一起健檢') + '</div>' };
     }
     var side = sideOf(it), sg = side === 'long' ? 1 : -1, price = d && isNum(d.price) ? Number(d.price) : (obj(d && d.price) && isNum(d.price.price) ? Number(d.price.price) : null);
     var pl = price != null && isNum(it.entry) ? Math.round((price - Number(it.entry)) * sg) : null;
     var stop = isNum(it.stop_now) ? it.stop_now : it.stop_orig;
-    var pos = '<div class="pos"><span class="sd ' + side + '"' + (hm(it.trade) ? ' title="' + esc(hm(it.trade)) + ' 進場（Argon 做單紀錄）"' : '') + '>' + (side === 'long' ? '做多' : '做空') + ' ' + px(it.entry) + '</span>' +
+    var pos = '<div class="pos"><span title="僅 AI 追蹤帳，非券商實際部位">AI追蹤｜</span><span class="sd ' + side + '"' + (hm(it.trade) ? ' title="' + esc(hm(it.trade)) + ' 進場（Argon 做單紀錄）"' : '') + '>' + (side === 'long' ? '做多' : '做空') + ' ' + px(it.entry) + '</span>' +
       (pl != null ? '<span class="pl ' + (pl > 0 ? 'p' : (pl < 0 ? 'n' : '')) + '">浮動 ' + signed(pl) + '</span>' : '') +
       '<span title="AI 追蹤帳的停損，不代表券商已掛單">AI 追蹤停損 ' + px(stop) + (it.be_moved ? '<span class="be" title="僅 AI 追蹤帳保本；實際券商停損另核對">AI帳保本</span>' : '') + '</span>' +
       (isNum(it.target) ? '<span><small>目標</small> ' + px(it.target) + '</span>' : '') + '</div>';
