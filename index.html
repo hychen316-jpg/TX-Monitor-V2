@@ -13116,6 +13116,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     /* 1.4.7：重畫前記住卷軸位置，重畫後放回去（停在最上面＝看最新的，就繼續停在最上面） */
     var keep = {};
     Array.prototype.forEach.call(c.querySelectorAll('[data-scroll]'), function (e) { keep[e.getAttribute('data-scroll')] = e.scrollTop; });
+    if (window.BZ_keepAiMobileScroll) window.BZ_keepAiMobileScroll(c);
     c.innerHTML = html;
     Array.prototype.forEach.call(c.querySelectorAll('[data-scroll]'), function (e) { var v = keep[e.getAttribute('data-scroll')]; if (v) e.scrollTop = v; });
     window.__BaoZAIView = view;
@@ -14533,6 +14534,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     /* 放在 1.4.21 調單協助下面；沒有調單協助就放在流程列下面（1.4.21 之後補上時會插在流程列和這段中間，順序一樣） */
     var after = c.querySelector(':scope > .bz-tdn-wrap') || c.querySelector(':scope > .bz-fl') || c.querySelector(':scope > .bz-flow') || c.querySelector(':scope > .bz-ai-head');
     if (old && old.__z1425 === h && old.previousElementSibling === after) return;
+    if (window.BZ_keepAiMobileScroll) window.BZ_keepAiMobileScroll(c);
     if (old) old.remove();
     var box = document.createElement('div');
     box.className = 'bz-mkt-wrap';
@@ -15896,8 +15898,22 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
   if (window.BZ_SCROLL1433) return;
   window.BZ_SCROLL1433 = true;
   var mq = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
-  var st = { el: null, top: 0, busy: 0, lost: 0 };
+  var st = { el: null, top: 0, pageY: 0, busy: 0, lost: 0 };
   function touchDev() { return !!(mq && mq.matches); }
+
+  /* 手機停在 AI 卡內閱讀時，等原有子區塊補齊，再恢復卡片的捲動位置。 */
+  var aiScrollFrame = 0;
+  window.BZ_keepAiMobileScroll = function (card) {
+    if (!touchDev() || aiScrollFrame || Date.now() < st.busy || !card.scrollTop) return;
+    var top = card.scrollTop;
+    var started = st.busy;
+    aiScrollFrame = window.requestAnimationFrame(function () {
+      aiScrollFrame = 0;
+      if (!touchDev() || st.busy !== started || !card.isConnected || card.hidden) return;
+      if (card.scrollTop !== top) card.scrollTop = top;
+    });
+  };
+
   function hit(e) {
     if (!e || !e.isConnected) return false;
     var r = e.getBoundingClientRect();
@@ -15919,7 +15935,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     st.el = null; st.lost = 0;
     if (!touchDev() || window.scrollY <= 0) return;   /* 在最上面：照原樣往下長 */
     var e = pick();
-    if (e) { st.el = e; st.top = e.getBoundingClientRect().top; }
+    if (e) { st.el = e; st.top = e.getBoundingClientRect().top; st.pageY = window.scrollY; }
   }
   function fix() {
     try {
@@ -15932,6 +15948,8 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
         return;
       }
       st.lost = 0;
+      /* 讀 AI 卡時，頁面已自行移動就以新位置為準，避免用上一個基準把頁面拉回。 */
+      if (st.el.id === 'bz-ai-card' && Math.abs(window.scrollY - st.pageY) >= 1) { remember(); return; }
       var r = st.el.getBoundingClientRect();
       if (r.height > 0) {
         var dy = r.top - st.top;
