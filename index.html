@@ -10769,7 +10769,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       if(!data){s.problem='Firebase 尚無 BaoZ 近月資料';freshness();return;}
       const normalized=normalize(data);
       if(!valid(normalized)){s.problem='雲端 BaoZ 必要資料欄位不完整';freshness();return;}
-      s.problem='';s.payload=normalized;render();if(window.__BaoZR06P1)window.__BaoZR06P1.near(normalized);
+      s.problem='';s.payload=normalized;render();
     });
     listen('.info/connected',v=>{s.connected=v===true;freshness();});
     listen('.info/serverTimeOffset',v=>{s.offset=typeof v==='number'&&Number.isFinite(v)?v:0;freshness();});
@@ -12710,7 +12710,7 @@ html.z31-pro:not(.z31-w-md) #baoz-system-panel .bz-ai-body { grid-template-colum
     if (st.ref) return;
     if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
     st.ref = db.ref(NODE);
-    st.fn = function (sn) { st.data = sn.val(); st.problem = ''; render(); if(window.__BaoZR06P1)window.__BaoZR06P1.ai(st.data); };
+    st.fn = function (sn) { st.data = sn.val(); st.problem = ''; render(); };
     st.ref.on('value', st.fn, function (err) {
       st.problem = err && err.code === 'PERMISSION_DENIED' ? 'AI 節點沒有讀取權限（Firebase 規則要允許 baoz_realtime/near_ai）' : 'AI 資料讀取失敗';
       detach(); render();
@@ -14446,7 +14446,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     if (!g) return '<div class="bz-mst-gate mk-attn">TDN AI 意見：NO_COVERAGE</div>';
     var on = g.on === true, fresh = rc04TdnFresh(d, m, g), a = [];
     a.push('<span class="lb" title="' + esc(txt(g.text) +
-      (txt(g.note) ? '｜' + txt(g.note) : '')) + '">盤勢 A_PLUS 意見 <b class="' +
+      (txt(g.note) ? '｜' + txt(g.note) : '')) + '">TDN 意見產生器 <b class="' +
       (on ? 'mk-on' : 'mk-off') + '">' + (on ? '開' : '關') + '</b></span>');
     if (!fresh.ok) {
       var reason = {
@@ -14592,11 +14592,11 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel #bz-session-gauge .bz-gaug
     var m = obj(d && d.market), g = m && obj(m.gate);
     var cfgOn = !!(m && m.mode === 'state' && g && g.on === true);
     var fresh = cfgOn && rc04TdnFresh(d,m,g).ok;
-    var want = cfgOn ? (fresh ? 'A_PLUS 意見有效（非實單確認）' : 'A_PLUS 意見失效／待更新') : 'A_PLUS 意見未啟用';
+    var want = cfgOn ? (fresh ? '不下單・TDN產生器開' : '不下單・TDN意見過期') : '影子・不下單';
     if (tg.textContent !== want) tg.textContent = want;
     tg.classList.toggle('z34-on', fresh);
     if (cfgOn) {
-      tg.title = '僅指盤勢 A_PLUS Gate Producer 意見，並非 Trader 實單狀態；心跳或盤勢狀態過期不得顯示有效。Excel B112／B113、V4 FIRE、Trader 與券商回報須另行驗證。';
+      tg.title = '僅指 TDN 意見產生器；心跳或狀態過期時不得顯示即時判斷。V4 B112／B113及 Trader／券商是否擋單仍未驗證。';
     } else if (tg.hasAttribute('title')) tg.removeAttribute('title');
   }
 
@@ -16155,129 +16155,6 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 }
 </style>
 <!-- BAOZ_AI_NEAR_RC03_GPT_20261110_END -->
-
-
-<!-- BAOZ_R06_NEAR_P1_RC05_20261111_BEGIN : display-only, no new Firebase listeners, no trade changes -->
-<style id="bz-r06-p1-style">
-/* Only the BaoZ Near panel. Avoid modifying portrait grids and mobile AI scroll. */
-#baoz-system-panel > .bz-r06-p1 { order:1; flex:0 0 auto; width:100%; box-sizing:border-box; }
-#baoz-system-panel .bz-r06-p1 {
-  display:flex; flex-wrap:wrap; align-items:center; gap:3px 9px;
-  background:rgba(117,211,255,.045); border:1px solid var(--bz-line,#343c49);
-  border-radius:5px; padding:5px 8px; font-size:11px; line-height:1.45;
-  color:var(--bz-muted,#a7afbc); overflow-wrap:anywhere;
-}
-#baoz-system-panel .bz-r06-p1 span { min-width:0; }
-#baoz-system-panel .bz-r06-p1 .key { color:var(--bz-ink,#eef1f7); font-weight:650; }
-#baoz-system-panel .bz-r06-p1 .warn { color:var(--bz-attn,#f3cd7c); }
-#baoz-system-panel .bz-r06-p1 .bad { color:#ff707b; font-weight:700; }
-#baoz-system-panel .bz-r06-p1 .sep { color:var(--bz-line,#343c49); }
-@media(max-width:640px) {
-  #baoz-system-panel .bz-r06-p1 { gap:2px 7px; font-size:10.5px; padding:4px 6px; }
-}
-</style>
-<script id="bz-r06-p1-js">
-(function(){
-  'use strict';
-  var data={near:null,ai:null};
-  var node=null;
-  function el(tag,cls,s){var x=document.createElement(tag); if(cls)x.className=cls; x.textContent=s; return x;}
-  function goodNumber(x){return typeof x==='number' && Number.isFinite(x) && x>0;}
-  function txt(x){return typeof x==='string'?x.trim():'';}
-  function ageInfo(ms,limit){
-    var d=Date.now()-ms;
-    if(!goodNumber(ms)||!Number.isFinite(d)||d< -30000)return {ok:false,age:null};
-    return {ok:d<=limit,age:Math.max(0,Math.floor(d/1000))};
-  }
-  function hasAccess(){
-    try { var d=document.getElementById('dashboard');
-      return !!(d && d.classList.contains('unlocked') && d.classList.contains('lvl4') &&
-        typeof auth!=='undefined' && auth.currentUser && auth.currentUser.emailVerified===true &&
-        typeof isDashboardOwner==='function' && isDashboardOwner(auth.currentUser));
-    }catch(e){return false;}
-  }
-  function inTradingWindow(session){
-    try {
-      var parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
-      var m={}; parts.forEach(function(p){m[p.type]=p.value;});
-      var hm=Number(m.hour)*60+Number(m.minute);
-      if(!Number.isFinite(hm))return false;
-      if(session==='DAY')return hm>=8*60+45 && hm<13*60+45;
-      if(session==='NIGHT')return hm>=15*60 || hm<5*60;
-      return false;
-    }catch(e){return false;}
-  }
-  function makeChunk(k,v,cls){
-    var x=el('span',cls||''); x.appendChild(el('span','key',k+'：'));
-    x.appendChild(document.createTextNode(v)); return x;
-  }
-  function ensurePanel(){
-    var p=document.getElementById('baoz-system-panel');
-    if(!p)return null;
-    if(node && node.parentNode===p)return node;
-    var existing=document.getElementById('bz-r06-p1-health');
-    node=existing||el('section','bz-r06-p1','');
-    node.id='bz-r06-p1-health';
-    node.setAttribute('aria-label','BaoZ 近月 R06 資料及實戰設定核對');
-    var target=p.querySelector(':scope > .bz-head') || p.firstChild;
-    if(!existing)p.insertBefore(node,target);
-    return node;
-  }
-  function render(){
-    var n=ensurePanel(); if(!n)return;
-    if(!hasAccess()){data.near=null;data.ai=null;n.hidden=true;return;}
-    n.hidden=false;
-    var a=data.ai, q=data.near, nearSrc=q&&q.source||{};
-    var nearMs=nearSrc.generated_at_ms;
-    var interval=Number(nearSrc.expected_interval_s);
-    var nearLimit=Math.max(180000,Number.isFinite(interval)&&interval>0?interval*3000:0);
-    var nearAge=ageInfo(nearMs,nearLimit);
-    var sess=txt(nearSrc.session);
-    var within=inTradingWindow(sess);
-    var snapshot=(nearAge.ok ? '更新 '+nearAge.age+' 秒前' : (q?'STALE／時間未驗證':'NO_COVERAGE'));
-    var market=(!nearAge.ok)?'行情有效性 UNKNOWN':
-      (!within?'非交易窗口／僅作參考價':'交易窗口內；逐筆成交時間 NOT_EXPOSED');
-    var aiAge=ageInfo(a&&a.updated_at_ms,180000);
-    var run=(!a)?'AI NO_COVERAGE':!aiAge.ok?'AI STALE／時間未驗證':
-      (a.dry_run===false?'AI 非模擬設定':a.dry_run===true?'AI 模擬設定':'AI 模式 UNKNOWN');
-    var planner=a&&a.own_plans===false?'／自主計畫關':a&&a.own_plans===true?'／自主計畫開':'';
-    var nc=txt(nearSrc.contract),ac=txt(a&&a.contract);
-    var match=!a||!q?'契約 NO_COVERAGE':!nc||!ac?'契約 UNKNOWN':
-      nc!==ac?'CONTRACT_MISMATCH（Near '+nc+'／AI '+ac+'）':'契約一致 '+nc;
-    var ver=txt(a&&a.build);
-    var vnote=!a?'AI 版本 UNKNOWN':ver?('AI '+ver+(ver.indexOf('R06')<0?'（非R06版本，請核對）':'')):'AI 版本 UNKNOWN';
-    var quoteClass=nearAge.ok&&within?'warn':(!nearAge.ok?'bad':'warn');
-    var contractClass=nc&&ac&&nc!==ac?'bad':(!nc||!ac?'warn':'');
-    var versionClass=ver&&ver.indexOf('R06')<0?'bad':'';
-    var aiClass=a&&!aiAge.ok?'warn':'';
-    var values=[
-      makeChunk('近月快照',snapshot,nearAge.ok?'':'warn'),
-      makeChunk('行情',market,quoteClass),
-      makeChunk('盤別',sess||'UNKNOWN',!within?'warn':''),
-      makeChunk('AI',run+planner,aiClass),
-      makeChunk('一致性',match,contractClass),
-      makeChunk('版本',vnote,versionClass),
-      makeChunk('實單','Trader／券商回報 NOT_EXPOSED（本頁不代表實單已驗收）','warn')
-    ];
-    var fragment=document.createDocumentFragment();
-    values.forEach(function(x){fragment.appendChild(x);});
-    var summary=values.map(function(x){return x.textContent;}).join(' | ');
-    if(n.getAttribute('data-last')!==summary){n.replaceChildren(fragment);n.setAttribute('data-last',summary);}
-  }
-  // Existing Near and AI Firebase listeners invoke these two hooks.
-  // No additional Firebase network subscription, trading action, or storage.
-  window.__BaoZR06P1=Object.freeze({
-    near:function(x){data.near=x&&typeof x==='object'?x:null;render();},
-    ai:function(x){data.ai=x&&typeof x==='object'?x:null;render();},
-    refresh:render
-  });
-  var timer=window.setInterval(render,2000);
-  window.addEventListener('pagehide',function(){if(timer)window.clearInterval(timer);timer=null;});
-  window.addEventListener('pageshow',function(e){if(e.persisted&&!timer)timer=window.setInterval(render,2000);render();});
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render,{once:true});else render();
-})();
-</script>
-<!-- BAOZ_R06_NEAR_P1_RC05_20261111_END -->
 
 </body>
 </html>
