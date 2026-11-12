@@ -11467,7 +11467,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.35');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.36');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -15161,6 +15161,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     var M = { syn: syn, fut: fut, basis: basis, at: num(d.source && d.source.generated_at_ms), session: txt(d.source && d.source.session),
               contract: txt(d.source && d.source.contract), anchors: [], zones: [], marks: [], cost: {} };
     M.anchors = layers(stepOf(v, 16, /暴Z表/), 'Z').concat(layers(stepOf(v, 17, /即時表/), 'T'));
+    M.mv = null; try { if (window.BZ_MV1436) M.mv = window.BZ_MV1436.track(M); } catch (e) { M.mv = null; }   /* 1.4.36：四色層上下移動 */
     list(v.levels).forEach(function (lv) {
       var src = txt(lv && lv.source), x = ZRE.exec(src), mm;
       if ((mm = /^暴Z表 (Call|Put) ([紅黃藍綠]) (\d{4,6})（成本約 (\d+)）/.exec(src))) M.cost['Z' + mm[1][0] + mm[3]] = Number(mm[4]);
@@ -15306,12 +15307,13 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     for (k = top; k >= bot; k -= STEP) { by[k] = { k: k, cells: {}, ms: [], imp: false }; rows.push(by[k]); }
     M.anchors.forEach(function (a) {
       var r = by[a.k], who = (a.tb === 'Z' ? '暴Z ' : '今天 ') + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band;
-      if (!r) { (a.k > M.syn ? out.up : out.dn).push(who + ' ' + fmt(a.k) + '（' + sgn(a.k - M.syn) + '）'); return; }
+      if (!r) { (a.k > M.syn ? out.up : out.dn).push(who + ' ' + fmt(a.k) + '（' + sgn(a.k - M.syn) + '）' + (M.mv ? window.BZ_MV1436.outTxt(M, a) : '')); return; }
       r.cells[a.tb + a.sd] = a; r.imp = true;
       var t = a.brk ? who + '（已破＝' + (a.role || '換角色') + '）' : (a.tb === 'T' && a.band === '綠' ? who + '（今天攻擊目標）' : who);
       var cost = M.cost['Z' + a.sd + a.k];
       r.ms.push({ cls: a.role === '壓力' ? 'res' : 'sup', t: t, tip: who + (cost ? '｜成本約 ' + cost : '') + '｜期貨 ' + fmt(a.f) + (a.note ? '｜' + a.note : '') });
     });
+    if (M.mv) { try { window.BZ_MV1436.rows(M, by); } catch (e) {} }   /* 1.4.36：箭頭說明、原來位置的虛線框 */
     M.zones.forEach(function (z) {
       var mid = (z.lo + z.hi) / 2, cov = zoneRows(z, by);
       if (!inR(mid) || !cov.length) { (mid > M.syn ? out.up : out.dn).push((z.ov ? '粉紅 ' : '調單區 ') + z.name + ' ' + fmt(z.lo) + '–' + fmt(z.hi) + '（' + sgn((mid > M.syn ? z.lo : z.hi) - M.syn) + '）'); return; }
@@ -15350,9 +15352,9 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
              '<span title="即時表 Call 賣方（壓力）">C</span><span title="即時表 Put 賣方（支撐）">P</span><span>期貨</span><span>距離</span><span class="l">莊家在這裡</span></div>';
     var cell = function (r, key, z) {
       var a = r.cells[key];
-      if (!a) return '<span></span>';
+      if (!a) return r.gh && r.gh[key] && M.mv ? window.BZ_MV1436.ghost(r.gh[key]) : '<span></span>';
       var cost = M.cost['Z' + a.sd + a.k];
-      return '<span class="bz-lad-c ' + a.band + (z ? ' z' : ' t') + (a.brk ? ' brk' : '') + '" title="' + esc(tbName(a.tb) + ' ' + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band + '（約 ' + BAND_W[a.band] + '）' + (cost ? '｜成本約 ' + cost : '') + (a.note ? '｜' + a.note : '')) + '">' + a.band + '</span>';
+      return '<span class="bz-lad-c ' + a.band + (z ? ' z' : ' t') + (a.brk ? ' brk' : '') + '" title="' + esc(tbName(a.tb) + ' ' + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band + '（約 ' + BAND_W[a.band] + '）' + (cost ? '｜成本約 ' + cost : '') + (a.note ? '｜' + a.note : '')) + '">' + a.band + (M.mv ? window.BZ_MV1436.arrow(M, a) : '') + '</span>';
     };
     var body = L.items.map(function (r) {
       if (r.px) {
@@ -15461,7 +15463,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       var tip = tbName(a.tb) + ' ' + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band + '（約 ' + BAND_W[a.band] + '）履約價 ' + fmt(a.k) + '｜期貨約 ' + fmt(a.k + M.basis) + (a.brk ? '｜已破：角色互換' : '') + (a.note ? '｜' + a.note : '');
       return '<span class="dc' + (d <= NEAR ? ' nr' : '') + '" title="' + esc(tip) + '"><i class="bz-lad-c z ' + a.band + (a.brk ? ' brk' : '') + '">' + a.band + '</i>' +
              '<span class="nm">' + (a.sd === 'C' ? 'Call ' : 'Put ') + a.band + ' ' + fmt(a.k) + (a.brk ? '<em>已破</em>' : '') + '</span>' +
-             '<b class="dd ' + (dir > 0 ? 'up' : 'down') + '">' + (dir > 0 ? '+' : '−') + Math.round(d) + '</b>' +
+             '<b class="dd ' + (dir > 0 ? 'up' : 'down') + '">' + (dir > 0 ? '+' : '−') + Math.round(d) + (M.mv ? window.BZ_MV1436.dist(M, a) : '') + '</b>' +
              '<small>期貨 ' + fmt(a.k + M.basis) + (n2 ? '｜再' + (dir > 0 ? '上' : '下') + ' ' + n2[1].band + ' ' + fmt(n2[1].k) + ' ' + (dir > 0 ? '+' : '−') + fmt(n2[0]) : '') + '</small></span>';
     };
     var row = function (tb, label) { var p = pickTb(tb); return '<span class="tb">' + label + '</span>' + cell(p.up, 1) + cell(p.dn, -1); };
@@ -16309,5 +16311,113 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 #baoz-system-panel .bz-x3 .bz-x3-item.bz-x3-bk>span{display:inline-block;white-space:nowrap}
 #baoz-system-panel .bz-x3 .bz-x3-item.bz-x3-old>.bz-x3-syn{opacity:.55}
 </style>
+<!-- Z31_BAOZ_LADMOVE_UI_1_4_36_BEGIN -->
+<style id="z31-baoz-ladmove-ui-1-4-36">
+/* ===== BaoZ UI 1.4.36（20261112 Edward）：價位梯子四色層上下移動加箭頭
+   顏色格裡 ▲（往上移）／▼（往下移），剛動 1 分鐘內閃；「莊家在這裡」加「▲ +50 15:42」；原來的位置留虛線框；
+   梯子範圍外、距離卡也有箭頭。10 分鐘後變淡，30 分鐘後拿掉。只改顯示，不讀新的 Firebase 節點，不寫 Firebase ===== */
+#baoz-system-panel .bz-lad-c .mva { font-size: 9px; font-weight: 800; font-style: normal; margin-left: 1px; }
+#baoz-system-panel .bz-lad-c .mva.nw { animation: z36blink .9s ease-in-out infinite; }
+#baoz-system-panel .bz-lad-c .mva.dim { opacity: .5; }
+@keyframes z36blink { 50% { opacity: .15; } }
+#baoz-system-panel .bz-lad-c.gh { background: transparent !important; background-image: none !important; border: 1px dashed; box-sizing: border-box; opacity: .85; }
+#baoz-system-panel .bz-lad-c.gh.藍 { border-color: #4f8dff; }
+#baoz-system-panel .bz-lad-c.gh.黃 { border-color: #f5c542; }
+#baoz-system-panel .bz-lad-c.gh.綠 { border-color: #00e676; }
+#baoz-system-panel .bz-lad-c.gh.紅 { border-color: rgba(255,90,90,.7); }
+#baoz-system-panel .bz-lad-r.sm .bz-lad-c.gh { height: 6px; }
+#baoz-system-panel .bz-lad-m.mvu { color: var(--bz-up); font-weight: 700; }
+#baoz-system-panel .bz-lad-m.mvd { color: var(--bz-down); font-weight: 700; }
+#baoz-system-panel .bz-lad-m.mvu.dim, #baoz-system-panel .bz-lad-m.mvd.dim { opacity: .6; font-weight: 400; }
+#baoz-system-panel .bz-lad-dist .mvx { font-style: normal; font-weight: 700; font-size: 12px; margin-left: 5px; vertical-align: middle; }
+#baoz-system-panel .bz-lad-dist .mvx.up { color: var(--bz-up); }
+#baoz-system-panel .bz-lad-dist .mvx.dn { color: var(--bz-down); }
+#baoz-system-panel .bz-lad-dist .mvx.dim { opacity: .55; font-weight: 400; }
+</style>
+<script id="z31-baoz-ladmove-ui-1-4-36">
+/* 1.4.36：四色層移動紀錄。一層＝表（Z 暴Z表／T 即時表）＋Call／Put＋顏色，例如「TC綠」＝即時表 Call 綠。
+   1.4.27 的 model() 每次重畫都會呼叫 track()；同一份快照（generated_at_ms 一樣）只算一次 */
+(function () {
+  'use strict';
+  var KEY = 'z31.baoz.ladmv.v1';
+  var SHOW = 30 * 60000, DIM = 10 * 60000, NEW = 60000, GAP = 10 * 60000;
+  var st = null;
+  function load() {
+    try {
+      var o = JSON.parse(window.localStorage.getItem(KEY) || 'null');
+      if (o && typeof o === 'object' && typeof o.ctx === 'string' && Number.isFinite(o.at) && o.pos && typeof o.pos === 'object' && o.mv && typeof o.mv === 'object') return o;
+    } catch (e) {}
+    return null;
+  }
+  function save() { try { window.localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+  function fmt(v) { return Math.round(v).toLocaleString('en-US'); }
+  function hm(ms) { return new Date(ms + 8 * 3600000).toISOString().slice(11, 16); }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function name(k) { return (k.charAt(0) === 'Z' ? '暴Z表 ' : '即時表 ') + (k.charAt(1) === 'C' ? 'Call ' : 'Put ') + k.slice(2); }
+  function tip(o) {
+    return name(o.key) + (o.up ? ' 往上移 ' : ' 往下移 ') + fmt(Math.abs(o.to - o.from)) + ' 點（' + hm(o.at) + '）｜' +
+      o.h.map(function (x) { return hm(x[0]) + ' ' + fmt(x[1]) + '→' + fmt(x[2]); }).join('；') + '｜10 分鐘後變淡、30 分鐘後拿掉';
+  }
+
+  function track(M) {
+    if (!M || !Array.isArray(M.anchors)) return null;
+    var ctx = String(M.contract || '') + '|' + String(M.session || ''), at = Number(M.at), pos = {};
+    M.anchors.forEach(function (a) { if (a && Number.isFinite(a.k)) pos[a.tb + a.sd + a.band] = a.k; });
+    if (!st) st = load();
+    if (!st || st.ctx !== ctx) st = { ctx: ctx, at: 0, pos: {}, mv: {} };   /* 換契約／換盤別：重新開始 */
+    if (Number.isFinite(at) && at > st.at) {
+      var gap = !st.at || at - st.at > GAP;   /* 第一份或中間斷超過 10 分鐘：只記位置，不知道什麼時候動的就不畫 */
+      Object.keys(pos).forEach(function (k) {
+        var was = st.pos[k];
+        if (!gap && Number.isFinite(was) && was !== pos[k]) {
+          var old = st.mv[k] && Array.isArray(st.mv[k].h) ? st.mv[k].h : [];
+          st.mv[k] = { from: was, to: pos[k], at: at, h: old.concat([[at, was, pos[k]]]).slice(-4) };
+        }
+        st.pos[k] = pos[k];   /* 這一份沒有的層留著上次的位置（之後出現在別的地方也算移動） */
+      });
+      st.at = at;
+      Object.keys(st.mv).forEach(function (k) { if (!(at - st.mv[k].at < SHOW)) delete st.mv[k]; });
+      save();
+    }
+    var now = Date.now(), out = { by: {}, ghosts: [] };
+    Object.keys(st.mv).forEach(function (k) {
+      var m = st.mv[k], age = Math.max(0, now - m.at);
+      if (!(age < SHOW) || pos[k] !== m.to || !Number.isFinite(m.from)) return;   /* 已經又動了或不見了：不畫 */
+      var o = { key: k, from: m.from, to: m.to, at: m.at, up: m.to > m.from, cls: age < NEW ? 'nw' : (age < DIM ? '' : 'dim'), h: Array.isArray(m.h) ? m.h : [] };
+      out.by[k] = o; out.ghosts.push(o);
+    });
+    return out;
+  }
+  function get(M, a) { return M && M.mv && a ? M.mv.by[a.tb + a.sd + a.band] || null : null; }
+  function arrow(M, a) {
+    var o = get(M, a);
+    return o ? '<i class="mva ' + (o.up ? 'up' : 'dn') + (o.cls ? ' ' + o.cls : '') + '" title="' + esc(tip(o)) + '">' + (o.up ? '▲' : '▼') + '</i>' : '';
+  }
+  function outTxt(M, a) { var o = get(M, a); return o ? (o.up ? ' ▲' : ' ▼') + fmt(Math.abs(o.to - o.from)) + ' ' + hm(o.at) : ''; }
+  function dist(M, a) {
+    var o = get(M, a);
+    return o ? '<i class="mvx ' + (o.up ? 'up' : 'dn') + (o.cls === 'dim' ? ' dim' : '') + '" title="' + esc(tip(o)) + '">' + (o.up ? '▲' : '▼') + fmt(Math.abs(o.to - o.from)) + '</i>' : '';
+  }
+  /* 1.4.27 rowsOf()：這一層那一列的說明後面加一個箭頭說明；原來的履約價列（梯子裡有、那一格現在空著）記一個虛線框 */
+  function rows(M, by) {
+    M.mv.ghosts.forEach(function (o) {
+      var r = by[o.to], c = o.key.slice(0, 2);
+      if (r && r.cells[c] && r.cells[c].band === o.key.slice(2)) {
+        var i = -1;
+        r.ms.forEach(function (mk, j) { if (mk && mk.tip && mk.tip.indexOf((c.charAt(0) === 'Z' ? '暴Z ' : '今天 ') + (c.charAt(1) === 'C' ? 'Call ' : 'Put ') + o.key.slice(2)) === 0) i = j; });
+        var mk = { cls: (o.up ? 'mvu' : 'mvd') + (o.cls === 'dim' ? ' dim' : ''), t: (o.up ? '▲ +' : '▼ −') + fmt(Math.abs(o.to - o.from)) + ' ' + hm(o.at), tip: tip(o) };
+        if (i >= 0) r.ms.splice(i + 1, 0, mk); else r.ms.push(mk);
+      }
+      var g = by[o.from];
+      if (g && !g.cells[c]) (g.gh = g.gh || {})[c] = o;
+    });
+  }
+  function ghost(o) {
+    return '<span class="bz-lad-c gh ' + o.key.slice(2) + (o.key.charAt(0) === 'Z' ? ' z' : ' t') + '" title="' + esc(name(o.key) + ' ' + hm(o.at) + ' 以前在這裡，' + (o.up ? '往上' : '往下') + '移到 ' + fmt(o.to)) + '"></span>';
+  }
+  window.BZ_MV1436 = { track: track, arrow: arrow, outTxt: outTxt, dist: dist, rows: rows, ghost: ghost };
+})();
+</script>
+<!-- Z31_BAOZ_LADMOVE_UI_1_4_36_END -->
 </body>
 </html>
