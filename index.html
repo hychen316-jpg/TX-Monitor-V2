@@ -10971,15 +10971,38 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
   }
 
   // ---------- 三檔對照
-  function x3(v) {
+  // 1.4.35（20261112 Edward）：Next／Next_Month 加上自己的合成期貨、多日分界（上傳器 1.0.5 的 p.books；沒有 books＝和 1.4.34 一樣）
+  function x3(v,p) {
     const box=$('bz-x3');box.replaceChildren();
     const c=v.comparison;if(!c||!c.text){box.hidden=true;return;}
     box.hidden=false;
     box.appendChild(el('span','bz-pill '+(/偏空/.test(c.status||'')?'bz-p-short':/偏多/.test(c.status||'')?'bz-p-long':''),'三檔 '+(c.status||'')));
+    const bk=(p&&p.books&&typeof p.books==='object')?p.books:{};
     String(c.text).split('｜').forEach(part=>{
       const m=/^(\S+) (\S+)：多日 ([+-]?\d+|—)、(今晚|今天) ([+-]?\d+|—)/.exec(part);
-      box.appendChild(el('span','bz-x3-item bz-num',m?m[1]+' 多日 '+m[3]+'｜'+m[4]+' '+m[5]:part));
+      const it=el('span','bz-x3-item bz-num',m?m[1]+' 多日 '+m[3]+'｜'+m[4]+' '+m[5]:part);
+      if(m)x3Book(it,m,bk[{Next:'next',Next_Month:'next_month'}[m[1]]],p);
+      box.appendChild(it);
     });
+  }
+  // 1.4.35：books 和近月快照差 3 分鐘內、合約相同 → 這一格整格用同一份 Next／Next_Month 快照（多日＝合成－多日分界）；
+  //   不然原本的字不動，後面加灰色的合成／多日分界和那份快照的時間。合成、分界在合成期貨座標（和梯子的履約價座標一樣），滑鼠移上去看期貨換算
+  function x3Book(it,m,b,p){
+    if(!b||typeof b!=='object')return;
+    const n=x=>{if(x===null||x===undefined||x==='')return null;const y=Number(x);return Number.isFinite(y)?y:null;};
+    const syn=n(b.synthetic),kd=n(b.kdiv_a),kb=n(b.kdiv_b),da=n(b.dist_a),db=n(b.dist_b),bs=n(b.basis),fu=n(b.futures),at=n(b.generated_at_ms);
+    if(!(syn>1000&&kd>1000))return;
+    const ref=n(p&&p.source&&p.source.generated_at_ms),ct=String(b.contract||'');
+    const f=x=>Math.round(x).toLocaleString('en-US'),sg=x=>(x>0?'+':'')+Math.round(x);
+    const hm=ms=>new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ms));
+    const fresh=at!==null&&ref!==null&&Math.abs(ref-at)<=180000&&ct===m[2];
+    const own=fresh?m[1]+' 多日 '+sg(da!==null?da:syn-kd)+'｜'+m[4]+' '+(kb>1000&&db!==null?sg(db):'—'):m[1]+' 多日 '+m[3]+'｜'+m[4]+' '+m[5];
+    const add='｜合成 '+f(syn)+'｜多日分界 '+f(kd)+(fresh?'':'（'+(ct&&ct!==m[2]?ct+' ':'')+(at!==null?hm(at):'時間不明')+'）');
+    it.classList.add('bz-x3-bk');if(!fresh)it.classList.add('bz-x3-old');
+    it.replaceChildren(el('span','bz-x3-own',own),document.createTextNode('\u200b'),el('span','bz-x3-syn',add));
+    it.title=m[1]+' '+(ct||m[2])+(at!==null?' 快照 '+taipei(at):'')+'\n合成期貨 '+f(syn)+(fu!==null?'（期貨 '+f(fu)+(bs!==null?'，換算差 '+sg(bs):'')+'）':'')
+      +'\n暴Z表多日分界 Kdiv '+f(kd)+(bs!==null?'（換成期貨 '+f(kd+bs)+'）':'')+(kb>1000?'\n即時表 Kdiv '+f(kb)+(bs!==null?'（換成期貨 '+f(kb+bs)+'）':''):'')
+      +(fresh?'':'\n和近月快照時間差超過 3 分鐘或合約不同：多日／今天照近月那一列，合成／分界是這份快照的');
   }
 
   // ---------- 價位表
@@ -11444,7 +11467,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.34');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.35');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -11456,7 +11479,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     [['bz-multi-distance',m.dist_a],['bz-session-distance',m.dist_b]].forEach(([id,n])=>{$(id).classList.toggle('bz-bull',n>0);$(id).classList.toggle('bz-bear',n<0);});
     gauge('bz-multi-gauge',m.dist_a,-800,800,[[-20,20]],[-200,-20,20,100],['−800（偏空）','0','+800（偏多）']);
     gauge('bz-session-gauge',m.dist_b,-150,150,[[-20,20]],[-20,20],['−150','±20 內＝貼近','+150']);
-    x3(v);
+    x3(v,p);
     const posInfo=positionCard(v,m);
     levels(posInfo);targets();
     const scenes=$('bz-scenarios');scenes.replaceChildren();
@@ -16279,5 +16302,12 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 </script>
 <!-- BAOZ_R06_NEAR_P1_RC05_20261111_END -->
 
+<!-- Z31_BAOZ_X3BOOKS_UI_1_4_35 -->
+<style id="z31-baoz-x3books-ui-1-4-35">
+/* 1.4.35：三檔 Next／Next_Month 加合成、多日分界；窄螢幕時「合成｜多日分界」整段換到下一行，不會撐出橫向捲動 */
+#baoz-system-panel .bz-x3 .bz-x3-item.bz-x3-bk{white-space:normal}
+#baoz-system-panel .bz-x3 .bz-x3-item.bz-x3-bk>span{display:inline-block;white-space:nowrap}
+#baoz-system-panel .bz-x3 .bz-x3-item.bz-x3-old>.bz-x3-syn{opacity:.55}
+</style>
 </body>
 </html>
