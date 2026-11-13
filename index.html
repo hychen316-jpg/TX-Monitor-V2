@@ -10653,6 +10653,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       <div class="bz-metric"><span id="bz-multi-label" class="bz-small bz-muted">多日方向</span><span id="bz-multi-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">期貨分界 <span id="bz-multi-boundary" class="bz-num">—</span></span><div id="bz-multi-gauge"></div></div>
       <div class="bz-metric"><span id="bz-session-label" class="bz-small bz-muted">本盤方向</span><span id="bz-session-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">期貨分界 <span id="bz-session-boundary" class="bz-num">—</span></span><div id="bz-session-gauge"></div></div>
     </div>
+    <div id="bz-x3g" class="bz-metrics bz-x3g" hidden></div>
     <div id="bz-x3" class="bz-x3" hidden></div>
     <div class="bz-layout">
       <section class="bz-panel" aria-label="關鍵期貨價位">
@@ -10968,6 +10969,48 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const d=el('div','bz-dot');d.style.left=pos(val)+'%';d.style.background=val>0?'var(--bz-up)':val<0?'var(--bz-down)':'var(--bz-ink)';g.appendChild(d);
     const cap=el('div','bz-gauge-cap');caps.forEach(c=>cap.appendChild(el('span','',c)));
     box.append(g,cap);
+  }
+
+  // ---------- 三檔上方 Next／Next_Month 方向卡
+  // 1.4.37（20261113 Edward）：和 Near 的「多日方向／今天方向」同一種卡、同一把量尺。資料是上傳器 1.0.5 的 p.books；
+  //   1.0.6 再多 multi_label／today_label（「空方 -650」），標題才有「· 空方」。沒有 books＝不顯示（和 1.4.36 一樣）
+  //   數字＝那一檔自己的 distA／distB；期貨分界＝Kdiv＋那一檔自己的換算差；和近月快照差超過 3 分鐘：卡片變淡、分界後面加快照時間
+  function x3g(p,night) {
+    const box=$('bz-x3g');if(!box)return;box.replaceChildren();
+    const bk=(p&&p.books&&typeof p.books==='object')?p.books:{};
+    const n=x=>{if(x===null||x===undefined||x==='')return null;const y=Number(x);return Number.isFinite(y)?y:null;};
+    const hm=ms=>new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ms));
+    const lab=x=>typeof x==='string'&&x.trim()?' · '+x.trim().replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''):'';
+    const f=x=>Math.round(x).toLocaleString('en-US'),sg=x=>(x>0?'+':'')+Math.round(x);
+    const ref=n(p&&p.source&&p.source.generated_at_ms);
+    let shown=0;
+    [['next','Next'],['next_month','Next_Month']].forEach(([key,name])=>{
+      const b=bk[key];if(!b||typeof b!=='object')return;
+      const syn=n(b.synthetic),ka=n(b.kdiv_a),kb=n(b.kdiv_b),fu=n(b.futures),at=n(b.generated_at_ms);
+      if(!(syn>1000&&ka>1000))return;
+      const bs=n(b.basis)!==null?n(b.basis):(fu!==null?fu-syn:null);
+      const da=n(b.dist_a)!==null?n(b.dist_a):syn-ka;
+      const okb=kb!==null&&kb>1000,db=okb?(n(b.dist_b)!==null?n(b.dist_b):syn-kb):null;
+      const old=!(at!==null&&ref!==null&&Math.abs(ref-at)<=180000);
+      const ct=String(b.contract||'');
+      const head=name+(ct?' '+ct:'')+(at!==null?' 快照 '+taipei(at):'')+(old?'（和近月快照差超過 3 分鐘）':'');
+      [['m','多日方向',b.multi_label,da,ka,'暴Z表',-800,800,[-200,-20,20,100],['−800（偏空）','0','+800（偏多）']],
+       ['s',(night?'今晚':'今天')+'方向',b.today_label,db,okb?kb:null,'即時表',-150,150,[-20,20],['−150','±20 內＝貼近','+150']]]
+      .forEach(([t,title,label,d,kd,tb,min,max,ticks,caps])=>{
+        const card=el('div','bz-metric bz-x3g-card'+(old?' bz-x3g-old':''));
+        const val=el('span','bz-value bz-num',sign(d));val.classList.toggle('bz-bull',d>0);val.classList.toggle('bz-bear',d<0);
+        const foot=el('span','bz-small bz-muted','期貨分界 ');foot.appendChild(el('span','bz-num',kd!==null&&bs!==null?num(kd+bs):'未提供'));
+        if(old)foot.appendChild(el('span','bz-x3g-at','（'+(at!==null?hm(at):'時間不明')+'）'));
+        const g=el('div','bz-x3g-g'+t);g.id='bz-x3g-'+key+'-'+t;
+        const hd=el('span','bz-small bz-muted bz-x3g-t');hd.append(el('span','bz-x3g-nm',name),document.createTextNode(' '),el('span','bz-x3g-tt',title+lab(label)));
+        card.append(hd,val,foot,g);
+        card.title=head+(kd!==null&&d!==null?'\n合成期貨 '+f(syn)+' － '+tb+' Kdiv '+f(kd)+' ＝ '+sg(d)+(bs!==null?'（分界換成期貨 '+f(kd+bs)+'）':''):'\n'+tb+' Kdiv 未提供');
+        box.appendChild(card);
+        gauge(g.id,d,min,max,[[-20,20]],ticks,caps);
+        shown++;
+      });
+    });
+    box.hidden=!shown;
   }
 
   // ---------- 三檔對照
@@ -11459,7 +11502,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(!p){
       ['bz-contract','bz-version','bz-source-time','bz-long-status','bz-short-status','bz-long-reason','bz-short-reason','bz-data-note'].forEach(id=>text(id,'待資料'));
       ['bz-steps','bz-comparison','bz-next-plan','bz-timeline','bz-research','bz-diagnostics','bz-level-body','bz-target-body','bz-pos','bz-cmd-lines','bz-long-plan','bz-short-plan','bz-x3','bz-multi-gauge','bz-session-gauge'].forEach(id=>$(id).replaceChildren());
-      $('bz-pos').hidden=true;$('bz-x3').hidden=true;
+      $('bz-pos').hidden=true;$('bz-x3').hidden=true;x3g(null,false);
       ['bz-futures','bz-synthetic','bz-basis','bz-multi-distance','bz-multi-boundary','bz-session-distance','bz-session-boundary','bz-carry-detail','bz-level-detail'].forEach(id=>text(id,'未提供'));
       $('bz-long-gates').replaceChildren();$('bz-short-gates').replaceChildren();text('bz-carry-decision','留倉：未提供');
       text('bz-raw-text','尚無來源資料');freshness();return;
@@ -11467,7 +11510,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.36');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.37');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -11479,7 +11522,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     [['bz-multi-distance',m.dist_a],['bz-session-distance',m.dist_b]].forEach(([id,n])=>{$(id).classList.toggle('bz-bull',n>0);$(id).classList.toggle('bz-bear',n<0);});
     gauge('bz-multi-gauge',m.dist_a,-800,800,[[-20,20]],[-200,-20,20,100],['−800（偏空）','0','+800（偏多）']);
     gauge('bz-session-gauge',m.dist_b,-150,150,[[-20,20]],[-20,20],['−150','±20 內＝貼近','+150']);
-    x3(v,p);
+    x3g(p,night);x3(v,p);
     const posInfo=positionCard(v,m);
     levels(posInfo);targets();
     const scenes=$('bz-scenarios');scenes.replaceChildren();
@@ -16419,5 +16462,35 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 })();
 </script>
 <!-- Z31_BAOZ_LADMOVE_UI_1_4_36_END -->
+<!-- Z31_BAOZ_X3DIR_UI_1_4_37 -->
+<style id="z31-baoz-x3dir-ui-1-4-37">
+/* 1.4.37：三檔上方 Next／Next_Month 方向卡（和 Near 的多日／今天方向卡同一種樣式） */
+#baoz-system-panel .bz-metrics.bz-x3g{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:640px){#baoz-system-panel .bz-metrics.bz-x3g{grid-template-columns:1fr 1fr}}
+#baoz-system-panel .bz-x3g .bz-x3g-card{display:flex;flex-direction:column;container-type:inline-size}
+#baoz-system-panel .bz-x3g .bz-x3g-nm,#baoz-system-panel .bz-x3g .bz-x3g-tt{white-space:nowrap}
+/* 卡片窄（直立兩欄、1366 寬）時「Next_Month」自己一行、量尺字換短字（同 1.4.10 給 Near 直立時的短字），四張卡一起換，數字和量尺對齊；寬的時候和 Near 一樣 */
+@container (max-width:149px){#baoz-system-panel .bz-x3g .bz-x3g-nm{display:block}
+  #baoz-system-panel .bz-x3g-gm .bz-gauge-cap,#baoz-system-panel .bz-x3g-gs .bz-gauge-cap{white-space:nowrap}
+  #baoz-system-panel .bz-x3g-gm .bz-gauge-cap>span{font-size:0}
+  #baoz-system-panel .bz-x3g-gm .bz-gauge-cap>span::before{font-size:10px}
+  #baoz-system-panel .bz-x3g-gm .bz-gauge-cap>span:nth-child(1)::before{content:"−800 空"}
+  #baoz-system-panel .bz-x3g-gm .bz-gauge-cap>span:nth-child(2)::before{content:"0"}
+  #baoz-system-panel .bz-x3g-gm .bz-gauge-cap>span:nth-child(3)::before{content:"+800 多"}
+  #baoz-system-panel .bz-x3g-gs .bz-gauge-cap>span:nth-child(2){font-size:0}
+  #baoz-system-panel .bz-x3g-gs .bz-gauge-cap>span:nth-child(2)::before{font-size:10px;content:"±20 貼近"}}
+#baoz-system-panel .bz-x3g .bz-x3g-card>div{margin-top:auto}
+#baoz-system-panel .bz-x3g .bz-x3g-old{opacity:.55}
+#baoz-system-panel .bz-x3g .bz-x3g-at{white-space:nowrap}
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gm .bz-gauge-cap { white-space: nowrap; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gm .bz-gauge-cap > span { font-size: 0; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gm .bz-gauge-cap > span::before { font-size: 10px; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gm .bz-gauge-cap > span:nth-child(1)::before { content: "−800 空"; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gm .bz-gauge-cap > span:nth-child(2)::before { content: "0"; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gm .bz-gauge-cap > span:nth-child(3)::before { content: "+800 多"; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gs .bz-gauge-cap { white-space: nowrap; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gs .bz-gauge-cap > span:nth-child(2) { font-size: 0; }
+html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gs .bz-gauge-cap > span:nth-child(2)::before { font-size: 10px; content: "±20 貼近"; }
+</style>
 </body>
 </html>
