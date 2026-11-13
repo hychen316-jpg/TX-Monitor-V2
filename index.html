@@ -10650,8 +10650,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     <div class="bz-metrics">
       <div class="bz-metric"><span class="bz-small bz-muted">BaoZ 來源期貨</span><span id="bz-futures" class="bz-value bz-price bz-num">—</span><span id="bz-price-foot" class="bz-small bz-muted">—</span></div>
       <div class="bz-metric"><span class="bz-small bz-muted">合成期貨</span><span id="bz-synthetic" class="bz-value bz-num">—</span><span class="bz-small bz-muted">換算差 <span id="bz-basis" class="bz-num">—</span></span></div>
-      <div class="bz-metric"><span id="bz-multi-label" class="bz-small bz-muted">多日方向</span><span id="bz-multi-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">期貨分界 <span id="bz-multi-boundary" class="bz-num">—</span></span><div id="bz-multi-gauge"></div></div>
-      <div class="bz-metric"><span id="bz-session-label" class="bz-small bz-muted">本盤方向</span><span id="bz-session-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">期貨分界 <span id="bz-session-boundary" class="bz-num">—</span></span><div id="bz-session-gauge"></div></div>
+      <div class="bz-metric"><span id="bz-multi-label" class="bz-small bz-muted">多日方向</span><span id="bz-multi-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">履約價分界 <span id="bz-multi-boundary" class="bz-num">—</span></span><div id="bz-multi-gauge"></div></div>
+      <div class="bz-metric"><span id="bz-session-label" class="bz-small bz-muted">本盤方向</span><span id="bz-session-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">履約價分界 <span id="bz-session-boundary" class="bz-num">—</span></span><div id="bz-session-gauge"></div></div>
     </div>
     <div id="bz-x3g" class="bz-metrics bz-x3g" hidden></div>
     <div id="bz-x3" class="bz-x3" hidden></div>
@@ -10971,6 +10971,18 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     box.append(g,cap);
   }
 
+  // ---------- 方向卡的分界
+  // 1.4.38（20261113 Edward）：Near／Next／Next_Month 方向卡的分界改成履約價座標（Kdiv 本身，和三檔「多日分界」、價位梯子同一個座標）；
+  //   大數字不變（合成－Kdiv）。滑鼠移上去看換成期貨的分界（Kdiv＋換算差）。Kdiv 沒送：用期貨分界－換算差補
+  function nearKdiv(id,kd,fb,bs) {
+    const e=$(id);if(!e)return;
+    const ok=x=>typeof x==='number'&&Number.isFinite(x);
+    const k=ok(kd)&&kd>1000?kd:(ok(fb)&&fb>1000&&ok(bs)?fb-bs:null);
+    const f=ok(fb)&&fb>1000?fb:(k!==null&&ok(bs)?k+bs:null);
+    text(id,num(k));
+    if(e.parentNode)e.parentNode.title=f!==null?'換成期貨 '+num(f)+(ok(bs)?'（換算差 '+sign(bs)+'）':''):'';
+  }
+
   // ---------- 三檔上方 Next／Next_Month 方向卡
   // 1.4.37（20261113 Edward）：和 Near 的「多日方向／今天方向」同一種卡、同一把量尺。資料是上傳器 1.0.5 的 p.books；
   //   1.0.6 再多 multi_label／today_label（「空方 -650」），標題才有「· 空方」。沒有 books＝不顯示（和 1.4.36 一樣）
@@ -10999,7 +11011,8 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       .forEach(([t,title,label,d,kd,tb,min,max,ticks,caps])=>{
         const card=el('div','bz-metric bz-x3g-card'+(old?' bz-x3g-old':''));
         const val=el('span','bz-value bz-num',sign(d));val.classList.toggle('bz-bull',d>0);val.classList.toggle('bz-bear',d<0);
-        const foot=el('span','bz-small bz-muted','期貨分界 ');foot.appendChild(el('span','bz-num',kd!==null&&bs!==null?num(kd+bs):'未提供'));
+        const foot=el('span','bz-small bz-muted','履約價分界 ');foot.appendChild(el('span','bz-num',kd!==null?num(kd):'未提供'));   // 1.4.38：Kdiv 本身
+        if(kd!==null&&bs!==null)foot.title='換成期貨 '+num(kd+bs)+'（換算差 '+sign(bs)+'）';
         if(old)foot.appendChild(el('span','bz-x3g-at','（'+(at!==null?hm(at):'時間不明')+'）'));
         const g=el('div','bz-x3g-g'+t);g.id='bz-x3g-'+key+'-'+t;
         const hd=el('span','bz-small bz-muted bz-x3g-t');hd.append(el('span','bz-x3g-nm',name),document.createTextNode(' '),el('span','bz-x3g-tt',title+lab(label)));
@@ -11510,15 +11523,15 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.37');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.38');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
     const quality=/資料[：:]([^｜]+)/.exec(v.source_quality||'');
     text('bz-data-note',[(quality?'來源資料：'+quality[1]:''),'資料檢核：'+v.data_check.status,v.warning.text,v.inconsistent?'來源指令與做單狀態不一致，請看原文':''].filter(Boolean).join('｜'));
     text('bz-futures',num(m.futures));text('bz-synthetic',num(m.synthetic));text('bz-basis',sign(m.basis));
-    text('bz-multi-label','多日方向 · '+String(v.multi_day.label||'未提供').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''));text('bz-multi-distance',sign(m.dist_a));text('bz-multi-boundary',num(multiBoundary(v)));
-    text('bz-session-label',(night?'今晚':'今天')+'方向 · '+String(v.session_direction.label||'未提供').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''));text('bz-session-distance',sign(m.dist_b));text('bz-session-boundary',num(v.session_direction.futures_boundary));
+    text('bz-multi-label','多日方向 · '+String(v.multi_day.label||'未提供').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''));text('bz-multi-distance',sign(m.dist_a));nearKdiv('bz-multi-boundary',m.kdiv_a,multiBoundary(v),m.basis);
+    text('bz-session-label',(night?'今晚':'今天')+'方向 · '+String(v.session_direction.label||'未提供').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''));text('bz-session-distance',sign(m.dist_b));nearKdiv('bz-session-boundary',m.kdiv_b,v.session_direction.futures_boundary,m.basis);
     [['bz-multi-distance',m.dist_a],['bz-session-distance',m.dist_b]].forEach(([id,n])=>{$(id).classList.toggle('bz-bull',n>0);$(id).classList.toggle('bz-bear',n<0);});
     gauge('bz-multi-gauge',m.dist_a,-800,800,[[-20,20]],[-200,-20,20,100],['−800（偏空）','0','+800（偏多）']);
     gauge('bz-session-gauge',m.dist_b,-150,150,[[-20,20]],[-20,20],['−150','±20 內＝貼近','+150']);
@@ -16491,6 +16504,11 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gm .bz-gauge-cap >
 html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gs .bz-gauge-cap { white-space: nowrap; }
 html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gs .bz-gauge-cap > span:nth-child(2) { font-size: 0; }
 html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gs .bz-gauge-cap > span:nth-child(2)::before { font-size: 10px; content: "±20 貼近"; }
+</style>
+<!-- Z31_BAOZ_KDIVCARD_UI_1_4_38 -->
+<style id="z31-baoz-kdivcard-ui-1-4-38">
+/* 1.4.38：方向卡的分界改成履約價座標（Kdiv）；數字不拆行 */
+#baoz-system-panel #bz-multi-boundary,#baoz-system-panel #bz-session-boundary,#baoz-system-panel .bz-x3g .bz-small .bz-num{white-space:nowrap}
 </style>
 </body>
 </html>
