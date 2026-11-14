@@ -11561,7 +11561,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.39');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.40');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -16561,5 +16561,189 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gs .bz-gauge-cap >
 #baoz-system-panel .bz-flow-at{margin-left:auto}
 #baoz-system-panel .bz-flow.bz-flow-old>*{opacity:.55}   /* 加在裡面每一項：合約到期變淡（.7）時也疊得上去 */
 </style>
+<!-- Z31_BAOZ_TXFLOW_UI_1_4_40 -->
+<style id="z31-baoz-txflow-ui-1-4-40">
+/* ===== BaoZ UI 1.4.40（20261114）：最上方 TX 台指期區塊加一格「主力心態」
+   只改顯示：不寫 Firebase、不改計算。格子只在有 flow 的時候存在，版面的改變全部掛在 .txf-on 底下（沒有 flow＝和 1.4.39 一樣）。 */
+html.z31-pro.z31-w-lg #v2-live-page .v2-market-compact-grid.txf-on {
+  grid-template-columns: minmax(190px, 1fr) minmax(0, 2.2fr) minmax(220px, 1.2fr) minmax(360px, 1.45fr) !important;
+  grid-template-areas: "price metrics flow neutral" !important;
+}
+html.z31-pro:not(.z31-w-lg) #v2-live-page .v2-market-compact-grid.txf-on:not(.txf-row) {
+  grid-template-columns: minmax(170px, .9fr) minmax(220px, 1fr) minmax(360px, 1.4fr) !important;
+  grid-template-areas: "price flow neutral" "metrics metrics metrics" !important;
+}
+html.z31-pro:not(.z31-w-lg) #v2-live-page .v2-market-compact-grid.txf-on.txf-row {
+  grid-template-areas: "price neutral" "flow flow" "metrics metrics" !important;
+}
+#v2-live-page #tx-flow[hidden] { display: none !important; }
+#v2-live-page #tx-flow {
+  container: txf / inline-size;
+  min-width: 0;
+  overflow: hidden;
+  padding: 5px 10px;
+  border: 1px solid var(--pro-line, rgba(255,255,255,.10));
+  border-left: 3px solid var(--txf-c);
+  border-radius: 6px;
+  background: var(--pro-panel-2, rgba(255,255,255,.045));
+  font-family: var(--pro-font, inherit);
+  color: var(--pro-text, #e8ecf1);
+  --txf-c: var(--pro-line, rgba(255,255,255,.18));
+  cursor: default;
+}
+html.z31-pro #v2-live-page #tx-flow { grid-area: flow !important; }
+/* 和 TX 價格、中性值同一排時：格子本身不撐高那一排（size containment，高度跟著那一排），TX 區塊高度和 1.4.39 一樣；
+   內容約 61 px，排高約 63 px，放得下。自己一排（.txf-row、非 pro）時照內容高度 */
+html.z31-pro #v2-live-page .v2-market-compact-grid.txf-on:not(.txf-row) #tx-flow { contain: size layout style; align-self: stretch !important; }
+html:not(.z31-pro) #v2-live-page #tx-flow { grid-column: 1 / -1; }
+#v2-live-page #tx-flow.txf-bull_attack { --txf-c: var(--pro-up, #ff4d4f); }
+#v2-live-page #tx-flow.txf-bear_attack { --txf-c: var(--pro-down, #22c55e); }
+#v2-live-page #tx-flow.txf-spoof_trap { --txf-c: var(--pro-warn, #f5b301); }
+#v2-live-page #tx-flow.txf-warmup { border-left-style: dashed; }
+#v2-live-page #tx-flow.txf-old { --txf-c: var(--pro-line, rgba(255,255,255,.18)); }
+#v2-live-page #tx-flow.txf-old .txf-in { opacity: .55; }
+#v2-live-page #tx-flow .txf-in { display: flex; flex-direction: column; justify-content: center; gap: 2px; height: 100%; min-width: 0; }
+#v2-live-page #tx-flow .txf-hd { display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; font: 600 11px/1.1 var(--pro-font, inherit); color: var(--pro-muted, #8691a0); letter-spacing: .03em; }
+#v2-live-page #tx-flow .txf-nv { padding: 0 4px; border: 1px solid var(--pro-line, rgba(255,255,255,.18)); border-radius: 3px; font-size: 10px; font-weight: 500; letter-spacing: 0; }
+#v2-live-page #tx-flow .txf-at { margin-left: auto; font-weight: 500; font-family: var(--pro-num, inherit); letter-spacing: 0; }
+#v2-live-page #tx-flow .txf-rg { font: 600 19px/1.1 var(--pro-font, inherit); white-space: nowrap; color: var(--txf-c); }
+#v2-live-page #tx-flow.txf-choppy_neutral .txf-rg { color: var(--pro-text, #e8ecf1); }
+#v2-live-page #tx-flow.txf-warmup .txf-rg,
+#v2-live-page #tx-flow.txf-old .txf-rg { color: var(--pro-text-2, #b9c2cd); }
+#v2-live-page #tx-flow .txf-ln { display: flex; flex-wrap: nowrap; gap: 9px; min-width: 0; overflow: hidden; white-space: nowrap; font: 500 11px/1.2 var(--pro-font, inherit); color: var(--pro-muted, #8691a0); }
+#v2-live-page #tx-flow .txf-ln b { font: 600 12px/1.2 var(--pro-num, inherit); color: var(--pro-text, #e8ecf1); }
+#v2-live-page #tx-flow .txf-ln b.txf-up { color: var(--pro-up, #ff4d4f); }
+#v2-live-page #tx-flow .txf-ln b.txf-dn { color: var(--pro-down, #22c55e); }
+#v2-live-page #tx-flow.txf-old .txf-ln b { color: var(--pro-text-2, #b9c2cd); }
+@container txf (max-width: 279px) { #v2-live-page #tx-flow .txf-ooi { display: none; } }
+@container txf (min-width: 560px) {               /* 自己一排的時候（平板、手機）：排成一行 */
+  #v2-live-page #tx-flow .txf-in { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
+  #v2-live-page #tx-flow .txf-hd { display: contents; }
+  #v2-live-page #tx-flow .txf-at { order: 9; }
+  #v2-live-page #tx-flow .txf-rg { font-size: 17px; }
+}
+html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.4.39 的橫條：已經搬到最上方 */
+</style>
+<script>
+/* BaoZ UI 1.4.40：最上方 TX 台指期區塊的「主力心態」格（只讀 Firebase，不寫；只改顯示） */
+(function () {
+  'use strict';
+  var NODE = 'baoz_realtime/near';
+  var OLD_MS = 120000;                         /* 快照超過 120 秒沒更新：當作資料舊 */
+  var ROW_W = 860;                             /* 直立版面的 TX 區塊比這個窄：主力心態自己一排 */
+  var ZH = { BULL_ATTACK: '多方攻擊', BEAR_ATTACK: '空方攻擊', SPOOF_TRAP: '掛撤背離', CHOPPY_NEUTRAL: '中性', WARMUP: '暖機中' };
+  var s = { ref: null, fn: null, flow: null, ms: NaN, failAt: 0, card: null, key: null };
+
+  function $(id) { return document.getElementById(id); }
+  function n(x) { return typeof x === 'number' && Number.isFinite(x) ? x : null; }
+  function fm(x, d) { return x === null ? '—' : (x > 0 ? '+' : x < 0 ? '-' : '') + Math.abs(x).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
+  function qt(x) { return x === null ? '—' : Math.round(x).toLocaleString('en-US'); }
+  function tone(x) { return x === null || x === 0 ? '' : (x > 0 ? 'txf-up' : 'txf-dn'); }
+  function mk(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+
+  /* 和 1.4.5 同一個條件：本人帳號、已驗證、儀表板已解鎖到 Level 4 才讀 */
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function detach() {
+    if (s.ref && s.fn) { try { s.ref.off('value', s.fn); } catch (e) {} }
+    s.ref = null; s.fn = null;
+  }
+  function reconcile() {
+    if (!allowed()) { if (s.ref) detach(); s.flow = null; render(); return; }
+    if (s.ref || Date.now() - s.failAt < 60000) return;
+    if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
+    s.ref = db.ref(NODE);
+    s.fn = function (sn) {
+      var v = sn && typeof sn.val === 'function' ? sn.val() : null;
+      s.flow = v && typeof v === 'object' && v.flow && typeof v.flow === 'object' ? v.flow : null;
+      s.ms = v && typeof v === 'object' && v.source ? Number(v.source.generated_at_ms) : NaN;
+      render();
+    };
+    s.ref.on('value', s.fn, function () { s.failAt = Date.now(); detach(); s.flow = null; render(); });   /* 讀取失敗的說明 1.4.5 已經會顯示 */
+  }
+
+  /* 要顯示的內容；沒有 flow＝null */
+  function view(f, ms) {
+    if (!f) return null;
+    var rg = Object.prototype.hasOwnProperty.call(ZH, f.regime) ? f.regime : 'WARMUP';
+    var live = f.in_session !== false, stale = f.stale === true || !(Number.isFinite(ms) && Date.now() - ms < OLD_MS);
+    var t = String(f.ex_time || '').slice(11, 19);
+    var a5 = n(f.aggr_net_5m), oz = n(f.ofi_z), vp = n(f.vpin_pct), sv = n(f.signed_vpin), o5 = n(f.ooi_5m), ooi = f.ooi_available === true;
+    var items = [
+      ['主動', fm(a5), tone(a5), ''],
+      ['OFI', oz === null ? '—' : fm(oz, 1) + 'σ', tone(oz), ''],
+      ['VPIN', vp === null ? '—' : Math.round(vp) + '%', tone(sv), ''],
+      ['OOI', ooi ? fm(o5) : '未接', ooi ? tone(o5) : '', 'txf-ooi']
+    ];
+    var tip = [
+      '主力心態（' + String(f.version || 'BaoZ Flow') + '）：研究用，還沒有經過市場驗證；只顯示，不影響 Argon、不影響實單',
+      '狀態 ' + ZH[rg] + '：連續 20 秒成立才換；資料舊時當中性' + (!live ? '（現在非盤中）' : stale ? '（現在資料舊）' : ''),
+      '主動買賣（外盤減內盤，大台當量口：小台×0.25、微台×0.05）1分 ' + fm(n(f.aggr_net_1m)) + '、5分 ' + fm(a5) + '、15分 ' + fm(n(f.aggr_net_15m)) + '、本盤 ' + fm(n(f.aggr_net_session)),
+      '　5分 大台 ' + fm(n(f.big_net_5m)) + '、小台＋微台 ' + fm(n(f.small_net_5m)) + '、z 值 ' + fm(n(f.aggr_z), 2),
+      'OFI 一檔委託流失衡：這 5 分鐘和前 60 分鐘比的 z 值 ' + fm(oz, 2) + '（1分 ' + fm(n(f.ofi_1m)) + '、5分 ' + fm(n(f.ofi_5m)) + '）',
+      'VPIN 成交方向失衡（每 200 口一桶，夜盤 100 口，最近 50 桶）：這一盤百分位 ' + (vp === null ? '—' : Math.round(vp) + '%') + '、帶方向 ' + fm(sv, 2) + '（+買多、−賣多）、VPIN ' + fm(n(f.vpin), 3) + '、' + qt(n(f.vpin_buckets)) + ' 桶',
+      '掃單 5分（1 秒內同方向 ≥3 筆、合計 ≥15 口）買 ' + qt(n(f.burst_buy_5m)) + ' 次 ' + qt(n(f.burst_vol_buy_5m)) + ' 口、賣 ' + qt(n(f.burst_sell_5m)) + ' 次 ' + qt(n(f.burst_vol_sell_5m)) + ' 口',
+      '掛單撤減 1分（五檔同價位減少、沒有成交可以解釋）委買 ' + qt(n(f.cancel_bid_1m)) + '、委賣 ' + qt(n(f.cancel_ask_1m)) + '（z ' + fm(n(f.cancel_bid_z), 1) + '／' + fm(n(f.cancel_ask_z), 1) + '）',
+      '五檔加權（委買−委賣）÷（委買＋委賣）' + fm(n(f.obi_w), 2) + '、1 分鐘平均 ' + fm(n(f.obi_1m), 2),
+      ooi ? 'OOI 選擇權主動買賣 × delta × 0.25（大台當量口）5分 ' + fm(o5) + '、1分 ' + fm(n(f.ooi_1m)) + '、價外 5分 ' + fm(n(f.ooi_otm_5m)) + '、本盤 ' + fm(n(f.ooi_session))
+          : 'OOI 未接：讀不到選擇權逐筆，這一盤不算；其他照算',
+      '盤別 ' + String(f.label || '—') + '、交易所時間 ' + String(f.ex_time || '—')
+    ].join('\n');
+    return { rg: rg, old: stale || !live, at: !live ? '非盤中' : stale ? '資料舊' : (t || '時間不明'), items: items, tip: tip };
+  }
+
+  function grid() { return document.querySelector('#v2-live-page .v2-market-compact-grid'); }
+  function render() {
+    var g = grid(), v = view(s.flow, s.ms);
+    var row = !!g && (!document.documentElement.classList.contains('z31-pro') ||
+      (!document.documentElement.classList.contains('z31-w-lg') && g.clientWidth < ROW_W));
+    var key = v ? JSON.stringify([v, row]) : '';
+    if (!g) { document.documentElement.classList.remove('txf-shown'); return; }
+    if (!s.card || !s.card.isConnected || s.card.parentNode !== g) {
+      if (s.card && s.card.parentNode) s.card.parentNode.removeChild(s.card);
+      s.card = mk('div');
+      s.card.id = 'tx-flow';
+      s.card.hidden = true;
+      s.card.setAttribute('data-z1440', '1');
+      s.card.setAttribute('aria-label', '主力心態（未驗證）');
+      g.appendChild(s.card);
+      s.key = null;
+    }
+    if (key === s.key) return;
+    s.key = key;
+    s.card.replaceChildren();
+    g.classList.toggle('txf-on', !!v);
+    g.classList.toggle('txf-row', !!v && row);
+    document.documentElement.classList.toggle('txf-shown', !!v);
+    if (!v) { s.card.hidden = true; s.card.className = ''; s.card.title = ''; return; }
+    s.card.className = 'txf-' + v.rg.toLowerCase() + (v.old ? ' txf-old' : '');
+    var inn = mk('div', 'txf-in'), hd = mk('div', 'txf-hd'), ln = mk('div', 'txf-ln');
+    hd.append(mk('span', 'txf-lb', '主力心態'), mk('span', 'txf-nv', '未驗證'), mk('span', 'txf-at', v.at));
+    v.items.forEach(function (it) { var e = mk('span', it[3]); e.append(it[0] + ' ', mk('b', it[2], it[1])); ln.appendChild(e); });
+    inn.append(hd, mk('div', 'txf-rg', ZH[v.rg]), ln);
+    s.card.appendChild(inn);
+    s.card.title = v.tip;
+    s.card.hidden = false;
+  }
+
+  function start() {
+    reconcile();
+    render();
+    var d = $('dashboard');
+    if (d && typeof MutationObserver !== 'undefined') new MutationObserver(reconcile).observe(d, { attributes: true, attributeFilter: ['class'] });
+    try { if (typeof auth !== 'undefined' && auth && typeof auth.onAuthStateChanged === 'function') auth.onAuthStateChanged(function () { detach(); s.failAt = 0; reconcile(); }); } catch (e) {}
+    window.addEventListener('resize', function () { render(); });
+    window.setInterval(function () { reconcile(); render(); }, 5000);   /* 資料舊要變淡；TX 區塊晚建立 */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+</script>
+<!-- Z31_BAOZ_TXFLOW_UI_1_4_40_END -->
 </body>
 </html>
