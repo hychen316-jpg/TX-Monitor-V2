@@ -10653,6 +10653,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
       <div class="bz-metric"><span id="bz-multi-label" class="bz-small bz-muted">多日方向</span><span id="bz-multi-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">履約價分界 <span id="bz-multi-boundary" class="bz-num">—</span></span><div id="bz-multi-gauge"></div></div>
       <div class="bz-metric"><span id="bz-session-label" class="bz-small bz-muted">本盤方向</span><span id="bz-session-distance" class="bz-value bz-num">—</span><span class="bz-small bz-muted">履約價分界 <span id="bz-session-boundary" class="bz-num">—</span></span><div id="bz-session-gauge"></div></div>
     </div>
+    <div id="bz-flow" class="bz-flow" hidden></div>
     <div id="bz-x3g" class="bz-metrics bz-x3g" hidden></div>
     <div id="bz-x3" class="bz-x3" hidden></div>
     <div class="bz-layout">
@@ -10981,6 +10982,43 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const f=ok(fb)&&fb>1000?fb:(k!==null&&ok(bs)?k+bs:null);
     text(id,num(k));
     if(e.parentNode)e.parentNode.title=f!==null?'換成期貨 '+num(f)+(ok(bs)?'（換算差 '+sign(bs)+'）':''):'';
+  }
+
+  // ---------- 主力心態（BaoZ Flow，未驗證）
+  // 1.4.39（20261114 Edward）：上傳器 1.0.7 的 p.flow（BaoZ Flow 0.1.0：主動買賣、OFI、VPIN、掃單、掛單撤減、OOI → 狀態）。
+  //   研究用、還沒有經過市場驗證：只顯示，不影響 Argon、不影響實單。沒有 flow＝不顯示（版面和 1.4.38 一樣）
+  function flowCard(p) {
+    const box=$('bz-flow');if(!box)return;box.replaceChildren();
+    const f=(p&&p.flow&&typeof p.flow==='object')?p.flow:null;
+    if(!f){box.hidden=true;box.classList.remove('bz-flow-old');box.title='';return;}
+    const n=x=>typeof x==='number'&&Number.isFinite(x)?x:null;
+    const fm=(x,d)=>x===null?'—':(x>0?'+':x<0?'-':'')+Math.abs(x).toLocaleString('en-US',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});
+    const qt=x=>x===null?'—':Math.round(x).toLocaleString('en-US');
+    const pn=x=>x===null||x===0?'':x>0?'bz-bull':'bz-bear';
+    const ZH={BULL_ATTACK:'多方攻擊',BEAR_ATTACK:'空方攻擊',SPOOF_TRAP:'掛撤背離',CHOPPY_NEUTRAL:'中性',WARMUP:'暖機中'};
+    const rg=Object.prototype.hasOwnProperty.call(ZH,f.regime)?f.regime:'WARMUP';
+    const stale=f.stale===true,live=f.in_session!==false;
+    const head=el('span','bz-flow-h');head.append(el('strong','','主力心態'),el('span','bz-small bz-muted','（未驗證）'));
+    box.append(head,el('span','bz-flow-tag bz-flow-'+(stale||!live?'off':rg.toLowerCase()),ZH[rg]));   // 資料舊／非盤中：狀態字不上色
+    const item=(label,val,cls,tip)=>{const e=el('span','bz-flow-i');e.append(el('span','bz-small bz-muted',label+' '),el('span','bz-num'+(cls?' '+cls:''),val));e.title=tip;box.appendChild(e);};
+    const a5=n(f.aggr_net_5m);
+    item('主動買賣 5分',fm(a5)+(a5===null?'':' 口'),pn(a5),'外盤減內盤（大台當量口：小台×0.25、微台×0.05）\n1分 '+fm(n(f.aggr_net_1m))+'、15分 '+fm(n(f.aggr_net_15m))+'、本盤 '+fm(n(f.aggr_net_session))+'\n5分 大台 '+fm(n(f.big_net_5m))+'、小台＋微台 '+fm(n(f.small_net_5m))+'\nz 值 '+fm(n(f.aggr_z),2));
+    const oz=n(f.ofi_z);
+    item('OFI',oz===null?'—':fm(oz,1)+'σ',pn(oz),'一檔委託流失衡（委買委賣第一檔的增減）\n這 5 分鐘和前 60 分鐘比的 z 值；1分 '+fm(n(f.ofi_1m))+'、5分 '+fm(n(f.ofi_5m)));
+    const vp=n(f.vpin_pct),sv=n(f.signed_vpin);
+    item('VPIN',(vp===null?'—':Math.round(vp)+'%')+(sv===null?'':'（'+fm(sv,2)+'）'),pn(sv),'成交方向失衡（每 200 口一桶，夜盤 100 口，最近 50 桶）\n百分比＝這一盤到目前的百分位；括號＝帶方向（+買多、−賣多）\nVPIN '+fm(n(f.vpin),3)+'、已湊 '+qt(n(f.vpin_buckets))+' 桶');
+    const bb=n(f.burst_buy_5m),bs=n(f.burst_sell_5m);
+    item('掃單 5分','買 '+qt(bb)+' · 賣 '+qt(bs),bb!==null&&bs!==null?pn(bb-bs):'','交易所時間 1 秒內同方向 ≥3 筆、合計 ≥15 口\n掃單量 買 '+qt(n(f.burst_vol_buy_5m))+' 口、賣 '+qt(n(f.burst_vol_sell_5m))+' 口');
+    item('掛單撤減 1分','買 '+qt(n(f.cancel_bid_1m))+' · 賣 '+qt(n(f.cancel_ask_1m)),'','五檔同一價位減少、1 秒內沒有同價成交可以解釋的量（大台當量口）\nz 值 委買 '+fm(n(f.cancel_bid_z),1)+'、委賣 '+fm(n(f.cancel_ask_z),1));
+    const ob=n(f.obi_w);
+    item('五檔',fm(ob,2),pn(ob),'五檔加權（委買－委賣）÷（委買＋委賣），−1 到 +1\n1 分鐘平均 '+fm(n(f.obi_1m),2));
+    if(f.ooi_available===true){const o5=n(f.ooi_5m);item('OOI 5分',fm(o5)+(o5===null?'':' 口'),pn(o5),'選擇權主動買賣 × delta × 0.25（大台當量口）\n1分 '+fm(n(f.ooi_1m))+'、價外（|Δ| 0.15–0.35）5分 '+fm(n(f.ooi_otm_5m))+'、本盤 '+fm(n(f.ooi_session)));}
+    else item('OOI','未接','','讀不到選擇權逐筆，OOI 這一盤不算；其他照算');
+    const t=String(f.ex_time||'').slice(11,19);
+    box.appendChild(el('span','bz-flow-at bz-small bz-muted',(t||'時間不明')+(!live?' · 非盤中':stale?' · 資料舊':'')));
+    box.classList.toggle('bz-flow-old',stale||!live);
+    box.title=(String(f.version||'BaoZ Flow'))+'：盤中主力心態。研究用，還沒有經過市場驗證；只顯示，不影響 Argon、不影響實單\n狀態連續 20 秒成立才換；資料舊時當中性\n盤別 '+String(f.label||'—')+'、交易所時間 '+String(f.ex_time||'—');
+    box.hidden=false;
   }
 
   // ---------- 三檔上方 Next／Next_Month 方向卡
@@ -11515,7 +11553,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     if(!p){
       ['bz-contract','bz-version','bz-source-time','bz-long-status','bz-short-status','bz-long-reason','bz-short-reason','bz-data-note'].forEach(id=>text(id,'待資料'));
       ['bz-steps','bz-comparison','bz-next-plan','bz-timeline','bz-research','bz-diagnostics','bz-level-body','bz-target-body','bz-pos','bz-cmd-lines','bz-long-plan','bz-short-plan','bz-x3','bz-multi-gauge','bz-session-gauge'].forEach(id=>$(id).replaceChildren());
-      $('bz-pos').hidden=true;$('bz-x3').hidden=true;x3g(null,false);
+      $('bz-pos').hidden=true;$('bz-x3').hidden=true;x3g(null,false);flowCard(null);
       ['bz-futures','bz-synthetic','bz-basis','bz-multi-distance','bz-multi-boundary','bz-session-distance','bz-session-boundary','bz-carry-detail','bz-level-detail'].forEach(id=>text(id,'未提供'));
       $('bz-long-gates').replaceChildren();$('bz-short-gates').replaceChildren();text('bz-carry-decision','留倉：未提供');
       text('bz-raw-text','尚無來源資料');freshness();return;
@@ -11523,7 +11561,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const v=p.view,m=p.market||{};
     const night=p.source.session==='NIGHT';
     const row1=String(((p.analysis_rows.find(r=>r&&r.row===1)||{}).cells||[''])[0]||'');const ph=/｜(盤前|收盤後|盤後|休市|夜盤|日盤)｜/.exec(row1);
-    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.38');
+    text('bz-contract',p.source.contract);text('bz-session',night?'夜盤':p.source.session==='DAY'?'日盤':(ph?ph[1]:'盤別未提供'));text('bz-version',p.source.version+(p.source.algo?'（'+p.source.algo+'）':'')+' · UI 1.4.39');
     text('bz-source-time','來源 '+taipei(p.source.generated_at_ms));
     const lines=$('bz-cmd-lines');lines.replaceChildren();commandLines(v).slice(0,6).forEach(t=>lines.appendChild(el('li','',t)));
     sideCards(v);
@@ -11535,7 +11573,7 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     [['bz-multi-distance',m.dist_a],['bz-session-distance',m.dist_b]].forEach(([id,n])=>{$(id).classList.toggle('bz-bull',n>0);$(id).classList.toggle('bz-bear',n<0);});
     gauge('bz-multi-gauge',m.dist_a,-800,800,[[-20,20]],[-200,-20,20,100],['−800（偏空）','0','+800（偏多）']);
     gauge('bz-session-gauge',m.dist_b,-150,150,[[-20,20]],[-20,20],['−150','±20 內＝貼近','+150']);
-    x3g(p,night);x3(v,p);
+    flowCard(p);x3g(p,night);x3(v,p);
     const posInfo=positionCard(v,m);
     levels(posInfo);targets();
     const scenes=$('bz-scenarios');scenes.replaceChildren();
@@ -16509,6 +16547,19 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gs .bz-gauge-cap >
 <style id="z31-baoz-kdivcard-ui-1-4-38">
 /* 1.4.38：方向卡的分界改成履約價座標（Kdiv）；數字不拆行 */
 #baoz-system-panel #bz-multi-boundary,#baoz-system-panel #bz-session-boundary,#baoz-system-panel .bz-x3g .bz-small .bz-num{white-space:nowrap}
+</style>
+<!-- Z31_BAOZ_FLOW_UI_1_4_39 -->
+<style id="z31-baoz-flow-ui-1-4-39">
+/* 1.4.39：主力心態（未驗證）橫條。窄的時候自動換行；每一項不拆開 */
+#baoz-system-panel .bz-flow{display:flex;flex-wrap:wrap;align-items:center;gap:3px 14px;margin:0 0 10px;padding:6px 10px;border:1px dashed var(--bz-line);border-radius:var(--bz-radius);background:var(--bz-surface)}
+#baoz-system-panel .bz-flow-h,#baoz-system-panel .bz-flow-i,#baoz-system-panel .bz-flow-at{white-space:nowrap}
+#baoz-system-panel .bz-flow-tag{white-space:nowrap;padding:0 8px;border:1px solid var(--bz-line);border-radius:999px;font-weight:700;color:var(--bz-muted)}
+#baoz-system-panel .bz-flow-tag.bz-flow-bull_attack{color:var(--bz-up);border-color:var(--bz-up);background:rgba(255,112,123,.12)}
+#baoz-system-panel .bz-flow-tag.bz-flow-bear_attack{color:var(--bz-down);border-color:var(--bz-down);background:rgba(82,217,160,.12)}
+#baoz-system-panel .bz-flow-tag.bz-flow-spoof_trap{color:var(--bz-attn);border-color:var(--bz-attn)}
+#baoz-system-panel .bz-flow-tag.bz-flow-warmup{border-style:dashed}
+#baoz-system-panel .bz-flow-at{margin-left:auto}
+#baoz-system-panel .bz-flow.bz-flow-old>*{opacity:.55}   /* 加在裡面每一項：合約到期變淡（.7）時也疊得上去 */
 </style>
 </body>
 </html>
