@@ -16748,6 +16748,7 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 <!-- Z31_BAOZ_TXMFS_UI_1_4_41 -->
 <style id="z31-baoz-txmfs-ui-1-4-41">
 /* ===== BaoZ UI 1.4.41（20261114）：TX 台指期區塊最下面加一條「主力心態（謝版）」紅綠柱
+   UI 1.4.42（20261116）：紅綠柱下面加時間軸（整條 34 px → 46 px）
    只改顯示：不寫 Firebase、不改計算。只有 flow.mfs 有資料時才出現（上傳器 1.0.10＋BaoZ Flow 0.1.2）；沒有＝和 1.4.40 一樣。 */
 #v2-live-page #tx-mfs[hidden] { display: none !important; }
 #v2-live-page #tx-mfs {
@@ -16760,7 +16761,7 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 34px;
+  height: 46px;
   padding: 3px 10px;
   border: 1px solid var(--pro-line, rgba(255,255,255,.10));
   border-left: 3px solid var(--txm-c);
@@ -16785,13 +16786,17 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 #v2-live-page #tx-mfs.txm-neutral .txm-sg b { color: var(--pro-text, #e8ecf1); }
 #v2-live-page #tx-mfs.txm-warmup .txm-sg b, #v2-live-page #tx-mfs.txm-old .txm-sg b { color: var(--pro-text-2, #b9c2cd); }
 #v2-live-page #tx-mfs .txm-m { font: 600 12px/1.1 var(--pro-num, inherit); color: var(--pro-text, #e8ecf1); }
-#v2-live-page #tx-mfs .txm-ch { flex: 1 1 auto; min-width: 40px; height: 26px; display: block; }
+#v2-live-page #tx-mfs .txm-ch { flex: 1 1 auto; min-width: 40px; height: 38px; display: block; overflow: hidden; }
 #v2-live-page #tx-mfs .txm-ch .u { fill: var(--pro-up, #ff4d4f); }
 #v2-live-page #tx-mfs .txm-ch .d { fill: var(--pro-down, #22c55e); }
 #v2-live-page #tx-mfs .txm-ch .n { fill: var(--pro-muted, #8691a0); opacity: .7; }
 #v2-live-page #tx-mfs .txm-ch .w { opacity: .5; }
 #v2-live-page #tx-mfs .txm-ch .z { stroke: var(--pro-line, rgba(255,255,255,.22)); stroke-width: 1; vector-effect: non-scaling-stroke; }
 #v2-live-page #tx-mfs .txm-ch .g { stroke: var(--pro-line, rgba(255,255,255,.12)); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
+#v2-live-page #tx-mfs .txm-ch .ax { stroke: var(--pro-line, rgba(255,255,255,.22)); stroke-width: 1; vector-effect: non-scaling-stroke; }
+#v2-live-page #tx-mfs .txm-ch .tk { stroke: var(--pro-muted, #8691a0); stroke-width: 1; stroke-dasharray: 1 2; opacity: .45; vector-effect: non-scaling-stroke; }
+#v2-live-page #tx-mfs .txm-ch .tm { stroke: var(--pro-muted, #8691a0); stroke-width: 1; vector-effect: non-scaling-stroke; }
+#v2-live-page #tx-mfs .txm-ch .tl { fill: var(--pro-muted, #8691a0); font-family: var(--pro-num, inherit); font-size: 10px; font-weight: 500; font-variant-numeric: tabular-nums; }
 #v2-live-page #tx-mfs .txm-at { flex: none; font: 500 11px/1.1 var(--pro-num, inherit); color: var(--pro-muted, #8691a0); white-space: nowrap; }
 @container txm (max-width: 560px) {
   #v2-live-page #tx-mfs .txm-l, #v2-live-page #tx-mfs .txm-nv { display: none; }
@@ -16800,7 +16805,7 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 @container txm (max-width: 340px) { #v2-live-page #tx-mfs .txm-at { display: none; } }
 </style>
 <script>
-/* BaoZ UI 1.4.41：TX 台指期區塊的「主力心態（謝版）」紅綠柱（只讀 Firebase，不寫；只改顯示） */
+/* BaoZ UI 1.4.41：TX 台指期區塊的「主力心態（謝版）」紅綠柱（只讀 Firebase，不寫；只改顯示）；1.4.42：加時間軸 */
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near';
@@ -16848,7 +16853,7 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
   function hm(t0, i) {
     var mm = /(\d{2}):(\d{2})$/.exec(String(t0 || ''));
     if (!mm) return '';
-    var t = (Number(mm[1]) * 60 + Number(mm[2]) + i) % 1440;
+    var t = ((Number(mm[1]) * 60 + Number(mm[2]) + i) % 1440 + 1440) % 1440;
     return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
   }
   function sigOf(m) { return m > 0.5 ? 'STRONG_BULL' : m > 0.15 ? 'BULL' : m >= -0.15 ? 'NEUTRAL' : m >= -0.5 ? 'BEAR' : 'STRONG_BEAR'; }
@@ -16867,7 +16872,7 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
       '0.25×量能斜率 Z ' + fm(n(m.z_slope_flow), 2) + '（最近 12 分鐘）',
       '0.15×五檔委買委賣 Z ' + fm(n(m.z_ob), 2) + '（加權，60 秒平均 ' + fm(n(m.ob_smooth)) + ' 口）',
       '0.15×價格：12 分鐘斜率 Z ' + fm(n(m.z_slope_price), 2) + '、偏離均價 ' + fm(n(m.price_bias), 2) + ' 個 ATR（均價 ' + fm(n(m.vwap)) + '、ATR14 ' + fm(n(m.atr14), 1) + '）',
-      (n(m.carry_in) !== null ? '開盤帶上一盤（' + String(m.carry_from || '') + '）的 20%：' + fm(n(m.carry_in)) + ' 口　' : '') + '每分鐘結算一次；紅綠柱是最近幾小時每分鐘的 M（滑鼠指著柱子看時間）',
+      (n(m.carry_in) !== null ? '開盤帶上一盤（' + String(m.carry_from || '') + '）的 20%：' + fm(n(m.carry_in)) + ' 口　' : '') + '每分鐘結算一次；紅綠柱是最近幾小時每分鐘的 M，下面是時間軸（滑鼠指著柱子看那一分鐘）',
       '交易所時間 ' + String(m.ex_time || '—')
     ].join('\n');
     return { sg: sg, m: mv, old: stale || !live, at: !live ? '非盤中' : stale ? '資料舊' : (t || '時間不明'), b: bars(m), t0: m.bars_t0, tip: tip };
@@ -16875,22 +16880,59 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 
   function chart(svg, v, w) {
     // 每根柱子固定寬（3～5 px，300 根剛好排滿寬螢幕），最新的靠右；柱子少時左邊留空，不拉寬
+    // 1.4.42：柱子下面 12 px 是時間軸（axis）
     var W = Math.max(30, Math.round(w)), P = Math.max(3, Math.min(5, W / 300)), cap = Math.max(1, Math.floor(W / P));
-    var b = v.b.slice(-cap), off = v.b.length - b.length, x0 = W - b.length * P, H = 26, mid = H / 2, S = 1.5;
+    var b = v.b.slice(-cap), off = v.b.length - b.length, x0 = W - b.length * P, HB = 26, H = HB + 12, mid = HB / 2, S = 1.5;
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     svg.setAttribute('preserveAspectRatio', 'none');
     svg.appendChild(sv('line', { x1: 0, x2: W, y1: mid - 0.5 / S * (mid - 1), y2: mid - 0.5 / S * (mid - 1), 'class': 'g' }));
     svg.appendChild(sv('line', { x1: 0, x2: W, y1: mid + 0.5 / S * (mid - 1), y2: mid + 0.5 / S * (mid - 1), 'class': 'g' }));
     svg.appendChild(sv('line', { x1: 0, x2: W, y1: mid, y2: mid, 'class': 'z' }));
+    axis(svg, v.t0, b.length, off, x0, P, W, HB, H);
     b.forEach(function (x, i) {
       var g = sigOf(x), h = Math.max(1, Math.min(Math.abs(x), S) / S * (mid - 1));
       var cls = g === 'NEUTRAL' ? 'n' : (x > 0 ? 'u' : 'd') + (g === 'BULL' || g === 'BEAR' ? ' w' : '');
       var r = sv('rect', { x: (x0 + i * P).toFixed(2), width: (P * 0.67).toFixed(2), y: x >= 0 ? mid - h : mid, height: h, 'class': cls });
       var tt = sv('title', {});
-      tt.textContent = hm(v.t0, off + i) + '　M ' + fm(x, 2) + '　' + ZH[g];
+      tt.textContent = hm(v.t0, off + i - 1) + '～' + hm(v.t0, off + i) + '　M ' + fm(x, 2) + '　' + ZH[g];
       r.appendChild(tt);
       svg.appendChild(r);
     });
+  }
+  function axis(svg, t0, nb, off, x0, P, W, HB, H) {
+    // 刻度畫在兩根柱子中間的空隙：「09:00」＝ 08:59～09:00 那根的右邊、09:00～09:01 那根的左邊
+    // 長刻度加時間：每 15／30／60／120 分鐘（挑字不會擠在一起的最小間隔）；短刻度：長刻度的一半（15 分鐘時是 5 分鐘）
+    var mm = /(\d{2}):(\d{2})$/.exec(String(t0 || ''));
+    if (!mm || !nb) return;
+    var e0 = Number(mm[1]) * 60 + Number(mm[2]) + off - 1;     /* 畫面上第一根柱子開始的分鐘 */
+    var st = [15, 30, 60, 120].filter(function (q) { return q * P >= 60; })[0] || 120, mn = st === 15 ? 5 : st / 2;
+    var y = HB + 0.5, xs = [], HW = 14, GAP = 34;
+    function hhmm(t) { return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); }
+    function tick(x, y2, cls) { svg.appendChild(sv('line', { x1: x.toFixed(2), x2: x.toFixed(2), y1: cls === 'tk' ? 0 : HB, y2: y2, 'class': cls })); }
+    function label(x, t, anchor) {
+      var e = sv('text', { x: x.toFixed(2), y: H - 1, 'text-anchor': anchor, 'class': 'tl' });
+      e.textContent = hhmm(t);
+      svg.appendChild(e);
+      xs.push(x);
+    }
+    svg.appendChild(sv('line', { x1: Math.max(0, x0 - P * 0.165).toFixed(2), x2: W, y1: y, y2: y, 'class': 'ax' }));
+    for (var k = 0; k <= nb; k++) {
+      var t = ((e0 + k) % 1440 + 1440) % 1440, x = x0 + k * P - P * 0.165;
+      if (x < 0) continue;
+      if (t % st === 0) {
+        tick(x, HB, 'tk');
+        tick(x, HB + 2.5, 'tm');
+        if (x - HW >= 0 && x + HW <= W) label(x, t, 'middle');
+      } else if (t % mn === 0) tick(x, HB + 2, 'tm');
+    }
+    // 最左邊那根是這一盤留下來的第一根（開盤 5 小時內就是開盤，例如日盤 08:45）：標它開始的時間；和別的時間擠在一起就不標
+    if (off === 0) {
+      var xa = Math.max(0, x0 - P * 0.165), ta = ((e0 % 1440) + 1440) % 1440;
+      if (ta % st !== 0 && xs.every(function (q) { return Math.abs(q - xa) >= GAP + (xa < HW ? HW : 0); })) {
+        tick(xa, HB + 2.5, 'tm');
+        label(xa, ta, xa < HW ? 'start' : xa + HW > W ? 'end' : 'middle');
+      }
+    }
   }
 
   function grid() { return document.querySelector('#v2-live-page .v2-market-compact-grid'); }
@@ -16903,6 +16945,7 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
       s.el.id = 'tx-mfs';
       s.el.hidden = true;
       s.el.setAttribute('data-z1441', '1');
+      s.el.setAttribute('data-z1442', '1');
       s.el.setAttribute('aria-label', '主力心態（謝版，未驗證）');
       g.appendChild(s.el);
       s.key = null;
@@ -16940,5 +16983,6 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 })();
 </script>
 <!-- Z31_BAOZ_TXMFS_UI_1_4_41_END -->
+<!-- Z31_BAOZ_TXMFS_AXIS_UI_1_4_42 -->
 </body>
 </html>
