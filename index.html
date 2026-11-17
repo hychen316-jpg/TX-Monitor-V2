@@ -11030,17 +11030,20 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
     const bk=(p&&p.books&&typeof p.books==='object')?p.books:{};
     const n=x=>{if(x===null||x===undefined||x==='')return null;const y=Number(x);return Number.isFinite(y)?y:null;};
     const hm=ms=>new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ms));
-    const lab=x=>typeof x==='string'&&x.trim()?' · '+x.trim().replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''):'';
+    const lab=x=>typeof x==='string'&&x.trim()&&!/^[—－-]+$/.test(x.trim())?' · '+x.trim().replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/,''):'';   // 1.4.43：只有「—」不加
     const f=x=>Math.round(x).toLocaleString('en-US'),sg=x=>(x>0?'+':'')+Math.round(x);
     const ref=n(p&&p.source&&p.source.generated_at_ms);
     let shown=0;
     [['next','Next'],['next_month','Next_Month']].forEach(([key,name])=>{
       const b=bk[key];if(!b||typeof b!=='object')return;
-      const syn=n(b.synthetic),ka=n(b.kdiv_a),kb=n(b.kdiv_b),fu=n(b.futures),at=n(b.generated_at_ms);
-      if(!(syn>1000&&ka>1000))return;
+      const syn=n(b.synthetic),ka0=n(b.kdiv_a),kb=n(b.kdiv_b),fu=n(b.futures),at=n(b.generated_at_ms);
+      // 1.4.43（20261117 Edward）：多日分界沒有（暴Z表找不到分界，例如 Next_Month 換到 202612）→ 今天方向卡照樣顯示，
+      //   多日卡寫「暴Z表沒有分界」；多日、今天兩個分界都沒有才不顯示這一檔（以前是多日沒有就整檔不顯示）
+      const ka=ka0!==null&&ka0>1000?ka0:null,okb=kb!==null&&kb>1000;
+      if(!(syn>1000&&(ka!==null||okb)))return;
       const bs=n(b.basis)!==null?n(b.basis):(fu!==null?fu-syn:null);
-      const da=n(b.dist_a)!==null?n(b.dist_a):syn-ka;
-      const okb=kb!==null&&kb>1000,db=okb?(n(b.dist_b)!==null?n(b.dist_b):syn-kb):null;
+      const da=ka===null?null:(n(b.dist_a)!==null?n(b.dist_a):syn-ka);
+      const db=okb?(n(b.dist_b)!==null?n(b.dist_b):syn-kb):null;
       const old=!(at!==null&&ref!==null&&Math.abs(ref-at)<=180000);
       const ct=String(b.contract||'');
       const head=name+(ct?' '+ct:'')+(at!==null?' 快照 '+taipei(at):'')+(old?'（和近月快照差超過 3 分鐘）':'');
@@ -11048,14 +11051,15 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
        ['s',(night?'今晚':'今天')+'方向',b.today_label,db,okb?kb:null,'即時表',-150,150,[-20,20],['−150','±20 內＝貼近','+150']]]
       .forEach(([t,title,label,d,kd,tb,min,max,ticks,caps])=>{
         const card=el('div','bz-metric bz-x3g-card'+(old?' bz-x3g-old':''));
-        const val=el('span','bz-value bz-num',sign(d));val.classList.toggle('bz-bull',d>0);val.classList.toggle('bz-bear',d<0);
-        const foot=el('span','bz-small bz-muted','履約價分界 ');foot.appendChild(el('span','bz-num',kd!==null?num(kd):'未提供'));   // 1.4.38：Kdiv 本身
+        const nok=t==='m'&&kd===null;   // 1.4.43：暴Z表找不到多日分界
+        const val=el('span','bz-value bz-num',nok?'—':sign(d));val.classList.toggle('bz-bull',d>0);val.classList.toggle('bz-bear',d<0);
+        const foot=el('span','bz-small bz-muted',nok?'':'履約價分界 ');foot.appendChild(el('span','bz-num',kd!==null?num(kd):nok?'暴Z表沒有分界':'未提供'));   // 1.4.38：Kdiv 本身
         if(kd!==null&&bs!==null)foot.title='換成期貨 '+num(kd+bs)+'（換算差 '+sign(bs)+'）';
         if(old)foot.appendChild(el('span','bz-x3g-at','（'+(at!==null?hm(at):'時間不明')+'）'));
         const g=el('div','bz-x3g-g'+t);g.id='bz-x3g-'+key+'-'+t;
         const hd=el('span','bz-small bz-muted bz-x3g-t');hd.append(el('span','bz-x3g-nm',name),document.createTextNode(' '),el('span','bz-x3g-tt',title+lab(label)));
         card.append(hd,val,foot,g);
-        card.title=head+(kd!==null&&d!==null?'\n合成期貨 '+f(syn)+' － '+tb+' Kdiv '+f(kd)+' ＝ '+sg(d)+(bs!==null?'（分界換成期貨 '+f(kd+bs)+'）':''):'\n'+tb+' Kdiv 未提供');
+        card.title=head+(kd!==null&&d!==null?'\n合成期貨 '+f(syn)+' － '+tb+' Kdiv '+f(kd)+' ＝ '+sg(d)+(bs!==null?'（分界換成期貨 '+f(kd+bs)+'）':''):'\n'+(nok?'暴Z表畫面兩倍範圍內沒有分界 Kdiv（Call、Put 成本沒有交叉），多日方向判斷不了':tb+' Kdiv 未提供'));
         box.appendChild(card);
         gauge(g.id,d,min,max,[[-20,20]],ticks,caps);
         shown++;
@@ -16984,5 +16988,6 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 </script>
 <!-- Z31_BAOZ_TXMFS_UI_1_4_41_END -->
 <!-- Z31_BAOZ_TXMFS_AXIS_UI_1_4_42 -->
+<!-- Z31_BAOZ_X3G_NOKDIV_UI_1_4_43 -->
 </body>
 </html>
