@@ -15325,6 +15325,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     var ex = ai && txt(ai.expiry_date);   /* AI V0.1.18 起就有（live.txt [控制台] B6 到期日）；沒有就不顯示。ai.expiry 是別的用途，不要讀 */
     M.expiry = /^\d{4}-\d{2}-\d{2}/.test(ex) ? ex.slice(0, 10) : '';
     M.sr = null; try { if (window.BZ_SR1431) M.sr = window.BZ_SR1431.model(d, M); } catch (e) { M.sr = null; }   /* 1.4.31 撐壓狀態 */
+    M.lin = null; try { if (window.BZ_LIN1444) M.lin = window.BZ_LIN1444.model(d, M); } catch (e) { M.lin = null; }   /* 1.4.44 林式撐壓（Argon V1.2.56 第 80–87 列）；AI 影子計畫的線先不畫 */
     return M;
   }
 
@@ -15419,6 +15420,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       by[cov[0]].ms.unshift({ cls: z.ov ? 'pk' : 'bx', t: (z.ov ? '粉紅 ' : '調單區 ') + z.name + '（' + (z.tb === 'Z' ? '暴Z' : '今天') + '）', tip: tbName(z.tb) + ' ' + fmt(z.lo) + '–' + fmt(z.hi) + '｜' + z.meaning });
     });
     if (M.sr) { try { window.BZ_SR1431.rows(M, by); } catch (e) {} }   /* 1.4.31：撐壓線蓋到的履約價列 */
+    if (M.lin) { try { window.BZ_LIN1444.rows(M, by, out); } catch (e) {} }   /* 1.4.44：林式撐壓小標 */
     var lines = [{ px: true, k: M.syn }];
     M.marks.forEach(function (mk) {
       if (!inR(mk.k)) { (mk.k > M.syn ? out.up : out.dn).push(mk.t + '（' + sgn(mk.k - M.syn) + '）'); return; }
@@ -15508,6 +15510,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
 
   function sideHtml(M, L) {
     var h = '';   /* 1.4.32：不放撐壓狀態小框（梯子上的小標就有一樣的資訊） */
+    if (M.lin) { try { h = window.BZ_LIN1444.side(M) || ''; } catch (e) { h = ''; } }   /* 1.4.44：林式撐壓說明 */
     var srU = '', srD = '';   /* 1.4.32：梯子範圍外的撐壓線 */
     if (M.sr) { try { srU = window.BZ_SR1431.outs(M, L, 1); srD = window.BZ_SR1431.outs(M, L, -1); } catch (e) { srU = srD = ''; } }
     if (L.out.up.length || L.out.dn.length || srU || srD) {
@@ -15524,7 +15527,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     h += '<div class="bz-lad-box"><div class="h">怎麼看</div><div class="bz-lad-leg">' +
          '<span><i style="background:#4f8dff"></i>藍 200</span><span><i style="background:#f5c542"></i>黃 100</span><span><i style="background:#00e676"></i>綠 400</span>' +
          '<span><i style="background:rgba(244,143,177,.35);border:1.5px solid #f48fb1"></i>粉紅＝雙側重疊</span><span><i style="border:1.5px dashed #f3cd7c"></i>虛線＝箱型（調單區）</span>' +
-         '<span><i style="border-top:2px solid #eef1f7;height:0;width:14px"></i>多日分界</span><span><i style="border-top:1.5px dashed #eef1f7;height:0;width:14px"></i>今天分界</span><span><i style="border-top:1px dashed rgba(170,180,198,.8);height:0;width:14px"></i>AI 影子計畫</span>' +
+         '<span><i style="border-top:2px solid #eef1f7;height:0;width:14px"></i>多日分界</span><span><i style="border-top:1.5px dashed #eef1f7;height:0;width:14px"></i>今天分界</span>' +
          '<span><i style="background:#5b6472;width:3px"></i>本盤高低</span></div>' +
          '<div class="bz-lad-out">靠履約價的兩欄是暴Z表（多日），外側兩欄是即時表（今天）。斜線格＝已被穿過、角色互換。顏色代表「莊家在那裡」，2 年回測守住的比例和隨機價位差不多，不代表一定守住。滑鼠移到格子上可以看成本。</div></div>';
     return h;
@@ -15594,6 +15597,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
   function section() { return document.querySelector('#baoz-system-panel section[aria-label="關鍵期貨價位"]'); }
   function unmount() {
     if (s.box) { s.box.remove(); s.box = null; }
+    try { if (window.BZ_LIN1444) window.BZ_LIN1444.card(null); } catch (e) {}   /* 1.4.44 */
     if (s.btn) { s.btn.remove(); s.btn = null; }
     if (s.sec) s.sec.removeAttribute('data-z1426-fold');
     s.sec = null; s.html = '';
@@ -15628,6 +15632,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     var html = H.html + '<div class="bz-lad-main"><div class="bz-lad-top">' + H.info + A.html + '</div>' + ladderHtml(M, L) + '<div class="bz-lad-side">' + sideHtml(M, L) + '</div></div>';
     if (H.stale) s.box.setAttribute('data-stale', '1'); else s.box.removeAttribute('data-stale');
     if (html !== s.html) { s.box.innerHTML = html; s.html = html; overlay(s.box, M, L); }
+    try { if (window.BZ_LIN1444) window.BZ_LIN1444.card(M, now); } catch (e) {}   /* 1.4.44：左欄最上面「林式進場時機」 */
     if (A.flash && !H.stale) s.flashUntil = now + 3600;
     if (now < (s.flashUntil || 0)) { var bar = s.box.querySelector('[data-z1426-bar]'); if (bar && !bar.classList.contains('flash')) bar.classList.add('flash'); }
     s.last = now;
@@ -16989,5 +16994,378 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 <!-- Z31_BAOZ_TXMFS_UI_1_4_41_END -->
 <!-- Z31_BAOZ_TXMFS_AXIS_UI_1_4_42 -->
 <!-- Z31_BAOZ_X3G_NOKDIV_UI_1_4_43 -->
+<!-- Z31_BAOZ_LIN_UI_1_4_44_BEGIN -->
+<style id="z31-baoz-lin-ui-1-4-44">
+/* BaoZ UI 1.4.44（20261120 Edward）：BaoZ 近月區塊重排（只改顯示，不寫 Firebase）
+   1. AI 即時分析先不顯示（Edward：目前發現沒有幫助）
+   2. 左欄最上面放「林式進場時機」：讀 Argon V1.2.56 [即時分析] 第 80–87 列（第 87 列 LIN2|… 給網頁）
+   3. 價位梯子：林式撐壓小標、林式分界線、林式2 進場價（B 預掛／A 破位）和持有的進場、停損、目標線
+   右欄（價位梯子、必來點、條件變化、留倉）照舊 */
+#baoz-system-panel #bz-ai-card { display: none !important; }
+#baoz-system-panel .bz-lin { order: 0; grid-column: 1; min-width: 0; padding: 10px 12px 9px; border: 1px solid var(--bz-line); border-left: 4px solid var(--bz-accent); border-radius: var(--bz-radius); background: var(--bz-surface); font-variant-numeric: tabular-nums; }
+#baoz-system-panel .bz-lin[data-stale] { opacity: .55; }
+#baoz-system-panel .bz-lin[data-flash] { animation: z44flash 1s 8; }
+#baoz-system-panel .bz-lin .l-hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+#baoz-system-panel .bz-lin .l-hd strong { font-size: 15px; letter-spacing: .02em; }
+#baoz-system-panel .bz-lin .l-md { padding: 0 7px; border-radius: 9px; border: 1px solid var(--bz-line); font-size: 11.5px; color: var(--bz-muted); }
+#baoz-system-panel .bz-lin .l-md.m2 { border-color: var(--bz-up); color: var(--bz-up); font-weight: 700; }
+#baoz-system-panel .bz-lin .l-md.m1 { border-color: var(--bz-accent); color: var(--bz-accent); }
+#baoz-system-panel .bz-lin .l-age { margin-left: auto; font-size: 11.5px; color: var(--bz-muted); }
+#baoz-system-panel .bz-lin .l-age.old { color: var(--bz-attn); font-weight: 700; }
+#baoz-system-panel .bz-lin .l-none { margin-top: 6px; color: var(--bz-muted); }
+#baoz-system-panel .bz-lin .l-hit { margin-top: 8px; padding: 6px 10px; border-radius: 6px; background: rgba(117,211,255,.16); border: 1px solid var(--bz-accent); color: var(--bz-ink); font-size: 14px; font-weight: 700; }
+#baoz-system-panel .bz-lin .l-hit.old { background: transparent; font-size: 12px; font-weight: 400; color: var(--bz-muted); border-style: dashed; }
+#baoz-system-panel .bz-lin .l-dir { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin-top: 8px; }
+#baoz-system-panel .bz-lin .l-dir > b { font-size: 22px; line-height: 1.2; }
+#baoz-system-panel .bz-lin .l-dir.s > b { color: var(--bz-down); }
+#baoz-system-panel .bz-lin .l-dir.l > b { color: var(--bz-up); }
+#baoz-system-panel .bz-lin .l-dir.n > b { color: var(--bz-muted); }
+#baoz-system-panel .bz-lin .l-dir > span { color: var(--bz-muted); font-size: 12.5px; }
+#baoz-system-panel .bz-lin .l-dir .warn { color: var(--bz-attn); }
+#baoz-system-panel .bz-lin .l-side { margin-top: 6px; }
+#baoz-system-panel .bz-lin .l-side > .h { font-size: 12px; font-weight: 700; margin: 2px 0; }
+#baoz-system-panel .bz-lin .l-side.s > .h { color: var(--bz-down); }
+#baoz-system-panel .bz-lin .l-side.l > .h { color: var(--bz-up); }
+#baoz-system-panel .bz-lin .l-side.dim { opacity: .7; }
+#baoz-system-panel .bz-lin .l-t { display: grid; grid-template-columns: 9.5em 5.2em minmax(7em, auto) minmax(0, 1fr); align-items: baseline; gap: 2px 10px; padding: 5px 8px; margin-top: 4px; border: 1px solid var(--bz-line); border-radius: 6px; background: var(--bz-raised); }
+#baoz-system-panel .bz-lin .l-t .l-lb { font-weight: 700; }
+#baoz-system-panel .bz-lin .l-t .l-px { font-size: 19px; line-height: 1.15; color: var(--bz-accent); }
+#baoz-system-panel .bz-lin .l-t .l-dd { white-space: nowrap; }
+#baoz-system-panel .bz-lin .l-t .l-nm { color: var(--bz-muted); font-size: 12px; min-width: 0; }
+#baoz-system-panel .bz-lin .l-t.none .l-px { color: var(--bz-muted); }
+#baoz-system-panel .bz-lin .l-t.none { opacity: .7; }
+#baoz-system-panel .bz-lin .l-t.off .l-px { text-decoration: line-through; color: var(--bz-muted); }
+#baoz-system-panel .bz-lin .l-t.near { border-color: var(--bz-attn); box-shadow: inset 0 0 0 1px var(--bz-attn); }
+#baoz-system-panel .bz-lin .l-t.near .l-dd { color: var(--bz-attn); font-weight: 700; }
+#baoz-system-panel .bz-lin .l-t.hit { border-color: var(--bz-accent); background: rgba(117,211,255,.18); }
+#baoz-system-panel .bz-lin .l-t.hit .l-dd { color: var(--bz-accent); font-weight: 700; }
+#baoz-system-panel .bz-lin .l-pos { margin-top: 8px; padding: 6px 10px; border-radius: 6px; border: 1.5px solid var(--bz-accent); background: rgba(117,211,255,.08); font-size: 13.5px; }
+#baoz-system-panel .bz-lin .l-pos .up { color: var(--bz-up); }
+#baoz-system-panel .bz-lin .l-pos .down { color: var(--bz-down); }
+#baoz-system-panel .bz-lin .l-win { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 7px; font-size: 12.5px; }
+#baoz-system-panel .bz-lin .ok { color: var(--bz-down); }
+#baoz-system-panel .bz-lin .no { color: var(--bz-attn); }
+#baoz-system-panel .bz-lin .l-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 8px; font-size: 12px; }
+#baoz-system-panel .bz-lin .l-steps span { padding: 1px 8px; border: 1px solid var(--bz-line); border-radius: 10px; color: var(--bz-muted); white-space: nowrap; }
+#baoz-system-panel .bz-lin .l-steps span.on { border-color: var(--bz-accent); background: rgba(117,211,255,.16); color: var(--bz-ink); font-weight: 700; }
+#baoz-system-panel .bz-lin .l-steps i { font-style: normal; color: var(--bz-muted); }
+#baoz-system-panel .bz-lin .l-stx { margin-top: 3px; font-size: 12.5px; }
+#baoz-system-panel .bz-lin .l-chk { margin: 7px 0 0; padding: 0; list-style: none; font-size: 12px; columns: 2 18em; column-gap: 16px; }
+#baoz-system-panel .bz-lin .l-chk li { break-inside: avoid; padding: 1px 0; }
+#baoz-system-panel .bz-lin .l-chk li.h { font-weight: 700; color: var(--bz-ink); }
+#baoz-system-panel .bz-lin .l-flt { margin-top: 5px; font-size: 12px; color: var(--bz-attn); }
+#baoz-system-panel .bz-lin .l-near { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 5px; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-lin .l-near .res b { color: var(--bz-up); font-weight: 600; }
+#baoz-system-panel .bz-lin .l-near .sup b { color: var(--bz-down); font-weight: 600; }
+#baoz-system-panel .bz-lin .l-foot { margin-top: 5px; font-size: 11px; color: var(--bz-muted); }
+@media (max-width: 640px) {
+  #baoz-system-panel .bz-lin .l-t { grid-template-columns: auto auto minmax(0, 1fr); }
+  #baoz-system-panel .bz-lin .l-t .l-nm { grid-column: 1 / -1; }
+  #baoz-system-panel .bz-lin .l-dir > b { font-size: 20px; }
+}
+/* 價位梯子：林式撐壓小標 */
+#baoz-system-panel .bz-lad-m.lin { display: inline-block; margin-right: 4px; padding: 0 4px; border: 1px solid currentColor; border-radius: 4px; font-weight: 700; line-height: 15px; }
+#baoz-system-panel .bz-lad-m.lin.t1 { border-width: 2px; background: rgba(255,255,255,.07); }
+#baoz-system-panel .bz-lad-m.lin.off { opacity: .45; text-decoration: line-through; }
+#baoz-system-panel .bz-lad-m.lin.chop { border-style: dashed; opacity: .65; }
+/* 價位梯子：林式分界、林式2 進場價（B 實線、A 虛線）、林式2 持有 */
+#baoz-system-panel .bz-lad-r.ln.l2p { border-top: 2px dotted var(--bz-attn); }
+#baoz-system-panel .bz-lad-r.ln.l2p .k, #baoz-system-panel .bz-lad-r.ln.l2p .x { color: var(--bz-attn); font-weight: 700; }
+#baoz-system-panel .bz-lad-r.ln.l2e { border-top: 2px solid var(--bz-accent); min-height: 17px; }
+#baoz-system-panel .bz-lad-r.ln.l2e.a { border-top-style: dashed; }
+#baoz-system-panel .bz-lad-r.ln.l2e .k, #baoz-system-panel .bz-lad-r.ln.l2e .f, #baoz-system-panel .bz-lad-r.ln.l2e .x { color: var(--bz-accent); font-weight: 700; }
+#baoz-system-panel .bz-lad-r.ln.l2e.dim { opacity: .5; }
+#baoz-system-panel .bz-lad-r.ln.l2e.hit { background: rgba(117,211,255,.18); animation: z44blink 1s 8; }
+#baoz-system-panel .bz-lad-r.ln.l2pe { border-top: 2px solid var(--bz-accent); }
+#baoz-system-panel .bz-lad-r.ln.l2pe .x, #baoz-system-panel .bz-lad-r.ln.l2pe .k { color: var(--bz-accent); font-weight: 700; }
+#baoz-system-panel .bz-lad-r.ln.l2ps { border-top: 1.5px dashed var(--bz-up); }
+#baoz-system-panel .bz-lad-r.ln.l2ps .x { color: var(--bz-up); }
+#baoz-system-panel .bz-lad-r.ln.l2pt { border-top: 1.5px dashed var(--bz-down); }
+#baoz-system-panel .bz-lad-r.ln.l2pt .x { color: var(--bz-down); }
+@keyframes z44flash { 50% { box-shadow: 0 0 0 3px rgba(117,211,255,.65); } }
+@keyframes z44blink { 50% { background: rgba(117,211,255,.42); } }
+@media (prefers-reduced-motion: reduce) { #baoz-system-panel .bz-lin[data-flash], #baoz-system-panel .bz-lad-r.ln.l2e.hit { animation: none; } }
+</style>
+<script id="z31-baoz-lin-ui-1-4-44-js">
+/* BaoZ UI 1.4.44：林式撐壓（Argon V1.2.56 [即時分析] 第 80–87 列）→ 價位梯子＋「林式進場時機」。
+   只讀價位梯子已經讀到的近月快照（baoz_realtime/near），不另外連 Firebase、不寫任何東西。 */
+(function () {
+  'use strict';
+  var STEP = 50, NEAR = 20, STALE_MS = 3 * 60000, RECENT_MS = 15 * 60000;
+  var TW = ['', '①', '②', '③', '④'];
+  var STEPS = ['盤前定調', '盤中判斷', '等進場', '持有風控'];
+  var C = { el: null, html: '', seen: {}, recent: [], flashUntil: 0, first: true };
+
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(v) { if (v === null || v === undefined || v === '' || typeof v === 'boolean' || typeof v === 'object') return null; var n = Number(String(v).replace(/,/g, '')); return Number.isFinite(n) ? n : null; }
+  function fmt(v) { return v == null ? '—' : Math.round(v).toLocaleString('en-US'); }
+  function sgn(v) { v = Math.round(Number(v) || 0); return (v > 0 ? '+' : (v < 0 ? '−' : '±')) + Math.abs(v).toLocaleString('en-US'); }
+  function txt(v) { return typeof v === 'string' ? v.trim() : (typeof v === 'number' && Number.isFinite(v) ? String(v) : ''); }
+  function list(v) {
+    if (Array.isArray(v)) return v.filter(function (x) { return x != null; });
+    if (v && typeof v === 'object') return Object.keys(v).sort(function (a, b) { return Number(a) - Number(b); }).map(function (k) { return v[k]; }).filter(function (x) { return x != null; });
+    return [];
+  }
+  /* [即時分析] 第 n 列的 A–D 欄（Firebase 可能把陣列變成 {"0":…}，空格可能不見，所以用位置取） */
+  function cellsOf(d, n) {
+    var rs = list(d && d.analysis_rows);
+    for (var i = 0; i < rs.length; i++) {
+      var r = rs[i];
+      if (r && Number(r.row) === n) { var c = r.cells || {}; return [txt(c[0]), txt(c[1]), txt(c[2]), txt(c[3])]; }
+    }
+    return null;
+  }
+  function trg(v) { if (!v) return null; var a = v.split('~'), p = num(a[0]); return p == null ? null : { px: p, tier: num(a[1]) || 0, nm: a.slice(2).join(' ') }; }
+  function hitOf(v) { if (!v) return null; var a = v.split('~'), p = num(a[1]); return /^[AB]$/.test(a[0]) ? { md: a[0], px: p } : null; }
+  function posOf(v) { if (!v) return null; var a = v.split('~'), e = num(a[1]); return e == null ? null : { kind: a[0], entry: e, stop: num(a[2]), tgt: num(a[3]), t: a[4] || '' }; }
+  /* 第 87 列：LIN2|v=1|mode=…|lv=階,角色,原本,色,K低,K高,旗標,名稱;… */
+  function parse(s) {
+    s = txt(s);
+    if (!/^LIN2\|/.test(s)) return null;
+    var o = {}, parts = s.split('|'), i;
+    for (i = 1; i < parts.length; i++) { var p = parts[i], j = p.indexOf('='); if (j > 0) o[p.slice(0, j)] = p.slice(j + 1); }
+    var L = { mode: num(o.mode) || 0, w: num(o.w) || 25, cb: num(o.cb), px: num(o.px), syn: num(o.syn), reg: num(o.reg) || 0,
+              piv: num(o.piv), pivf: num(o.pivf), step: num(o.step) || 0, chk: num(o.chk), gap: num(o.gap), f11: o.f11 || '',
+              sess: o.sess === '1', win: o.win === '1', wins: o.wins || '', sl: num(o.sl), stopP: num(o.stopP),
+              bL: trg(o.bL), aL: trg(o.aL), fatL: o.fatL === '1', hitL: hitOf(o.hitL), bS: trg(o.bS), aS: trg(o.aS), fatS: o.fatS === '1', hitS: hitOf(o.hitS),
+              vS: posOf(o.vS), vL: posOf(o.vL), lv: [] };
+    (o.lv || '').split(';').forEach(function (x) {
+      var a = x.split(','); if (a.length < 8) return;
+      var lo = num(a[4]), hi = num(a[5]); if (lo == null || hi == null) return;
+      L.lv.push({ tier: num(a[0]) || 0, role: num(a[1]) || 0, nat: num(a[2]) || 0, bd: num(a[3]) || 0, kLo: Math.min(lo, hi), kHi: Math.max(lo, hi), f: a[6] || '', nm: a.slice(7).join(' ') });
+    });
+    return L;
+  }
+  function shortNm(nm) { return String(nm || '').replace(/（[^）]*）/g, '').replace(/\s*[\d,]{4,7}(?:\s*[–－~-]\s*[\d,]{4,7})?\s*$/, '').trim(); }
+  function roleW(r) { return r < 0 ? '壓' : (r > 0 ? '撐' : ''); }
+  function flagW(v) {
+    return (v.f.indexOf('f') >= 0 ? (v.role < 0 ? '（原撐）' : '（原壓）') : '') + (v.f.indexOf('c') >= 0 ? ' 黏線暫停' : '') + (v.f.indexOf('v') >= 0 ? ' 跳空作廢' : '');
+  }
+  function tipOf(v, L) {
+    var w = L.w, cb = L.cb != null ? L.cb : 0;
+    return '林式' + TW[v.tier] + roleW(v.role) + '：' + v.nm + '｜期貨 ' + fmt(v.kLo + cb - w) + '–' + fmt(v.kHi + cb + w) + '（±' + w + '）' +
+      (v.f.indexOf('f') >= 0 ? '｜角色互換：' + (v.role < 0 ? '原本是支撐，跌破後變壓力' : '原本是壓力，突破後變支撐') : '') +
+      (v.f.indexOf('c') >= 0 ? '｜黏線：60 分鐘來回穿過太多次，暫停使用' : '') + (v.f.indexOf('v') >= 0 ? '｜開盤跳空：暴Z表點位作廢' : '');
+  }
+  function dvNear(M, k) {
+    for (var i = 0; i < M.marks.length; i++) { var mk = M.marks[i]; if (mk && /^dv[AB]$/.test(mk.line || '') && Math.abs(mk.k - k) <= 5) return mk; }
+    return null;
+  }
+
+  /* 價位梯子的 model() 最後呼叫：讀第 80–87 列；AI 影子計畫的線先不畫；把林式分界、進場價、持有的線放進 M.marks */
+  function model(d, M) {
+    var X = { L: null, rows: {}, ver: txt(d && d.source && d.source.version), badges: [] }, n;
+    for (n = 80; n <= 87; n++) X.rows[n] = cellsOf(d, n);
+    M.marks = M.marks.filter(function (mk) { return !mk || mk.line !== 'ai'; });   /* AI 即時分析先不顯示：梯子上的 AI 影子計畫也不畫 */
+    var L = X.L = parse(X.rows[87] && X.rows[87][2]);
+    if (!L || L.px == null) { X.L = null; return X; }
+    var b = M.basis, sideW = function (sd) { return sd === 'S' ? '空' : '多'; };
+    if (L.piv) {
+      var pm = dvNear(M, L.piv), pt = L.reg < 0 ? '下面只做空' : (L.reg > 0 ? '上面只做多' : '方向還沒定');
+      if (pm) { pm.t += '＝林式分界（' + pt + '）'; pm.tip = (pm.tip || '') + '｜林式分界：林式 v1、林式2 共用'; }
+      else M.marks.push({ k: L.piv, line: 'dvL2 l2p', t: '林式分界（上一盤即時表）：' + pt, tip: '期貨 ' + fmt(L.pivf) + '｜林式 v1、林式2 共用；合成在下面只做空、在上面只做多' });
+    }
+    L.lv.forEach(function (v) {
+      if (v.tier === 2) {
+        var mk = dvNear(M, v.kLo);
+        if (mk) { if (!/林②/.test(mk.t)) { mk.t += '｜林②' + roleW(v.role) + flagW(v); mk.tip = (mk.tip || '') + '｜' + tipOf(v, L); } return; }
+        if (L.piv && Math.abs(v.kLo - L.piv) <= 5) {
+          M.marks.forEach(function (m2) { if (m2 && m2.line === 'dvL2 l2p') m2.t += '｜林②' + roleW(v.role) + flagW(v); });
+          return;
+        }
+      }
+      X.badges.push(v);
+    });
+    if (L.mode > 0) {
+      (L.reg < 0 ? ['S'] : (L.reg > 0 ? ['L'] : ['S', 'L'])).forEach(function (sd) {
+        var S = sd === 'S', p = L['v' + sd], nm = sideW(sd);
+        if (p) {
+          if (p.kind === '開' && M.pos) return;   /* 實單已經有 Argon 持倉的線 */
+          var who = '林式2 ' + (p.kind === '開' ? '' : '影子') + nm;
+          M.marks.push({ k: p.entry - b, fut: p.entry, line: 'dvL2 l2pe', t: who + ' 持倉：進場' + (p.t ? ' ' + p.t : ''), tip: '期貨價' + (p.kind === '開' ? '' : '（影子，不下單）') });
+          if (p.stop != null) M.marks.push({ k: p.stop - b, fut: p.stop, line: 'dvL2 l2ps', t: who + ' 停損', tip: '期貨價' });
+          if (p.tgt != null) M.marks.push({ k: p.tgt - b, fut: p.tgt, line: 'dvL2 l2pt', t: who + ' 目標', tip: '期貨價' });
+          return;
+        }
+        var dim = L.reg === 0 || L.f11 === sd || !L.win || !L.sess, hit = L['hit' + sd], fat = L['fat' + sd];
+        var bt = L['b' + sd], at = L['a' + sd];
+        if (bt) M.marks.push({ k: bt.px - b, fut: bt.px, line: 'dvL2 l2e b' + (dim ? ' dim' : '') + (hit && hit.md === 'B' ? ' hit' : ''),
+          t: (hit && hit.md === 'B' ? '⚡ ' : '') + '林式2 ' + nm + ' B：' + (S ? '反彈到這裡空' : '回檔到這裡多') + '（' + TW[bt.tier] + shortNm(bt.nm) + '）',
+          tip: 'B 前緣預掛：' + (S ? '價格往上碰到這個價就空' : '價格往下碰到這個價就多') + '｜' + bt.nm });
+        if (at) M.marks.push({ k: at.px - b, fut: at.px, line: 'dvL2 l2e a' + (dim || fat ? ' dim' : '') + (hit && hit.md === 'A' ? ' hit' : ''),
+          t: (hit && hit.md === 'A' ? '⚡ ' : '') + '林式2 ' + nm + ' A：' + (S ? '跌破這裡追空' : '站上這裡追多') + (fat ? '（過肥：不追）' : '') + '（' + TW[at.tier] + shortNm(at.nm) + '）',
+          tip: 'A 破位觸價：' + (S ? '價格跌破這個價就空' : '價格站上這個價就多') + '｜' + at.nm });
+      });
+    }
+    return X;
+  }
+
+  /* 價位梯子的 rowsOf() 呼叫：①③④ 層的小標放在最接近的履約價列；梯子外的放到「梯子範圍外」 */
+  function rows(M, by, out) {
+    var X = M.lin;
+    if (!X || !X.L) return;
+    X.badges.slice().sort(function (a, b) { return b.tier - a.tier; }).forEach(function (v) {
+      var mid = (v.kLo + v.kHi) / 2, k = Math.round(mid / STEP) * STEP, r = by[k];
+      var t = '林' + TW[v.tier] + roleW(v.role) + ' ' + shortNm(v.nm) + flagW(v);
+      if (!r) { (mid > M.syn ? out.up : out.dn).push(t + ' ' + fmt(mid) + '（' + sgn(mid - M.syn) + '）'); return; }
+      r.imp = true;
+      r.ms.unshift({ cls: 'lin t' + v.tier + (v.role < 0 ? ' res' : (v.role > 0 ? ' sup' : '')) + (v.f.indexOf('v') >= 0 ? ' off' : '') + (v.f.indexOf('c') >= 0 ? ' chop' : ''), t: t, tip: tipOf(v, X.L) });
+    });
+  }
+
+  /* 價位梯子右邊「怎麼看」前面加一格林式說明 */
+  function side(M) {
+    var X = M.lin;
+    if (!X || !X.L) return '';
+    return '<div class="bz-lad-box"><div class="h">林式撐壓（林宏杰四層，Argon B122 ' + ['關', '影子', '開'][X.L.mode] + '）</div><div class="bz-lad-leg">' +
+      '<span><b class="bz-lad-m lin res">林③壓</b>壓力</span><span><b class="bz-lad-m lin sup">林③撐</b>支撐</span>' +
+      '<span><i style="border-top:2px dotted #f3cd7c;height:0;width:14px"></i>林式分界</span>' +
+      '<span><i style="border-top:2px solid #75d3ff;height:0;width:14px"></i>B 預掛價</span><span><i style="border-top:2px dashed #75d3ff;height:0;width:14px"></i>A 破位價</span></div>' +
+      '<div class="bz-lad-out">①重疊區 ②分界 ③單側紅黃藍 ④極限（代理）。期貨＝履約價＋換算差，每層 ±' + X.L.w + ' 點。（原撐）＝跌破後變壓力；劃掉＝跳空作廢；虛框＝黏線暫停。依 Neon 報告＋盤中 SOP，沒有回測過。</div></div>';
+  }
+
+  /* ---------------- 左欄最上面：林式進場時機 ---------------- */
+  function hm(m) { m = ((m % 1440) + 1440) % 1440; return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); }
+  function winsOf(spec) {
+    var out = [];
+    String(spec || '').split(/[,，]/).forEach(function (w) { var m = /^(\d{1,2}):?(\d{2})\s*[-–~]\s*(\d{1,2}):?(\d{2})$/.exec(w.trim()); if (m) out.push([+m[1] * 60 + +m[2], +m[3] * 60 + +m[4]]); });
+    return out;
+  }
+  function inW(w, n) { return w[0] <= w[1] ? n >= w[0] && n < w[1] : (n >= w[0] || n < w[1]); }
+  function twMin(ms) { var t = new Date(ms + 8 * 3600000); return t.getUTCHours() * 60 + t.getUTCMinutes(); }
+
+  function trgRow(L, sd, kind) {
+    var act = L.reg !== 0 && L.f11 !== sd && L.win && L.sess;   /* 只有能進場的那一邊才標「快到了」 */
+    var S = sd === 'S', t = L[(kind === 'B' ? 'b' : 'a') + sd], hit = L['hit' + sd], fat = L['fat' + sd];
+    var lb = kind === 'B' ? (S ? 'B 反彈空（預掛）' : 'B 回檔多（預掛）') : (S ? 'A 跌破追空' : 'A 站上追多');
+    var tip = kind === 'B' ? (S ? '價格往上碰到這個價就空（限價預掛）；原撐轉壓要先跌出帶子再反彈' : '價格往下碰到這個價就多（限價預掛）；原壓轉撐要先站出帶子再回檔')
+                           : (S ? '價格跌破①②支撐帶下緣就空；Put 過肥不追' : '價格站上①②壓力帶上緣就多；過肥不追');
+    if (!t) return '<div class="l-t none" title="' + esc(tip) + '"><span class="l-lb">' + lb + '</span><b class="l-px">—</b><span class="l-dd"></span><span class="l-nm">' +
+      (kind === 'B' ? (S ? '上面沒有可以預掛的壓力' : '下面沒有可以預掛的支撐') : (S ? '下面沒有①②支撐可以破' : '上面沒有①②壓力可以破')) + '</span></div>';
+    var d = kind === 'B' ? (S ? t.px - L.px : L.px - t.px) : (S ? L.px - t.px : t.px - L.px);
+    var mv = S === (kind === 'B') ? '漲' : '跌', isHit = hit && hit.md === kind, off = kind === 'A' && fat;
+    var dd = isHit ? '⚡ 觸發 ' + fmt(hit.px) : (d > 0 ? '還要' + mv + ' <b>' + fmt(d) + '</b> 點' : '已過 ' + fmt(-d) + ' 點');
+    return '<div class="l-t ' + kind.toLowerCase() + (isHit ? ' hit' : '') + (act && !isHit && !off && d > 0 && d <= NEAR ? ' near' : '') + (off ? ' off' : '') + '" title="' + esc(tip) + '">' +
+      '<span class="l-lb">' + lb + '</span><b class="l-px">' + fmt(t.px) + '</b><span class="l-dd">' + dd + '</span><span class="l-nm">' + TW[t.tier] + esc(t.nm) + (off ? '｜過肥：不追' : '') + '</span></div>';
+  }
+
+  function cardHtml(M, now) {
+    var X = M.lin, at = M.at || 0, ageM = at ? Math.max(0, Math.round((now - at) / 60000)) : null, stale = !!(at && now - at > STALE_MS);
+    var L = X && X.L, md = L ? L.mode : -1;
+    var hd = '<div class="l-hd"><strong>林式進場時機</strong>' +
+      (md === 2 ? '<span class="l-md m2" title="控制台 B122＝開：取代現行進場和 B116 林式">B122 開：觸發就下實單</span>'
+       : md === 1 ? '<span class="l-md m1" title="控制台 B122＝影子：只算虛擬單、寫紀錄頁「林式2」，不下單">B122 影子：只算虛擬單，不下單</span>'
+       : md === 0 ? '<span class="l-md" title="控制台 B122＝關">B122 關：只顯示撐壓，不算進場</span>' : '') +
+      '<span class="l-age' + (stale ? ' old' : '') + '">' + (ageM == null ? '' : (stale ? '資料 ' + ageM + ' 分鐘前（舊）：先不要照這個進場' : (ageM < 1 ? '剛更新' : ageM + ' 分鐘前'))) + '</span></div>';
+    if (!L) return { stale: stale, html: hd + '<div class="l-none">Argon 還沒送林式資料：要升到 Argon V1.2.56 才有' + (X && X.ver ? '（現在 ' + esc(X.ver) + '）' : '') + '。</div>' };
+    var h = hd, nowM = twMin(now);
+    /* 觸發（這一筆快照）／最近 15 分鐘觸發過 */
+    var hits = [];
+    ['S', 'L'].forEach(function (sd) {
+      var x = L['hit' + sd];
+      if (!x) return;
+      var p = L['v' + sd];
+      hits.push('⚡ 觸發：林式2 ' + (sd === 'S' ? '空' : '多') + ' ' + x.md + (x.md === 'B' ? ' 前緣預掛 ' : ' 破位 ') + fmt(x.px) +
+        (p ? ' → ' + (p.kind === '開' ? '實單' : '影子') + (sd === 'S' ? '空 ' : '多 ') + fmt(p.entry) : (md === 0 ? '（B122 關，不進場）' : '')));
+    });
+    C.recent = C.recent.filter(function (r) { return now - r.at < RECENT_MS; });
+    if (hits.length) h += '<div class="l-hit">' + hits.map(esc).join('<br>') + '</div>';
+    else if (C.recent.length) h += '<div class="l-hit old">最近觸發：' + C.recent.map(function (r) { return esc(r.t + ' ' + r.txt); }).join('｜') + '</div>';
+    /* 方向 */
+    var dcls = L.reg < 0 ? 's' : (L.reg > 0 ? 'l' : 'n'), dw = L.reg < 0 ? '只做空' : (L.reg > 0 ? '只做多' : '還沒定方向'), sub = [];
+    if (L.pivf) sub.push('林式分界 期貨 ' + fmt(L.pivf) + '｜現價 ' + fmt(L.px) + (L.px < L.pivf ? ' 在下 ' : ' 在上 ') + fmt(Math.abs(L.px - L.pivf)) + ' 點');
+    else sub.push('還沒有林式分界（上一盤即時表 Kdiv）');
+    if (L.reg === 0) sub.push('等價格離開分界、第一根 K 定方向');
+    var warn = [];
+    if (L.gap != null) warn.push('開盤跳空 ' + sgn(L.gap) + '：暴Z表點位作廢，只看即時表');
+    if (L.f11 === 'S') warn.push('11:00 空方控盤失敗：今天不再做空');
+    if (L.f11 === 'L') warn.push('11:00 多方控盤失敗：今天不再做多');
+    if (!L.sess) warn.push('現在不是交易時段');
+    h += '<div class="l-dir ' + dcls + '"><b>' + dw + '</b><span>' + sub.map(esc).join('｜') + '</span>' + (warn.length ? '<span class="warn">' + warn.map(esc).join('｜') + '</span>' : '') + '</div>';
+    /* 進場價：定方向後只顯示那一邊；還沒定方向兩邊都列（淡） */
+    var sides = L.reg < 0 ? ['S'] : (L.reg > 0 ? ['L'] : ['S', 'L']);
+    sides.forEach(function (sd) {
+      var p = L['v' + sd], S = sd === 'S';
+      if (p) {
+        var pl = S ? p.entry - L.px : L.px - p.entry;
+        h += '<div class="l-pos"><b>' + (p.kind === '開' ? '實單' : '影子') + (S ? '空 ' : '多 ') + fmt(p.entry) + '</b>' + (p.t ? '（' + esc(p.t) + ' 進場）' : '') +
+          '｜停損 ' + fmt(p.stop) + '｜目標 ' + fmt(p.tgt) + '｜現在 <b class="' + (pl >= 0 ? 'up' : 'down') + '">' + sgn(pl) + '</b> 點' + (p.kind === '開' ? '' : '（影子，不下單）') + '</div>';
+        return;
+      }
+      h += '<div class="l-side ' + (S ? 's' : 'l') + (L.reg === 0 || L.f11 === sd ? ' dim' : '') + '">' + (sides.length > 1 || L.f11 === sd ? '<div class="h">' + (S ? '做空' : '做多') + (L.f11 === sd ? '（11:00 控盤失敗，今天不做）' : '') + '</div>' : '') +
+        trgRow(L, sd, 'B') + trgRow(L, sd, 'A') + '</div>';
+    });
+    /* 時段、停損 */
+    var ws = winsOf(L.wins), wt = ws.length ? ws.map(function (w) { return hm(w[0]) + '–' + hm(w[1]); }).join('、') : esc(L.wins), cur = null, nxt = null;
+    ws.forEach(function (w) { if (inW(w, nowM)) cur = w; });
+    ws.slice().sort(function (a, b) { return ((a[0] - nowM + 1440) % 1440) - ((b[0] - nowM + 1440) % 1440); }).forEach(function (w) { if (!nxt && w[0] !== nowM) nxt = w; });
+    h += '<div class="l-win"><span class="' + (L.win ? 'ok' : 'no') + '">' + (L.win ? '√ 現在是進場時段' + (cur ? '（到 ' + hm(cur[1]) + '）' : '') : '× 現在不是進場時段' + (nxt ? '（下一段 ' + hm(nxt[0]) + ' 開始）' : '')) + '</span>' +
+      '<span title="盤中 SOP：避開 08:45–09:30 程式單雙巴、10:30–11:00 休兵；夜盤 21:00 起是 Claude 自己取的（B126 可以改）">進場時段 ' + wt + '</span>' +
+      (L.sl != null ? '<span>停損 進場價×' + L.sl.toFixed(2) + '％' + (L.stopP != null ? '（約 ' + fmt(L.stopP) + ' 點）' : '') + '</span>' : '') + '</div>';
+    /* 目前步驟（盤中 SOP 第 1–4 步） */
+    var stx = X.rows[84] ? X.rows[84][2] : '';
+    h += '<div class="l-steps">' + STEPS.map(function (t, i) { return '<span' + (i + 1 === L.step ? ' class="on"' : '') + '>' + (i + 1) + ' ' + t + '</span>'; }).join('<i>›</i>') + '</div>' +
+      (stx ? '<div class="l-stx">' + esc(stx) + '</div>' : '');
+    /* 30 秒檢核 */
+    var ck = X.rows[85];
+    if (ck && ck[2]) {
+      h += '<ul class="l-chk"><li class="h">30 秒檢核 ' + esc(ck[1]) + '</li>' + ck[2].split('｜').map(function (x) {
+        x = x.trim(); return x ? '<li class="' + (/^√/.test(x) ? 'ok' : (/^×/.test(x) ? 'no' : '')) + '">' + esc(x) + '</li>' : '';
+      }).join('') + '</ul>';
+    }
+    /* 濾網（有才顯示） */
+    var fl = X.rows[86];
+    if (fl && fl[1] === '有') h += '<div class="l-flt">濾網：' + esc(fl[2].split('｜').filter(function (x) { return !/^黏線＝/.test(x.trim()); }).join('｜')) + '</div>';
+    /* 最近的壓力、支撐（梯子上有完整的） */
+    var r81 = X.rows[81] && X.rows[81][2], r82 = X.rows[82] && X.rows[82][2], nr = [];
+    if (r81 && r81 !== '沒有') nr.push('<span class="res">▲ 最近壓力 <b>' + esc(r81.split('｜')[0]) + '</b></span>');
+    if (r82 && r82 !== '沒有') nr.push('<span class="sup">▼ 最近支撐 <b>' + esc(r82.split('｜')[0]) + '</b></span>');
+    if (nr.length) h += '<div class="l-near">' + nr.join('') + '</div>';
+    h += '<div class="l-foot">林宏杰四層撐壓（Neon 逆向報告＋盤中 SOP），沒有回測過。' + (md === 2 ? '' : '實單照下面 Argon 那一塊。') + '梯子上有林式撐壓和這些進場價。</div>';
+    return { stale: stale, html: h, hits: hits };
+  }
+
+  function panel() { return document.getElementById('baoz-system-panel'); }
+  function place(P) {
+    var after = P.querySelector(':scope > #bz-banner') || P.querySelector(':scope > .bz-source');
+    if (C.el.parentNode !== P || (after && C.el.previousElementSibling !== after) || (!after && P.firstElementChild !== C.el)) {
+      if (after) P.insertBefore(C.el, after.nextSibling); else P.insertBefore(C.el, P.firstChild);
+    }
+  }
+  /* 價位梯子的 paint() 每次畫完呼叫；unmount() 呼叫 card(null) */
+  function card(M, now) {
+    if (!M) { if (C.el) { C.el.remove(); C.el = null; C.html = ''; } return; }
+    var P = panel();
+    if (!P) return;
+    now = now || Date.now();
+    var X = M.lin, L = X && X.L;
+    if (L) {   /* 新的觸發：閃 8 秒、記 15 分鐘（第一次打開頁面看到的不閃） */
+      ['S', 'L'].forEach(function (sd) {
+        var x = L['hit' + sd];
+        if (!x) return;
+        var key = sd + x.md + x.px;
+        if (C.seen[key] && now - C.seen[key] < RECENT_MS) return;
+        C.seen[key] = now;
+        if (!C.first) C.flashUntil = now + 8000;
+        C.recent.unshift({ at: now, t: hm(twMin(M.at || now)), txt: (sd === 'S' ? '空 ' : '多 ') + x.md + ' ' + fmt(x.px) });
+        C.recent = C.recent.slice(0, 3);
+      });
+    }
+    C.first = false;
+    if (!C.el) { C.el = document.createElement('section'); C.el.className = 'bz-lin'; C.el.setAttribute('aria-label', '林式進場時機'); C.el.setAttribute('data-z1444', '1'); }
+    place(P);
+    var H = cardHtml(M, now);
+    if (H.html !== C.html) { C.el.innerHTML = H.html; C.html = H.html; }
+    if (H.stale) C.el.setAttribute('data-stale', '1'); else C.el.removeAttribute('data-stale');
+    if (now < C.flashUntil && !H.stale) C.el.setAttribute('data-flash', '1'); else C.el.removeAttribute('data-flash');
+  }
+  /* 主程式重畫面板時接回來 */
+  window.setInterval(function () { if (C.el && !C.el.isConnected) { var P = panel(); if (P) place(P); } }, 1000);
+
+  window.BZ_LIN1444 = { model: model, rows: rows, side: side, card: card, parse: parse };
+})();
+</script>
+<!-- Z31_BAOZ_LIN_UI_1_4_44_END -->
+<!-- Z31_BAOZ_LIN_UI_1_4_44 -->
 </body>
 </html>
