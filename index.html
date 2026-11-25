@@ -10989,9 +10989,9 @@ body.z31-sticky-off #v2-live-page .v2-core-grid {
   //   研究用、還沒有經過市場驗證：只顯示，不影響 Argon、不影響實單。沒有 flow＝不顯示（版面和 1.4.38 一樣）
   function flowCard(p) {
     const box=$('bz-flow');if(!box)return;box.replaceChildren();
-    if(p&&p.source&&p.source.session==='DAY'){
+    if(p&&p.source&&['DAY','NIGHT'].includes(p.source.session)){
       const v=window.baozR16DayView?window.baozR16DayView(p,Date.now()):null;
-      box.append(el('span','bz-flow-h','主力心態 V1（日盤・研究）'),el('span','bz-flow-tag bz-flow-'+(v&&!v.old?v.rg.toLowerCase():'off'),v?v.label:'UNKNOWN'));
+      box.append(el('span','bz-flow-h','主力心態 V1（日／夜盤・研究）'),el('span','bz-flow-tag bz-flow-'+(v&&!v.old?v.rg.toLowerCase():'off'),v?v.label:'UNKNOWN'));
       if(v)v.items.forEach(it=>box.append(el('span','bz-flow-i',it[0]+' '+it[1])));
       box.title=v?v.tip:'R16 UNKNOWN';box.classList.toggle('bz-flow-old',!v||v.old);box.hidden=false;return;
     }
@@ -16580,11 +16580,13 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel .bz-x3g-gs .bz-gauge-cap >
 /* R16 RC2 display-only preview. Never upgrades the formal direction. */
 window.baozR16DayView = function(p, now) {
   var src=p&&p.source, v=p&&p.day_mind_v1;
-  if(!src||src.session!=='DAY')return null;
+  if(!src||!['DAY','NIGHT'].includes(src.session))return null;
+  var night=src.session==='NIGHT';
   var stamp=typeof src.generated_at_ms==='number'?src.generated_at_ms:NaN;
   var fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'});
   var parts=fmt.formatToParts(new Date(now)), get=k=>parts.find(x=>x.type===k)?.value;
-  var session=get('year')+get('month')+get('day')+'_D';
+  var local=new Date(now+8*3600000); if(night&&local.getUTCHours()<6)local=new Date(local.getTime()-86400000);
+  var session=local.toISOString().slice(0,10).replace(/-/g,'')+(night?'_N':'_D');
   var fresh=x=>{var dt=new Date(typeof x==='string'?x.replace(' ','T')+'+08:00':'').getTime();return Number.isFinite(stamp)&&now-stamp>=0&&now-stamp<=120000&&Number.isFinite(dt)&&now-dt>=0&&now-dt<=120000;};
   var envelope=!!(v&&v.schema==='baoz-day-mind.v1'&&v.version==='R16-DAY-MIND-INTEGRATION-V1'&&v.authority===0&&v.session===session);
   var ok=envelope&&v.valid===true&&fresh(v.sampled_at)&&[-1,0,1].includes(v.direction);
@@ -16598,13 +16600,14 @@ window.baozR16DayView = function(p, now) {
   var attack=ok?v.short_attack:preview?q.estimated_attack:null;
   var st=ok?v.short_strength:preview?q.estimated_strength:null;
   var change=ok?v.short_change:preview?q.estimated_change:null;
-  var e6=ok?v.e6:preview?q.e6:null;
-  var rel=ok?v.e6_relation:preview?q.e6_relation:null;
+  var e6=ok?(night?v.e5:v.e6):preview?(night?q.e5:q.e6):null;
+  var rel=ok?(night?v.e5_relation:v.e6_relation):preview?(night?q.e5_relation:q.e6_relation):null;
   var reason=v&&typeof v.reason==='string'?v.reason:'MISSING';
-  var items=[['資格',ok?'來源合格':preview?'未驗源・不可交易':'未知','',''],['持續',Number.isInteger(dur)&&dur>0?dur+'分':'—','',''],['攻擊',d(attack),'',''],['力道',strength[st]||'—','',''],['變化',changes[change]||'—','',''],['E6',typeof e6==='number'&&Number.isFinite(e6)?String(e6)+(rel==='ALIGNED'?' 同向':rel==='OPPOSED'?' 反向':''):'—','','']];
+  var items=[['資格',ok?'來源合格':preview?'未驗源・不可交易':'未知','',''],['持續',Number.isInteger(dur)&&dur>0?dur+'分':'—','',''],['攻擊',d(attack),'',''],['力道',strength[st]||'—','',''],['變化',changes[change]||'—','',''],[night?'E5':'E6',typeof e6==='number'&&Number.isFinite(e6)?String(e6)+(rel==='ALIGNED'?' 同向':rel==='OPPOSED'?' 反向':''):'—','','']];
   var label=side===1?'偏多':side===-1?'偏空':side===0?'未確認':'UNKNOWN';
+  if(!ok&&!preview&&night)label=reason==='NIGHT_E5_MISSING'?'UNKNOWN｜缺今晚 E5':reason==='NIGHT_E5_STALE'?'UNKNOWN｜E5 過期':reason==='NIGHT_WARMUP_OR_FROZEN_QC_INVALID'?'UNKNOWN｜暖機／資料不合格':'UNKNOWN｜夜盤資料未確認';
   if(preview)label='研究估算：'+label+'（未驗源）';
-  return {rg:ok?(side===1?'BULL_ATTACK':side===-1?'BEAR_ATTACK':'CHOPPY_NEUTRAL'):preview?'CHOPPY_NEUTRAL':'WARMUP',label:label,old:!(ok||preview),at:(ok||preview)?String(v.sampled_at).slice(11,19):'資料未確認',items:items,tip:preview?'僅研究估算，歷史首次可見與共同期指月份未證實；正式方向 UNKNOWN，禁止作為自動交易輸入。':ok?'R16 日盤主力心態 V1；整體強度未校準；authority=0。':'資料不合格：'+reason};
+  return {rg:ok?(side===1?'BULL_ATTACK':side===-1?'BEAR_ATTACK':'CHOPPY_NEUTRAL'):preview?'CHOPPY_NEUTRAL':'WARMUP',label:label,old:!(ok||preview),at:(ok||preview)?String(v.sampled_at).slice(11,19):'資料未確認',items:items,tip:preview?'僅研究估算，歷史首次可見與共同期指月份未證實；正式方向 UNKNOWN，禁止作為自動交易輸入。':ok?'R16 主力心態 V1；整體強度未校準；authority=0。':'資料不合格：'+reason};
 };
 </script><!-- Z31_BAOZ_TXFLOW_UI_1_4_40 -->
 <style id="z31-baoz-txflow-ui-1-4-40">
@@ -16745,7 +16748,7 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 
   function grid() { return document.querySelector('#v2-live-page .v2-market-compact-grid'); }
   function render() {
-    var g = grid(), day = s.payload && s.payload.source && s.payload.source.session === 'DAY', v = day ? window.baozR16DayView(s.payload, Date.now()) : view(s.flow, s.ms);
+    var g = grid(), day = s.payload && s.payload.source && ['DAY','NIGHT'].includes(s.payload.source.session), v = day ? window.baozR16DayView(s.payload, Date.now()) : view(s.flow, s.ms);
     var row = !!g && (!document.documentElement.classList.contains('z31-pro') ||
       (!document.documentElement.classList.contains('z31-w-lg') && g.clientWidth < ROW_W));
     var key = v ? JSON.stringify([v, row]) : '';
