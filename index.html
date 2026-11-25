@@ -16591,7 +16591,7 @@ window.baozR16DayView = function(p, now) {
   var envelope=!!(v&&v.schema==='baoz-day-mind.v1'&&v.version==='R16-DAY-MIND-INTEGRATION-V1'&&v.authority===0&&v.session===session);
   var ok=envelope&&v.valid===true&&fresh(v.sampled_at)&&[-1,0,1].includes(v.direction);
   var q=envelope&&v.research_preview;
-  var preview=!!(!ok&&envelope&&v.valid===false&&v.direction===null&&q&&q.schema==='baoz-day-mind-preview.v1'&&q.authority===0&&q.mode==='UNQUALIFIED_DISPLAY_ONLY'&&q.calculation_valid===true&&q.source_qualification==='NOT_EXPOSED'&&q.session===session&&q.sampled_at===v.sampled_at&&fresh(q.sampled_at)&&[-1,0,1].includes(q.estimated_side));
+  var preview=!!(!ok&&envelope&&v.valid===false&&(v.direction===null||v.direction===undefined)&&q&&q.schema==='baoz-day-mind-preview.v1'&&q.authority===0&&q.mode==='UNQUALIFIED_DISPLAY_ONLY'&&q.calculation_valid===true&&q.source_qualification==='NOT_EXPOSED'&&q.session===session&&q.sampled_at===v.sampled_at&&fresh(q.sampled_at)&&[-1,0,1].includes(q.estimated_side));
   var side=ok?v.direction:preview?q.estimated_side:null;
   var d=x=>x===1?'多':x===-1?'空':x===0?'未確認':'—';
   var changes={COUNTER_ATTACK:'反向攻擊',STRENGTHENING:'增強',WEAKENING:'減弱',STABLE:'穩定',TRANSITION:'轉向確認中',REVERSED:'已確認翻轉',WARMUP:'暖機',UNCONFIRMED:'未確認'};
