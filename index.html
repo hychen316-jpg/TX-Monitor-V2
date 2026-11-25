@@ -16594,7 +16594,7 @@ window.baozR16DayView = function(p, now) {
   var preview=!!(!ok&&envelope&&v.valid===false&&(v.direction===null||v.direction===undefined)&&q&&q.schema==='baoz-day-mind-preview.v1'&&q.authority===0&&q.mode==='UNQUALIFIED_DISPLAY_ONLY'&&q.calculation_valid===true&&q.source_qualification==='NOT_EXPOSED'&&q.session===session&&q.sampled_at===v.sampled_at&&fresh(q.sampled_at)&&[-1,0,1].includes(q.estimated_side));
   var side=ok?v.direction:preview?q.estimated_side:null;
   var d=x=>x===1?'多':x===-1?'空':x===0?'未確認':'—';
-  var changes={COUNTER_ATTACK:'反向攻擊',STRENGTHENING:'增強',WEAKENING:'減弱',STABLE:'穩定',TRANSITION:'轉向確認中',REVERSED:'已確認翻轉',WARMUP:'暖機',UNCONFIRMED:'未確認'};
+  var changes={COUNTER_ATTACK:'反向攻擊',STRENGTHENING:'增強',WEAKENING:'減弱',STABLE:'穩定',TRANSITION:'轉向確認中',REVERSED:'已確認翻轉',WARMUP:'暖機',UNCONFIRMED:'未確認',GAP_HOLD:'延續前值'};   /* 1.4.45：S1 資料中斷延續前值 */
   var strength={STRONG:'強',MODERATE:'中',WEAK:'弱'};
   var dur=ok?v.direction_duration_min:preview?q.estimated_duration_min:null;
   var attack=ok?v.short_attack:preview?q.estimated_attack:null;
@@ -16606,8 +16606,13 @@ window.baozR16DayView = function(p, now) {
   var items=[['資格',ok?'來源合格':preview?'未驗源・不可交易':'未知','',''],['持續',Number.isInteger(dur)&&dur>0?dur+'分':'—','',''],['攻擊',d(attack),'',''],['力道',strength[st]||'—','',''],['變化',changes[change]||'—','',''],[night?'E5':'E6',typeof e6==='number'&&Number.isFinite(e6)?String(e6)+(rel==='ALIGNED'?' 同向':rel==='OPPOSED'?' 反向':''):'—','','']];
   var label=side===1?'偏多':side===-1?'偏空':side===0?'未確認':'UNKNOWN';
   if(!ok&&!preview&&night)label=reason==='NIGHT_E5_MISSING'?'UNKNOWN｜缺今晚 E5':reason==='NIGHT_E5_STALE'?'UNKNOWN｜E5 過期':reason==='NIGHT_WARMUP_OR_FROZEN_QC_INVALID'?'UNKNOWN｜暖機／資料不合格':'UNKNOWN｜夜盤資料未確認';
-  if(preview)label='研究估算：'+label+'（未驗源）';
-  return {rg:ok?(side===1?'BULL_ATTACK':side===-1?'BEAR_ATTACK':'CHOPPY_NEUTRAL'):preview?'CHOPPY_NEUTRAL':'WARMUP',label:label,old:!(ok||preview),at:(ok||preview)?String(v.sampled_at).slice(11,19):'資料未確認',items:items,tip:preview?'僅研究估算，歷史首次可見與共同期指月份未證實；正式方向 UNKNOWN，禁止作為自動交易輸入。':ok?'R16 主力心態 V1；整體強度未校準；authority=0。':'資料不合格：'+reason};
+  /* 1.4.45（Claude 11/25）主力心態 V1 S1：不合格寫原因＋大概幾點恢復；資料中斷 10 分鐘內延續前值。沒有 variant＝和 z71 一樣 */
+  var s1=!!(v&&v.variant==='S1'), why=s1&&typeof v.detail==='string'?v.detail.slice(0,14):'', whyl=s1&&typeof v.detail_long==='string'?v.detail_long.slice(0,120):why;
+  var eta=s1&&typeof v.eta==='string'&&/^\d\d:\d\d$/.test(v.eta)?v.eta:'', wait=s1&&Number.isInteger(v.wait_min)&&v.wait_min>0&&v.wait_min<=60?v.wait_min:0;
+  var hold=!!(s1&&preview&&q.estimated_change==='GAP_HOLD');
+  if(!ok&&!preview&&why)label='UNKNOWN｜'+why;
+  if(preview)label=(hold?'延續前值：':'研究估算：')+label+'（未驗源）';
+  return {rg:ok?(side===1?'BULL_ATTACK':side===-1?'BEAR_ATTACK':'CHOPPY_NEUTRAL'):preview?'CHOPPY_NEUTRAL':'WARMUP',label:label,old:!(ok||preview),at:(ok||preview)?String(v.sampled_at).slice(11,19):eta?'約 '+eta+' 恢復':wait?'恢復後約 '+wait+' 分':'資料未確認',items:items,tip:preview?(hold?'資料中斷：'+(whyl||'原因不明')+(eta?'，約 '+eta+' 恢復':'')+'。延續 '+q.gap_hold_min+' 分鐘前的結果（最多 '+q.gap_hold_max+' 分鐘）。':'')+'僅研究估算，歷史首次可見與共同期指月份未證實；正式方向 UNKNOWN，禁止作為自動交易輸入。':ok?'R16 主力心態 V1；整體強度未校準；authority=0。':'資料不合格：'+(why?whyl+(eta?'，約 '+eta+' 恢復':'')+'（'+reason+'）':reason)};
 };
 </script><!-- Z31_BAOZ_TXFLOW_UI_1_4_40 -->
 <style id="z31-baoz-txflow-ui-1-4-40">
