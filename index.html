@@ -17591,11 +17591,11 @@ html.z31-portrait #v2-live-page #tx-flow .txf-ln { flex-wrap: wrap; row-gap: 2px
 </script>
 <!-- Z31_BAOZ_LIN_UI_1_4_44_END -->
 <!-- Z31_BAOZ_LIN_UI_1_4_44 -->
-<!-- Z31_BAOZ_TXDM_UI_1_4_48 -->
-<style id="z31-baoz-txdm-ui-1-4-48">
-/* ===== BaoZ UI 1.4.48（Claude 11/26）：主力心態 V1 時間軸多空棒，和謝版紅綠柱合成一條、共用時間軸
+<!-- Z31_BAOZ_TXDM_UI_1_4_49 -->
+<style id="z31-baoz-txdm-ui-1-4-49">
+/* ===== BaoZ UI 1.4.49（Claude 11/26；z75＝1.4.48 再改：兩軌一樣高、林式可收起）：主力心態 V1 時間軸多空棒，和謝版紅綠柱合成一條、共用時間軸
    上面一軌 V1（day_mind_v1.bars，每分鐘一個字）、下面一軌謝版（flow.mfs.bars，和 1.4.41／1.4.42 一樣）、最下面時間軸。
-   有 V1 時間軸時取代原本的謝版那一條（46 px → 62 px，不另外加一整排）；沒有＝和 z74 一樣。只改顯示：不寫 Firebase、不改計算。 */
+   有 V1 時間軸時取代原本的謝版那一條（46 px → 80 px，不另外加一整排；12:19 Edward：兩軌一樣高、加高）；沒有＝和 z74 一樣。只改顯示：不寫 Firebase、不改計算。 */
 html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
 #v2-live-page #tx-dm[hidden] { display: none !important; }
 #v2-live-page #tx-dm {
@@ -17608,7 +17608,7 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 62px;
+  height: 80px;
   padding: 3px 10px;
   border: 1px solid var(--pro-line, rgba(255,255,255,.10));
   border-left: 3px solid var(--txd-c);
@@ -17625,7 +17625,7 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
 #v2-live-page #tx-dm.txd-unk { border-left-style: dashed; }
 #v2-live-page #tx-dm.txd-old { --txd-c: var(--pro-line, rgba(255,255,255,.18)); }
 #v2-live-page #tx-dm.txd-old > * { opacity: .55; }
-#v2-live-page #tx-dm .txd-lb { flex: none; display: grid; grid-template-rows: 16px 2px 26px; align-self: flex-start; margin-top: 1px; white-space: nowrap; }
+#v2-live-page #tx-dm .txd-lb { flex: none; display: grid; grid-template-rows: 28px 4px 28px; align-self: flex-start; margin-top: 0; white-space: nowrap; }
 #v2-live-page #tx-dm .txd-r { display: flex; align-items: center; gap: 6px; min-width: 0; }
 #v2-live-page #tx-dm .txd-r1 { grid-row: 1; }
 #v2-live-page #tx-dm .txd-r2 { grid-row: 3; }
@@ -17639,7 +17639,7 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
 #v2-live-page #tx-dm .txd-r .bn { color: var(--pro-text, #e8ecf1); }
 #v2-live-page #tx-dm .txd-r .bx { color: var(--pro-text-2, #b9c2cd); }
 #v2-live-page #tx-dm .txd-m { font: 600 12px/1.1 var(--pro-num, inherit); color: var(--pro-text, #e8ecf1); }
-#v2-live-page #tx-dm .txd-ch { flex: 1 1 auto; min-width: 40px; height: 54px; display: block; overflow: hidden; }
+#v2-live-page #tx-dm .txd-ch { flex: 1 1 auto; min-width: 40px; height: 72px; display: block; overflow: hidden; }
 #v2-live-page #tx-dm .txd-ch .u { fill: var(--pro-up, #ff4d4f); }
 #v2-live-page #tx-dm .txd-ch .d { fill: var(--pro-down, #22c55e); }
 #v2-live-page #tx-dm .txd-ch .n { fill: var(--pro-muted, #8691a0); opacity: .7; }
@@ -17663,13 +17663,13 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
 @container txd (max-width: 420px) { #v2-live-page #tx-dm .txd-m, #v2-live-page #tx-dm .txd-at { display: none; } }
 </style>
 <script>
-/* BaoZ UI 1.4.48：主力心態 V1＋謝版 合成一條的時間軸多空棒（只讀 Firebase，不寫；只改顯示） */
+/* BaoZ UI 1.4.49：主力心態 V1＋謝版 合成一條的時間軸多空棒（只讀 Firebase，不寫；只改顯示） */
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near';
   var OLD_MS = 120000;                         /* 快照超過 120 秒沒更新：當作資料舊（和謝版那一條一樣） */
   var BAR_RE = /^[SMWsmw0Hhz-]{1,600}$/, T0_RE = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)$/;
-  var LV = 16, GV = 2, HB = 26, HA = 12;       /* V1 一軌 16 px、間隔 2 px、謝版 26 px（和原本一樣）、時間軸 12 px */
+  var LV = 28, GV = 4, HB = 28, HA = 12;       /* 兩軌一樣高：V1 28 px、間隔 4 px、謝版 28 px、時間軸 12 px（合計 72 px） */
   /* V1 一分鐘一個字（S1 模組 bar_code）：S/M/W 偏多 強/中/弱、s/m/w 偏空 強/中/弱、0 未確認、H/h/z 資料中斷延續前值、- 不合格或沒資料 */
   var CODE = {
     S: [1, 3, '偏多・強'], M: [1, 2, '偏多・中'], W: [1, 1, '偏多・弱'],
@@ -17913,6 +17913,63 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
   else start();
 })();
 </script>
-<!-- Z31_BAOZ_TXDM_UI_1_4_48_END -->
+<style id="z31-baoz-linfold-ui-1-4-49">
+/* BaoZ UI 1.4.49（12:24 Edward）：「林式進場時機」細節可以收起，只看重點（預設收起；按右上「細節 ▾」打開，記在這台電腦的瀏覽器）
+   收起時藏：SOP 步驟、步驟說明、30 秒檢核、最近壓力支撐（梯子上有）、說明小字、進場時段清單（「現在是／不是進場時段」照留）、
+   同一邊已經有進場價時那一列「—」。照留：B122 狀態、觸發、方向和警告、進場價、持有、濾網。只改顯示，不改計算。 */
+#baoz-system-panel .bz-lin .z48-lt { flex: none; padding: 0 9px; border: 1px solid var(--bz-line); border-radius: 9px; background: transparent; color: var(--bz-muted); font: inherit; font-size: 11.5px; line-height: 18px; cursor: pointer; }
+#baoz-system-panel .bz-lin .z48-lt:hover, #baoz-system-panel .bz-lin .z48-lt:focus-visible { color: var(--bz-ink); border-color: var(--bz-accent); outline: none; }
+#baoz-system-panel .bz-lin.z48-fold .l-steps,
+#baoz-system-panel .bz-lin.z48-fold .l-stx,
+#baoz-system-panel .bz-lin.z48-fold .l-chk,
+#baoz-system-panel .bz-lin.z48-fold .l-near,
+#baoz-system-panel .bz-lin.z48-fold .l-foot,
+#baoz-system-panel .bz-lin.z48-fold .l-win > span:nth-child(2) { display: none !important; }
+#baoz-system-panel .bz-lin.z48-fold .l-side:has(> .l-t:not(.none)) > .l-t.none { display: none !important; }
+</style>
+<script>
+/* BaoZ UI 1.4.49：「林式進場時機」收起／打開（1.4.44 每次重畫卡片後補回按鈕；不讀寫 Firebase） */
+(function () {
+  'use strict';
+  var KEY = 'z31_lin_fold_v1';
+  var fold = true;
+  try { fold = localStorage.getItem(KEY) !== '0'; } catch (e) {}
+  function sync(el) {
+    if (el.classList.contains('z48-fold') !== fold) el.classList.toggle('z48-fold', fold);
+    var hd = el.querySelector(':scope > .l-hd');
+    if (!hd) return;
+    var b = hd.querySelector(':scope > .z48-lt');
+    if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'z48-lt'; hd.appendChild(b); }
+    var t = fold ? '細節 ▾' : '收起 ▴';
+    if (b.textContent !== t) {
+      b.textContent = t;
+      b.setAttribute('aria-expanded', fold ? 'false' : 'true');
+      b.title = fold ? '打開細節：SOP 步驟、30 秒檢核、最近撐壓、進場時段' : '收起細節：只看方向、進場價和觸發';
+    }
+  }
+  var obs = window.MutationObserver ? new MutationObserver(function (ms) {
+    ms.forEach(function (m) { if (m.target && m.target.classList && m.target.classList.contains('bz-lin')) sync(m.target); });
+  }) : null;
+  function scan() {
+    var els = document.querySelectorAll('#baoz-system-panel .bz-lin');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (obs && !el.__z48) { el.__z48 = 1; obs.observe(el, { childList: true }); }
+      sync(el);
+    }
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target && ev.target.closest ? ev.target.closest('#baoz-system-panel .bz-lin .z48-lt') : null;
+    if (!b) return;
+    ev.preventDefault(); ev.stopPropagation();
+    fold = !fold;
+    try { localStorage.setItem(KEY, fold ? '1' : '0'); } catch (e) {}
+    scan();
+  }, true);
+  scan();
+  window.setInterval(scan, 1000);
+})();
+</script>
+<!-- Z31_BAOZ_TXDM_UI_1_4_49_END -->
 </body>
 </html>
