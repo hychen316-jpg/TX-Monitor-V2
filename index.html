@@ -16800,6 +16800,172 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 })();
 </script>
 <!-- Z31_BAOZ_TXFLOW_UI_1_4_40_END -->
+<!-- Z31_BAOZ_OPCSP_UI_1_4_47 -->
+<style id="z31-baoz-opcsp-ui-1-4-47">
+/* ===== BaoZ UI 1.4.47（Claude 11/26）：布局中心「兩側賣方強度」下面加一行「OP61 逐筆｜賣 Put vs 賣 Call」
+   上傳器 1.0.13＋BaoZ Flow 0.1.5 的 opcsp；只改顯示：不寫 Firebase、不改計算。原本那一格（Excel 算的）不動。
+   一行排開（太窄時換行），不讓布局中心那一排變太高。 */
+#v2-live-page .z74-op { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; margin-top: 4px; padding: 4px 8px;
+  border: 1px solid #353539; border-left: 3px solid #ffd60a; border-radius: 5px; background: rgba(255,214,10,.03);
+  font-size: 12px; font-weight: 800; line-height: 1.25; color: #e5e5ea; min-width: 0; cursor: default; }
+#v2-live-page .z74-op[hidden] { display: none !important; }
+#v2-live-page .z74-op .z74-t { font-size: 11px; font-weight: 900; color: #f2f2f7; white-space: nowrap; }
+#v2-live-page .z74-op .z74-p { color: #ff453a; white-space: nowrap; }
+#v2-live-page .z74-op .z74-c { color: #30d158; white-space: nowrap; }
+#v2-live-page .z74-op .z74-p b, #v2-live-page .z74-op .z74-c b { font-variant-numeric: tabular-nums; }
+#v2-live-page .z74-op .z74-bar { display: flex; flex: none; width: 60px; height: 8px; border: 1px solid #48484a; border-radius: 3px; overflow: hidden; background: #242426; }
+#v2-live-page .z74-op .z74-bar i { display: block; height: 100%; width: 0; }
+#v2-live-page .z74-op .z74-bar i:first-child { background: #ff453a; }
+#v2-live-page .z74-op .z74-bar i:last-child { background: #30d158; }
+#v2-live-page .z74-op .z74-cm { font-weight: 700; color: #d1d1d6; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#v2-live-page .z74-op .z74-sp { display: block; flex: 1 1 40px; min-width: 40px; height: 16px; overflow: hidden; }
+#v2-live-page .z74-op .z74-sp .u { fill: #ff453a; }
+#v2-live-page .z74-op .z74-sp .d { fill: #30d158; }
+#v2-live-page .z74-op .z74-sp .c { opacity: .35; }
+#v2-live-page .z74-op .z74-sp .z { stroke: #636366; stroke-width: 1; vector-effect: non-scaling-stroke; }
+#v2-live-page .z74-op .z74-k { margin-left: auto; font-size: 10px; font-weight: 800; color: #ffd60a; white-space: nowrap; }
+#v2-live-page .z74-op .z74-k.z74-warn { color: #ff9f0a; }
+#v2-live-page .z74-op.is-wait b, #v2-live-page .z74-op.is-stale b, #v2-live-page .z74-op.is-stale .z74-cm { opacity: .55; }
+</style>
+<script>
+/* BaoZ UI 1.4.47：OP61 逐筆賣方比例（只讀 Firebase，不寫；只改顯示） */
+(function () {
+  'use strict';
+  var NODE = 'baoz_realtime/near';
+  var OLD_MS = 120000;                         /* 快照超過 120 秒沒更新：當作資料舊（和其他卡一樣） */
+  var s = { ref: null, fn: null, op: null, ms: NaN, failAt: 0 };
+
+  function $(id) { return document.getElementById(id); }
+  function n(x) { return typeof x === 'number' && Number.isFinite(x) ? x : null; }
+  function num(x) { return x === null ? '--' : Math.round(x).toLocaleString('en-US'); }
+  function sv(tag, attrs) { var e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function arr(b) {                            /* Firebase 可能把陣列變成物件 */
+    var out = [];
+    if (Array.isArray(b)) out = b.slice();
+    else if (b && typeof b === 'object') Object.keys(b).map(Number).filter(Number.isFinite).sort(function (a, c) { return a - c; }).forEach(function (k) { out.push(b[k]); });
+    return out;
+  }
+
+  function allowed() {
+    try {
+      var d = $('dashboard');
+      return typeof auth !== 'undefined' && typeof isDashboardOwner === 'function' && isDashboardOwner(auth.currentUser) &&
+        auth.currentUser.emailVerified === true && d.classList.contains('unlocked') && d.classList.contains('lvl4');
+    } catch (e) { return false; }
+  }
+  function detach() {
+    if (s.ref && s.fn) { try { s.ref.off('value', s.fn); } catch (e) {} }
+    s.ref = null; s.fn = null;
+  }
+  function reconcile() {
+    if (!allowed()) { if (s.ref) detach(); s.op = null; return; }
+    if (s.ref || Date.now() - s.failAt < 60000) return;
+    if (typeof db === 'undefined' || !db || typeof db.ref !== 'function') return;
+    s.ref = db.ref(NODE);
+    s.fn = function (sn) {
+      var v = sn && typeof sn.val === 'function' ? sn.val() : null;
+      s.op = v && typeof v === 'object' && v.opcsp && typeof v.opcsp === 'object' ? v.opcsp : null;
+      s.ms = v && typeof v === 'object' && v.source ? Number(v.source.generated_at_ms) : NaN;
+      render();
+    };
+    s.ref.on('value', s.fn, function () { s.failAt = Date.now(); detach(); s.op = null; render(); });
+  }
+
+  function box() {
+    var anchor = $('lfz-center-strength');
+    if (!anchor) return null;
+    var el = $('z74-opcsp');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'z74-opcsp';
+      el.className = 'z74-op is-wait';
+      el.innerHTML =
+        '<span class="z74-t">OP61 逐筆</span>' +
+        '<span class="z74-p">賣 Put <b data-k="put">--</b></span>' +
+        '<span class="z74-bar" aria-hidden="true"><i data-k="pb"></i><i data-k="cb"></i></span>' +
+        '<span class="z74-c"><b data-k="call">--</b> 賣 Call</span>' +
+        '<span class="z74-cm" data-k="read">CSP --｜CSC --｜M --</span>' +
+        '<svg class="z74-sp" data-k="sp" aria-hidden="true"></svg>' +
+        '<span class="z74-k" data-k="kind">等待資料</span>';
+      anchor.insertAdjacentElement('afterend', el);
+    }
+    return el;
+  }
+
+  function spark(svg, o) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var b = arr(o && o.bars), c = arr(o && o.bars_c);
+    var W = 300, H = 16, mid = H / 2;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.appendChild(sv('line', { x1: 0, x2: W, y1: mid, y2: mid, 'class': 'z' }));
+    b = b.slice(-W);
+    c = c.slice(-b.length);
+    var x0 = W - b.length;
+    b.forEach(function (x, i) {
+      if (n(x) === null || x < 0 || x > 1) return;
+      var h = Math.max(0.6, Math.abs(x - 0.5) * 2 * (mid - 1));
+      svg.appendChild(sv('rect', { x: x0 + i, width: 0.8, y: x >= 0.5 ? mid - h : mid, height: h,
+        'class': (x >= 0.5 ? 'u' : 'd') + (c[i] === 1 ? '' : ' c') }));
+    });
+  }
+
+  function render() {
+    var el = box();
+    if (!el) return;
+    var o = s.op;
+    function q(k) { return el.querySelector('[data-k="' + k + '"]'); }
+    var ps = o ? n(o.put_share) : null;
+    var live = !!o && o.in_session !== false;
+    var old = !o || o.stale === true || !(Number.isFinite(s.ms) && Date.now() - s.ms < OLD_MS);
+    var cls = 'z74-op', kind = '等待資料', warn = false, read = 'CSP --｜CSC --｜M --';
+    var note = '還沒有資料：要上傳器 1.0.13＋BaoZ Flow 0.1.5（盤中才有）';
+    var late = o ? n(o.n_late_k) || 0 : 0, t = o ? String(o.ex_time || '').slice(11, 16) : '';
+    if (o) {
+      if (!live) { kind = '非盤中'; warn = true; }
+      else if (old) { kind = '資料舊'; warn = true; }
+      else if (ps === null) { kind = '還沒有成交'; }
+      else if (o.complete !== 1) { kind = '不完整 ' + (n(o.n_put_k) || 0) + '／' + (n(o.n_call_k) || 0) + ' 檔'; warn = true; }
+      else if (late > 0) { kind = '中途補訂 ' + late + ' 檔'; warn = true; }
+      else kind = '10 檔完整';
+      if (t && live) kind += '・' + t;
+      read = 'CSP ' + num(n(o.csp)) + '｜CSC ' + num(n(o.csc)) + '｜M ' + num(n(o.m));
+      var exp = arr(o.series_expiry).map(function (x) { return String(x).slice(4, 8); }).join('、');
+      note = '只含 OP61 訂的週選' + (exp ? '（' + exp + ' 到期）' : '') + '；交易所時間 ' + String(o.ex_time || '—');
+    }
+    cls += ps === null ? ' is-wait' : (old || !live ? ' is-stale' : '');
+    el.className = cls;
+    el.hidden = !o;                            /* 還沒有 opcsp（上傳器還沒換 1.0.13）：整行不出現，畫面和 z73 一樣 */
+    var kd = q('kind');
+    kd.textContent = kind;
+    kd.className = 'z74-k' + (warn ? ' z74-warn' : '');
+    var pp = ps === null ? null : Math.round(ps * 1000) / 10;      /* 兩邊加起來剛好 100.0% */
+    q('put').textContent = pp === null ? '--' : pp.toFixed(1) + '%';
+    q('call').textContent = pp === null ? '--' : (100 - pp).toFixed(1) + '%';
+    q('pb').style.width = pp === null ? '0' : pp.toFixed(1) + '%';
+    q('cb').style.width = pp === null ? '0' : (100 - pp).toFixed(1) + '%';
+    q('read').textContent = read;
+    spark(q('sp'), o);
+    var wr = o ? arr(o.wing_range) : [];
+    el.title = [
+      'OP61 逐筆重算的「CSP vs CSC」（BaoZ Flow 0.1.5，研究用，還沒有經過市場驗證；只顯示，不影響 Argon、不影響實單）',
+      note,
+      '賣方＝交易所標的內盤成交；金額＝口數×成交價×50，從這一盤第一筆累積。賣 Put＝現價下方 10 檔 Put，賣 Call＝上方 10 檔 Call',
+      '上面那一格是 Excel 用買賣價猜的、含所有序列，這一格只有 OP61 訂的那一個週選序列，兩個數字不會一樣',
+      'OP61 開盤時訂價平上下 30 檔；OP61F 0.2.0 會跟著價平往外補訂' + (wr.length === 2 ? '（現在範圍 ' + num(n(wr[0])) + '～' + num(n(wr[1])) + '）' : ''),
+      '不完整＝價格附近湊不滿 10 檔；中途補訂＝窗口裡有盤中才補訂的履約價，少了補訂之前的成交',
+      o ? '價平 ±5 檔：' + (n(o.dir5) === null ? '--' : (n(o.dir5) >= 0 ? '+' : '') + n(o.dir5).toFixed(3)) + '　現價 ' + num(n(o.ref)) +
+        '　賣 Put 最多 ' + num(n(o.top_put_k)) + '（' + num(n(o.top_put_lots)) + ' 口）　賣 Call 最多 ' + num(n(o.top_call_k)) + '（' + num(n(o.top_call_lots)) + ' 口）' : '',
+      '小紅綠柱：每分鐘的賣 Put 比例（紅＝賣 Put 多、綠＝賣 Call 多，越高越偏，淡色＝那一分鐘 10 檔不完整），最新的在右邊' + (o && o.bars_t0 ? '，從 ' + String(o.bars_t0).slice(11) + ' 開始' : '')
+    ].filter(Boolean).join('\n');
+  }
+
+  function tick() { reconcile(); render(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
+  setInterval(tick, 5000);
+})();
+</script>
+<!-- Z31_BAOZ_OPCSP_UI_1_4_47_END -->
 <!-- Z31_BAOZ_TXFLOW_PORTRAIT_UI_1_4_46 -->
 <style id="z31-baoz-txflow-portrait-ui-1-4-46">
 /* ===== BaoZ UI 1.4.46（Claude 11/26）：直立螢幕時「主力心態 V1」自己一整排，不再和 TX 價格、中性值擠同一排。
