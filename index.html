@@ -16755,6 +16755,7 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
   function render() {
     var g = grid(), day = s.payload && s.payload.source && ['DAY','NIGHT'].includes(s.payload.source.session), v = day ? window.baozR16DayView(s.payload, Date.now()) : view(s.flow, s.ms);
     var row = !!g && (!document.documentElement.classList.contains('z31-pro') ||
+      document.documentElement.classList.contains('z31-portrait') ||   /* 1.4.46（Claude 11/26）：直立螢幕一律自己一排 */
       (!document.documentElement.classList.contains('z31-w-lg') && g.clientWidth < ROW_W));
     var key = v ? JSON.stringify([v, row]) : '';
     if (!g) { document.documentElement.classList.remove('txf-shown'); return; }
@@ -16799,6 +16800,18 @@ html.txf-shown #baoz-system-panel #bz-flow { display: none !important; }   /* 1.
 })();
 </script>
 <!-- Z31_BAOZ_TXFLOW_UI_1_4_40_END -->
+<!-- Z31_BAOZ_TXFLOW_PORTRAIT_UI_1_4_46 -->
+<style id="z31-baoz-txflow-portrait-ui-1-4-46">
+/* ===== BaoZ UI 1.4.46（Claude 11/26）：直立螢幕時「主力心態 V1」自己一整排，不再和 TX 價格、中性值擠同一排。
+   TX 價格＋中性值一排 → 主力心態一整排 → 均價一排。只改排版，一般螢幕不變。 */
+html.z31-pro.z31-portrait #v2-live-page .v2-market-compact-grid.txf-on.txf-row {
+  grid-template-columns: minmax(170px, 1fr) minmax(0, 2fr) !important;
+  grid-template-areas: "price neutral" "flow flow" "metrics metrics" !important;
+}
+html.z31-portrait #v2-live-page #tx-flow .txf-in { justify-content: flex-start; }
+html.z31-portrait #v2-live-page #tx-flow .txf-ln { flex-wrap: wrap; row-gap: 2px; overflow: visible; }   /* 太窄時換行，不切掉 */
+</style>
+<!-- Z31_BAOZ_TXFLOW_PORTRAIT_UI_1_4_46_END -->
 <!-- Z31_BAOZ_TXMFS_UI_1_4_41 -->
 <style id="z31-baoz-txmfs-ui-1-4-41">
 /* ===== BaoZ UI 1.4.41（20261114）：TX 台指期區塊最下面加一條「主力心態（謝版）」紅綠柱
