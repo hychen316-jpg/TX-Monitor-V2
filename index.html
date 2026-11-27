@@ -18005,6 +18005,12 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
 #baoz-system-panel .bz-sv1 .sv-now b { font-size: 17px; color: var(--bz-ink); font-weight: 800; }
 #baoz-system-panel .bz-sv1 .sv-mean { margin-top: 1px; font-size: 12.5px; color: var(--bz-ink); min-width: 0; }
 #baoz-system-panel .bz-sv1 .sv-mean .sv-bt { color: var(--bz-muted); }
+/* Z31_BAOZ_SV1GUIDE_UI_1_4_53：台指期一句話 */
+#baoz-system-panel .bz-sv1 .sv-guide { margin-top: 5px; padding: 4px 8px; border-left: 3px solid var(--bz-line); border-radius: 3px; background: color-mix(in srgb, var(--bz-line) 28%, transparent); font-size: 12.5px; line-height: 1.45; font-weight: 700; color: var(--bz-ink); min-width: 0; }
+#baoz-system-panel .bz-sv1 .sv-guide .sv-gl { display: inline-block; margin-right: 6px; padding: 0 5px; border: 1px solid var(--bz-line); border-radius: 4px; font-size: 10.5px; font-weight: 700; color: var(--bz-muted); white-space: nowrap; }
+#baoz-system-panel .bz-sv1 .sv-guide.sv-g-dn { border-left-color: var(--bz-down); }
+#baoz-system-panel .bz-sv1 .sv-guide.sv-g-up { border-left-color: var(--bz-up); }
+#baoz-system-panel .bz-sv1 .sv-guide.sv-g-warn { border-left-color: var(--bz-attn); }
 /* 價位尺 */
 #baoz-system-panel .bz-sv1 .sv-rule { position: relative; margin: 8px 2px 0; height: 54px; }
 #baoz-system-panel .bz-sv1 .sv-bar { position: absolute; left: 0; right: 0; top: 18px; height: 10px; display: flex; border-radius: 3px; overflow: hidden; }
@@ -18228,6 +18234,34 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     return ['Call 賣方回補區', '漲過 Us ' + px(V.Us) + '（' + sg(x - V.Us, 0) + ' 點）：Call 賣方虧掉一倍權利金，被迫買回 Call 會推價格往上。回測：越過回補線後順勢延續比較常見'];
   }
 
+  /* 1.4.53（Edward 11/27 16:04「站在我是操作台指期的角度來給一句短話，一看就懂，有點像操作指南」）
+     台指期一句話：照 SV1 回測規則（只有「越過回補線＋IV 升 → 順勢」成立；L/U 反彈、收租不成立）；回傳 [文字, 色調 dn/up/warn/''] */
+  function guide(o, C, z, V, x, st, side, em, cont) {
+    var b = n(o.basis) !== null ? n(o.basis) : n(o.basis0);
+    function lv(name, v) { return name + ' ' + px(v) + (C.syn && b !== null ? '（期貨約 ' + px(v + b) + '）' : ''); }
+    var ir = n(o.iv_ratio), ivUp = ir !== null ? ir > 1 : (n(o.iv) !== null && n(o.iv0) !== null && o.iv > o.iv0);
+    var near = em ? Math.max(30, em * 0.15) : 100, obs = str(o.obs, 80) && /持有/.test(str(o.obs, 80));
+    if (o.exp_today === true) return ['今天結算：到期序列不開旁觀單，價位只當參考，看下面的結算（估）', ''];
+    if (cont) return ['開盤前 15 分鐘：不追開盤缺口，等 09:01 日盤定價後再看', ''];
+    if (st === '回補' && (side === '空' || side === '多')) {
+      var dn = side === '空', tg = em ? (dn ? x - em : x + em) : null;
+      var sp = dn ? (V.L !== null && V.L > x ? V.L : (em ? x + 0.5 * em : null)) : (V.U !== null && V.U < x ? V.U : (em ? x - 0.5 * em : null));
+      return [(dn ? '偏空順勢：Put 賣方被迫回補，不要接多' : '偏多順勢：Call 賣方被迫回補，不要放空') +
+        (obs ? '；目標、停損看下面旁觀單' : (tg !== null ? '；系統規則 目標 ' + px(tg) + (sp !== null ? '・停損 ' + px(sp) : '') : '')), dn ? 'dn' : 'up'];
+    }
+    if (z === 'LS_OUT') return ivUp ? ['跌破 Ls、IV 也升：下一次狀態更新（每 10 分鐘）轉「回補」才是偏空訊號，先別接多', 'warn']
+                                    : ['跌破 Ls 但 IV 沒升：還不算回補，先別追空', 'warn'];
+    if (z === 'US_OUT') return ivUp ? ['漲過 Us、IV 也升：下一次狀態更新（每 10 分鐘）轉「回補」才是偏多訊號，先別放空', 'warn']
+                                    : ['漲過 Us 但 IV 沒升：還不算回補，先別追多', 'warn'];
+    if (z === 'L_LS') return [V.Ls !== null ? '別在這裡接多（L 反彈回測不成立）；跌破 ' + lv('Ls', V.Ls) + '、再 ' + px(x - V.Ls) + ' 點，加上 IV 升才偏空'
+                                            : '別在這裡接多（L 反彈回測不成立）；下方沒有回補線，SV1 不給空單訊號', 'warn'];
+    if (z === 'U_US') return [V.Us !== null ? '別在這裡放空（U 壓回回測不成立）；漲過 ' + lv('Us', V.Us) + '、再 ' + px(V.Us - x) + ' 點，加上 IV 升才偏多'
+                                            : '別在這裡放空（U 壓回回測不成立）；上方沒有回補線，SV1 不給多單訊號', 'warn'];
+    if (V.L !== null && x - V.L <= near) return ['貼著 ' + lv('L', V.L) + '，差 ' + px(x - V.L) + ' 點：跌破只是 Put 賣方開始賠，不是空單訊號；SV1 沒方向，照 Argon', 'warn'];
+    if (V.U !== null && V.U - x <= near) return ['貼著 ' + lv('U', V.U) + '，差 ' + px(V.U - x) + ' 點：漲過只是 Call 賣方開始賠，不是多單訊號；SV1 沒方向，照 Argon', 'warn'];
+    return ['賣方舒服，SV1 沒方向訊號：照 Argon 做' + (V.Ls !== null || V.Us !== null ? '；' + [V.Ls !== null ? '偏空要跌破 Ls ' + px(V.Ls) : '', V.Us !== null ? '偏多要漲過 Us ' + px(V.Us) : ''].filter(Boolean).join('、') + '（都要 IV 升）' : ''), ''];
+  }
+
   /* 價位尺：分段寬度照點數比例，但每段至少 14%，兩端各 8%；現在價格在所在那一段裡照比例放 */
   function ruler(V, x, em) {
     var pts = [['Ls', '回補', V.Ls], ['L', '防線', V.L], ['pin', '舒適', V.pin], ['U', '防線', V.U], ['Us', '回補', V.Us]].filter(function (p) { return p[2] !== null; });
@@ -18320,6 +18354,12 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       mean.textContent = w[0] || str(o.note, 120);
     } else {
       var vd = verdict(z, V, x, sess, st, side);
+      if (z === 'IN' && st === '防守') {   /* 1.4.53：價格在防線內、但狀態是防守（IV 升或舒適度低）：不寫「兩邊都在賺」 */
+        var pc0 = n(o.put_c), cc0 = n(o.call_c), ir0 = n(o.iv_ratio);
+        vd = ['賣方防守中', '價格還在防線內，但' + (pr === 'IV' ? 'IV 升高' + (ir0 === null ? '' : '（定價的 ' + ir0.toFixed(2) + ' 倍）') : '舒適度變低') +
+          '：Put 賣方 ' + (pc0 === null ? '—' : sg(pc0, 0) + '%') + '、Call 賣方 ' + (cc0 === null ? '—' : sg(cc0, 0) + '%') + '（低於 +30% 就算防守）'];
+        if (!dim) el.style.setProperty('--sv-z', 'var(--bz-attn)');
+      }
       big.appendChild(mk('span', 'sv-zone', vd[0]));
       var nw = mk('span', 'sv-now', C.name + ' ');
       bold(nw, px(x));
@@ -18328,6 +18368,13 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       mean.textContent = vd[1];
     }
     el.append(big, mean);
+    if (V && x !== null && !dim) {   /* 1.4.53：台指期一句話 */
+      var g = guide(o, C, z, V, x, st, side, em, cont), ge = mk('div', 'sv-guide' + (g[1] ? ' sv-g-' + g[1] : ''));
+      ge.appendChild(mk('span', 'sv-gl', '台指期'));
+      ge.append(g[0]);
+      ge.title = '照 SV1 回測規則給的一句話（夜盤 91 晚：只有越過 Ls／Us 而且 IV 比定價高之後順勢成立；L、U 反彈和收租不成立；日盤沒回測）。只是提示、未驗證，實單照 Argon';
+      el.appendChild(ge);
+    }
 
     /* 3. 價位尺 */
     if (V) el.appendChild(ruler(V, x, em));
@@ -18435,7 +18482,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     el.hidden = false;
   }
 
-  window.BZ_SV1 = { coordOf: coordOf, levels: levels, zoneOf: zoneOf, verdict: verdict };   /* 價位梯子（下面 BZ_SV1L）共用 */
+  window.BZ_SV1 = { coordOf: coordOf, levels: levels, zoneOf: zoneOf, verdict: verdict, guide: guide };   /* 價位梯子（下面 BZ_SV1L）共用 */
   function tick() { reconcile(); render(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
   setInterval(tick, 5000);
