@@ -17978,6 +17978,7 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
 <!-- Z31_BAOZ_TXDM_UI_1_4_49_END -->
 <!-- Z31_BAOZ_SV1_UI_1_4_52 -->
 <!-- Z31_BAOZ_SV1_UI_1_4_54：主力賣方卡＋價位梯子改成莊家帳（Argon V1.2.63 SV1-4、上傳器 1.0.17）；舊資料和 1.4.53 一樣 -->
+<!-- Z31_BAOZ_SV1_UI_1_4_55：主力賣方卡的「現在」改用即時合成期貨（market.synthetic，和即時表同一個）；SV1-4 的 pin 改名「沒避險最賺（參考）」 -->
 <style id="z31-baoz-sv1-ui-1-4-52">
 /* ===== BaoZ UI 1.4.52（Claude 11/27）：主力賣方 SV1 卡重新設計，讓 Edward「一眼就看懂」（11/27 12:27），並改用合成期貨（12:25 決定卡「改成合成期貨」）
    取代 1.4.50／1.4.51 的卡。位置一樣：左欄最上面、林式進場時機上面。資料一樣是 seller_v1（上傳器），只讀、不寫 Firebase、不下單。
@@ -18118,7 +18119,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     NO_FUT: '期貨價不可用（RTD 卡住？）', OFF: 'SV1 關閉', ERROR: 'SV1 計算錯誤' };
   var ZC = { IN: 'var(--bz-accent)', L_LS: 'var(--bz-attn)', U_US: 'var(--bz-attn)', LS_OUT: 'var(--bz-down)', US_OUT: 'var(--bz-up)' };
   var ZCLS = { IN: 'sv-z-in', L_LS: 'sv-z-lose', U_US: 'sv-z-lose', LS_OUT: 'sv-z-dn', US_OUT: 'sv-z-up' };
-  var s = { ref: null, fn: null, sv: null, ms: NaN, failAt: 0 };
+  var s = { ref: null, fn: null, sv: null, ms: NaN, failAt: 0, mkt: null };
   /* 1.4.54 莊家帳：狀態顏色（收租＝藍、吃緊＝黃、虧租＝橘；一定配文字）、最大痛點的說法、莊家帳多久沒更新算停了（正常每 10 分鐘） */
   var DLC = { '收租': 'var(--bz-accent)', '吃緊': 'var(--bz-attn)', '虧租': '#ff9f0a' };
   var DLM = { '時間': '沒有地方在痛，時間價值照收', 'IV': '痛在 IV（波動率比定價時高，選擇權變貴）', '價格': '痛在價格（價格走離定價，莊家追著價格補避險在賠）' };
@@ -18169,6 +18170,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       var v = sn && typeof sn.val === 'function' ? sn.val() : null;
       s.sv = v && typeof v === 'object' && v.seller_v1 && typeof v.seller_v1 === 'object' ? v.seller_v1 : null;
       s.ms = v && typeof v === 'object' && v.source ? Number(v.source.generated_at_ms) : NaN;
+      s.mkt = v && typeof v === 'object' && v.market && typeof v.market === 'object' ? v.market : null;   /* 1.4.55：網頁最上面的即時合成期貨 */
       render();
     };
     s.ref.on('value', s.fn, function () { s.failAt = Date.now(); detach(); s.sv = null; render(); });
@@ -18288,6 +18290,20 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     return { now: n(o.fut), name: '期貨', syn: false, bad: '' };
   }
 
+  /* 1.4.55（Edward 11/27「合成期貨可以使用即時表裡的，比較現實更新比較快」）：「現在」改用網頁最上面的即時合成期貨
+     （market.synthetic＝Argon 期貨 − 即時基差，和即時表同一個，live.txt 每 B84 秒；SV1 自己的 syn 每分鐘才取一次）。
+     只在：合成期貨座標、SV1 status=OK、syn_live、卡片沒變暗、和 SV1 的值差 ≦ max(300, 0.5 EM)；其他照舊用 SV1 的值 */
+  function liveNow(o, C, dim) {
+    var m = s.mkt, ls = m ? n(m.synthetic) : null, lf = m ? n(m.futures) : null, em = n(o.em);
+    C.live = false; C.fut = n(o.fut);
+    if (dim || !C.syn || C.now === null || ls === null || ls <= 0) return C;
+    if (String(o.status || '').toUpperCase() !== 'OK' || !(o.syn_live === true || o.syn_live === 1)) return C;
+    if (Math.abs(ls - C.now) > Math.max(300, 0.5 * (em !== null && em > 0 ? em : 0))) return C;
+    C.now = ls; C.live = true;
+    if (lf !== null && lf > 0) C.fut = lf;
+    return C;
+  }
+
   function why(o, C) {                         /* 回傳 [原因, 要不要變淡] */
     var age = Date.now() - s.ms, st = str(o.status, 12).toUpperCase();
     if (!Number.isFinite(s.ms)) return ['資料時間不明', true];
@@ -18375,7 +18391,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
 
   /* 價位尺：分段寬度照點數比例，但每段至少 14%，兩端各 8%；現在價格在所在那一段裡照比例放 */
   function ruler(V, x, em, D, ref) {          /* 1.4.54：ref＝SV1-4 線名（沒避險兩平／停損）；D＝莊家帳（畫莊家兩平虛線框） */
-    var LB = ref ? ['停損', '兩平', '舒適', '兩平', '停損'] : ['回補', '防線', '舒適', '防線', '回補'];
+    var LB = ref ? ['停損', '兩平', '最賺', '兩平', '停損'] : ['回補', '防線', '舒適', '防線', '回補'];   /* 1.4.55：SV1-4 pin＝沒避險最賺 */
     var pts = [['Ls', LB[0], V.Ls], ['L', LB[1], V.L], ['pin', LB[2], V.pin], ['U', LB[3], V.U], ['Us', LB[4], V.Us]].filter(function (p) { return p[2] !== null; });
     var OUT = 8, MIN = 14, inner = 100 - 2 * OUT, gaps = [], i, tot = 0;
     for (i = 1; i < pts.length; i++) { gaps.push(Math.max(1, pts[i][2] - pts[i - 1][2])); tot += gaps[i - 1]; }
@@ -18434,7 +18450,9 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     if (!o) { if (el) el.hidden = true; return; }   /* 沒有 seller_v1：整張卡不出現 */
     el = box();
     if (!el) return;
-    var C = coordOf(o), w = why(o, C), dim = w[1], x = C.now;
+    var C = coordOf(o), w = why(o, C), dim = w[1];
+    liveNow(o, C, dim);                          /* 1.4.55 */
+    var x = C.now;
     var em = n(o.em) !== null && o.em > 0 ? o.em : null;
     var st = str(o.state, 4), side = o.side === '多' || o.side === '空' ? o.side : '';
     var pr = ['時間', 'IV', '價格'].indexOf(o.pressure) >= 0 ? o.pressure : '';
@@ -18454,8 +18472,9 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     /* 1. 標題列 */
     var hd = mk('div', 'sv-hd'), at = str(o.at, 19);
     hd.append(mk('span', 'sv-t', '主力賣方 SV1' + (sess === 'D' ? '・日盤' : sess === 'N' ? '・夜盤' : '')));
-    var ct = mk('span', 'sv-tag', C.name);
-    ct.title = C.syn ? '價位和「現在」都是合成期貨（＝期貨 − 即時基差，和暴Z表 A2 一樣）' : '價位和「現在」都是期貨（定價時的基差換算；Argon V1.2.62 起改合成期貨）';
+    var ct = mk('span', 'sv-tag', C.name + (C.live ? '・即時' : ''));
+    ct.title = (C.syn ? '價位和「現在」都是合成期貨（＝期貨 − 即時基差，和暴Z表 A2 一樣）' : '價位和「現在」都是期貨（定價時的基差換算；Argon V1.2.62 起改合成期貨）') +
+      (C.live ? '。「現在」用網頁最上面的即時合成期貨（和即時表同一個，每幾秒更新）；莊家帳、舒適度、影子單照舊每分鐘／每 10 分鐘算' : '');
     hd.appendChild(ct);
     if (cont) { var ce = mk('span', 'sv-tag sv-hot', '夜盤延續'); ce.title = '08:45–09:00：沿用昨晚夜盤的價位，舒適度改用日盤報價；09:01 日盤定價'; hd.appendChild(ce); }
     hd.appendChild(mk('span', 'sv-tag', D ? (o.sh_on === false ? '只顯示・不下單' : '影子單・不下單') : '旁觀・不下單'));
@@ -18479,7 +18498,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       big.appendChild(zb);
       var nw4 = mk('span', 'sv-now', C.name + ' ');
       bold(nw4, px(x));
-      if (C.syn && n(o.fut) !== null) nw4.append('（期貨 ' + px(n(o.fut)) + '）');
+      if (C.syn && C.fut !== null) nw4.append('（期貨 ' + px(C.fut) + '）');
       big.appendChild(nw4);
       mean.textContent = dv[1];
     } else {
@@ -18493,7 +18512,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       big.appendChild(mk('span', 'sv-zone', vd[0]));
       var nw = mk('span', 'sv-now', C.name + ' ');
       bold(nw, px(x));
-      if (C.syn && n(o.fut) !== null) nw.append('（期貨 ' + px(n(o.fut)) + '）');
+      if (C.syn && C.fut !== null) nw.append('（期貨 ' + px(C.fut) + '）');
       big.appendChild(nw);
       mean.textContent = vd[1];
     }
@@ -18620,7 +18639,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     el.title = (D ? [                             /* 1.4.54 */
       '主力賣方 SV1（' + (str(o.ver, 12) || 'SV1') + '）莊家帳：假設大戶賣方放空整本週選庫存、每 10 分鐘用期貨把 delta 補平。痛度＝避險後損益 ÷ 一盤租金；收租 > -0.5、吃緊 -0.5～-1、虧租 ≦ -1',
       '11/27 回測（175 盤）：莊家 70% 的盤收租；虧租後順勢、收租時逆勢都沒有成立。影子單「莊家順勢」只記錄、不送單，4 週後評分；不影響 Argon、不影響實單',
-      'pin 舒適點＝價格停這裡賣方賺最多；L／U、Ls／Us＝假設賣方沒避險的兩平／停損，只當參考'
+      'pin、L／U、Ls／Us 都是假設賣方沒避險算的：pin＝收盤停在這裡、沒避險賣方帳面賺最多；L／U＝兩平；Ls／Us＝停損。只當參考，避險中的莊家不在乎價格停在哪裡'
     ] : [
       '主力賣方 SV1（' + (str(o.ver, 12) || 'SV1') + '）：用週選賣方庫存算賣方的舒適點、防線、回補線。研究用，還沒有經過市場驗證；旁觀單只記錄、不下單，不影響 Argon、不影響實單',
       'pin 舒適點＝價格停這裡賣方賺最多；L／U 防線＝越過後那一側賣方開始賠；Ls／Us 回補線＝越過後那一側賣方賠一倍權利金、容易被迫回補',
@@ -18653,7 +18672,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
   /* 1.4.54（SV1-4）：線名改「沒避險…（參考）」，多兩條莊家兩平 */
   var NM4 = { Ls: ['s1ls', 'Ls 沒避險停損', '參考線', '假設賣方沒避險：跌破＝Put 賣方賠一倍權利金。大戶有用期貨避險，只當參考'],
     L: ['s1l', 'L 沒避險兩平', '參考線', '假設賣方沒避險：跌破＝Put 賣方從賺轉賠。只當參考'],
-    pin: ['s1p', 'pin 舒適點', '賣方最想停的價', '收盤停在這裡，全部賣方（Call＋Put）賺最多'],
+    pin: ['s1p', 'pin 沒避險最賺', '參考線', '假設賣方沒避險、抱著不動：收盤停在這裡，全部賣方（Call＋Put）帳面賺最多。大戶有用期貨避險，不在乎停在哪裡，只當參考'],
     U: ['s1u', 'U 沒避險兩平', '參考線', '假設賣方沒避險：漲過＝Call 賣方從賺轉賠。只當參考'],
     Us: ['s1us', 'Us 沒避險停損', '參考線', '假設賣方沒避險：漲過＝Call 賣方賠一倍權利金。大戶有用期貨避險，只當參考'] };
   var ZTXT4 = { IN: '沒避險賣方都在賺', L_LS: '沒避險 Put 賣方在賠', U_US: '沒避險 Call 賣方在賠', LS_OUT: '沒避險 Put 賣方過停損', US_OUT: '沒避險 Call 賣方過停損' };
@@ -18736,7 +18755,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     if (!M.sv1) return '';
     if (M.sv1.dl4) return '<div class="bz-lad-box"><div class="h">主力賣方 SV1（莊家帳）</div><div class="bz-lad-leg">' +   /* 1.4.54 */
       '<span><i style="border-top:2.5px solid var(--bz-up);height:0;width:14px"></i>Us 沒避險停損</span><span><i style="border-top:2px dashed var(--bz-attn);height:0;width:14px"></i>U／L 沒避險兩平</span>' +
-      '<span><i style="border-top:2px solid var(--bz-accent);height:0;width:14px"></i>pin 舒適點</span><span><i style="border-top:2.5px solid var(--bz-down);height:0;width:14px"></i>Ls 沒避險停損</span>' +
+      '<span><i style="border-top:2px solid var(--bz-accent);height:0;width:14px"></i>pin 沒避險最賺</span><span><i style="border-top:2.5px solid var(--bz-down);height:0;width:14px"></i>Ls 沒避險停損</span>' +
       '<span><i style="border-top:1.5px dotted var(--bz-ink);height:0;width:14px"></i>莊家兩平</span></div>' +
       '<div class="bz-lad-out">大戶有用期貨避險，真正的痛看主力賣方卡的「莊家」狀態（收租／吃緊／虧租）。右邊色帶是假設賣方沒避險的分區，只當參考。' +
       '11/27 回測：越過 Ls／Us 順勢沒有贏過單純追價，L、U 反彈也不成立；莊家兩平不是撐壓。只顯示，不下單。</div></div>';
