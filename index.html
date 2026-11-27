@@ -17977,6 +17977,7 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
 </script>
 <!-- Z31_BAOZ_TXDM_UI_1_4_49_END -->
 <!-- Z31_BAOZ_SV1_UI_1_4_52 -->
+<!-- Z31_BAOZ_SV1_UI_1_4_54：主力賣方卡＋價位梯子改成莊家帳（Argon V1.2.63 SV1-4、上傳器 1.0.17）；舊資料和 1.4.53 一樣 -->
 <style id="z31-baoz-sv1-ui-1-4-52">
 /* ===== BaoZ UI 1.4.52（Claude 11/27）：主力賣方 SV1 卡重新設計，讓 Edward「一眼就看懂」（11/27 12:27），並改用合成期貨（12:25 決定卡「改成合成期貨」）
    取代 1.4.50／1.4.51 的卡。位置一樣：左欄最上面、林式進場時機上面。資料一樣是 seller_v1（上傳器），只讀、不寫 Firebase、不下單。
@@ -18069,6 +18070,18 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
   #baoz-system-panel .bz-sv1 .sv-tk { font-size: 10px; }
   #baoz-system-panel .bz-sv1 .sv-tk b { font-size: 10.5px; }
 }
+/* 1.4.54：莊家帳（Argon V1.2.63 起，ver=SV1-4） */
+#baoz-system-panel .bz-sv1 .sv-zone .sv-pv { margin-left: 8px; font-size: 15px; font-weight: 700; }
+#baoz-system-panel .bz-sv1 .sv-dl { margin-top: 6px; }
+#baoz-system-panel .bz-sv1 .sv-cap { font-size: 11px; color: var(--bz-muted); margin-bottom: 1px; }
+#baoz-system-panel .bz-sv1 .sv-split { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px 14px; }
+#baoz-system-panel .bz-sv1 .sv-split .sv-bv { min-width: 3.4em; }
+#baoz-system-panel .bz-sv1 .sv-split .sv-bv.sv-hotv { color: var(--bz-attn); }
+#baoz-system-panel .bz-sv1 .sv-rule.sv-ref .sv-seg { opacity: .45; }
+#baoz-system-panel .bz-sv1 .sv-dlb { position: absolute; top: 15px; height: 15px; box-sizing: border-box; border: 1.5px dashed var(--bz-ink); border-radius: 4px; opacity: .8; pointer-events: none; }
+@container sv1 (max-width: 520px) {
+  #baoz-system-panel .bz-sv1 .sv-split { grid-template-columns: minmax(0, 1fr); }
+}
 /* 價位梯子上的主力賣方線（1.4.52） */
 #baoz-system-panel .bz-lad-r.ln.dvS1 { min-height: 17px; }
 #baoz-system-panel .bz-lad-r.ln.dvS1 .x { font-weight: 700; }
@@ -18081,6 +18094,8 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
 #baoz-system-panel .bz-lad-r.ln.s1us { border-top: 2.5px solid var(--bz-up); }
 #baoz-system-panel .bz-lad-r.ln.s1us .k, #baoz-system-panel .bz-lad-r.ln.s1us .x { color: var(--bz-up); }
 #baoz-system-panel .bz-lad-r.ln.dvS1.old { opacity: .6; }
+#baoz-system-panel .bz-lad-r.ln.s1d { border-top: 1.5px dotted var(--bz-ink); }   /* 1.4.54：莊家兩平 */
+#baoz-system-panel .bz-lad-r.ln.s1d .k, #baoz-system-panel .bz-lad-r.ln.s1d .x { color: var(--bz-ink); }
 #baoz-system-panel .bz-lad-sv1z { position: absolute; right: -8px; width: 6px; z-index: 2; pointer-events: auto; border-radius: 2px; opacity: .9; }
 #baoz-system-panel .bz-lad-sv1t { position: absolute; left: 0; right: 0; z-index: 0; pointer-events: none; opacity: .1; }
 #baoz-system-panel .bz-lad-chip.sv1 { color: var(--c); border-color: var(--c); font-weight: 700; }
@@ -18104,6 +18119,13 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
   var ZC = { IN: 'var(--bz-accent)', L_LS: 'var(--bz-attn)', U_US: 'var(--bz-attn)', LS_OUT: 'var(--bz-down)', US_OUT: 'var(--bz-up)' };
   var ZCLS = { IN: 'sv-z-in', L_LS: 'sv-z-lose', U_US: 'sv-z-lose', LS_OUT: 'sv-z-dn', US_OUT: 'sv-z-up' };
   var s = { ref: null, fn: null, sv: null, ms: NaN, failAt: 0 };
+  /* 1.4.54 莊家帳：狀態顏色（收租＝藍、吃緊＝黃、虧租＝橘；一定配文字）、最大痛點的說法、莊家帳多久沒更新算停了（正常每 10 分鐘） */
+  var DLC = { '收租': 'var(--bz-accent)', '吃緊': 'var(--bz-attn)', '虧租': '#ff9f0a' };
+  var DLM = { '時間': '沒有地方在痛，時間價值照收', 'IV': '痛在 IV（波動率比定價時高，選擇權變貴）', '價格': '痛在價格（價格走離定價，莊家追著價格補避險在賠）' };
+  var DL_OLD_MS = 1500000;
+  var SH_TIP = '影子單「莊家順勢」（11/27 預先登記）：莊家吃緊或虧租（痛度 ≦ -0.5）而且 IV 比定價高 → 順著價格離開定價的方向記一筆；' +
+    '停損 0.3 EM（看分鐘收盤），不設目標，抱到收盤；一盤最多 1 筆，夜盤 01:00 後、收盤前 10 分鐘不開。回測 65 筆平均 +135 點，但 7–9 月只有 +27、' +
+    '主要靠 10–11 月，所以只記錄、不送單，4 週後評分。不影響 Argon、不影響實單';
 
   function $(id) { return document.getElementById(id); }
   function n(x) { return typeof x === 'number' && Number.isFinite(x) ? x : null; }
@@ -18167,6 +18189,95 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     }
     if (after) P.insertBefore(el, after.nextSibling); else P.insertBefore(el, P.firstChild);
     return el;
+  }
+
+  /* 1.4.54：莊家帳（Argon V1.2.63 起 ver=SV1-4；上傳器 1.0.17 帶 dl*）。null＝舊資料（照 1.4.53）；need＝上傳器還沒升級；on=false＝還沒有莊家快照 */
+  function dlOf(o) {
+    var v = /^SV1-(\d+)$/.exec(str(o.ver, 12));
+    if (!v || +v[1] < 4) return null;
+    if (o.dl !== true && o.dl !== false) return { need: true, on: false };
+    if (o.dl !== true) return { need: false, on: false };
+    var D = { need: false, on: true, at: str(o.dl_at, 19), late: o.dl_late === true, st: Object.prototype.hasOwnProperty.call(DLC, o.dl_state) ? o.dl_state : '',
+      main: Object.prototype.hasOwnProperty.call(DLM, o.dl_main) ? o.dl_main : '', p: n(o.dl_p), th: n(o.dl_th), vg: n(o.dl_vg), gm: n(o.dl_gm),
+      pmin: n(o.dl_pmin), r: n(o.dl_r), pnl: n(o.dl_pnl), g: n(o.dl_g), g0: n(o.dl_g0), hedge: n(o.dl_hedge), m0: n(o.dl_m0), lo: n(o.dl_lo), hi: n(o.dl_hi), bad: '' };
+    if (!D.st || D.p === null || D.r === null || !(D.r > 0)) D.bad = '莊家帳資料不完整';
+    return D;
+  }
+  function dlUse(D) { return !!(D && D.on && !D.bad); }
+  function dlWarn(D) {                         /* 標題列右邊的提醒（不變淡） */
+    if (!D) return '';
+    if (D.need) return '需要上傳器 1.0.17';
+    if (D.bad) return D.bad;
+    var a = tw(D.at);
+    if (D.on && Number.isFinite(a) && Number.isFinite(s.ms) && s.ms - a > DL_OLD_MS) return '莊家帳停在 ' + D.at.slice(11, 16);
+    return '';
+  }
+  function lots(v) { var a = Math.abs(v); return (a >= 10 ? Math.round(a).toLocaleString('en-US') : a.toFixed(1)) + ' 口'; }
+  /* 大字：[大字, 下面一行, 大字旁邊的小字] */
+  function dlVerdict(D) {
+    if (D.need) return ['莊家帳還沒上傳', '需要上傳器 1.0.17：Argon V1.2.63 已經在算莊家避險帳，舊上傳器不會送 dl 欄位。下面的 L／U／Ls／Us 是假設賣方沒避險的參考線', ''];
+    if (!D.on) return ['莊家帳計算中', '定價後每 10 分鐘更新一次（第一筆在定價後約 10 分鐘）；下面的 L／U／Ls／Us 是假設賣方沒避險的參考線', ''];
+    if (D.bad) return ['莊家帳不完整', D.bad, ''];
+    var m = D.st === '收租' ? (D.main === '時間' || !D.main ? DLM['時間'] : '還在收租；扣最多的是' + (D.main === 'IV' ? ' IV（波動率比定價時高）' : '價格（價格走離定價，避險來回在賠）'))
+                           : (DLM[D.main] || '');
+    return ['莊家' + D.st, '避險後' + (D.p >= 0 ? '賺 ' : '虧 ') + Math.abs(D.p).toFixed(2) + ' 盤租金（' + sg(D.pnl, 1) + ' 萬；一盤租金 ' + D.r.toFixed(1) + ' 萬）：' + m +
+      (D.pmin !== null && D.pmin <= -0.5 && D.pmin < D.p ? '。這一盤最低到 ' + sg(D.pmin, 2) : ''), sg(D.p, 2) + ' 盤租金'];
+  }
+  /* 台指期一句話（莊家帳版）：只講莊家狀態和影子單，不給買賣建議；回傳 [文字, 色調 warn/''] */
+  function dlGuide(o, D, x, cont) {
+    var obs = str(o.obs, 80), sh = /^莊家順勢/.test(obs), hold = sh && /持有/.test(obs);
+    var ir = n(o.iv_ratio), ivUp = ir !== null ? ir > 1.0005 : (n(o.iv) !== null && n(o.iv0) !== null && o.iv > o.iv0 * 1.0005);
+    var f0 = n(o.fwd0), way = f0 !== null && x !== null && x !== f0 ? (x < f0 ? '（現在價格在定價下面＝空）' : '（現在價格在定價上面＝多）') : '';
+    if (o.exp_today === true) return ['今天結算：價位只當參考，看下面的結算（估）', ''];
+    if (cont) return ['開盤前 15 分鐘：等 09:01 日盤定價、莊家帳重算後再看', ''];
+    if (hold) return ['影子單持有中：只記錄、不送單，4 週後評分。實單照 Argon', 'warn'];
+    if (D.st === '收租') return ['莊家收租中（避險後還在賺）：SV1 沒有方向訊號，照 Argon 做', ''];
+    if (sh) return ['莊家' + D.st + '；這一盤的影子單已經出場（一盤最多 1 筆）。SV1 沒有新訊號，照 Argon', 'warn'];
+    if (o.sh_on === true && ivUp) return ['莊家' + D.st + '而且 IV 比定價高：影子單條件到了，會順著價格離開定價的方向記一筆' + way + '，只記錄、不送單（夜盤 01:00 後、收盤前 10 分鐘不開）。實單照 Argon', 'warn'];
+    return ['莊家' + D.st + (ivUp ? '' : '，但 IV 沒有比定價高') + '：不是影子單條件，SV1 沒有方向訊號。實單照 Argon', 'warn'];
+  }
+  function dlBlock(D) {                        /* 拆帳三條＋避險＋莊家兩平 */
+    var box = mk('div', 'sv-dl'), cap = mk('div', 'sv-cap', '避險後拆帳（單位：一盤租金；+＝莊家賺）'), sp = mk('div', 'sv-split');
+    var top = Math.max(1, Math.abs(D.th || 0), Math.abs(D.vg || 0), Math.abs(D.gm || 0));
+    [['時間', D.th, '收到的時間價值（租金）'], ['IV', D.vg, 'IV 變化（比定價高＝莊家賠）'], ['價格', D.gm, '價格走動＋每 10 分鐘用期貨補避險的來回']].forEach(function (p) {
+      var v = p[1], row = mk('div', 'sv-b'), bt = mk('span', 'sv-bt2');
+      if (v !== null && v !== 0) { var i = mk('i', v > 0 ? 'sv-pos' : 'sv-neg'); i.style.width = (Math.abs(v) / top * 50).toFixed(1) + '%'; bt.appendChild(i); }
+      row.append(mk('span', 'sv-bl', p[0]), bt, mk('span', 'sv-bv' + (D.main === p[0] && v !== null && v < 0 ? ' sv-hotv' : ''), v === null ? '—' : sg(v, 2)));
+      row.title = p[2] + '：' + (v === null ? '—' : sg(v, 2) + ' 盤租金（' + sg(v * D.r, 1) + ' 萬）');
+      sp.appendChild(row);
+    });
+    box.append(cap, sp);
+    var hg = mk('div', 'sv-line', '莊家避險：每走 100 點補約 ');
+    bold(hg, D.g === null ? '—' : lots(D.g));
+    hg.append('大台（漲了買、跌了賣）');
+    if (D.hedge !== null) { hg.append('・現在期貨 '); bold(hg, Math.abs(D.hedge) < 0.05 ? '0 口' : (D.hedge > 0 ? '多 ' : '空 ') + lots(D.hedge)); }
+    hg.title = '莊家放空整本週選庫存、每 10 分鐘用期貨把 delta 補平：價格往上走要買期貨、往下走要賣期貨，方向和價格一樣。' +
+      '每 100 點補幾口＝gamma（定價時 ' + (D.g0 === null ? '—' : lots(D.g0)) + '）。台指期每天成交量大得多，這個量推不動行情，只是讓你知道莊家在做什麼';
+    box.appendChild(hg);
+    if (D.lo !== null && D.hi !== null && D.m0 !== null) {
+      var be = mk('div', 'sv-line', '莊家兩平（參考）：');
+      bold(be, px(D.lo) + ' – ' + px(D.hi));
+      be.append('（定價 ±' + px(D.m0) + ' 點，價位尺上的虛線框）');
+      be.title = '價格一次走離定價 ' + px(D.m0) + ' 點，莊家的 gamma 虧損就吃掉整盤租金（不算 IV、不算中途來回）。11/27 回測：這條線不是撐壓，只當參考';
+      box.appendChild(be);
+    }
+    return box;
+  }
+  function refLine(o, z, V) {                     /* 沒避險賣方（參考）：舊版 L／U／Ls／Us 和舒適度收成一行 */
+    var RZ = { IN: V && (V.Llost || V.Ulost) ? '在防線內（' + (V.Ulost ? 'U' : 'L') + ' 失守）' : '在 L 到 U 之間', L_LS: '跌破 L：Put 賣方開始賠', U_US: '漲過 U：Call 賣方開始賠', LS_OUT: '跌破 Ls：Put 賣方賠一倍權利金', US_OUT: '漲過 Us：Call 賣方賠一倍權利金' };
+    var e = mk('div', 'sv-line', '沒避險賣方（參考）：'), pc = n(o.put_c), cc = n(o.call_c);
+    bold(e, RZ[z] || '—');
+    e.append('・Put ' + (pc === null ? '—' : sg(pc, 0) + '%') + '・Call ' + (cc === null ? '—' : sg(cc, 0) + '%'));
+    e.title = 'L／U＝假設賣方完全不避險的兩平、Ls／Us＝賠一倍權利金的停損。真正的大戶有用期貨避險，所以這幾條線只當參考；' +
+      '11/27 回測：越過 Ls／Us 順勢沒有贏過單純追價，L、U 反彈也不成立。舒適度：+100%＝權利金全賺、0＝兩平、-100%＝賠一倍';
+    return e;
+  }
+  function shLine(o, obs) {                    /* 影子單（V1.2.63 起 sh_on） */
+    if (o.sh_on !== true && !obs) return null;
+    var e = mk('div', 'sv-line', '影子單（只記錄、不送單，4 週後評分）：');
+    if (obs) bold(e, obs, /持有/.test(obs) ? 'sv-hot' : ''); else e.append('這一盤還沒有（條件：莊家吃緊或虧租＋IV 比定價高）');
+    e.title = SH_TIP;
+    return e;
   }
 
   /* 座標：Argon V1.2.62（ver SV1-3）起價位和「現在」都是合成期貨（coord=SYN、syn）；V1.2.60／61 是期貨座標（fut） */
@@ -18263,8 +18374,9 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
   }
 
   /* 價位尺：分段寬度照點數比例，但每段至少 14%，兩端各 8%；現在價格在所在那一段裡照比例放 */
-  function ruler(V, x, em) {
-    var pts = [['Ls', '回補', V.Ls], ['L', '防線', V.L], ['pin', '舒適', V.pin], ['U', '防線', V.U], ['Us', '回補', V.Us]].filter(function (p) { return p[2] !== null; });
+  function ruler(V, x, em, D, ref) {          /* 1.4.54：ref＝SV1-4 線名（沒避險兩平／停損）；D＝莊家帳（畫莊家兩平虛線框） */
+    var LB = ref ? ['停損', '兩平', '舒適', '兩平', '停損'] : ['回補', '防線', '舒適', '防線', '回補'];
+    var pts = [['Ls', LB[0], V.Ls], ['L', LB[1], V.L], ['pin', LB[2], V.pin], ['U', LB[3], V.U], ['Us', LB[4], V.Us]].filter(function (p) { return p[2] !== null; });
     var OUT = 8, MIN = 14, inner = 100 - 2 * OUT, gaps = [], i, tot = 0;
     for (i = 1; i < pts.length; i++) { gaps.push(Math.max(1, pts[i][2] - pts[i - 1][2])); tot += gaps[i - 1]; }
     var w = gaps.map(function (g) { return g / tot * inner; }), deficit;
@@ -18286,7 +18398,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       for (var k = 1; k <= last; k++) if (p <= pts[k][2]) return pos[k - 1] + (p - pts[k - 1][2]) / (pts[k][2] - pts[k - 1][2]) * (pos[k] - pos[k - 1]);
       return 50;
     }
-    var R = mk('div', 'sv-rule'), bar = mk('div', 'sv-bar');
+    var R = mk('div', 'sv-rule' + (ref ? ' sv-ref' : '')), bar = mk('div', 'sv-bar');   /* 1.4.54：SV1-4 分區顏色變淡（線只當參考） */
     var edges = [0].concat(pos, [100]), prices = [pts[0][2] - unit].concat(pts.map(function (p) { return p[2]; }), [pts[pts.length - 1][2] + unit]);
     for (i = 1; i < edges.length; i++) {
       if (edges[i] - edges[i - 1] <= 0) continue;
@@ -18301,6 +18413,12 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       t.style.left = pos[k].toFixed(2) + '%';
       R.appendChild(t);
     });
+    if (D && D.lo !== null && D.hi !== null && D.hi > D.lo) {   /* 1.4.54：莊家兩平（定價 ± m0） */
+      var a0 = at(D.lo), a1 = at(D.hi), bd = mk('i', 'sv-dlb');
+      bd.style.left = a0.toFixed(2) + '%';
+      bd.style.width = Math.max(0.8, a1 - a0).toFixed(2) + '%';
+      R.appendChild(bd);
+    }
     if (x !== null) {
       var m = at(x), mkr = mk('i', 'sv-mk'), ml = mk('span', 'sv-ml' + (m < 10 ? ' sv-l0' : m > 90 ? ' sv-r0' : ''), '現在 ' + px(x));
       mkr.style.left = m.toFixed(2) + '%';
@@ -18323,12 +18441,14 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     var sess = o.session === 'D' ? 'D' : o.session === 'N' ? 'N' : '', cont = o.phase === 'CONT';
     var stName = function (q) { return sess === 'D' && q === '收租' ? '舒服' : q; };            /* 日盤只有 5 小時：收租叫「舒服」 */
     var V = levels(o), z = V && x !== null ? zoneOf(x, V) : '';
+    var D = dlOf(o), DU = dlUse(D);              /* 1.4.54 */
     var more = false;
     try { more = localStorage.getItem(MORE_KEY) === '1'; } catch (e) {}
     var old = el.querySelector('details.sv-more');
     if (old) more = old.open;
     el.className = 'bz-sv1' + (dim ? ' sv-dim' : '');
-    if (z && !dim) el.style.setProperty('--sv-z', ZC[z]); else el.style.removeProperty('--sv-z');
+    var zc = D ? (DU ? DLC[D.st] : '') : (z ? ZC[z] : '');
+    if (zc && !dim) el.style.setProperty('--sv-z', zc); else el.style.removeProperty('--sv-z');
     el.replaceChildren();
 
     /* 1. 標題列 */
@@ -18338,9 +18458,10 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     ct.title = C.syn ? '價位和「現在」都是合成期貨（＝期貨 − 即時基差，和暴Z表 A2 一樣）' : '價位和「現在」都是期貨（定價時的基差換算；Argon V1.2.62 起改合成期貨）';
     hd.appendChild(ct);
     if (cont) { var ce = mk('span', 'sv-tag sv-hot', '夜盤延續'); ce.title = '08:45–09:00：沿用昨晚夜盤的價位，舒適度改用日盤報價；09:01 日盤定價'; hd.appendChild(ce); }
-    hd.appendChild(mk('span', 'sv-tag', '旁觀・不下單'));
-    var ae = mk('span', 'sv-at' + (w[0] ? ' sv-warn' : ''), w[0] || (at ? at.slice(11, 16) + ' 計算' : '—'));
-    if (w[0]) ae.title = w[0];
+    hd.appendChild(mk('span', 'sv-tag', D ? (o.sh_on === false ? '只顯示・不下單' : '影子單・不下單') : '旁觀・不下單'));
+    var w0 = w[0] || dlWarn(D);
+    var ae = mk('span', 'sv-at' + (w0 ? ' sv-warn' : ''), w0 || (at ? at.slice(11, 16) + ' 計算' : '—'));
+    if (w0) ae.title = w0;
     hd.appendChild(ae);
     el.appendChild(hd);
 
@@ -18352,6 +18473,15 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     } else if (x === null) {
       big.appendChild(mk('span', 'sv-zone', '沒有' + C.name + '價'));
       mean.textContent = w[0] || str(o.note, 120);
+    } else if (D) {                               /* 1.4.54：大字＝莊家狀態 */
+      var dv = dlVerdict(D), zb = mk('span', 'sv-zone', dv[0]);
+      if (dv[2]) zb.appendChild(mk('span', 'sv-pv', dv[2]));
+      big.appendChild(zb);
+      var nw4 = mk('span', 'sv-now', C.name + ' ');
+      bold(nw4, px(x));
+      if (C.syn && n(o.fut) !== null) nw4.append('（期貨 ' + px(n(o.fut)) + '）');
+      big.appendChild(nw4);
+      mean.textContent = dv[1];
     } else {
       var vd = verdict(z, V, x, sess, st, side);
       if (z === 'IN' && st === '防守') {   /* 1.4.53：價格在防線內、但狀態是防守（IV 升或舒適度低）：不寫「兩邊都在賺」 */
@@ -18368,19 +18498,21 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       mean.textContent = vd[1];
     }
     el.append(big, mean);
-    if (V && x !== null && !dim) {   /* 1.4.53：台指期一句話 */
-      var g = guide(o, C, z, V, x, st, side, em, cont), ge = mk('div', 'sv-guide' + (g[1] ? ' sv-g-' + g[1] : ''));
+    if (V && x !== null && !dim && (!D || DU)) {   /* 1.4.53：台指期一句話（1.4.54：SV1-4 改莊家帳版） */
+      var g = D ? dlGuide(o, D, x, cont) : guide(o, C, z, V, x, st, side, em, cont), ge = mk('div', 'sv-guide' + (g[1] ? ' sv-g-' + g[1] : ''));
       ge.appendChild(mk('span', 'sv-gl', '台指期'));
       ge.append(g[0]);
-      ge.title = '照 SV1 回測規則給的一句話（夜盤 91 晚：只有越過 Ls／Us 而且 IV 比定價高之後順勢成立；L、U 反彈和收租不成立；日盤沒回測）。只是提示、未驗證，實單照 Argon';
+      ge.title = D ? '莊家帳版一句話：只說莊家現在的狀態和影子單，不給買賣建議。11/27 回測（175 盤）：莊家虧租後順勢、收租時逆勢都沒有成立；影子單 4 週後評分。實單照 Argon'
+                   : '照 SV1 回測規則給的一句話（夜盤 91 晚：只有越過 Ls／Us 而且 IV 比定價高之後順勢成立；L、U 反彈和收租不成立；日盤沒回測）。只是提示、未驗證，實單照 Argon';
       el.appendChild(ge);
     }
+    if (DU) el.appendChild(dlBlock(D));           /* 1.4.54：拆帳、避險、莊家兩平 */
 
     /* 3. 價位尺 */
-    if (V) el.appendChild(ruler(V, x, em));
+    if (V) el.appendChild(ruler(V, x, em, DU ? D : null, !!D));
 
     /* 4. 往下／往上 */
-    if (V && x !== null) {
+    if (V && x !== null && !D) {                  /* 1.4.54：SV1-4 不顯示往下／往上（線只當參考） */
       var dist = mk('div', 'sv-dist');
       var dn = mk('div'), up = mk('div');
       dn.appendChild(mk('span', 'sv-dh', '▼ 往下'));
@@ -18413,11 +18545,12 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       row.title = b[0] + '舒適度 ' + (v === null ? '—' : sg(v, 1) + '%') + '：+100%＝權利金全賺、0＝兩平、−100%＝權利金賠一倍（回補）；狀態 ' + (stName(bst) || '—');
       bars.appendChild(row);
     });
-    el.appendChild(bars);
+    if (!D) el.appendChild(bars); else if (V && x !== null) el.appendChild(refLine(o, z, V));   /* 1.4.54：SV1-4 收成一行參考 */
 
     /* 6. 旁觀單、結算均價（估） */
     var obs = str(o.obs, 80), on = n(o.obs_n);
-    if (obs) {
+    if (D) { var shl = shLine(o, obs); if (shl) el.appendChild(shl); }   /* 1.4.54：影子單 */
+    else if (obs) {
       var ob = mk('div', 'sv-line', '旁觀單（不送單）' + (on ? ' ' + on + '/2' : '') + '：');
       bold(ob, obs);
       el.appendChild(ob);
@@ -18432,7 +18565,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     }
 
     /* 7. 更多 */
-    var dt = mk('details', 'sv-more'), sm = mk('summary', '', '更多：結算價位、開盤、隔夜、IV、損益');
+    var dt = mk('details', 'sv-more'), sm = mk('summary', '', D ? '更多：莊家帳、結算價位、開盤、隔夜、IV' : '更多：結算價位、開盤、隔夜、IV、損益');
     dt.open = more;
     dt.appendChild(sm);
     dt.addEventListener('toggle', function () { try { localStorage.setItem(MORE_KEY, dt.open ? '1' : '0'); } catch (e) {} });
@@ -18443,8 +18576,21 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       if (tip) { a.title = tip; b.title = tip; }
       kv.append(a, b);
     }
-    row2('狀態', [['', st === '回補' ? '回補' + (side ? '・順勢' + side : '') : (stName(st) || '—')], ['壓力', pr || '—', pr && pr !== '時間' ? 'sv-hot' : '']],
-      'Argon 每 10 分鐘判一次：收租（日盤叫舒服）／防守／回補／中性；壓力＝時間、IV、價格三者中對賣方最不利的');
+    if (DU) {                                     /* 1.4.54：莊家帳細節 */
+      row2('莊家', [['', D.st, D.st !== '收租' ? 'sv-hot' : ''], ['痛度', sg(D.p, 2)], ['這一盤最低', sg(D.pmin, 2), D.pmin !== null && D.pmin <= -0.5 ? 'sv-hot' : '']],
+        '痛度＝避險後損益 ÷ 一盤租金；收租 > -0.5、吃緊 -0.5～-1、虧租 ≦ -1（狀態看現在的痛度）');
+      row2('租金', [['一盤', D.r.toFixed(1) + ' 萬'], ['避險後', sg(D.pnl, 1) + ' 萬', D.pnl !== null && D.pnl < 0 ? 'sv-hot' : '']],
+        '租金＝價格和 IV 都不動時，這一盤（定價到收盤）能收的時間價值；萬元');
+      row2('拆帳（萬）', [['時間', sg(D.th === null ? null : D.th * D.r, 1)], ['IV', sg(D.vg === null ? null : D.vg * D.r, 1), D.main === 'IV' ? 'sv-hot' : ''], ['價格', sg(D.gm === null ? null : D.gm * D.r, 1), D.main === '價格' ? 'sv-hot' : '']],
+        '避險後損益拆成時間、IV、價格三塊（萬元，＋＝莊家賺）');
+      row2('避險', [['每 100 點', D.g === null ? '—' : lots(D.g)], ['定價時', D.g0 === null ? '—' : lots(D.g0)], ['現在期貨', D.hedge === null ? '—' : Math.abs(D.hedge) < 0.05 ? '0 口' : (D.hedge > 0 ? '多 ' : '空 ') + lots(D.hedge)]],
+        '大台口數；每 10 分鐘補一次');
+      row2('莊家帳', [['', (D.at.slice(11, 16) || '—') + ' 更新'], ['', D.late ? 'Excel 晚開：第一筆從定價直接算到開檔' : '每 10 分鐘']],
+        '莊家帳每 10 分鐘拍一次快照；Excel 在定價 11 分鐘後才開時，第一筆直接從定價算到開檔那一刻');
+    }
+    row2(D ? '沒避險賣方' : '狀態', [['', st === '回補' ? '回補' + (side ? '・順勢' + side : '') : (stName(st) || '—')], ['壓力', pr || '—', pr && pr !== '時間' ? 'sv-hot' : '']],
+      D ? '舊版 SV1 判斷（假設賣方沒避險，只當參考）：收租／防守／回補／中性；壓力＝時間、IV、價格三者中對賣方最不利的'
+        : 'Argon 每 10 分鐘判一次：收租（日盤叫舒服）／防守／回補／中性；壓力＝時間、IV、價格三者中對賣方最不利的');
     row2('結算價位', [['pin', px(n(o.set_pin))], ['L', px(n(o.set_L))], ['U', px(n(o.set_U))]], '結算舒適點／結算防線（加權指數，到期那天才有用）' + (o.exp_today === true ? '：今天 13:30 結算' : ''));
     var ZN = { IN: '舒適區內', L_LS: 'L–Ls 之間', LS_OUT: 'Ls 以外', U_US: 'U–Us 之間', US_OUT: 'Us 以外', L_LOST: '下方失守側', U_LOST: '上方失守側' };
     if (ZN[o.gap_zone] && (sess === 'D' || cont)) {
@@ -18460,29 +18606,34 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     var iv = n(o.iv), iv0 = n(o.iv0), ir = n(o.iv_ratio);
     row2('IV', [['現在', iv === null ? '—' : iv.toFixed(2) + '%'], ['定價', iv0 === null ? '—' : iv0.toFixed(2) + '%'], ['×', ir === null ? '—' : ir.toFixed(2), ir !== null && ir > 1.1 ? 'sv-hot' : '']], 'ATM IV；×＝現在 ÷ 定價，> 1.1 對賣方不利');
     row2('EM', [['', em === null ? '—' : px(em) + ' 點']], sess === 'D' ? '日盤預期波動＝定價價格 × IV × √(到 13:45 收盤的時間)' : '夜盤預期波動＝定價價格 × IV × √(14 小時)');
-    row2('損益（萬）', [['時間', sg(n(o.pnl_theta), 1), pr === '時間' ? 'sv-hot' : ''], ['IV', sg(n(o.pnl_vega), 1), pr === 'IV' ? 'sv-hot' : ''], ['價格', sg(n(o.pnl_price), 1), pr === '價格' ? 'sv-hot' : '']],
+    row2(D ? '沒避險損益（萬）' : '損益（萬）', [['時間', sg(n(o.pnl_theta), 1), pr === '時間' ? 'sv-hot' : ''], ['IV', sg(n(o.pnl_vega), 1), pr === 'IV' ? 'sv-hot' : ''], ['價格', sg(n(o.pnl_price), 1), pr === '價格' ? 'sv-hot' : '']],
       '從定價到現在，全部賣方的損益變化拆解（萬元，＋＝賣方賺）');
     var basisNow = n(o.basis), b0 = n(o.basis0);
     row2('定價', [['', str(o.base_at, 19).slice(5, 16) || '—'], [C.syn ? '合成期貨' : '期貨', px(C.syn ? n(o.fwd0) : n(o.fut0))], ['基差', C.syn && basisNow !== null ? sg(basisNow, 0) + '（現在）' : sg(b0, 0)]],
       '定價時間、定價價格；基差＝期貨 − 合成期貨');
-    if (!obs) row2('旁觀單', [['', '無' + (on ? '（這個週選已記 ' + on + '/2）' : '')]], '旁觀單：只記錄、不送單，研究用；日盤、夜盤各最多 2 筆');
+    if (!obs && !D) row2('旁觀單', [['', '無' + (on ? '（這個週選已記 ' + on + '/2）' : '')]], '旁觀單：只記錄、不送單，研究用；日盤、夜盤各最多 2 筆');
     var exp = str(o.expiry, 10);
     row2('說明', [['', [str(o.note, 120), str(o.contract, 32) + (exp ? ' ' + exp.slice(5).replace('-', '/') + ' 到期' : '')].filter(Boolean).join('；')]]);
     dt.appendChild(kv);
     el.appendChild(dt);
 
-    el.title = [
+    el.title = (D ? [                             /* 1.4.54 */
+      '主力賣方 SV1（' + (str(o.ver, 12) || 'SV1') + '）莊家帳：假設大戶賣方放空整本週選庫存、每 10 分鐘用期貨把 delta 補平。痛度＝避險後損益 ÷ 一盤租金；收租 > -0.5、吃緊 -0.5～-1、虧租 ≦ -1',
+      '11/27 回測（175 盤）：莊家 70% 的盤收租；虧租後順勢、收租時逆勢都沒有成立。影子單「莊家順勢」只記錄、不送單，4 週後評分；不影響 Argon、不影響實單',
+      'pin 舒適點＝價格停這裡賣方賺最多；L／U、Ls／Us＝假設賣方沒避險的兩平／停損，只當參考'
+    ] : [
       '主力賣方 SV1（' + (str(o.ver, 12) || 'SV1') + '）：用週選賣方庫存算賣方的舒適點、防線、回補線。研究用，還沒有經過市場驗證；旁觀單只記錄、不下單，不影響 Argon、不影響實單',
       'pin 舒適點＝價格停這裡賣方賺最多；L／U 防線＝越過後那一側賣方開始賠；Ls／Us 回補線＝越過後那一側賣方賠一倍權利金、容易被迫回補',
-      '回測（夜盤 91 晚）：只有「越過回補線後順勢延續」成立；L、U 防線反彈、收租都不成立。日盤沒有回測過',
+      '回測（夜盤 91 晚）：只有「越過回補線後順勢延續」成立；L、U 防線反彈、收租都不成立。日盤沒有回測過'
+    ]).concat([
       o.tf_at ? '今天日盤分類帳（' + str(o.tf_at, 19).slice(11, 16) + '，只顯示、不當訊號）：Call 賣方新增 ' + px(n(o.tf_c_add)) + '、回補 ' + px(n(o.tf_c_cov)) + ' 口；Put 賣方新增 ' + px(n(o.tf_p_add)) + '、回補 ' + px(n(o.tf_p_cov)) + ' 口' : '',
       '庫存（' + (n(o.n_sess) === null ? '—' : n(o.n_sess)) + ' 盤）：Call 賣方 ' + px(n(o.q_c)) + ' 口、Put 賣方 ' + px(n(o.q_p)) + ' 口',
       '狀態碼 ' + (str(o.status, 12) || '—') + '　模式 ' + (str(o.mode, 4) || '—') + '　' + (str(o.key, 48) || '')
-    ].filter(Boolean).join('\n');
+    ]).filter(Boolean).join('\n');
     el.hidden = false;
   }
 
-  window.BZ_SV1 = { coordOf: coordOf, levels: levels, zoneOf: zoneOf, verdict: verdict, guide: guide };   /* 價位梯子（下面 BZ_SV1L）共用 */
+  window.BZ_SV1 = { coordOf: coordOf, levels: levels, zoneOf: zoneOf, verdict: verdict, guide: guide, dlOf: dlOf, dlVerdict: dlVerdict, dlGuide: dlGuide, DLC: DLC };   /* 價位梯子（下面 BZ_SV1L）共用 */
   function tick() { reconcile(); render(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
   setInterval(tick, 5000);
@@ -18499,6 +18650,14 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     Us: ['s1us', 'Us 回補線', '漲過→Call 賣方被迫回補', '漲過＝Call 賣方賠一倍權利金，被迫買回 Call，會推價格往上'] };
   var ZCOL = { IN: 'var(--bz-accent)', L_LS: 'var(--bz-attn)', U_US: 'var(--bz-attn)', LS_OUT: 'var(--bz-down)', US_OUT: 'var(--bz-up)' };
   var ZTXT = { IN: '賣方舒服區', L_LS: 'Put 賣方在賠', U_US: 'Call 賣方在賠', LS_OUT: 'Put 賣方回補區', US_OUT: 'Call 賣方回補區' };
+  /* 1.4.54（SV1-4）：線名改「沒避險…（參考）」，多兩條莊家兩平 */
+  var NM4 = { Ls: ['s1ls', 'Ls 沒避險停損', '參考線', '假設賣方沒避險：跌破＝Put 賣方賠一倍權利金。大戶有用期貨避險，只當參考'],
+    L: ['s1l', 'L 沒避險兩平', '參考線', '假設賣方沒避險：跌破＝Put 賣方從賺轉賠。只當參考'],
+    pin: ['s1p', 'pin 舒適點', '賣方最想停的價', '收盤停在這裡，全部賣方（Call＋Put）賺最多'],
+    U: ['s1u', 'U 沒避險兩平', '參考線', '假設賣方沒避險：漲過＝Call 賣方從賺轉賠。只當參考'],
+    Us: ['s1us', 'Us 沒避險停損', '參考線', '假設賣方沒避險：漲過＝Call 賣方賠一倍權利金。大戶有用期貨避險，只當參考'] };
+  var ZTXT4 = { IN: '沒避險賣方都在賺', L_LS: '沒避險 Put 賣方在賠', U_US: '沒避險 Call 賣方在賠', LS_OUT: '沒避險 Put 賣方過停損', US_OUT: '沒避險 Call 賣方過停損' };
+  function sg2(x) { return x === null ? '—' : (x > 0 ? '+' : x < 0 ? '-' : '') + Math.abs(x).toFixed(2); }
   function n(x) { return typeof x === 'number' && Number.isFinite(x) ? x : null; }
   function fmt(v) { return v == null ? '—' : Math.round(v).toLocaleString('en-US'); }
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -18513,15 +18672,24 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     var sh = 0;
     if (!C.syn) { var b0 = n(o.basis0); if (b0 === null) return null; sh = b0; }   /* 期貨座標 → 合成 */
     var X = { live: String(o.status).toUpperCase() === 'OK', sess: o.session === 'D' ? '日盤' : o.session === 'N' ? '夜盤' : '', V: {} , lines: [] };
+    var D = H.dlOf ? H.dlOf(o) : null;               /* 1.4.54 */
+    X.dl4 = !!D;
+    X.dl = D && D.on && !D.bad ? D : null;
     ['pin', 'L', 'U', 'Ls', 'Us'].forEach(function (k) { X.V[k] = V[k] === null ? null : V[k] - sh; });
     X.V.Llost = V.Llost; X.V.Ulost = V.Ulost;
     X.z = H.zoneOf(M.syn, X.V);
     ['Us', 'U', 'pin', 'L', 'Ls'].forEach(function (k) {
       if (X.V[k] === null) return;
-      var q = NM[k];
+      var q = (X.dl4 ? NM4 : NM)[k];
       M.marks.push({ k: X.V[k], line: 'dvS1 ' + q[0] + (X.live ? '' : ' old'), t: '主力賣方 ' + q[1] + '｜' + q[2],
         tip: '主力賣方 SV1' + (X.sess ? '（' + X.sess + '）' : '') + ' ' + q[1] + ' ' + fmt(X.V[k]) + '（合成）：' + q[3] + (X.live ? '' : '｜盤後：上一盤的價位') + '｜旁觀・不下單，未驗證' });
     });
+    if (X.dl && X.dl.lo !== null && X.dl.hi !== null && X.dl.m0 !== null) {   /* 1.4.54：莊家兩平（點線） */
+      [['hi', X.dl.hi - sh, '+'], ['lo', X.dl.lo - sh, '-']].forEach(function (b) {
+        M.marks.push({ k: b[1], line: 'dvS1 s1d' + (X.live ? '' : ' old'), t: '莊家兩平（' + (b[0] === 'hi' ? '上' : '下') + '）｜定價 ' + b[2] + fmt(X.dl.m0) + ' 點',
+          tip: '主力賣方 SV1 莊家兩平 ' + fmt(b[1]) + '（合成）：價格一次走離定價 ' + fmt(X.dl.m0) + ' 點，避險莊家的 gamma 虧損就吃掉整盤租金（不算 IV）｜不是撐壓，只當參考' });
+      });
+    }
     return X;
   }
 
@@ -18542,7 +18710,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
       var z = window.BZ_SV1.zoneOf(mid, X.V), e = document.createElement('div');
       e.className = 'bz-lad-sv1z';
       e.style.top = Math.round(edges[i - 1]) + 'px'; e.style.height = Math.round(edges[i] - edges[i - 1]) + 'px'; e.style.background = ZCOL[z];
-      e.title = '主力賣方：' + ZTXT[z];
+      e.title = X.dl4 ? '沒避險賣方（參考）：' + ZTXT4[z] : '主力賣方：' + ZTXT[z];
       lad.appendChild(e);
       if (z !== 'IN') {                                       /* 梯子底色：在賠、回補區淡淡上色（舒服區不上色） */
         var g = document.createElement('div');
@@ -18556,11 +18724,22 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
   function chip(M) {
     var X = M.sv1;
     if (!X) return '';
+    if (X.dl4) {                                  /* 1.4.54：小標＝莊家狀態 */
+      if (!X.dl) return '<span class="bz-lad-chip sv1" style="--c:var(--bz-muted)" title="主力賣方 SV1 莊家帳：還沒有資料（定價後每 10 分鐘；或需要上傳器 1.0.17）">莊家：—</span>';
+      return '<span class="bz-lad-chip sv1" style="--c:' + window.BZ_SV1.DLC[X.dl.st] + '" title="主力賣方 SV1 莊家帳：痛度 ' + sg2(X.dl.p) + ' 盤租金（避險後損益 ÷ 一盤租金）；右邊色帶是沒避險賣方的分區（參考）；影子・不下單">莊家：' +
+        esc(X.dl.st) + ' ' + sg2(X.dl.p) + (X.live ? '' : '（盤後）') + '</span>';
+    }
     return '<span class="bz-lad-chip sv1" style="--c:' + ZCOL[X.z] + '" title="主力賣方 SV1（右邊色帶）：現在合成 ' + fmt(M.syn) + ' 在這一區；旁觀・不下單，未驗證">主力賣方：' + esc(ZTXT[X.z]) + (X.live ? '' : '（盤後）') + '</span>';
   }
 
   function side(M) {
     if (!M.sv1) return '';
+    if (M.sv1.dl4) return '<div class="bz-lad-box"><div class="h">主力賣方 SV1（莊家帳）</div><div class="bz-lad-leg">' +   /* 1.4.54 */
+      '<span><i style="border-top:2.5px solid var(--bz-up);height:0;width:14px"></i>Us 沒避險停損</span><span><i style="border-top:2px dashed var(--bz-attn);height:0;width:14px"></i>U／L 沒避險兩平</span>' +
+      '<span><i style="border-top:2px solid var(--bz-accent);height:0;width:14px"></i>pin 舒適點</span><span><i style="border-top:2.5px solid var(--bz-down);height:0;width:14px"></i>Ls 沒避險停損</span>' +
+      '<span><i style="border-top:1.5px dotted var(--bz-ink);height:0;width:14px"></i>莊家兩平</span></div>' +
+      '<div class="bz-lad-out">大戶有用期貨避險，真正的痛看主力賣方卡的「莊家」狀態（收租／吃緊／虧租）。右邊色帶是假設賣方沒避險的分區，只當參考。' +
+      '11/27 回測：越過 Ls／Us 順勢沒有贏過單純追價，L、U 反彈也不成立；莊家兩平不是撐壓。只顯示，不下單。</div></div>';
     return '<div class="bz-lad-box"><div class="h">主力賣方 SV1（右邊色帶）</div><div class="bz-lad-leg">' +
       '<span><i style="border-top:2.5px solid var(--bz-up);height:0;width:14px"></i>Us 回補線</span><span><i style="border-top:2px dashed var(--bz-attn);height:0;width:14px"></i>U／L 防線</span>' +
       '<span><i style="border-top:2px solid var(--bz-accent);height:0;width:14px"></i>pin 舒適點</span><span><i style="border-top:2.5px solid var(--bz-down);height:0;width:14px"></i>Ls 回補線</span></div>' +
