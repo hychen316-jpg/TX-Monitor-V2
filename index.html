@@ -15331,7 +15331,10 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     var ex = ai && txt(ai.expiry_date);   /* AI V0.1.18 起就有（live.txt [控制台] B6 到期日）；沒有就不顯示。ai.expiry 是別的用途，不要讀 */
     M.expiry = /^\d{4}-\d{2}-\d{2}/.test(ex) ? ex.slice(0, 10) : '';
     M.sr = null; try { if (window.BZ_SR1431) M.sr = window.BZ_SR1431.model(d, M); } catch (e) { M.sr = null; }   /* 1.4.31 撐壓狀態 */
-    M.lin = null; try { if (window.BZ_LIN1444) M.lin = window.BZ_LIN1444.model(d, M); } catch (e) { M.lin = null; }   /* 1.4.44 林式撐壓（Argon V1.2.56 第 80–87 列）；AI 影子計畫的線先不畫 */
+    /* 1.4.52（Edward 11/27 12:31「莊家在哪裡裡面移除林式資訊」、12:34「html可以先移除林式進場時機的區塊」）：梯子和左欄都不用林式 */
+    M.lin = null;
+    M.marks = M.marks.filter(function (mk) { return !mk || mk.line !== 'ai'; });   /* 1.4.44：AI 即時分析先不顯示（梯子上的 AI 影子計畫也不畫） */
+    M.sv1 = null; try { if (window.BZ_SV1L) M.sv1 = window.BZ_SV1L.model(d, M); } catch (e) { M.sv1 = null; }   /* 1.4.52：主力賣方五條線 */
     return M;
   }
 
@@ -15426,7 +15429,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       by[cov[0]].ms.unshift({ cls: z.ov ? 'pk' : 'bx', t: (z.ov ? '粉紅 ' : '調單區 ') + z.name + '（' + (z.tb === 'Z' ? '暴Z' : '今天') + '）', tip: tbName(z.tb) + ' ' + fmt(z.lo) + '–' + fmt(z.hi) + '｜' + z.meaning });
     });
     if (M.sr) { try { window.BZ_SR1431.rows(M, by); } catch (e) {} }   /* 1.4.31：撐壓線蓋到的履約價列 */
-    if (M.lin) { try { window.BZ_LIN1444.rows(M, by, out); } catch (e) {} }   /* 1.4.44：林式撐壓小標 */
+    /* 1.4.52：「莊家在這裡」不放林式小標 */
     var lines = [{ px: true, k: M.syn }];
     M.marks.forEach(function (mk) {
       if (!inR(mk.k)) { (mk.k > M.syn ? out.up : out.dn).push(mk.t + '（' + sgn(mk.k - M.syn) + '）'); return; }
@@ -15482,7 +15485,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
   function overlay(box, M, L) {
     var lad = box.querySelector('[data-z1426-lad]');
     if (!lad) return;
-    Array.prototype.forEach.call(lad.querySelectorAll('.bz-lad-ov,.bz-lad-hl'), function (e) { e.remove(); });
+    Array.prototype.forEach.call(lad.querySelectorAll('.bz-lad-ov,.bz-lad-hl,.bz-lad-sv1z,.bz-lad-sv1t'), function (e) { e.remove(); });
     var px = lad.querySelector('[data-px]');
     var span = function (els) {
       var t = Infinity, b = -Infinity;
@@ -15512,11 +15515,12 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       var sp = span([rowEl(at(M.hi - M.basis)), rowEl(at(M.lo - M.basis)), px]);
       if (sp) add('bz-lad-hl', sp);
     }
+    try { if (M.sv1 && window.BZ_SV1L) window.BZ_SV1L.strip(lad, M); } catch (e) {}   /* 1.4.52：主力賣方色帶 */
   }
 
   function sideHtml(M, L) {
     var h = '';   /* 1.4.32：不放撐壓狀態小框（梯子上的小標就有一樣的資訊） */
-    if (M.lin) { try { h = window.BZ_LIN1444.side(M) || ''; } catch (e) { h = ''; } }   /* 1.4.44：林式撐壓說明 */
+    if (M.sv1) { try { h = window.BZ_SV1L.side(M) || ''; } catch (e) { h = ''; } }   /* 1.4.52：主力賣方說明（取代林式說明） */
     var srU = '', srD = '';   /* 1.4.32：梯子範圍外的撐壓線 */
     if (M.sr) { try { srU = window.BZ_SR1431.outs(M, L, 1); srD = window.BZ_SR1431.outs(M, L, -1); } catch (e) { srU = srD = ''; } }
     if (L.out.up.length || L.out.dn.length || srU || srD) {
@@ -15595,6 +15599,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
       else if (M.expiry === tmr) et = '近月明天到期（' + M.expiry.slice(5).replace('-', '/') + '）';
       if (et) dir.push('<span class="bz-lad-chip exp" title="控制台 B6 到期日（AI expiry_date）">' + et + '</span>');
     }
+    if (M.sv1) { try { dir.unshift(window.BZ_SV1L.chip(M)); } catch (e) {} }   /* 1.4.52 */
     return { stale: stale, html: '<div class="bz-lad-head"><strong>價位梯子</strong>' + (M.sr ? window.BZ_SR1431.head(M) : '') + '<span>履約價（合成）座標，跟 Excel 一樣由高到低；左暴Z表、右即時表</span><span class="age">' +
              (age == null ? '' : (stale ? '資料 ' + age + ' 分鐘前（舊）' : (age < 1 ? '剛更新' : age + ' 分鐘前'))) + '</span></div>',
              info: distHtml(M) + '<div class="bz-lad-dir">' + dir.join('') + '</div>' };
@@ -15638,7 +15643,7 @@ html.z31-portrait #baoz-system-panel #bz-ai-card[data-z26ai] { --z26-aih: 262px;
     var html = H.html + '<div class="bz-lad-main"><div class="bz-lad-top">' + H.info + A.html + '</div>' + ladderHtml(M, L) + '<div class="bz-lad-side">' + sideHtml(M, L) + '</div></div>';
     if (H.stale) s.box.setAttribute('data-stale', '1'); else s.box.removeAttribute('data-stale');
     if (html !== s.html) { s.box.innerHTML = html; s.html = html; overlay(s.box, M, L); }
-    try { if (window.BZ_LIN1444) window.BZ_LIN1444.card(M, now); } catch (e) {}   /* 1.4.44：左欄最上面「林式進場時機」 */
+    try { if (window.BZ_LIN1444) window.BZ_LIN1444.card(null); } catch (e) {}   /* 1.4.52：拿掉左欄「林式進場時機」（Edward 11/27 12:34） */
     if (A.flash && !H.stale) s.flashUntil = now + 3600;
     if (now < (s.flashUntil || 0)) { var bar = s.box.querySelector('[data-z1426-bar]'); if (bar && !bar.classList.contains('flash')) bar.classList.add('flash'); }
     s.last = now;
@@ -17971,85 +17976,127 @@ html.txd-shown #v2-live-page #tx-mfs { display: none !important; }
 })();
 </script>
 <!-- Z31_BAOZ_TXDM_UI_1_4_49_END -->
-<!-- Z31_BAOZ_SV1_UI_1_4_50 -->
-<style id="z31-baoz-sv1-ui-1-4-50">
-/* ===== BaoZ UI 1.4.50（Claude 11/27）：BaoZ 近月面板「主力心態」下面加一張「主力賣方 SV1（旁觀・不下單）」卡
-   資料＝上傳器 1.0.14 的 seller_v1（Argon V1.2.60 live.txt 的 [主力賣方 SV1]）。只改顯示：不寫 Firebase、不改計算、不下單。
-   沒有 seller_v1（上傳器還沒換 1.0.14、Argon 還沒升級、SV1 關）：整張卡不出現，畫面和 z76 一樣。
-   資料超過 120 秒沒更新、狀態不是 OK（等待、非夜盤、找不到分類帳、IV 點不足、期貨價不可用、關、錯誤）：整張卡變淡，右上寫原因。
-   卡片 ≤ 640 px 寬（直立 1080 的左欄、手機）：價位排成 3 欄；≤ 440 px（手機）：兩條舒適度上下排。 ===== */
+<!-- Z31_BAOZ_SV1_UI_1_4_52 -->
+<style id="z31-baoz-sv1-ui-1-4-52">
+/* ===== BaoZ UI 1.4.52（Claude 11/27）：主力賣方 SV1 卡重新設計，讓 Edward「一眼就看懂」（11/27 12:27），並改用合成期貨（12:25 決定卡「改成合成期貨」）
+   取代 1.4.50／1.4.51 的卡。位置一樣：左欄最上面、林式進場時機上面。資料一樣是 seller_v1（上傳器），只讀、不寫 Firebase、不下單。
+   版面（由上到下）：
+   1. 標題列：主力賣方 SV1・日盤／夜盤、座標（合成期貨／期貨）、旁觀・不下單、計算時間（或變淡的原因）
+   2. 一句話：現在價格在哪一區（舒服區／某一側賣方在賠／某一側回補區），大字＋顏色；下面一行說對期指的意思
+   3. 價位尺：Ls｜L｜pin｜U｜Us 五條線畫在一條橫尺上，分區上色，現在價格是一根直線；尺下面寫線名和價位
+   4. 往下／往上：到每一條線還有幾點、幾個 EM（已經越過的寫「已跌破／已漲過」）
+   5. Put／Call 賣方舒適度兩條
+   6. 旁觀單（有持有時）、結算日 13:00 起的結算均價（估）
+   7. 「更多」（收起，記住開關）：結算價位、開盤缺口、隔夜換手、IV、EM、損益拆解、說明
+   顏色：舒服區＝藍；一側在賠＝黃；Ls 以外＝綠（跌）、Us 以外＝紅（漲）——和面板的漲紅跌綠一樣。 ===== */
 #baoz-system-panel .bz-sv1[hidden] { display: none !important; }
-#baoz-system-panel .bz-sv1 { container: sv1 / inline-size; box-sizing: border-box; min-width: 0; margin: 0 0 10px; padding: 5px 10px 6px;
-  border: 1px solid var(--bz-line); border-left: 3px solid var(--sv-c, var(--bz-line)); border-radius: var(--bz-radius);
-  background: var(--bz-surface); font-size: 12px; line-height: 1.3; color: var(--bz-ink); font-variant-numeric: tabular-nums; }
+#baoz-system-panel > .bz-sv1 { order: 0; grid-column: 1; }
+#baoz-system-panel .bz-sv1 { container: sv1 / inline-size; box-sizing: border-box; min-width: 0; margin: 0; padding: 8px 12px 8px;
+  border: 1px solid var(--bz-line); border-left: 4px solid var(--sv-z, var(--bz-line)); border-radius: var(--bz-radius, 7px); background: var(--bz-surface); }
 #baoz-system-panel .bz-sv1 .sv-hd { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; min-width: 0; }
 #baoz-system-panel .bz-sv1 .sv-t { font-size: 13px; font-weight: 800; white-space: nowrap; }
-#baoz-system-panel .bz-sv1 .sv-nv { font-size: 10.5px; color: var(--bz-muted); border: 1px solid var(--bz-line); border-radius: 4px; padding: 0 5px; white-space: nowrap; }
-#baoz-system-panel .bz-sv1 .sv-st { font-weight: 800; padding: 0 9px; border: 1px solid currentColor; border-radius: 999px; white-space: nowrap; color: var(--sv-c, var(--bz-muted));
-  background: color-mix(in srgb, var(--sv-c, var(--bz-muted)) 13%, transparent); }
-#baoz-system-panel .bz-sv1 .sv-pr { font-size: 11px; color: var(--bz-muted); white-space: nowrap; }
-#baoz-system-panel .bz-sv1 .sv-pr b { color: var(--bz-ink); }
-#baoz-system-panel .bz-sv1 .sv-pr b.sv-hot { color: var(--bz-attn); }
+#baoz-system-panel .bz-sv1 .sv-tag { font-size: 10.5px; color: var(--bz-muted); border: 1px solid var(--bz-line); border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+#baoz-system-panel .bz-sv1 .sv-tag.sv-hot { color: var(--bz-attn); border-color: currentColor; }
 #baoz-system-panel .bz-sv1 .sv-at { margin-left: auto; font-size: 11px; color: var(--bz-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 #baoz-system-panel .bz-sv1 .sv-at.sv-warn { color: var(--bz-attn); font-weight: 700; }
-#baoz-system-panel .bz-sv1 .sv-bars { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3px 16px; margin-top: 5px; }
+#baoz-system-panel .bz-sv1 .sv-big { margin-top: 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; min-width: 0; }
+#baoz-system-panel .bz-sv1 .sv-zone { font-size: 21px; line-height: 1.25; font-weight: 800; color: var(--sv-z, var(--bz-ink)); white-space: nowrap; }
+#baoz-system-panel .bz-sv1 .sv-now { font-size: 13px; color: var(--bz-muted); white-space: nowrap; }
+#baoz-system-panel .bz-sv1 .sv-now b { font-size: 17px; color: var(--bz-ink); font-weight: 800; }
+#baoz-system-panel .bz-sv1 .sv-mean { margin-top: 1px; font-size: 12.5px; color: var(--bz-ink); min-width: 0; }
+#baoz-system-panel .bz-sv1 .sv-mean .sv-bt { color: var(--bz-muted); }
+/* 價位尺 */
+#baoz-system-panel .bz-sv1 .sv-rule { position: relative; margin: 8px 2px 0; height: 54px; }
+#baoz-system-panel .bz-sv1 .sv-bar { position: absolute; left: 0; right: 0; top: 18px; height: 10px; display: flex; border-radius: 3px; overflow: hidden; }
+#baoz-system-panel .bz-sv1 .sv-seg { height: 100%; box-shadow: inset -2px 0 0 var(--bz-surface); }
+#baoz-system-panel .bz-sv1 .sv-seg:last-child { box-shadow: none; }
+#baoz-system-panel .bz-sv1 .sv-z-in { background: color-mix(in srgb, var(--bz-accent) 55%, transparent); }
+#baoz-system-panel .bz-sv1 .sv-z-lose { background: color-mix(in srgb, var(--bz-attn) 60%, transparent); }
+#baoz-system-panel .bz-sv1 .sv-z-dn { background: color-mix(in srgb, var(--bz-down) 70%, transparent); }
+#baoz-system-panel .bz-sv1 .sv-z-up { background: color-mix(in srgb, var(--bz-up) 70%, transparent); }
+#baoz-system-panel .bz-sv1 .sv-tk { position: absolute; top: 30px; transform: translateX(-50%); text-align: center; white-space: nowrap; font-size: 10.5px; line-height: 1.2; color: var(--bz-muted); }
+#baoz-system-panel .bz-sv1 .sv-tk b { display: block; font-size: 11.5px; color: var(--bz-ink); font-weight: 700; }
+#baoz-system-panel .bz-sv1 .sv-tk.sv-l0 { transform: none; text-align: left; }
+#baoz-system-panel .bz-sv1 .sv-tk.sv-r0 { transform: translateX(-100%); text-align: right; }
+#baoz-system-panel .bz-sv1 .sv-tk.sv-off b { color: var(--bz-muted); font-weight: 600; }
+#baoz-system-panel .bz-sv1 .sv-tk::before { content: ''; position: absolute; left: 50%; top: -13px; height: 13px; width: 1px; background: var(--bz-surface); }
+#baoz-system-panel .bz-sv1 .sv-tk.sv-l0::before { left: 0; }
+#baoz-system-panel .bz-sv1 .sv-tk.sv-r0::before { left: auto; right: 0; }
+#baoz-system-panel .bz-sv1 .sv-mk { position: absolute; top: 13px; height: 20px; width: 3px; margin-left: -1.5px; background: var(--bz-ink); border-radius: 2px; box-shadow: 0 0 0 2px var(--bz-surface); }
+#baoz-system-panel .bz-sv1 .sv-ml { position: absolute; top: -3px; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-weight: 800; color: var(--bz-ink); }
+#baoz-system-panel .bz-sv1 .sv-ml.sv-l0 { transform: none; }
+#baoz-system-panel .bz-sv1 .sv-ml.sv-r0 { transform: translateX(-100%); }
+/* 往下／往上 */
+#baoz-system-panel .bz-sv1 .sv-dist { margin-top: 4px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2px 16px; font-size: 12px; color: var(--bz-muted); }
+#baoz-system-panel .bz-sv1 .sv-dist > div { min-width: 0; }
+#baoz-system-panel .bz-sv1 .sv-dist b { color: var(--bz-ink); font-weight: 700; }
+#baoz-system-panel .bz-sv1 .sv-dist .sv-x { color: var(--bz-attn); font-weight: 700; }
+#baoz-system-panel .bz-sv1 .sv-dist .sv-dh { font-weight: 800; color: var(--bz-ink); margin-right: 4px; }
+/* 舒適度 */
+#baoz-system-panel .bz-sv1 .sv-bars { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3px 16px; margin-top: 6px; }
 #baoz-system-panel .bz-sv1 .sv-b { display: flex; align-items: center; gap: 6px; min-width: 0; }
-#baoz-system-panel .bz-sv1 .sv-bl { font-size: 11px; color: var(--bz-muted); white-space: nowrap; }
-#baoz-system-panel .bz-sv1 .sv-bt { position: relative; flex: 1 1 60px; min-width: 40px; height: 8px; border-radius: 3px; background: color-mix(in srgb, var(--bz-line) 55%, transparent); overflow: hidden; }
-#baoz-system-panel .bz-sv1 .sv-bt::after { content: ''; position: absolute; left: 50%; top: -1px; bottom: -1px; width: 1px; background: var(--bz-muted); opacity: .7; }
-#baoz-system-panel .bz-sv1 .sv-bt i { position: absolute; top: 0; bottom: 0; width: 0; }
-#baoz-system-panel .bz-sv1 .sv-bt i.sv-pos { left: 50%; background: var(--bz-accent); }
-#baoz-system-panel .bz-sv1 .sv-bt i.sv-neg { right: 50%; background: var(--bz-attn); }
-#baoz-system-panel .bz-sv1 .sv-bv { width: 3.6em; text-align: right; font-weight: 800; white-space: nowrap; }
-#baoz-system-panel .bz-sv1 .sv-bs { min-width: 2.2em; font-size: 11px; font-weight: 700; white-space: nowrap; color: var(--sv-sc, var(--bz-muted)); }
-#baoz-system-panel .bz-sv1 .sv-ln { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; margin-top: 5px; }
-#baoz-system-panel .bz-sv1 .sv-c { min-width: 0; padding: 1px 6px 2px; border: 1px solid var(--bz-line); border-radius: 5px; }
-#baoz-system-panel .bz-sv1 .sv-c .sv-cl { display: flex; align-items: baseline; gap: 5px; min-width: 0; white-space: nowrap; }
-#baoz-system-panel .bz-sv1 .sv-c .sv-cl span { font-size: 10.5px; color: var(--bz-muted); overflow: hidden; text-overflow: ellipsis; }
-#baoz-system-panel .bz-sv1 .sv-c .sv-cl b { margin-left: auto; font-size: 13px; font-weight: 800; }
-#baoz-system-panel .bz-sv1 .sv-c .sv-cd { display: block; font-size: 10.5px; color: var(--bz-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
-#baoz-system-panel .bz-sv1 .sv-c.sv-now { border-color: var(--bz-accent); background: color-mix(in srgb, var(--bz-accent) 9%, transparent); }
-#baoz-system-panel .bz-sv1 .sv-c.sv-lost .sv-cl b { color: var(--bz-attn); }
-#baoz-system-panel .bz-sv1 .sv-c.sv-none .sv-cl b { color: var(--bz-muted); font-weight: 600; }
-#baoz-system-panel .bz-sv1 .sv-in, #baoz-system-panel .bz-sv1 .sv-ob { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 14px; margin-top: 4px; font-size: 11.5px; color: var(--bz-muted); min-width: 0; }
-#baoz-system-panel .bz-sv1 .sv-in > span { white-space: nowrap; }
-#baoz-system-panel .bz-sv1 .sv-in b, #baoz-system-panel .bz-sv1 .sv-ob b { color: var(--bz-ink); font-weight: 700; }
-#baoz-system-panel .bz-sv1 .sv-in b.sv-hot { color: var(--bz-attn); }
-#baoz-system-panel .bz-sv1 .sv-ob { flex-wrap: nowrap; margin-top: 3px; }
-#baoz-system-panel .bz-sv1 .sv-ob > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#baoz-system-panel .bz-sv1 .sv-ob > .sv-ob1 { flex: 0 1 auto; }
-#baoz-system-panel .bz-sv1 .sv-ob > .sv-nt { flex: 1 1 8em; text-align: right; }
+#baoz-system-panel .bz-sv1 .sv-bl { font-size: 11.5px; color: var(--bz-muted); white-space: nowrap; }
+#baoz-system-panel .bz-sv1 .sv-bt2 { position: relative; flex: 1 1 60px; min-width: 40px; height: 8px; border-radius: 3px; background: color-mix(in srgb, var(--bz-line) 55%, transparent); overflow: hidden; }
+#baoz-system-panel .bz-sv1 .sv-bt2::after { content: ''; position: absolute; left: 50%; top: -1px; bottom: -1px; width: 1px; background: var(--bz-muted); opacity: .7; }
+#baoz-system-panel .bz-sv1 .sv-bt2 i { position: absolute; top: 0; bottom: 0; width: 0; }
+#baoz-system-panel .bz-sv1 .sv-bt2 i.sv-pos { left: 50%; background: var(--bz-accent); }
+#baoz-system-panel .bz-sv1 .sv-bt2 i.sv-neg { right: 50%; background: var(--bz-attn); }
+#baoz-system-panel .bz-sv1 .sv-bv { min-width: 3.2em; text-align: right; font-weight: 800; white-space: nowrap; }
+#baoz-system-panel .bz-sv1 .sv-bs { min-width: 2.2em; font-size: 11.5px; font-weight: 700; white-space: nowrap; color: var(--sv-sc, var(--bz-muted)); }
+#baoz-system-panel .bz-sv1 .sv-line { margin-top: 4px; font-size: 12px; color: var(--bz-muted); min-width: 0; }
+#baoz-system-panel .bz-sv1 .sv-line b { color: var(--bz-ink); font-weight: 700; }
+#baoz-system-panel .bz-sv1 .sv-line b.sv-hot { color: var(--bz-attn); }
+/* 更多 */
+#baoz-system-panel .bz-sv1 details.sv-more { margin-top: 5px; font-size: 11.5px; color: var(--bz-muted); }
+#baoz-system-panel .bz-sv1 details.sv-more > summary { cursor: pointer; width: max-content; max-width: 100%; list-style: none; color: var(--bz-muted); }
+#baoz-system-panel .bz-sv1 details.sv-more > summary::-webkit-details-marker { display: none; }
+#baoz-system-panel .bz-sv1 details.sv-more > summary::before { content: '▸ '; }
+#baoz-system-panel .bz-sv1 details.sv-more[open] > summary::before { content: '▾ '; }
+#baoz-system-panel .bz-sv1 .sv-kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 1px 10px; margin-top: 3px; }
+#baoz-system-panel .bz-sv1 .sv-kv > span:nth-child(odd) { white-space: nowrap; }
+#baoz-system-panel .bz-sv1 .sv-kv b { color: var(--bz-ink); font-weight: 700; }
+#baoz-system-panel .bz-sv1 .sv-kv b.sv-hot { color: var(--bz-attn); }
 #baoz-system-panel .bz-sv1.sv-dim > :not(.sv-hd), #baoz-system-panel .bz-sv1.sv-dim .sv-hd > :not(.sv-at) { opacity: .5; }
-@container sv1 (max-width: 640px) {
-  #baoz-system-panel .bz-sv1 .sv-bars { column-gap: 12px; }
-  #baoz-system-panel .bz-sv1 .sv-ln { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  #baoz-system-panel .bz-sv1 .sv-ob { flex-wrap: wrap; }
-  #baoz-system-panel .bz-sv1 .sv-ob > span { white-space: normal; }
-  #baoz-system-panel .bz-sv1 .sv-ob > .sv-nt { flex-basis: 100%; text-align: left; }
+@container sv1 (max-width: 520px) {
+  #baoz-system-panel .bz-sv1 .sv-zone { font-size: 18px; }
+  #baoz-system-panel .bz-sv1 .sv-dist, #baoz-system-panel .bz-sv1 .sv-bars { grid-template-columns: minmax(0, 1fr); }
+  #baoz-system-panel .bz-sv1 .sv-tk { font-size: 10px; }
+  #baoz-system-panel .bz-sv1 .sv-tk b { font-size: 10.5px; }
 }
-@container sv1 (max-width: 440px) { #baoz-system-panel .bz-sv1 .sv-bars { grid-template-columns: minmax(0, 1fr); } }
-@container sv1 (max-width: 380px) {
-  #baoz-system-panel .bz-sv1 .sv-c { padding: 1px 4px 2px; }
-  #baoz-system-panel .bz-sv1 .sv-c .sv-cl b { font-size: 12px; }
-  #baoz-system-panel .bz-sv1 .sv-c .sv-cd { font-size: 10px; }
-  #baoz-system-panel .bz-sv1 .sv-in > span { white-space: normal; }
-}
-/* 兩欄版面（1.4.6 寬螢幕、1.4.9 直立）：左欄多一張卡，格子列數 14 → 16（沒有用到的列高度 0；右欄照樣從第 1 列跨到最後） */
+/* 價位梯子上的主力賣方線（1.4.52） */
+#baoz-system-panel .bz-lad-r.ln.dvS1 { min-height: 17px; }
+#baoz-system-panel .bz-lad-r.ln.dvS1 .x { font-weight: 700; }
+#baoz-system-panel .bz-lad-r.ln.s1p { border-top: 2px solid var(--bz-accent); }
+#baoz-system-panel .bz-lad-r.ln.s1p .k, #baoz-system-panel .bz-lad-r.ln.s1p .x { color: var(--bz-accent); }
+#baoz-system-panel .bz-lad-r.ln.s1l, #baoz-system-panel .bz-lad-r.ln.s1u { border-top: 2px dashed var(--bz-attn); }
+#baoz-system-panel .bz-lad-r.ln.s1l .k, #baoz-system-panel .bz-lad-r.ln.s1l .x, #baoz-system-panel .bz-lad-r.ln.s1u .k, #baoz-system-panel .bz-lad-r.ln.s1u .x { color: var(--bz-attn); }
+#baoz-system-panel .bz-lad-r.ln.s1ls { border-top: 2.5px solid var(--bz-down); }
+#baoz-system-panel .bz-lad-r.ln.s1ls .k, #baoz-system-panel .bz-lad-r.ln.s1ls .x { color: var(--bz-down); }
+#baoz-system-panel .bz-lad-r.ln.s1us { border-top: 2.5px solid var(--bz-up); }
+#baoz-system-panel .bz-lad-r.ln.s1us .k, #baoz-system-panel .bz-lad-r.ln.s1us .x { color: var(--bz-up); }
+#baoz-system-panel .bz-lad-r.ln.dvS1.old { opacity: .6; }
+#baoz-system-panel .bz-lad-sv1z { position: absolute; right: -8px; width: 6px; z-index: 2; pointer-events: auto; border-radius: 2px; opacity: .9; }
+#baoz-system-panel .bz-lad-sv1t { position: absolute; left: 0; right: 0; z-index: 0; pointer-events: none; opacity: .1; }
+#baoz-system-panel .bz-lad-chip.sv1 { color: var(--c); border-color: var(--c); font-weight: 700; }
+/* 兩欄版面（1.4.6 寬螢幕、1.4.9 直立）：左欄多一張卡，格子列數 14 → 16（和 1.4.50 一樣） */
 @media (orientation: landscape) {
   html.z31-pro.z31-w-lg:not(.z31-portrait) #baoz-system-panel:not([hidden]):has(#bz-sv1:not([hidden])) { grid-template-rows: repeat(16, auto) 1fr; }
 }
 html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:not([hidden])) { grid-template-rows: repeat(16, auto) 1fr; }
 </style>
 <script>
-/* BaoZ UI 1.4.50：主力賣方 SV1（旁觀・不下單）卡（只讀 Firebase，不寫；只改顯示） */
+/* BaoZ UI 1.4.52：主力賣方 SV1 卡（只讀 Firebase，不寫；只改顯示） */
 (function () {
   'use strict';
   var NODE = 'baoz_realtime/near';
   var OLD_MS = 120000;                         /* 快照超過 120 秒沒更新：資料舊（和其他卡一樣） */
   var CALC_MS = 180000;                        /* status=OK 但最後一次計算（at）比快照早 3 分鐘以上：SV1 計算停了 */
+  var MORE_KEY = 'z31_sv1_more_v1';            /* 「更多」開或關（只存在這台瀏覽器） */
   var STATES = { '收租': 'var(--bz-accent)', '防守': 'var(--bz-attn)', '中性': 'var(--bz-muted)' };
   var WHY = { WAIT: '等待定價（夜盤 15:31 後）', NOT_NIGHT: '非夜盤：上一個夜盤的結果', NO_CHAIN: 'IV 點不足：暫停計算',
     NO_FUT: '期貨價不可用（RTD 卡住？）', OFF: 'SV1 關閉', ERROR: 'SV1 計算錯誤' };
+  var ZC = { IN: 'var(--bz-accent)', L_LS: 'var(--bz-attn)', U_US: 'var(--bz-attn)', LS_OUT: 'var(--bz-down)', US_OUT: 'var(--bz-up)' };
+  var ZCLS = { IN: 'sv-z-in', L_LS: 'sv-z-lose', U_US: 'sv-z-lose', LS_OUT: 'sv-z-dn', US_OUT: 'sv-z-up' };
   var s = { ref: null, fn: null, sv: null, ms: NaN, failAt: 0 };
 
   function $(id) { return document.getElementById(id); }
@@ -18072,6 +18119,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     if (text !== undefined && text !== null) e.textContent = text;
     return e;
   }
+  function bold(parent, text, cls) { parent.appendChild(mk('b', cls || '', text)); return parent; }
 
   function allowed() {
     try {
@@ -18098,7 +18146,7 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     s.ref.on('value', s.fn, function () { s.failAt = Date.now(); detach(); s.sv = null; render(); });
   }
 
-  function box() {                             /* 1.4.51（Edward 11/27）：放在左欄最上面（來源列、提示列下面）、「林式進場時機」上面；面板重建時重新放 */
+  function box() {                             /* 左欄最上面（來源列、提示列下面）、「林式進場時機」上面；面板重建時重新放 */
     var P = $('baoz-system-panel');
     if (!P || !$('bz-semantic')) return null;
     var el = $('bz-sv1');
@@ -18115,19 +18163,28 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     return el;
   }
 
-  function why(o) {                            /* 回傳 [原因, 要不要變淡] */
+  /* 座標：Argon V1.2.62（ver SV1-3）起價位和「現在」都是合成期貨（coord=SYN、syn）；V1.2.60／61 是期貨座標（fut） */
+  function coordOf(o) {
+    var v = /^SV1-(\d+)$/.exec(str(o.ver, 12)), ver = v ? +v[1] : 1;
+    if (o.coord === 'SYN') return { now: n(o.syn), name: '合成期貨', syn: true, bad: n(o.syn) === null ? '合成期貨價不可用' : '' };
+    if (ver >= 3) return { now: null, name: '合成期貨', syn: true, bad: '需要上傳器 1.0.16（價位是合成期貨）' };
+    return { now: n(o.fut), name: '期貨', syn: false, bad: '' };
+  }
+
+  function why(o, C) {                         /* 回傳 [原因, 要不要變淡] */
     var age = Date.now() - s.ms, st = str(o.status, 12).toUpperCase();
     if (!Number.isFinite(s.ms)) return ['資料時間不明', true];
     if (age > OLD_MS) return ['資料舊：' + Math.floor(age / 60000) + ' 分鐘沒更新', true];
     if (str(o.mode, 4) === '關') return [WHY.OFF, true];
-    if (st === 'NO_LEDGER') return [str(o.note, 40) || '找不到分類帳', true];   /* 找不到分類帳檔或沒有賣方庫存：原因照 note */
-    if (st === 'WAIT' && o.day_on === true) return ['等待定價（日盤 09:01、夜盤 15:31）', true];   /* 1.4.51：日盤開（B129）時兩盤都定價 */
+    if (st === 'NO_LEDGER') return [str(o.note, 40) || '找不到分類帳', true];
+    if (st === 'WAIT' && o.day_on === true) return ['等待定價（日盤 09:01、夜盤 15:31）', true];
     if (st === 'NOT_NIGHT' && o.phase === 'END') return [o.session === 'D' ? '日盤結束：今天日盤的結果' : '夜盤結束：上一個夜盤的結果', true];
     if (WHY[st]) return [WHY[st], true];
     if (st !== 'OK') return ['狀態不明' + (st ? '（' + st + '）' : ''), true];
+    if (C.bad) return [C.bad, true];
     var at = tw(o.at);
     if (Number.isFinite(at) && s.ms - at > CALC_MS) return ['計算停在 ' + str(o.at, 19).slice(11, 16), true];
-    if (n(o.fut) === null || !Object.prototype.hasOwnProperty.call(STATES, o.state) && o.state !== '回補') return ['資料不完整', true];
+    if (C.now === null || !Object.prototype.hasOwnProperty.call(STATES, o.state) && o.state !== '回補') return ['資料不完整', true];
     return ['', false];
   }
 
@@ -18136,169 +18193,336 @@ html.z31-pro.z31-portrait.z31-w-md #baoz-system-panel:not([hidden]):has(#bz-sv1:
     return STATES[st] || '';
   }
 
+  /* 價位：pin 一定要有；L／U 失守（lost）＝那一側在舒適點就在賠 */
+  function levels(o) {
+    var pin = n(o.pin);
+    if (pin === null) return null;
+    var Llost = o.L_lost === true || o.L_lost === 1, Ulost = o.U_lost === true || o.U_lost === 1;
+    return { pin: pin, L: Llost ? null : n(o.L), U: Ulost ? null : n(o.U), Ls: n(o.Ls), Us: n(o.Us), Llost: Llost, Ulost: Ulost };
+  }
+  function zoneOf(x, V) {                      /* 價格 x 在哪一區 */
+    if (x < V.pin) {
+      if (V.Ls !== null && x < V.Ls) return 'LS_OUT';
+      if (V.L !== null ? x < V.L : V.Llost) return 'L_LS';
+      return 'IN';
+    }
+    if (V.Us !== null && x > V.Us) return 'US_OUT';
+    if (V.U !== null ? x > V.U : V.Ulost) return 'U_US';
+    return 'IN';
+  }
+
+  /* 一句話：[大字, 意思] */
+  function verdict(z, V, x, sess, st, side) {
+    var comfy = sess === 'D' ? '賣方舒服區' : '賣方收租區';
+    if (st === '回補' && (side === '空' || side === '多') && z !== 'LS_OUT' && z !== 'US_OUT')
+      return [(side === '空' ? 'Put' : 'Call') + ' 賣方回補中', '舒適度已經到 −100%（權利金賠一倍）：回補會推價格往' + (side === '空' ? '下' : '上') + '。回測：越過回補線後順勢延續比較常見'];
+    if (z === 'IN') {
+      var lo = V.Ls !== null ? V.Ls : V.L, hi = V.Us !== null ? V.Us : V.U;
+      return [comfy, '價格在 ' + (V.L !== null ? 'L ' + px(V.L) : '下方') + ' 到 ' + (V.U !== null ? 'U ' + px(V.U) : '上方') + ' 之間，兩邊賣方都在賺，沒有回補壓力。' +
+        (lo !== null || hi !== null ? '最近的回補線：' + (hi !== null && (lo === null || hi - x <= x - lo) ? 'Us 還要漲 ' + px(hi - x) + ' 點' : 'Ls 還要跌 ' + px(x - lo) + ' 點') : '') +
+        '（L、U 碰到會反彈，回測不成立）'];
+    }
+    if (z === 'L_LS') return ['Put 賣方在賠', (V.L !== null ? '跌破 L 防線 ' + px(V.L) : '下方防線失守') + '，下方 Put 賣方開始賠，還沒被迫回補。' + (V.Ls !== null ? '再跌 ' + px(x - V.Ls) + ' 點到 Ls 回補線 ' + px(V.Ls) : '±3000 點內沒有 Ls 回補線')];
+    if (z === 'U_US') return ['Call 賣方在賠', (V.U !== null ? '漲過 U 防線 ' + px(V.U) : '上方防線失守') + '，上方 Call 賣方開始賠，還沒被迫回補。' + (V.Us !== null ? '再漲 ' + px(V.Us - x) + ' 點到 Us 回補線 ' + px(V.Us) : '±3000 點內沒有 Us 回補線')];
+    if (z === 'LS_OUT') return ['Put 賣方回補區', '跌破 Ls ' + px(V.Ls) + '（' + sg(x - V.Ls, 0) + ' 點）：Put 賣方虧掉一倍權利金，被迫買回 Put 會推價格往下。回測：越過回補線後順勢延續比較常見'];
+    return ['Call 賣方回補區', '漲過 Us ' + px(V.Us) + '（' + sg(x - V.Us, 0) + ' 點）：Call 賣方虧掉一倍權利金，被迫買回 Call 會推價格往上。回測：越過回補線後順勢延續比較常見'];
+  }
+
+  /* 價位尺：分段寬度照點數比例，但每段至少 14%，兩端各 8%；現在價格在所在那一段裡照比例放 */
+  function ruler(V, x, em) {
+    var pts = [['Ls', '回補', V.Ls], ['L', '防線', V.L], ['pin', '舒適', V.pin], ['U', '防線', V.U], ['Us', '回補', V.Us]].filter(function (p) { return p[2] !== null; });
+    var OUT = 8, MIN = 14, inner = 100 - 2 * OUT, gaps = [], i, tot = 0;
+    for (i = 1; i < pts.length; i++) { gaps.push(Math.max(1, pts[i][2] - pts[i - 1][2])); tot += gaps[i - 1]; }
+    var w = gaps.map(function (g) { return g / tot * inner; }), deficit;
+    for (var it = 0; it < 4 && gaps.length; it++) {   /* 太窄的段補到 MIN，從寬的段扣 */
+      deficit = 0;
+      var wide = 0;
+      w.forEach(function (v) { if (v < MIN) deficit += MIN - v; else wide += v - MIN; });
+      if (!deficit || wide <= 0) break;
+      w = w.map(function (v) { return v < MIN ? MIN : v - (v - MIN) / wide * deficit; });
+    }
+    if (!gaps.length) { OUT = 50; }
+    var pos = [OUT];
+    w.forEach(function (v, k) { pos.push(pos[k] + v); });
+    var unit = em && em > 0 ? em : 200;
+    function at(p) {                            /* 價格 → 左邊百分比 */
+      if (p <= pts[0][2]) return Math.max(0, OUT - Math.min(1, (pts[0][2] - p) / unit) * OUT);
+      var last = pts.length - 1;
+      if (p >= pts[last][2]) return Math.min(100, pos[last] + Math.min(1, (p - pts[last][2]) / unit) * OUT);
+      for (var k = 1; k <= last; k++) if (p <= pts[k][2]) return pos[k - 1] + (p - pts[k - 1][2]) / (pts[k][2] - pts[k - 1][2]) * (pos[k] - pos[k - 1]);
+      return 50;
+    }
+    var R = mk('div', 'sv-rule'), bar = mk('div', 'sv-bar');
+    var edges = [0].concat(pos, [100]), prices = [pts[0][2] - unit].concat(pts.map(function (p) { return p[2]; }), [pts[pts.length - 1][2] + unit]);
+    for (i = 1; i < edges.length; i++) {
+      if (edges[i] - edges[i - 1] <= 0) continue;
+      var seg = mk('i', 'sv-seg ' + ZCLS[zoneOf((prices[i - 1] + prices[i]) / 2, V)]);
+      seg.style.width = (edges[i] - edges[i - 1]).toFixed(2) + '%';
+      bar.appendChild(seg);
+    }
+    R.appendChild(bar);
+    pts.forEach(function (p, k) {
+      var t = mk('span', 'sv-tk' + (pos[k] < 6 ? ' sv-l0' : pos[k] > 94 ? ' sv-r0' : ''), p[0] + ' ' + p[1]);
+      bold(t, px(p[2]));
+      t.style.left = pos[k].toFixed(2) + '%';
+      R.appendChild(t);
+    });
+    if (x !== null) {
+      var m = at(x), mkr = mk('i', 'sv-mk'), ml = mk('span', 'sv-ml' + (m < 10 ? ' sv-l0' : m > 90 ? ' sv-r0' : ''), '現在 ' + px(x));
+      mkr.style.left = m.toFixed(2) + '%';
+      ml.style.left = m.toFixed(2) + '%';
+      R.append(mkr, ml);
+    }
+    return R;
+  }
+
   function render() {
     var o = allowed() ? s.sv : null;
     var el = $('bz-sv1');
     if (!o) { if (el) el.hidden = true; return; }   /* 沒有 seller_v1：整張卡不出現 */
     el = box();
     if (!el) return;
-    var w = why(o), dim = w[1];
-    var fut = n(o.fut), em = n(o.em) !== null && o.em > 0 ? o.em : null;
+    var C = coordOf(o), w = why(o, C), dim = w[1], x = C.now;
+    var em = n(o.em) !== null && o.em > 0 ? o.em : null;
     var st = str(o.state, 4), side = o.side === '多' || o.side === '空' ? o.side : '';
-    var col = stColor(st, side);
     var pr = ['時間', 'IV', '價格'].indexOf(o.pressure) >= 0 ? o.pressure : '';
+    var sess = o.session === 'D' ? 'D' : o.session === 'N' ? 'N' : '', cont = o.phase === 'CONT';
+    var stName = function (q) { return sess === 'D' && q === '收租' ? '舒服' : q; };            /* 日盤只有 5 小時：收租叫「舒服」 */
+    var V = levels(o), z = V && x !== null ? zoneOf(x, V) : '';
+    var more = false;
+    try { more = localStorage.getItem(MORE_KEY) === '1'; } catch (e) {}
+    var old = el.querySelector('details.sv-more');
+    if (old) more = old.open;
     el.className = 'bz-sv1' + (dim ? ' sv-dim' : '');
-    if (col) el.style.setProperty('--sv-c', col); else el.style.removeProperty('--sv-c');
+    if (z && !dim) el.style.setProperty('--sv-z', ZC[z]); else el.style.removeProperty('--sv-z');
     el.replaceChildren();
 
-    /* 第 1 行：標題、狀態、壓力、時間（或變淡的原因） */
-    var hd = mk('div', 'sv-hd');
-    var sess = o.session === 'D' ? 'D' : o.session === 'N' ? 'N' : '', cont = o.phase === 'CONT';   /* 1.4.51：日盤／夜盤（上傳器 1.0.15） */
-    var emName = sess === 'D' ? '日盤預期波動' : '夜盤預期波動';
-    var stName = function (x) { return sess === 'D' && x === '收租' ? '舒服' : x; };            /* 日盤只有 5 小時：收租叫「舒服」 */
-    hd.append(mk('span', 'sv-t', '主力賣方 SV1' + (sess === 'D' ? '・日盤' : sess === 'N' ? '・夜盤' : '')), mk('span', 'sv-nv', '旁觀・不下單'));
-    if (cont) { var ce = mk('span', 'sv-nv sv-cont', '夜盤延續'); ce.title = '08:45–09:00：沿用昨晚夜盤的價位，舒適度改用日盤報價；09:01 日盤定價'; hd.appendChild(ce); }
-    hd.appendChild(mk('span', 'sv-st', st === '回補' ? '回補' + (side ? '・順勢' + side : '') : (stName(st) || '—')));
-    var pe = mk('span', 'sv-pr', '壓力 ');
-    pe.append(mk('b', pr && pr !== '時間' ? 'sv-hot' : '', pr || '—'));
-    pe.title = '今日壓力來源：時間／IV／價格三者中對賣方最不利、絕對值最大的；全部 ≥0（賣方都在賺）時＝時間';
-    var at = str(o.at, 19);
-    var ae = mk('span', 'sv-at' + (w[0] ? ' sv-warn' : ''), w[0] || (at ? at.slice(11, 19) + ' 計算' : '—'));
+    /* 1. 標題列 */
+    var hd = mk('div', 'sv-hd'), at = str(o.at, 19);
+    hd.append(mk('span', 'sv-t', '主力賣方 SV1' + (sess === 'D' ? '・日盤' : sess === 'N' ? '・夜盤' : '')));
+    var ct = mk('span', 'sv-tag', C.name);
+    ct.title = C.syn ? '價位和「現在」都是合成期貨（＝期貨 − 即時基差，和暴Z表 A2 一樣）' : '價位和「現在」都是期貨（定價時的基差換算；Argon V1.2.62 起改合成期貨）';
+    hd.appendChild(ct);
+    if (cont) { var ce = mk('span', 'sv-tag sv-hot', '夜盤延續'); ce.title = '08:45–09:00：沿用昨晚夜盤的價位，舒適度改用日盤報價；09:01 日盤定價'; hd.appendChild(ce); }
+    hd.appendChild(mk('span', 'sv-tag', '旁觀・不下單'));
+    var ae = mk('span', 'sv-at' + (w[0] ? ' sv-warn' : ''), w[0] || (at ? at.slice(11, 16) + ' 計算' : '—'));
     if (w[0]) ae.title = w[0];
-    hd.appendChild(pe);
-    if (sess === 'D' && n(o.on_pin_d) !== null) {             /* 1.4.51：隔夜換手（日盤 09:01 定價和昨晚夜盤定價比） */
-      var ope = n(o.on_pin_em), oe = mk('span', 'sv-pr', '隔夜 ');
-      oe.appendChild(mk('b', '', '舒適點 ' + sg(n(o.on_pin_d), 0) + (ope === null ? '' : '（' + sg(ope, 1) + 'EM）')));
-      oe.title = '隔夜換手：日盤定價和昨晚夜盤定價（' + (str(o.on_base, 19) || '—') + '）比\n舒適點 ' + sg(n(o.on_pin_d), 0) + ' 點' +
-        (n(o.on_L_d) !== null ? '、L ' + sg(n(o.on_L_d), 0) : '') + (n(o.on_U_d) !== null ? '、U ' + sg(n(o.on_U_d), 0) : '') +
-        '\nCall 賣方 ' + sg(n(o.on_qc_d), 0) + ' 口、Put 賣方 ' + sg(n(o.on_qp_d), 0) + ' 口\n舒適點往上＝賣方重心往上';
-      hd.appendChild(oe);
-    }
     hd.appendChild(ae);
     el.appendChild(hd);
 
-    /* 第 2 行：Put／Call 賣方舒適度（−100…+100） */
+    /* 2. 一句話 */
+    var big = mk('div', 'sv-big'), mean = mk('div', 'sv-mean');
+    if (!V) {
+      big.appendChild(mk('span', 'sv-zone', '還沒定價'));
+      mean.textContent = str(o.note, 120) || '等待定價（日盤 09:01、夜盤 15:31）';
+    } else if (x === null) {
+      big.appendChild(mk('span', 'sv-zone', '沒有' + C.name + '價'));
+      mean.textContent = w[0] || str(o.note, 120);
+    } else {
+      var vd = verdict(z, V, x, sess, st, side);
+      big.appendChild(mk('span', 'sv-zone', vd[0]));
+      var nw = mk('span', 'sv-now', C.name + ' ');
+      bold(nw, px(x));
+      if (C.syn && n(o.fut) !== null) nw.append('（期貨 ' + px(n(o.fut)) + '）');
+      big.appendChild(nw);
+      mean.textContent = vd[1];
+    }
+    el.append(big, mean);
+
+    /* 3. 價位尺 */
+    if (V) el.appendChild(ruler(V, x, em));
+
+    /* 4. 往下／往上 */
+    if (V && x !== null) {
+      var dist = mk('div', 'sv-dist');
+      var dn = mk('div'), up = mk('div');
+      dn.appendChild(mk('span', 'sv-dh', '▼ 往下'));
+      up.appendChild(mk('span', 'sv-dh', '▲ 往上'));
+      function part(box2, name, lv, lost, below) {
+        if (box2.childNodes.length > 1) box2.append('　');
+        if (lost) { box2.append(name + ' '); bold(box2, '失守', 'sv-x'); return; }
+        if (lv === null) { box2.append(name + ' 沒有'); return; }
+        var d = lv - x, crossed = below ? d > 0 : d < 0;
+        box2.append(name + ' ');
+        if (crossed) { bold(box2, (below ? '已跌破 ' : '已漲過 ') + px(lv), 'sv-x'); return; }
+        bold(box2, sg(d, 0));
+        if (em) box2.append('（' + Math.abs(d / em).toFixed(1) + ' EM）');
+      }
+      part(dn, 'L', V.L, V.Llost, true); part(dn, 'Ls', V.Ls, false, true);
+      part(up, 'U', V.U, V.Ulost, false); part(up, 'Us', V.Us, false, false);
+      dist.append(dn, up);
+      dist.title = '到每一條線還有幾點（' + C.name + '）；EM＝' + (sess === 'D' ? '日盤' : '夜盤') + '預期波動 ' + (em ? px(em) + ' 點' : '—') + '，1 EM ≈ 這一盤正常會走的幅度';
+      el.appendChild(dist);
+    }
+
+    /* 5. 舒適度 */
     var bars = mk('div', 'sv-bars');
-    [['Put 賣方', o.put_c, o.put_st], ['Call 賣方', o.call_c, o.call_st]].forEach(function (b) {
-      var v = n(b[1]), bst = str(b[2], 4), row = mk('div', 'sv-b'), bt = mk('span', 'sv-bt');
+    [['Put 賣方（下方）', o.put_c, o.put_st], ['Call 賣方（上方）', o.call_c, o.call_st]].forEach(function (b) {
+      var v = n(b[1]), bst = str(b[2], 4), row = mk('div', 'sv-b'), bt = mk('span', 'sv-bt2');
       if (v !== null && v !== 0) { var i = mk('i', v > 0 ? 'sv-pos' : 'sv-neg'); i.style.width = (Math.min(100, Math.abs(v)) / 2).toFixed(1) + '%'; bt.appendChild(i); }
       var se = mk('span', 'sv-bs', stName(bst) || '—'), sc = stColor(bst, side);
       if (sc) se.style.setProperty('--sv-sc', sc);
-      row.append(mk('span', 'sv-bl', b[0]), bt, mk('span', 'sv-bv', v === null ? '—' : sg(v, 0)), se);
-      row.title = b[0] + '舒適度 ' + (v === null ? '—' : sg(v, 1)) + '：+100＝權利金全賺、0＝兩平、−100＝權利金翻倍（賠一倍）；狀態 ' + (stName(bst) || '—');
+      row.append(mk('span', 'sv-bl', b[0]), bt, mk('span', 'sv-bv', v === null ? '—' : sg(v, 0) + '%'), se);
+      row.title = b[0] + '舒適度 ' + (v === null ? '—' : sg(v, 1) + '%') + '：+100%＝權利金全賺、0＝兩平、−100%＝權利金賠一倍（回補）；狀態 ' + (stName(bst) || '—');
       bars.appendChild(row);
     });
     el.appendChild(bars);
 
-    /* 第 3 行：價位（期貨座標），現在期貨插在價位中間；距離＝點數和 EM（夜盤預期波動）倍數 */
-    var ln = mk('div', 'sv-ln'), cells = [
-      ['Ls', '回補', o.Ls, null, '停損回補線（期貨座標）：價格到這裡，下方 Put 賣方要停損回補', '±3000 點內沒有'],
-      ['L', '防線', o.L, o.L_lost, '今日下防線（期貨座標）', '沒有'],
-      ['pin', '舒適', o.pin, null, '舒適點（期貨座標）：價格停在這裡，賣方整體最舒服', '沒有'],
-      ['U', '防線', o.U, o.U_lost, '今日上防線（期貨座標）', '沒有'],
-      ['Us', '回補', o.Us, null, '停損回補線（期貨座標）：價格到這裡，上方 Call 賣方要停損回補', '±3000 點內沒有']];
-    var nowDone = fut === null, based = n(o.pin) !== null;   /* 還沒有舒適點＝還沒定價（WAIT 等）：空白寫「—」，不寫「沒有」 */
-    function cell(lab, sub, val, dist, cls, tip) {
-      var c = mk('div', 'sv-c' + (cls ? ' ' + cls : '')), l = mk('div', 'sv-cl');
-      l.append(mk('span', '', lab + ' ' + sub), mk('b', '', val));
-      c.append(l, mk('span', 'sv-cd', dist));
-      c.title = tip;
-      ln.appendChild(c);
+    /* 6. 旁觀單、結算均價（估） */
+    var obs = str(o.obs, 80), on = n(o.obs_n);
+    if (obs) {
+      var ob = mk('div', 'sv-line', '旁觀單（不送單）' + (on ? ' ' + on + '/2' : '') + '：');
+      bold(ob, obs);
+      el.appendChild(ob);
     }
-    function nowCell() {
-      cell('現在', '期貨', px(fut), at ? at.slice(11, 16) : '', 'sv-now', '現在期貨 ' + px(fut) + '（SV1 最後一次計算 ' + (at || '—') + '）' + (em ? '\nEM（' + emName + '）' + px(em) + ' 點' : ''));
-      nowDone = true;
-    }
-    cells.forEach(function (c, i) {
-      var v = n(c[2]), lost = based && (c[3] === true || c[3] === 1);   /* 1.4.51：上傳器送 true／false */
-      if (!nowDone && (lost || v === null ? i > 2 : v > fut)) nowCell();   /* 上方的 U／Us 失守或沒有：現在期貨放在它前面 */
-      if (lost) { cell(c[0], c[1], '失守', '在舒適點就在賠', 'sv-lost', c[4] + '：失守＝這一側在舒適點就已經在賠，不畫線'); return; }
-      if (v === null) { cell(c[0], c[1], based ? '沒有' : '—', '', 'sv-none', c[4] + '：' + (based ? c[5] : '還沒有定價')); return; }
-      var d = fut === null ? null : v - fut, e = d !== null && em ? d / em : null;
-      cell(c[0], c[1], px(v), d === null ? '' : sg(d, 0) + (e === null ? ' 點' : '・' + sg(e, 2) + 'EM'), '',
-        c[4] + ' ' + px(v) + (d === null ? '' : '\n距現在期貨 ' + sg(d, 0) + ' 點' + (e === null ? '' : '＝' + sg(e, 2) + ' 個 EM（EM ' + px(em) + ' 點）')));
-    });
-    if (!nowDone) nowCell();
-    el.appendChild(ln);
-
-    /* 第 4 行：結算價位（指數座標）、IV、EM、損益拆解 */
-    var inf = mk('div', 'sv-in');
-    function item(label, parts, tip) {
-      var e = mk('span');
-      e.append(label + ' ');
-      parts.forEach(function (p, i) { if (i) e.append('・'); if (p[0]) e.append(p[0] + ' '); e.append(mk('b', p[2] || '', p[1])); });
-      if (tip) e.title = tip;
-      inf.appendChild(e);
-    }
-    item('結算', [['pin', px(n(o.set_pin))], ['L', px(n(o.set_L))], ['U', px(n(o.set_U))]], '結算舒適點／結算防線（指數座標，到期損益）' + (o.exp_today === true ? '：今天 13:30 結算' : ''));
-    var ZN = { IN: '舒適區內', L_LS: 'L–Ls 之間', LS_OUT: 'Ls 以外', U_US: 'U–Us 之間', US_OUT: 'Us 以外', L_LOST: '下方失守側', U_LOST: '上方失守側' };
-    if (ZN[o.gap_zone] && (sess === 'D' || cont)) {           /* 1.4.51：開盤缺口（日盤第一個價落在昨晚夜盤的哪一區） */
-      var go = n(o.gap_open), gp = n(o.gap_prev);
-      item('開盤', [['', px(go)], ['', ZN[o.gap_zone], /OUT$/.test(o.gap_zone) ? 'sv-hot' : '']],
-        '開盤缺口：日盤開盤 ' + px(go) + (gp === null || go === null ? '' : '（比夜盤收 ' + sg(go - gp, 0) + '）') + ' 落在昨晚夜盤價位的：' + ZN[o.gap_zone] +
-        (o.gap_late === true ? '（Excel 晚開，用第一次看到的價）' : '') + '\nLs／Us 以外＝夜盤賣方一開盤就在停損區，日盤一開始有回補壓力');
-    }
-    var iv = n(o.iv), iv0 = n(o.iv0), ir = n(o.iv_ratio);
-    item('IV', [['', iv === null ? '—' : iv.toFixed(2) + '%'], ['定價', iv0 === null ? '—' : iv0.toFixed(2) + '%'], ['×', ir === null ? '—' : ir.toFixed(2), ir !== null && ir > 1.1 ? 'sv-hot' : '']],
-      '現在 ATM IV／定價時 ATM IV／兩者比值（iv ÷ iv0）');
-    item('EM', [['', em === null ? '—' : px(em) + ' 點']], sess === 'D' ? '日盤預期波動（點）＝定價期貨 × IV × √(定價到 13:45 收盤〔結算日 13:30〕的時間 ÷ 365 天)' : '夜盤預期波動（點）＝定價期貨 × IV × √(14 小時 ÷ 365 天)');
-    item('損益（萬）', [['時間', sg(n(o.pnl_theta), 1), pr === '時間' ? 'sv-hot' : ''], ['IV', sg(n(o.pnl_vega), 1), pr === 'IV' ? 'sv-hot' : ''], ['價格', sg(n(o.pnl_price), 1), pr === '價格' ? 'sv-hot' : '']],
-      '從定價到現在，全部賣方的損益變化拆解（萬元，＋＝賣方賺）：時間價值、IV、價格');
-    el.appendChild(inf);
-
-    if (o.exp_today === true && n(o.stl_proj) !== null) {     /* 1.4.51：結算日 13:00 起：結算均價（估） */
-      var sl = mk('div', 'sv-in sv-stl'), sa = n(o.stl_avg), sn = n(o.stl_n);
-      [['結算均價（估）', [['平均', sa === null ? '—' : sa.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })], ['筆', sn === null ? '—' : String(sn)], ['預估結算', px(n(o.stl_proj))]]],
-       ['到期損益（萬）', [['Call', sg(n(o.stl_pnl_c), 0), n(o.stl_pnl_c) < 0 ? 'sv-hot' : ''], ['Put', sg(n(o.stl_pnl_p), 0), n(o.stl_pnl_p) < 0 ? 'sv-hot' : '']]]].forEach(function (g) {
-        var e = mk('span');
-        e.append(g[0] + ' ');
-        g[1].forEach(function (q, i) { if (i) e.append('・'); e.append(q[0] + ' '); e.appendChild(mk('b', q[2] || '', q[1])); });
-        sl.appendChild(e);
-      });
-      sl.title = '結算價＝13:00–13:30 加權指數的簡單平均；這裡用輪詢取樣估計（' + (str(o.stl_at, 19).slice(11) || '—') + '），預估結算＝已計入的平均＋剩下時間照現在指數\n到期損益＝用預估結算價算全部賣方的損益（萬元，＋＝賣方賺）；只顯示';
+    if (o.exp_today === true && n(o.stl_proj) !== null) {
+      var sl = mk('div', 'sv-line', '結算（估）'), sa = n(o.stl_avg), sn = n(o.stl_n);
+      sl.append(' 預估結算 '); bold(sl, px(n(o.stl_proj)));
+      sl.append('・平均 ' + (sa === null ? '—' : sa.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + '（' + (sn === null ? '—' : sn) + ' 筆）・到期損益 Call ');
+      bold(sl, sg(n(o.stl_pnl_c), 0), n(o.stl_pnl_c) < 0 ? 'sv-hot' : ''); sl.append(' 萬・Put '); bold(sl, sg(n(o.stl_pnl_p), 0), n(o.stl_pnl_p) < 0 ? 'sv-hot' : ''); sl.append(' 萬');
+      sl.title = '結算價＝13:00–13:30 加權指數的簡單平均；這裡用輪詢取樣估計（' + (str(o.stl_at, 19).slice(11) || '—') + '）；到期損益＝用預估結算價算全部賣方（萬元，＋＝賣方賺）';
       el.appendChild(sl);
     }
 
-    /* 第 5 行：旁觀單（不送單）＋說明 */
-    var ob = mk('div', 'sv-ob'), obs = str(o.obs, 80), on = n(o.obs_n);
-    var o1 = mk('span', 'sv-ob1', '旁觀單' + (on ? ' ' + on + '/2' : '') + '：');
-    o1.appendChild(mk('b', '', obs || '無'));
-    o1.title = '旁觀單：只記錄、不送單，研究用。這個週選' + (sess === 'D' ? '日盤' : sess === 'N' ? '夜盤' : '') + '已經記了 ' + (on === null ? '—' : on) + ' 筆（最多 2 筆' + (sess ? '，日盤、夜盤分開算' : '') + '）' +
-      (o.exp_today === true ? '\n結算日：到期序列不開' : '') + (cont ? '\n08:45–09:00 不開（開盤缺口不追）' : '') + (obs ? '\n' + obs : '');
+    /* 7. 更多 */
+    var dt = mk('details', 'sv-more'), sm = mk('summary', '', '更多：結算價位、開盤、隔夜、IV、損益');
+    dt.open = more;
+    dt.appendChild(sm);
+    dt.addEventListener('toggle', function () { try { localStorage.setItem(MORE_KEY, dt.open ? '1' : '0'); } catch (e) {} });
+    var kv = mk('div', 'sv-kv');
+    function row2(k, parts, tip) {
+      var a = mk('span', '', k), b = mk('span');
+      parts.forEach(function (p, i) { if (i) b.append('・'); if (p[0]) b.append(p[0] + ' '); bold(b, p[1], p[2]); });
+      if (tip) { a.title = tip; b.title = tip; }
+      kv.append(a, b);
+    }
+    row2('狀態', [['', st === '回補' ? '回補' + (side ? '・順勢' + side : '') : (stName(st) || '—')], ['壓力', pr || '—', pr && pr !== '時間' ? 'sv-hot' : '']],
+      'Argon 每 10 分鐘判一次：收租（日盤叫舒服）／防守／回補／中性；壓力＝時間、IV、價格三者中對賣方最不利的');
+    row2('結算價位', [['pin', px(n(o.set_pin))], ['L', px(n(o.set_L))], ['U', px(n(o.set_U))]], '結算舒適點／結算防線（加權指數，到期那天才有用）' + (o.exp_today === true ? '：今天 13:30 結算' : ''));
+    var ZN = { IN: '舒適區內', L_LS: 'L–Ls 之間', LS_OUT: 'Ls 以外', U_US: 'U–Us 之間', US_OUT: 'Us 以外', L_LOST: '下方失守側', U_LOST: '上方失守側' };
+    if (ZN[o.gap_zone] && (sess === 'D' || cont)) {
+      var go = n(o.gap_open), gp = n(o.gap_prev);
+      row2('開盤', [['', px(go)], ['', ZN[o.gap_zone], /OUT$/.test(o.gap_zone) ? 'sv-hot' : ''], ['比夜盤收', gp === null || go === null ? '—' : sg(go - gp, 0)]],
+        '日盤開盤價落在昨晚夜盤價位的哪一區' + (o.gap_late === true ? '（Excel 晚開，用第一次看到的價）' : '') + '；Ls／Us 以外＝夜盤賣方一開盤就在停損區');
+    }
+    if (sess === 'D' && n(o.on_pin_d) !== null) {
+      var ope = n(o.on_pin_em);
+      row2('隔夜換手', [['舒適點', sg(n(o.on_pin_d), 0) + (ope === null ? '' : '（' + sg(ope, 1) + ' EM）')], ['L', sg(n(o.on_L_d), 0)], ['U', sg(n(o.on_U_d), 0)], ['Call 口', sg(n(o.on_qc_d), 0)], ['Put 口', sg(n(o.on_qp_d), 0)]],
+        '日盤定價和昨晚夜盤定價（' + (str(o.on_base, 19) || '—') + '）比；舒適點往上＝賣方重心往上');
+    }
+    var iv = n(o.iv), iv0 = n(o.iv0), ir = n(o.iv_ratio);
+    row2('IV', [['現在', iv === null ? '—' : iv.toFixed(2) + '%'], ['定價', iv0 === null ? '—' : iv0.toFixed(2) + '%'], ['×', ir === null ? '—' : ir.toFixed(2), ir !== null && ir > 1.1 ? 'sv-hot' : '']], 'ATM IV；×＝現在 ÷ 定價，> 1.1 對賣方不利');
+    row2('EM', [['', em === null ? '—' : px(em) + ' 點']], sess === 'D' ? '日盤預期波動＝定價價格 × IV × √(到 13:45 收盤的時間)' : '夜盤預期波動＝定價價格 × IV × √(14 小時)');
+    row2('損益（萬）', [['時間', sg(n(o.pnl_theta), 1), pr === '時間' ? 'sv-hot' : ''], ['IV', sg(n(o.pnl_vega), 1), pr === 'IV' ? 'sv-hot' : ''], ['價格', sg(n(o.pnl_price), 1), pr === '價格' ? 'sv-hot' : '']],
+      '從定價到現在，全部賣方的損益變化拆解（萬元，＋＝賣方賺）');
+    var basisNow = n(o.basis), b0 = n(o.basis0);
+    row2('定價', [['', str(o.base_at, 19).slice(5, 16) || '—'], [C.syn ? '合成期貨' : '期貨', px(C.syn ? n(o.fwd0) : n(o.fut0))], ['基差', C.syn && basisNow !== null ? sg(basisNow, 0) + '（現在）' : sg(b0, 0)]],
+      '定價時間、定價價格；基差＝期貨 − 合成期貨');
+    if (!obs) row2('旁觀單', [['', '無' + (on ? '（這個週選已記 ' + on + '/2）' : '')]], '旁觀單：只記錄、不送單，研究用；日盤、夜盤各最多 2 筆');
     var exp = str(o.expiry, 10);
-    var nt = [str(o.note, 120), str(o.contract, 32) + (exp ? ' ' + exp.slice(5).replace('-', '/') + ' 到期' : '')].filter(Boolean).join('・');
-    var ne = mk('span', 'sv-nt', nt);
-    ne.title = nt;
-    ob.append(o1, ne);
-    el.appendChild(ob);
+    row2('說明', [['', [str(o.note, 120), str(o.contract, 32) + (exp ? ' ' + exp.slice(5).replace('-', '/') + ' 到期' : '')].filter(Boolean).join('；')]]);
+    dt.appendChild(kv);
+    el.appendChild(dt);
 
     el.title = [
-      '主力賣方 SV1（' + (str(o.ver, 12) || 'SV1') + '，Argon ' + (sess ? 'V1.2.61' : 'V1.2.60') + '）：用週選賣方庫存算賣方的舒適點、防線、回補線。研究用，還沒有經過市場驗證；旁觀單只記錄、不下單，不影響 Argon、不影響實單',
-      '狀態：收租＝賣方舒服在收時間價值（日盤叫「舒服」）；防守＝有一側開始吃緊；回補＝有一側要停損回補（順勢方向＝回補會推的方向）；中性',
-      sess ? '日盤：08:45–09:00 沿用昨晚夜盤價位（夜盤延續）、09:01 日盤定價、13:45 結束；結算日 13:00 起有結算均價（估）。日盤沒有回測過（未驗證）' : '',
+      '主力賣方 SV1（' + (str(o.ver, 12) || 'SV1') + '）：用週選賣方庫存算賣方的舒適點、防線、回補線。研究用，還沒有經過市場驗證；旁觀單只記錄、不下單，不影響 Argon、不影響實單',
+      'pin 舒適點＝價格停這裡賣方賺最多；L／U 防線＝越過後那一側賣方開始賠；Ls／Us 回補線＝越過後那一側賣方賠一倍權利金、容易被迫回補',
+      '回測（夜盤 91 晚）：只有「越過回補線後順勢延續」成立；L、U 防線反彈、收租都不成立。日盤沒有回測過',
       o.tf_at ? '今天日盤分類帳（' + str(o.tf_at, 19).slice(11, 16) + '，只顯示、不當訊號）：Call 賣方新增 ' + px(n(o.tf_c_add)) + '、回補 ' + px(n(o.tf_c_cov)) + ' 口；Put 賣方新增 ' + px(n(o.tf_p_add)) + '、回補 ' + px(n(o.tf_p_cov)) + ' 口' : '',
-      '定價 ' + (str(o.base_at, 19) || '—') + '　期貨 ' + px(n(o.fut0)) + '　平價遠期 ' + px(n(o.fwd0)) + '　基差 ' + sg(n(o.basis0), 0) + '　IV ' + (iv0 === null ? '—' : iv0.toFixed(2) + '%'),
-      '庫存（' + (n(o.n_sess) === null ? '—' : n(o.n_sess)) + ' 盤）：Call 賣方 ' + px(n(o.q_c)) + ' 口、權利金 ' + px(n(o.prem_c)) + ' 萬；Put 賣方 ' + px(n(o.q_p)) + ' 口、權利金 ' + px(n(o.prem_p)) + ' 萬',
-      '狀態碼 ' + (str(o.status, 12) || '—') + '　模式 ' + (str(o.mode, 4) || '—') + '　來源 ' + (str(o.src, 8) || '—') + '　' + (str(o.key, 48) || '')
+      '庫存（' + (n(o.n_sess) === null ? '—' : n(o.n_sess)) + ' 盤）：Call 賣方 ' + px(n(o.q_c)) + ' 口、Put 賣方 ' + px(n(o.q_p)) + ' 口',
+      '狀態碼 ' + (str(o.status, 12) || '—') + '　模式 ' + (str(o.mode, 4) || '—') + '　' + (str(o.key, 48) || '')
     ].filter(Boolean).join('\n');
     el.hidden = false;
   }
 
+  window.BZ_SV1 = { coordOf: coordOf, levels: levels, zoneOf: zoneOf, verdict: verdict };   /* 價位梯子（下面 BZ_SV1L）共用 */
   function tick() { reconcile(); render(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
   setInterval(tick, 5000);
 })();
 </script>
-<!-- Z31_BAOZ_SV1_UI_1_4_50_END -->
-<!-- Z31_BAOZ_SV1TOP_UI_1_4_51 -->
-<style id="z31-baoz-sv1top-ui-1-4-51">
-/* BaoZ UI 1.4.51（Edward 11/27 09:50「把主力賣方區塊移到林式進場時機的上方」）：主力賣方 SV1 卡搬到左欄最上面、林式進場時機上面；
-   加 Argon V1.2.61 日盤（上傳器 1.0.15 的欄位：日盤／夜盤標題、夜盤延續、舒服、隔夜換手、開盤缺口、結算均價）。沒有新欄位時卡片內容和 1.4.50 一樣；
-   沒有 seller_v1 時整張卡不出現（林式進場時機照舊在最上面）。 */
-#baoz-system-panel > .bz-sv1 { order: 0; grid-column: 1; margin: 0; }
-#baoz-system-panel .bz-sv1 .sv-nv.sv-cont { color: var(--bz-attn); border-color: currentColor; }
-#baoz-system-panel .bz-sv1 .sv-stl { margin-top: 3px; }
-</style>
-<!-- Z31_BAOZ_SV1TOP_UI_1_4_51_END -->
+<script>
+/* BaoZ UI 1.4.52：價位梯子上畫主力賣方 SV1 五條線（Edward 11/27 12:31「把主力賣方加入價位梯子，讓我很清楚能看到」），右邊一條分區色帶；
+   梯子的 model()／overlay()／sideHtml()／headHtml() 呼叫這裡。梯子是合成期貨座標：V1.2.62（coord=SYN）直接用；V1.2.60／61（期貨座標）減定價基差 basis0。 */
+(function () {
+  'use strict';
+  var STA = { OK: 1, NOT_NIGHT: 1 };
+  var NM = { Ls: ['s1ls', 'Ls 回補線', '跌破→Put 賣方被迫回補', '跌破＝Put 賣方賠一倍權利金，被迫買回 Put，會推價格往下'], L: ['s1l', 'L 防線', '跌破→Put 賣方開始賠', '跌破＝Put 賣方整體從賺轉賠'],
+    pin: ['s1p', 'pin 舒適點', '賣方最想停的價', '收盤停在這裡，全部賣方（Call＋Put）賺最多'], U: ['s1u', 'U 防線', '漲過→Call 賣方開始賠', '漲過＝Call 賣方整體從賺轉賠'],
+    Us: ['s1us', 'Us 回補線', '漲過→Call 賣方被迫回補', '漲過＝Call 賣方賠一倍權利金，被迫買回 Call，會推價格往上'] };
+  var ZCOL = { IN: 'var(--bz-accent)', L_LS: 'var(--bz-attn)', U_US: 'var(--bz-attn)', LS_OUT: 'var(--bz-down)', US_OUT: 'var(--bz-up)' };
+  var ZTXT = { IN: '賣方舒服區', L_LS: 'Put 賣方在賠', U_US: 'Call 賣方在賠', LS_OUT: 'Put 賣方回補區', US_OUT: 'Call 賣方回補區' };
+  function n(x) { return typeof x === 'number' && Number.isFinite(x) ? x : null; }
+  function fmt(v) { return v == null ? '—' : Math.round(v).toLocaleString('en-US'); }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  function model(d, M) {
+    var o = d && d.seller_v1, H = window.BZ_SV1;
+    if (!o || typeof o !== 'object' || !H || !STA[String(o.status || '').toUpperCase()] || o.mode === '關') return null;
+    var C = H.coordOf(o);
+    if (C.bad) return null;
+    var V = H.levels(o);
+    if (!V) return null;
+    var sh = 0;
+    if (!C.syn) { var b0 = n(o.basis0); if (b0 === null) return null; sh = b0; }   /* 期貨座標 → 合成 */
+    var X = { live: String(o.status).toUpperCase() === 'OK', sess: o.session === 'D' ? '日盤' : o.session === 'N' ? '夜盤' : '', V: {} , lines: [] };
+    ['pin', 'L', 'U', 'Ls', 'Us'].forEach(function (k) { X.V[k] = V[k] === null ? null : V[k] - sh; });
+    X.V.Llost = V.Llost; X.V.Ulost = V.Ulost;
+    X.z = H.zoneOf(M.syn, X.V);
+    ['Us', 'U', 'pin', 'L', 'Ls'].forEach(function (k) {
+      if (X.V[k] === null) return;
+      var q = NM[k];
+      M.marks.push({ k: X.V[k], line: 'dvS1 ' + q[0] + (X.live ? '' : ' old'), t: '主力賣方 ' + q[1] + '｜' + q[2],
+        tip: '主力賣方 SV1' + (X.sess ? '（' + X.sess + '）' : '') + ' ' + q[1] + ' ' + fmt(X.V[k]) + '（合成）：' + q[3] + (X.live ? '' : '｜盤後：上一盤的價位') + '｜旁觀・不下單，未驗證' });
+    });
+    return X;
+  }
+
+  /* 梯子右邊一條色帶：五條線之間照分區上色（舒服＝藍、在賠＝黃、Ls 以外＝綠、Us 以外＝紅） */
+  function strip(lad, M) {
+    var X = M.sv1;
+    if (!X) return;
+    var head = lad.querySelector('.bz-lad-r.hd'), top = head ? head.offsetTop + head.offsetHeight : 0, bot = lad.scrollHeight;
+    var ks = ['Us', 'U', 'pin', 'L', 'Ls'].filter(function (k) { return X.V[k] !== null; });
+    var ys = ks.map(function (k) {                          /* 梯子範圍外的線：貼在梯子的上緣／下緣 */
+      var r = lad.querySelector('.bz-lad-r.ln.dvS1.' + NM[k][0]);
+      return r ? r.offsetTop : (X.V[k] > M.syn ? top : bot);
+    });
+    var edges = [top].concat(ys, [bot]), prices = [X.V[ks[0]] + 1].concat(ks.map(function (k) { return X.V[k]; }), [X.V[ks[ks.length - 1]] - 1]);
+    for (var i = 1; i < edges.length; i++) {
+      if (edges[i] - edges[i - 1] < 2) continue;
+      var mid = i === 1 ? prices[1] + 1 : (i === edges.length - 1 ? prices[i - 1] - 1 : (prices[i - 1] + prices[i]) / 2);
+      var z = window.BZ_SV1.zoneOf(mid, X.V), e = document.createElement('div');
+      e.className = 'bz-lad-sv1z';
+      e.style.top = Math.round(edges[i - 1]) + 'px'; e.style.height = Math.round(edges[i] - edges[i - 1]) + 'px'; e.style.background = ZCOL[z];
+      e.title = '主力賣方：' + ZTXT[z];
+      lad.appendChild(e);
+      if (z !== 'IN') {                                       /* 梯子底色：在賠、回補區淡淡上色（舒服區不上色） */
+        var g = document.createElement('div');
+        g.className = 'bz-lad-sv1t';
+        g.style.top = e.style.top; g.style.height = e.style.height; g.style.background = ZCOL[z];
+        lad.insertBefore(g, lad.firstChild);
+      }
+    }
+  }
+
+  function chip(M) {
+    var X = M.sv1;
+    if (!X) return '';
+    return '<span class="bz-lad-chip sv1" style="--c:' + ZCOL[X.z] + '" title="主力賣方 SV1（右邊色帶）：現在合成 ' + fmt(M.syn) + ' 在這一區；旁觀・不下單，未驗證">主力賣方：' + esc(ZTXT[X.z]) + (X.live ? '' : '（盤後）') + '</span>';
+  }
+
+  function side(M) {
+    if (!M.sv1) return '';
+    return '<div class="bz-lad-box"><div class="h">主力賣方 SV1（右邊色帶）</div><div class="bz-lad-leg">' +
+      '<span><i style="border-top:2.5px solid var(--bz-up);height:0;width:14px"></i>Us 回補線</span><span><i style="border-top:2px dashed var(--bz-attn);height:0;width:14px"></i>U／L 防線</span>' +
+      '<span><i style="border-top:2px solid var(--bz-accent);height:0;width:14px"></i>pin 舒適點</span><span><i style="border-top:2.5px solid var(--bz-down);height:0;width:14px"></i>Ls 回補線</span></div>' +
+      '<div class="bz-lad-out">色帶：藍＝賣方舒服；黃＝一側賣方在賠；紅／綠＝越過回補線，賣方被迫回補。回測只有「越過回補線後順勢延續」成立；L、U 反彈不成立。只顯示，不下單。</div></div>';
+  }
+
+  window.BZ_SV1L = { model: model, strip: strip, chip: chip, side: side };
+})();
+</script>
+<!-- Z31_BAOZ_SV1_UI_1_4_52_END -->
 </body>
 </html>
